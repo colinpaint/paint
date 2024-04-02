@@ -2313,7 +2313,7 @@ static void endDecodeFrame (sDecoder* decoder) {
 //{{{
 static void initPicture (sDecoder* decoder, sSlice* slice) {
 
-  sDPB* dpb = slice->dpb;
+  sDpb* dpb = slice->dpb;
   sSps* activeSps = decoder->activeSps;
 
   decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (slice->fieldPic+1);

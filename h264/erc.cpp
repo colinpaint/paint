@@ -1498,7 +1498,7 @@ static void CopyImgData (sPixel** inputY, sPixel** *inputUV, sPixel** outputY, s
 ************************************************************************
 */
 
-static sPicture* get_last_ref_pic_from_dpb (sDPB* dpb)
+static sPicture* get_last_ref_pic_from_dpb (sDpb* dpb)
 {
   int usedSize = dpb->usedSize - 1;
   int i;
@@ -1662,7 +1662,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
 ************************************************************************
 */
 
-static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDPB* dpb)
+static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDpb* dpb)
 {
   sDecoder* decoder = dpb->decoder;
   /* get the last ref pic in dpb */
@@ -1676,7 +1676,7 @@ static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDPB* dpb)
 }
 //}}}
 //{{{
-static sPicture* get_pic_from_dpb (sDPB* dpb, int missingpoc, unsigned int *pos)
+static sPicture* get_pic_from_dpb (sDpb* dpb, int missingpoc, unsigned int *pos)
 {
   sDecoder* decoder = dpb->decoder;
   int usedSize = dpb->usedSize - 1;
@@ -1728,7 +1728,7 @@ static void delete_node (sDecoder* decoder, struct ConcealNode *ptr ) {
   }
 //}}}
 //{{{
-static void update_ref_list_for_concealment (sDPB* dpb) {
+static void update_ref_list_for_concealment (sDpb* dpb) {
 
   sDecoder* decoder = dpb->decoder;
 
@@ -1765,7 +1765,7 @@ struct ConcealNode * init_node (sPicture* picture, int missingpoc ) {
 *
 ************************************************************************
 */
-void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStructure currPicStructure)
+void init_lists_for_non_reference_loss (sDpb* dpb, int currSliceType, ePicStructure currPicStructure)
 {
   sDecoder* decoder = dpb->decoder;
   sSps *activeSps = decoder->activeSps;
@@ -1868,7 +1868,7 @@ void init_lists_for_non_reference_loss (sDPB* dpb, int currSliceType, ePicStruct
 * based on the sudden decrease in frame number.
 ************************************************************************
 */
-void concealLostFrames (sDPB* dpb, sSlice *slice)
+void concealLostFrames (sDpb* dpb, sSlice *slice)
 {
   sDecoder* decoder = dpb->decoder;
   int CurrFrameNum;
@@ -1962,7 +1962,7 @@ void concealLostFrames (sDPB* dpb, sSlice *slice)
 ************************************************************************
 */
 
-void conceal_non_ref_pics (sDPB* dpb, int diff)
+void conceal_non_ref_pics (sDpb* dpb, int diff)
 {
   sDecoder* decoder = dpb->decoder;
   int missingpoc = 0;
@@ -2026,7 +2026,7 @@ void conceal_non_ref_pics (sDPB* dpb, int diff)
 ************************************************************************
 */
 
-void sliding_window_poc_management (sDPB* dpb, sPicture *p)
+void sliding_window_poc_management (sDpb* dpb, sPicture *p)
 {
   if (dpb->usedSize == dpb->size)
   {
@@ -2051,7 +2051,7 @@ void sliding_window_poc_management (sDPB* dpb, sPicture *p)
 ************************************************************************
 */
 
-void write_lost_non_ref_pic (sDPB* dpb, int poc) {
+void write_lost_non_ref_pic (sDpb* dpb, int poc) {
 
   sDecoder* decoder = dpb->decoder;
   sFrameStore concealment_fs;
@@ -2077,7 +2077,7 @@ void write_lost_non_ref_pic (sDPB* dpb, int poc) {
 *
 ************************************************************************
 */
-void write_lost_ref_after_idr (sDPB* dpb, int pos) {
+void write_lost_ref_after_idr (sDpb* dpb, int pos) {
 
   sDecoder* decoder = dpb->decoder;
   int temp = 1;

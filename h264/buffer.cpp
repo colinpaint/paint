@@ -96,7 +96,7 @@ static void genFieldRefIds (sDecoder* decoder, sPicture* p) {
   }
 //}}}
 //{{{
-static void unmarkLongTermFieldRefFrameIndex (sDPB* dpb, ePicStructure picStructure, int longTermFrameIndex,
+static void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStructure, int longTermFrameIndex,
                                               int mark_current, unsigned curr_frame_num, int curr_pic_num) {
 
   sDecoder* decoder = dpb->decoder;
@@ -171,7 +171,7 @@ static int getPicNumX (sPicture* p, int diffPicNumMinus1) {
   }
 //}}}
 //{{{
-static int outputDpbFrame (sDPB* dpb) {
+static int outputDpbFrame (sDpb* dpb) {
 
   // diagnostics
   if (dpb->usedSize < 1)
@@ -826,7 +826,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
 
 // dpb
 //{{{
-static void dumpDpb (sDPB* dpb) {
+static void dumpDpb (sDpb* dpb) {
 
 #ifdef DUMP_DPB
   for (unsigned i = 0; i < dpb->usedSize; i++) {
@@ -866,7 +866,7 @@ static void dumpDpb (sDPB* dpb) {
   }
 //}}}
 //{{{
-static void checkNumDpbFrames (sDPB* dpb) {
+static void checkNumDpbFrames (sDpb* dpb) {
 
   if ((int)(dpb->longTermRefFramesInBuffer + dpb->refFramesInBuffer) > imax (1, dpb->numRefFrames))
     error ("Max. number of reference frames exceeded. Invalid stream");
@@ -1007,7 +1007,7 @@ static int getDpbSize (sDecoder* decoder, sSps *activeSps) {
 //}}}
 
 //{{{
-static void markPicLongTerm (sDPB* dpb, sPicture* p, int longTermFrameIndex, int picNumX) {
+static void markPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex, int picNumX) {
 
   int addTop, addBot;
 
@@ -1092,7 +1092,7 @@ static void markPicLongTerm (sDPB* dpb, sPicture* p, int longTermFrameIndex, int
   }
 //}}}
 //{{{
-static void unmarkLongTermFrameForRefByFrameIndex (sDPB* dpb, int longTermFrameIndex) {
+static void unmarkLongTermFrameForRefByFrameIndex (sDpb* dpb, int longTermFrameIndex) {
 
   for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++)
     if (dpb->fsLongTermRef[i]->longTermFrameIndex == longTermFrameIndex)
@@ -1100,7 +1100,7 @@ static void unmarkLongTermFrameForRefByFrameIndex (sDPB* dpb, int longTermFrameI
   }
 //}}}
 //{{{
-static void unmarkLongTermForRef (sDPB* dpb, sPicture* p, int longTermPicNum) {
+static void unmarkLongTermForRef (sDpb* dpb, sPicture* p, int longTermPicNum) {
 
   for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (p->picStructure == eFrame) {
@@ -1139,7 +1139,7 @@ static void unmarkLongTermForRef (sDPB* dpb, sPicture* p, int longTermPicNum) {
   }
 //}}}
 //{{{
-static void unmarkShortTermForRef (sDPB* dpb, sPicture* p, int diffPicNumMinus1)
+static void unmarkShortTermForRef (sDpb* dpb, sPicture* p, int diffPicNumMinus1)
 {
   int picNumX = getPicNumX(p, diffPicNumMinus1);
 
@@ -1177,7 +1177,7 @@ static void unmarkShortTermForRef (sDPB* dpb, sPicture* p, int diffPicNumMinus1)
   }
 //}}}
 //{{{
-static void assignLongTermFrameIndex (sDPB* dpb, sPicture* p, int diffPicNumMinus1, int longTermFrameIndex) {
+static void assignLongTermFrameIndex (sDpb* dpb, sPicture* p, int diffPicNumMinus1, int longTermFrameIndex) {
 
   int picNumX = getPicNumX(p, diffPicNumMinus1);
 
@@ -1213,7 +1213,7 @@ static void assignLongTermFrameIndex (sDPB* dpb, sPicture* p, int diffPicNumMinu
   }
 //}}}
 //{{{
-static void updateMaxLongTermFrameIndex (sDPB* dpb, int maxLongTermFrameIndexPlus1) {
+static void updateMaxLongTermFrameIndex (sDpb* dpb, int maxLongTermFrameIndexPlus1) {
 
   dpb->maxLongTermPicIndex = maxLongTermFrameIndexPlus1 - 1;
 
@@ -1224,12 +1224,12 @@ static void updateMaxLongTermFrameIndex (sDPB* dpb, int maxLongTermFrameIndexPlu
   }
 //}}}
 //{{{
-static void unmarkAllLongTermForRef (sDPB* dpb) {
+static void unmarkAllLongTermForRef (sDpb* dpb) {
   updateMaxLongTermFrameIndex (dpb, 0);
   }
 //}}}
 //{{{
-static void unmarkAllShortTermForRef (sDPB* dpb) {
+static void unmarkAllShortTermForRef (sDpb* dpb) {
 
   for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++)
     unmarkForRef (dpb->fsRef[i]);
@@ -1237,7 +1237,7 @@ static void unmarkAllShortTermForRef (sDPB* dpb) {
   }
 //}}}
 //{{{
-static void markCurPicLongTerm (sDPB* dpb, sPicture* p, int longTermFrameIndex) {
+static void markCurPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex) {
 
   // remove long term pictures with same longTermFrameIndex
   if (p->picStructure == eFrame)
@@ -1250,7 +1250,7 @@ static void markCurPicLongTerm (sDPB* dpb, sPicture* p, int longTermFrameIndex) 
   }
 //}}}
 //{{{
-static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
+static void adaptiveMemoryManagement (sDpb* dpb, sPicture* p) {
 
   sDecodedRefPicMark* tmp_drpm;
   sDecoder* decoder = dpb->decoder;
@@ -1343,7 +1343,7 @@ static void adaptiveMemoryManagement (sDPB* dpb, sPicture* p) {
   }
 //}}}
 //{{{
-static void slidingWindowMemoryManagement (sDPB* dpb, sPicture* p) {
+static void slidingWindowMemoryManagement (sDpb* dpb, sPicture* p) {
 
   assert (!p->isIDR);
 
@@ -1362,7 +1362,7 @@ static void slidingWindowMemoryManagement (sDPB* dpb, sPicture* p) {
   }
 //}}}
 //{{{
-static void idrMemoryManagement (sDPB* dpb, sPicture* p) {
+static void idrMemoryManagement (sDpb* dpb, sPicture* p) {
 
   if (p->noOutputPriorPicFlag) {
     // free all stored pictures
@@ -1398,7 +1398,7 @@ static void idrMemoryManagement (sDPB* dpb, sPicture* p) {
   }
 //}}}
 //{{{
-static sPicture* getLongTermPic (sSlice* slice, sDPB* dpb, int LongtermPicNum) {
+static sPicture* getLongTermPic (sSlice* slice, sDpb* dpb, int LongtermPicNum) {
 
   for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (slice->picStructure == eFrame) {
@@ -1487,7 +1487,7 @@ static void genPicListFromFrameList (ePicStructure currStructure, sFrameStore** 
 //}}}
 
 //{{{
-void updateRefList (sDPB* dpb) {
+void updateRefList (sDpb* dpb) {
 
   unsigned i, j;
   for (i = 0, j = 0; i < dpb->usedSize; i++)
@@ -1501,7 +1501,7 @@ void updateRefList (sDPB* dpb) {
   }
 //}}}
 //{{{
-void updateLongTermRefList (sDPB* dpb) {
+void updateLongTermRefList (sDpb* dpb) {
 
   unsigned i, j;
   for (i = 0, j = 0; i < dpb->usedSize; i++)
@@ -1515,7 +1515,7 @@ void updateLongTermRefList (sDPB* dpb) {
   }
 //}}}
 //{{{
-void getSmallestPoc (sDPB* dpb, int* poc, int* pos) {
+void getSmallestPoc (sDpb* dpb, int* poc, int* pos) {
 
   if (dpb->usedSize<1)
     error ("Cannot determine smallest POC, DPB empty");
@@ -1532,7 +1532,7 @@ void getSmallestPoc (sDPB* dpb, int* poc, int* pos) {
 //}}}
 
 //{{{
-void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
+void initDpb (sDecoder* decoder, sDpb* dpb, int type) {
 
   sSps* activeSps = decoder->activeSps;
 
@@ -1587,7 +1587,7 @@ void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
   }
 //}}}
 //{{{
-void reInitDpb (sDecoder* decoder, sDPB* dpb, int type) {
+void reInitDpb (sDecoder* decoder, sDpb* dpb, int type) {
 
   sSps* activeSps = decoder->activeSps;
   int dpbSize = getDpbSize (decoder, activeSps) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
@@ -1622,7 +1622,7 @@ void reInitDpb (sDecoder* decoder, sDPB* dpb, int type) {
   }
 //}}}
 //{{{
-void flushDpb (sDPB* dpb) {
+void flushDpb (sDpb* dpb) {
 
   if (!dpb->initDone)
     return;
@@ -1644,7 +1644,7 @@ void flushDpb (sDPB* dpb) {
   }
 //}}}
 //{{{
-int removeUnusedDpb (sDPB* dpb) {
+int removeUnusedDpb (sDpb* dpb) {
 
   // check for frames that were already output and no longer used for reference
   for (uint32 i = 0; i < dpb->usedSize; i++) {
@@ -1658,7 +1658,7 @@ int removeUnusedDpb (sDPB* dpb) {
   }
 //}}}
 //{{{
-void storePictureDpb (sDPB* dpb, sPicture* picture) {
+void storePictureDpb (sDpb* dpb, sPicture* picture) {
 
   sDecoder* decoder = dpb->decoder;
   int poc, pos;
@@ -1766,7 +1766,7 @@ void storePictureDpb (sDPB* dpb, sPicture* picture) {
   }
 //}}}
 //{{{
-void removeFrameDpb (sDPB* dpb, int pos) {
+void removeFrameDpb (sDpb* dpb, int pos) {
 
   //printf ("remove frame with frameNum #%d\n", fs->frameNum);
   sFrameStore* fs = dpb->fs[pos];
@@ -1812,7 +1812,7 @@ void removeFrameDpb (sDPB* dpb, int pos) {
   }
 //}}}
 //{{{
-void freeDpb (sDPB* dpb) {
+void freeDpb (sDpb* dpb) {
 
   sDecoder* decoder = dpb->decoder;
   if (dpb->fs) {
@@ -2039,7 +2039,7 @@ void updatePicNum (sSlice* slice) {
   int addBot = 0;
   int maxFrameNum = 1 << (activeSps->log2maxFrameNumMinus4 + 4);
 
-  sDPB* dpb = slice->dpb;
+  sDpb* dpb = slice->dpb;
   if (slice->picStructure == eFrame) {
     for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fsRef[i]->isUsed == 3 ) {
@@ -2095,7 +2095,7 @@ void updatePicNum (sSlice* slice) {
   }
 //}}}
 //{{{
-sPicture* getShortTermPic (sSlice* slice, sDPB* dpb, int picNum) {
+sPicture* getShortTermPic (sSlice* slice, sDpb* dpb, int picNum) {
 
   for (unsigned i = 0; i < dpb->refFramesInBuffer; i++) {
     if (slice->picStructure == eFrame) {
@@ -2128,7 +2128,7 @@ void initListsSliceI (sSlice* slice) {
 void initListsSliceP (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
-  sDPB* dpb = slice->dpb;
+  sDpb* dpb = slice->dpb;
 
   int list0idx = 0;
   int listLtIndex = 0;
@@ -2195,7 +2195,7 @@ void initListsSliceP (sSlice* slice) {
 void initListsSliceB (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
-  sDPB* dpb = slice->dpb;
+  sDpb* dpb = slice->dpb;
 
   unsigned int i;
   int j;

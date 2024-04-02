@@ -397,8 +397,10 @@ typedef struct  {
 //}}}
 
 struct Picture;
+struct sDpb;
 struct PicMotion;
-struct MacroBlock;
+struct sMacroBlock;
+struct sSlice;
 struct sDecoder;
 //{{{  sBitStream
 typedef struct {
@@ -437,7 +439,7 @@ typedef struct SyntaxElement {
   void (*mapping) (int, int, int*, int*);
 
   // eCabac actual coding method of each individual syntax element type
-  void (*reading) (struct MacroBlock*, struct SyntaxElement*, sCabacDecodeEnv*);
+  void (*reading) (sMacroBlock*, struct SyntaxElement*, sCabacDecodeEnv*);
   } sSyntaxElement;
 //}}}
 //{{{  sDataPartition
@@ -445,7 +447,7 @@ typedef struct DataPartition {
   sBitStream* stream;
   sCabacDecodeEnv cabacDecodeEnv;
 
-  int (*readSyntaxElement) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*);
+  int (*readSyntaxElement) (sMacroBlock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
 //}}}
 //{{{  sMotionVec
@@ -454,10 +456,10 @@ typedef struct {
   short mvY;
   } sMotionVec;
 //}}}
-//{{{  sMacroBlock
-typedef struct MacroBlock {
+//{{{  
+struct sMacroBlock {
   sDecoder* decoder;
-  struct Slice*   slice;
+  sSlice*   slice;
 
   int     mbIndexX;
   int     mbIndexA;
@@ -497,11 +499,11 @@ typedef struct MacroBlock {
   short   deltaQuant;        // for rate control
   short   listOffset;
 
-  struct MacroBlock* mbCabacUp;   // pointer to neighboring MB (eCabac)
-  struct MacroBlock* mbCabacLeft; // pointer to neighboring MB (eCabac)
+  sMacroBlock* mbCabacUp;   // pointer to neighboring MB (eCabac)
+  sMacroBlock* mbCabacLeft; // pointer to neighboring MB (eCabac)
 
-  struct MacroBlock* mbUp;    // neighbors for loopfilter
-  struct MacroBlock* mbLeft;  // neighbors for loopfilter
+  sMacroBlock* mbUp;    // neighbors for loopfilter
+  sMacroBlock* mbLeft;  // neighbors for loopfilter
 
   // some storage of macroblock syntax elements for global access
   short   mbType;
@@ -532,16 +534,16 @@ typedef struct MacroBlock {
   bool noMbPartLessThan8x8Flag;
 
   // virtual methods
-  void (*iTrans4x4) (struct MacroBlock*, eColorPlane, int, int);
-  void (*iTrans8x8) (struct MacroBlock*, eColorPlane, int, int);
-  void (*GetMVPredictor) (struct MacroBlock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
-  int  (*readStoreCBPblockBit) (struct MacroBlock*, sCabacDecodeEnv*, int);
-  char (*readRefPictureIndex) (struct MacroBlock*, struct SyntaxElement*, struct DataPartition*, char, int);
-  void (*readCompCoef4x4cabac) (struct MacroBlock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
-  void (*readCompCoef8x8cabac) (struct MacroBlock*, struct SyntaxElement*, eColorPlane);
-  void (*readCompCoef4x4cavlc) (struct MacroBlock*, eColorPlane, int(*)[4], int, int, byte**);
-  void (*readCompCoef8x8cavlc) (struct MacroBlock*, eColorPlane, int(*)[8], int, int, byte**);
-  } sMacroBlock;
+  void (*iTrans4x4) (sMacroBlock*, eColorPlane, int, int);
+  void (*iTrans8x8) (sMacroBlock*, eColorPlane, int, int);
+  void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, short, struct PicMotion**, int, int, int, int, int);
+  int  (*readStoreCBPblockBit) (sMacroBlock*, sCabacDecodeEnv*, int);
+  char (*readRefPictureIndex) (sMacroBlock*, struct SyntaxElement*, struct DataPartition*, char, int);
+  void (*readCompCoef4x4cabac) (sMacroBlock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
+  void (*readCompCoef8x8cabac) (sMacroBlock*, struct SyntaxElement*, eColorPlane);
+  void (*readCompCoef4x4cavlc) (sMacroBlock*, eColorPlane, int(*)[4], int, int, byte**);
+  void (*readCompCoef8x8cavlc) (sMacroBlock*, eColorPlane, int(*)[8], int, int, byte**);
+  };
 //}}}
 //{{{  sImage
 typedef struct Image {
@@ -610,13 +612,13 @@ typedef struct {
   int      ppsId;
   } sOldSlice;
 //}}}
-//{{{  sSlice
-typedef struct Slice {
+//{{{
+struct sSlice {
   sDecoder* decoder;
 
   sPps* activePps;
   sSps* activeSps;
-  struct DPB* dpb;
+  sDpb* dpb;
 
   eSliceType sliceType;
 
@@ -757,8 +759,8 @@ typedef struct Slice {
   char            chromaVectorAdjust[6][32];
 
   // virtual methods
-  int  (*nalStartCode) (struct Slice*, int);
-  void (*initLists) (struct Slice*);
+  int  (*nalStartCode) (sSlice*, int);
+  void (*initLists) (sSlice*);
   void (*readCBPcoeffs) (sMacroBlock*);
   int  (*decodeComponenet) (sMacroBlock*, eColorPlane, sPixel**, struct Picture*);
   void (*nalReadMotionInfo) (sMacroBlock*);
@@ -772,7 +774,7 @@ typedef struct Slice {
   void (*readCoef4x4cavlc) (sMacroBlock*, int, int, int, int[16], int[16], int*);
   void (*linfoCbpIntra) (int, int, int*, int*);
   void (*linfoCbpInter) (int, int, int*, int*);
-  } sSlice;
+  };
 //}}}
 //{{{  sCoding
 typedef struct {
@@ -920,7 +922,7 @@ struct sDecoder {
   sOldSlice*   oldSlice;
 
   // output
-  struct DPB*        dpb;
+  sDpb*        dpb;
   int                lastHasMmco5;
   int                dpbPoc[100];
   struct Picture*    picture;

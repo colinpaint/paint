@@ -117,9 +117,8 @@ typedef struct FrameStore {
   sPicture* botField;
   } sFrameStore;
 //}}}
-//{{{  sDPB
-// DecodedPictureBuffer
-typedef struct DPB {
+//{{{
+struct sDpb {
   sDecoder*    decoder;
 
   sFrameStore** fs;
@@ -137,7 +136,7 @@ typedef struct DPB {
   int numRefFrames;
 
   sFrameStore* lastPicture;
-  } sDPB;
+  };
 //}}}
 
 //{{{
@@ -275,17 +274,17 @@ extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX,
 extern void freePicture (sPicture* picture);
 extern void fillFrameNumGap (sDecoder* decoder, sSlice *slice);
 
-extern void updateRefList (sDPB* dpb);
-extern void updateLongTermRefList (sDPB* dpb);
-extern void getSmallestPoc (sDPB* dpb, int* poc, int* pos);
+extern void updateRefList (sDpb* dpb);
+extern void updateLongTermRefList (sDpb* dpb);
+extern void getSmallestPoc (sDpb* dpb, int* poc, int* pos);
 
-extern void initDpb (sDecoder* decoder, sDPB* dpb, int type);
-extern void reInitDpb (sDecoder* decoder, sDPB* dpb, int type);
-extern void flushDpb (sDPB* dpb);
-extern int removeUnusedDpb (sDPB* dpb);
-extern void storePictureDpb (sDPB* dpb, sPicture* picture);
-extern void removeFrameDpb (sDPB* dpb, int pos);
-extern void freeDpb (sDPB* dpb);
+extern void initDpb (sDecoder* decoder, sDpb* dpb, int type);
+extern void reInitDpb (sDecoder* decoder, sDpb* dpb, int type);
+extern void flushDpb (sDpb* dpb);
+extern int removeUnusedDpb (sDpb* dpb);
+extern void storePictureDpb (sDpb* dpb, sPicture* picture);
+extern void removeFrameDpb (sDpb* dpb, int pos);
+extern void freeDpb (sDpb* dpb);
 
 extern void initImage (sDecoder* decoder, sImage* image, sSps *sps);
 extern void freeImage (sDecoder* decoder, sImage* image);
@@ -298,7 +297,7 @@ extern void updatePicNum (sSlice* slice);
 extern void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore);
 extern void reorderRefPicList (sSlice* slice, int curList);
 extern void initMbAffLists (sDecoder* decoder, sSlice* slice);
-extern sPicture* getShortTermPic (sSlice* slice, sDPB* dpb, int picNum);
+extern sPicture* getShortTermPic (sSlice* slice, sDpb* dpb, int picNum);
 
 extern void allocRefPicListReordeBuffer (sSlice* slice);
 extern void freeRefPicListReorderBuffer (sSlice* slice);

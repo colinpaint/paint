@@ -32,7 +32,7 @@ void error (const char* text) {
   }
 //}}}
 //{{{
-static void resetDpb (sDecoder* decoder, sDPB* dpb) {
+static void resetDpb (sDecoder* decoder, sDpb* dpb) {
 
   dpb->decoder = decoder;
   dpb->initDone = 0;
@@ -379,7 +379,7 @@ sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
   decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
   decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
 
-  decoder->dpb = (sDPB*)calloc (1, sizeof(sDPB));
+  decoder->dpb = (sDpb*)calloc (1, sizeof(sDpb));
   resetDpb (decoder, decoder->dpb);
 
   decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
