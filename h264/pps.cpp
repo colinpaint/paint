@@ -86,7 +86,7 @@ static int isEqualPps (sPps* pps1, sPps* pps2) {
   }
 //}}}
 //{{{
-static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
+static void scalingList (int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix, sBitStream* s) {
 // syntax for scaling list matrix values
 
   //{{{
@@ -110,7 +110,7 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
     if (nextScale != 0) {
       int delta_scale = readSeV ("   : delta_sl   ", s);
       nextScale = (lastScale + delta_scale + 256) % 256;
-      *useDefaultScalingMatrix = (Boolean)(scanj == 0 && nextScale == 0);
+      *useDefaultScalingMatrix = (bool)(scanj == 0 && nextScale == 0);
       }
 
     scalingList[scanj] = (nextScale == 0) ? lastScale : nextScale;
@@ -168,7 +168,7 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
           NumberBitsPerSliceGroupId = 1;
 
         pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
-        pps->sliceGroupId = calloc (pps->picSizeMapUnitsMinus1+1, 1);
+        pps->sliceGroupId = (byte*)calloc (pps->picSizeMapUnitsMinus1+1, 1);
         for (unsigned i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
           pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
         break;
@@ -220,7 +220,7 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
   else
     pps->chromaQpOffset2 = pps->chromaQpOffset;
 
-  pps->ok = TRUE;
+  pps->ok = true;
   }
 //}}}
 

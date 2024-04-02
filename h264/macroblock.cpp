@@ -446,7 +446,7 @@ void updateQp (sMacroBlock* mb, int qp) {
   mb->qpScaled[0] = qp + decoder->coding.bitDepthLumaQpScale;
   setChromaQp (mb);
 
-  mb->isLossless = (Boolean)((mb->qpScaled[0] == 0) && (decoder->coding.useLosslessQpPrime == 1));
+  mb->isLossless = (bool)((mb->qpScaled[0] == 0) && (decoder->coding.useLosslessQpPrime == 1));
   setReadCompCoefCavlc (mb);
   setReadCompCabac (mb);
   }
@@ -730,7 +730,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   setMbPosInfo (*mb);
 
   // reset intra mode
-  (*mb)->isIntraBlock = FALSE;
+  (*mb)->isIntraBlock = false;
 
   // reset mode info
   (*mb)->mbType = 0;
@@ -759,17 +759,17 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   memset ((*mb)->codedBlockPatterns, 0, 3 * sizeof(sCodedBlockPattern));
 
   // initialize slice->mbRess
-  if (slice->isResetCoef == FALSE) {
+  if (slice->isResetCoef == false) {
     memset (slice->mbRess[0][0], 0, MB_PIXELS * sizeof(int));
     memset (slice->mbRess[1][0], 0, decoder->mbCrSize * sizeof(int));
     memset (slice->mbRess[2][0], 0, decoder->mbCrSize * sizeof(int));
-    if (slice->isResetCoefCr == FALSE) {
+    if (slice->isResetCoefCr == false) {
       memset (slice->cof[0][0], 0, 3 * MB_PIXELS * sizeof(int));
-      slice->isResetCoefCr = TRUE;
+      slice->isResetCoefCr = true;
       }
     else
       memset (slice->cof[0][0], 0, MB_PIXELS * sizeof(int));
-    slice->isResetCoef = TRUE;
+    slice->isResetCoef = true;
     }
 
   // store filtering parameters for this MB
@@ -781,7 +781,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   }
 //}}}
 //{{{
-Boolean exitMacroblock (sSlice* slice, int eos_bit) {
+bool exitMacroblock (sSlice* slice, int eos_bit) {
 
   // The if() statement below resembles the original code, which tested
   // decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense
@@ -791,27 +791,27 @@ Boolean exitMacroblock (sSlice* slice, int eos_bit) {
 
   sDecoder* decoder = slice->decoder;
   if (slice->mbIndex == decoder->picSizeInMbs - 1)
-    return TRUE;
+    return true;
   else {
     slice->mbIndex = FmoGetNextMBNr (decoder, slice->mbIndex);
     if (slice->mbIndex == -1) {
       // End of sSlice group, MUST be end of slice
-      assert (slice->nalStartCode (slice, eos_bit) == TRUE);
-      return TRUE;
+      assert (slice->nalStartCode (slice, eos_bit) == true);
+      return true;
       }
 
-    if (slice->nalStartCode (slice, eos_bit) == FALSE)
-      return FALSE;
+    if (slice->nalStartCode (slice, eos_bit) == false)
+      return false;
 
     if ((slice->sliceType == eSliceI)  ||
         (slice->sliceType == eSliceSI) ||
         (decoder->activePps->entropyCoding == eCabac))
-      return TRUE;
+      return true;
 
     if (slice->codCount <= 0)
-      return TRUE;
+      return true;
 
-    return FALSE;
+    return false;
    }
   }
 //}}}
@@ -832,13 +832,13 @@ static void interpretMbModeP (sMacroBlock* mb) {
     mb->slice->allrefzero = (mbmode == 5);
     }
   else if (mbmode == 6) {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType = I4MB;
     memset (mb->b8mode, IBLOCK, 4 * sizeof(char));
     memset (mb->b8pdir,     -1, 4 * sizeof(char));
     }
   else if (mbmode == 31) {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType = IPCM;
     mb->codedBlockPattern = -1;
     mb->i16mode = 0;
@@ -847,7 +847,7 @@ static void interpretMbModeP (sMacroBlock* mb) {
     memset (mb->b8pdir,-1, 4 * sizeof(char));
     }
   else {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType = I16MB;
     mb->codedBlockPattern = ICBPTAB[((mbmode-7))>>2];
     mb->i16mode = ((mbmode-7)) & 0x03;
@@ -863,13 +863,13 @@ static void interpretMbModeI (sMacroBlock* mb) {
 
   short mbmode = mb->mbType;
   if (mbmode == 0) {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType = I4MB;
     memset (mb->b8mode,IBLOCK,4 * sizeof(char));
     memset (mb->b8pdir,-1,4 * sizeof(char));
     }
   else if (mbmode == 25) {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType=IPCM;
     mb->codedBlockPattern= -1;
     mb->i16mode = 0;
@@ -877,7 +877,7 @@ static void interpretMbModeI (sMacroBlock* mb) {
     memset (mb->b8pdir,-1,4 * sizeof(char));
     }
   else {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType = I16MB;
     mb->codedBlockPattern= ICBPTAB[(mbmode-1)>>2];
     mb->i16mode = (mbmode-1) & 0x03;
@@ -921,13 +921,13 @@ static void interpretMbModeB (sMacroBlock* mb) {
     memset (mb->b8pdir, 2, 4 * sizeof(char));
     }
   else if (mbtype == 23) { // intra4x4
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mbmode = I4MB;
     memset (mb->b8mode, IBLOCK,4 * sizeof(char));
     memset (mb->b8pdir, -1,4 * sizeof(char));
     }
   else if ((mbtype > 23) && (mbtype < 48) ) { // intra16x16
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mbmode = I16MB;
     memset (mb->b8mode,  0, 4 * sizeof(char));
     memset (mb->b8pdir, -1, 4 * sizeof(char));
@@ -942,7 +942,7 @@ static void interpretMbModeB (sMacroBlock* mb) {
     memset (mb->b8pdir, offset2pdir16x16[mbtype], 4 * sizeof(char));
     }
   else if(mbtype == 48) {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mbmode = IPCM;
     memset (mb->b8mode, 0,4 * sizeof(char));
     memset (mb->b8pdir,-1,4 * sizeof(char));
@@ -973,20 +973,20 @@ static void interpretMbModeSI (sMacroBlock* mb) {
 
   short mbmode = mb->mbType;
   if (mbmode == 0) {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType = SI4MB;
     memset (mb->b8mode,IBLOCK,4 * sizeof(char));
     memset (mb->b8pdir,-1,4 * sizeof(char));
     mb->slice->siBlock[mb->mb.y][mb->mb.x]=1;
     }
   else if (mbmode == 1) {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType = I4MB;
     memset (mb->b8mode,IBLOCK,4 * sizeof(char));
     memset (mb->b8pdir,-1,4 * sizeof(char));
     }
   else if (mbmode == 26) {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType = IPCM;
     mb->codedBlockPattern= -1;
     mb->i16mode = 0;
@@ -994,7 +994,7 @@ static void interpretMbModeSI (sMacroBlock* mb) {
     memset (mb->b8pdir,-1,4 * sizeof(char));
     }
   else {
-    mb->isIntraBlock = TRUE;
+    mb->isIntraBlock = true;
     mb->mbType = I16MB;
     mb->codedBlockPattern= ICBPTAB[(mbmode-2)>>2];
     mb->i16mode = (mbmode-2) & 0x03;
@@ -1083,11 +1083,11 @@ static void readMotionInfoB (sMacroBlock* mb) {
   dataPartition = &(slice->dataPartitions[dpMap[SE_REFFRAME]]);
 
   //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
-  prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], TRUE);
+  prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], true);
   readMBRefPictureIdx (&se, dataPartition, mb, p_mv_info, LIST_0, step_v0, step_h0);
 
   //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB
-  prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_1], TRUE);
+  prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_1], true);
   readMBRefPictureIdx (&se, dataPartition, mb, p_mv_info, LIST_1, step_v0, step_h0);
 
   //=====  READ MOTION VECTORS =====
@@ -1232,7 +1232,7 @@ void checkDpNeighbours (sMacroBlock* mb) {
   decoder->getNeighbour (mb, -1,  0, decoder->mbSize[1], &left);
   decoder->getNeighbour (mb,  0, -1, decoder->mbSize[1], &up);
 
-  if ((mb->isIntraBlock == FALSE) || (!(decoder->activePps->hasConstrainedIntraPred)) ) {
+  if ((mb->isIntraBlock == false) || (!(decoder->activePps->hasConstrainedIntraPred)) ) {
     if (left.available)
       mb->dplFlag |= decoder->mbData[left.mbIndex].dplFlag;
     if (up.available)
@@ -1338,8 +1338,8 @@ int decodeMacroblock (sMacroBlock* mb, sPicture* picture) {
       slice->decodeComponenet (mb, PLANE_U, picture->imgUV[0], picture);
       slice->decodeComponenet (mb, PLANE_V, picture->imgUV[1], picture);
       }
-    slice->isResetCoef = FALSE;
-    slice->isResetCoefCr = FALSE;
+    slice->isResetCoef = false;
+    slice->isResetCoefCr = false;
     }
   else
     slice->decodeComponenet(mb, PLANE_Y, picture->imgY, picture);

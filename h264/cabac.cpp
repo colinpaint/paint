@@ -993,7 +993,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
     neighborMB = &slice->mbData[block_b.mbIndex];
     if (!((neighborMB->mbType == IPCM) || IS_DIRECT(neighborMB) ||
         (neighborMB->b8mode[b8b]==0 && neighborMB->b8pdir[b8b] == 2))) {
-      if (slice->mbAffFrame && (mb->mbField == FALSE) && (neighborMB->mbField == TRUE))
+      if (slice->mbAffFrame && (mb->mbField == false) && (neighborMB->mbField == true))
         b = (picture->mvInfo[block_b.posY][block_b.posX].refIndex[list] > 1 ? 2 : 0);
       else
         b = (picture->mvInfo[block_b.posY][block_b.posX].refIndex[list] > 0 ? 2 : 0);
@@ -1005,7 +1005,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
     neighborMB = &slice->mbData[block_a.mbIndex];
     if (!((neighborMB->mbType==IPCM) || IS_DIRECT(neighborMB) ||
         (neighborMB->b8mode[b8a]==0 && neighborMB->b8pdir[b8a]==2))) {
-      if (slice->mbAffFrame && (mb->mbField == FALSE) && (neighborMB->mbField == 1))
+      if (slice->mbAffFrame && (mb->mbField == false) && (neighborMB->mbField == 1))
         a = (picture->mvInfo[block_a.posY][block_a.posX].refIndex[list] > 1 ? 1 : 0);
       else
         a = (picture->mvInfo[block_a.posY][block_a.posX].refIndex[list] > 0 ? 1 : 0);

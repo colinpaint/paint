@@ -71,7 +71,7 @@ static int isEqualSps (sSps* sps1, sSps* sps2) {
 //}}}
 //{{{
 // syntax for scaling list matrix values
-static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefaultScalingMatrix, sBitStream* s) {
+static void scalingList (int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix, sBitStream* s) {
 
   //{{{
   static const byte ZZ_SCAN[16] = {
@@ -94,7 +94,7 @@ static void scalingList (int* scalingList, int scalingListSize, Boolean* useDefa
     if (nextScale != 0) {
       int delta_scale = readSeV ("   : delta_sl   ", s);
       nextScale = (lastScale + delta_scale + 256) % 256;
-      *useDefaultScalingMatrix = (Boolean)(scanj == 0 && nextScale == 0);
+      *useDefaultScalingMatrix = (bool)(scanj == 0 && nextScale == 0);
       }
 
     scalingList[scanj] = (nextScale == 0) ? lastScale : nextScale;
@@ -297,12 +297,12 @@ static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
     sps->cropBot = readUeV ("SPS cropBot", s);
     }
   //}}}
-  sps->hasVui = (Boolean)readU1 ("SPS hasVui", s);
+  sps->hasVui = (bool)readU1 ("SPS hasVui", s);
 
   sps->vuiSeqParams.matrix_coefficients = 2;
   readVuiFromStream (dataPartition, sps);
 
-  sps->ok = TRUE;
+  sps->ok = true;
   }
 //}}}
 

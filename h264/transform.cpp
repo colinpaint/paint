@@ -565,7 +565,7 @@ void itrans8x8 (sMacroBlock *mb, eColorPlane plane, int ioff, int joff) {
   sSlice* slice = mb->slice;
   int** m7 = slice->mbRess[plane];
 
-  if (mb->isLossless == TRUE)
+  if (mb->isLossless == true)
     recon8x8_lossless (&m7[joff], &slice->mbRec[plane][joff], &slice->mbPred[plane][joff], mb->decoder->coding.maxPelValueComp[plane], ioff);
   else {
     inverse8x8 (&m7[joff], &m7[joff], ioff);

@@ -181,7 +181,7 @@ static int intra8x8_dc_pred (sMacroBlock * mb, eColorPlane plane, int ioff, int 
   sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[eLuma];
 
-  for (int i = 0; i < 25; i++) 
+  for (int i = 0; i < 25; i++)
     PredPel[i] = 0;
 
   getNonAffNeighbour(mb, ioff - 1, joff, mbSize, &pix_a);
@@ -281,7 +281,7 @@ static int intra8x8_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int
   sPixel** mpr = slice->mbPred[plane];
   int *mbSize = decoder->mbSize[eLuma];
 
-  for (int i=0; i<25;i++) 
+  for (int i=0; i<25;i++)
     PredPel[i] = 0;
 
   getNonAffNeighbour (mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -344,7 +344,7 @@ static int intra8x8_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int 
   sPixelPos pix_a;
   sPixelPos pix_b, pix_d;
 
-  for (int i = 0;  i < 25; i++) 
+  for (int i = 0;  i < 25; i++)
     PredPel[i]=0;
 
   int jpos;
@@ -2542,19 +2542,17 @@ static int intra16x16_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
   else
     up_avail = b.available ? slice->intraBlock[b.mbIndex] : 0;
 
-  if (!up_avail)
+  if  (!up_avail)
     error ("invalid 16x16 intra pred Mode VERT_PRED_16");
 
-    {
-    sPixel** prd = &slice->mbPred[plane][0];
-    sPixel *src = &(imgY[b.posY][b.posX]);
+  sPixel** prd = &slice->mbPred[plane][0];
+  sPixel *src = &(imgY[b.posY][b.posX]);
 
-    for (j = 0; j < MB_BLOCK_SIZE; j+= 4) {
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
-      memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
-      }
+  for (j = 0; j < MB_BLOCK_SIZE; j+= 4) {
+    memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
+    memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
+    memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
+    memcpy(*prd++, src, MB_BLOCK_SIZE * sizeof(sPixel));
     }
 
   return eDecodingOk;

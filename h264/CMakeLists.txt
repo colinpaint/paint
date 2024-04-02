@@ -1,7 +1,7 @@
 # h264 JM software reference decoder library
 project (h264 VERSION 1.0.0)
   file (GLOB HEADER_FILES *.h)
-  file (GLOB SOURCE_FILES *.c)
+  file (GLOB SOURCE_FILES *.cpp)
 
   add_library (${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -9,6 +9,7 @@ project (h264 VERSION 1.0.0)
   else()
     target_compile_options (${PROJECT_NAME} PUBLIC -Wno-unused-variable
                                                    -Wno-unused-but-set-variable
+                                                   -Wno-unused-function
                                                    -Wno-unused-parameter
                                                    -Wno-implicit-fallthrough
                                                    -Wno-sign-compare

@@ -13,8 +13,7 @@
 #define REGMODE_INTER_PRED_8x8   5
 #define REGMODE_INTRA_8x8        6
 
-//{{{
-//! YUV pixel domain image arrays for a video frame
+//{{{  frame
 typedef struct frame_s {
   sDecoder* decoder;
   sPixel *yptr;
@@ -22,8 +21,7 @@ typedef struct frame_s {
   sPixel *vptr;
   } frame;
 //}}}
-//{{{
-//! region picStructure stores information about a region that is needed for conceal
+//{{{  sObjectBuffer
 typedef struct ObjectBuffer {
   byte regionMode;  //!< region mode as above
   int xMin;         //!< X coordinate of the pixel position of the top-left corner of the region
@@ -39,7 +37,7 @@ typedef struct ErcSegment {
   char  corrupted;
 } sErcSegment;
 //}}}
-//{{{
+//{{{  sErcVariables
 /* Error detector & conceal instance data picStructure */
 typedef struct ErcVariables {
   /*  Number of macroblocks (size or size/4 of the arrays) */

@@ -454,8 +454,8 @@ void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb) {
 
   if (mb->isLossless && mb->mbType == I16MB)
     invResidualTrans16x16(mb, plane);
-  else if (smb || mb->isLossless == TRUE) {
-    mb->iTrans4x4 = (smb) ? itransSp : ((mb->isLossless == FALSE) ? itrans4x4 : invResidualTrans4x4);
+  else if (smb || mb->isLossless == true) {
+    mb->iTrans4x4 = (smb) ? itransSp : ((mb->isLossless == false) ? itrans4x4 : invResidualTrans4x4);
     for (int block8x8 = 0; block8x8 < MB_BLOCK_SIZE; block8x8 += 4) {
       for (int k = block8x8; k < block8x8 + 4; ++k ) {
         int jj = ((decode_block_scan[k] >> 2) & 3) << BLOCK_SHIFT;
@@ -469,7 +469,7 @@ void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb) {
     int** cof = slice->cof[plane];
     int** mbRess = slice->mbRess[plane];
 
-    if (mb->isIntraBlock == FALSE) {
+    if (mb->isIntraBlock == false) {
       if (mb->codedBlockPattern & 0x01) {
         inverse4x4 (cof, mbRess, 0, 0);
         inverse4x4 (cof, mbRess, 0, 4);
@@ -562,7 +562,7 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
     }
 
   if (smb)
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
 
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
     sPixel** curUV;
@@ -572,15 +572,15 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
       curUV = &picture->imgUV[uv - 1][mb->piccY];
       mbRec = slice->mbRec[uv];
       if (!smb && (mb->codedBlockPattern >> 4)) {
-        if (mb->isLossless == FALSE) {
+        if (mb->isLossless == false) {
           const unsigned char *x_pos, *y_pos;
           for (int b8 = 0; b8 < (decoder->coding.numUvBlocks); ++b8) {
             x_pos = subblk_offset_x[1][b8];
             y_pos = subblk_offset_y[1][b8];
-            itrans4x4 (mb, uv, *x_pos++, *y_pos++);
-            itrans4x4 (mb, uv, *x_pos++, *y_pos++);
-            itrans4x4 (mb, uv, *x_pos++, *y_pos++);
-            itrans4x4 (mb, uv, *x_pos  , *y_pos  );
+            itrans4x4 (mb, (eColorPlane)uv, *x_pos++, *y_pos++);
+            itrans4x4 (mb, (eColorPlane)uv, *x_pos++, *y_pos++);
+            itrans4x4 (mb, (eColorPlane)uv, *x_pos++, *y_pos++);
+            itrans4x4 (mb, (eColorPlane)uv, *x_pos  , *y_pos  );
             }
           sample_reconstruct (mbRec, slice->mbPred[uv], slice->mbRess[uv], 0, 0,
             decoder->mbSize[1][0], decoder->mbSize[1][1], mb->decoder->coding.maxPelValueComp[uv], DQ_BITS);
@@ -593,25 +593,25 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
               for (int j = 0 ; j < decoder->mbCrSizeX ; j ++)
                 slice->mbRess[uv][i][j] = slice->cof[uv][i][j] ;
 
-            itrans4x4Lossless (mb, uv, *x_pos++, *y_pos++);
-            itrans4x4Lossless (mb, uv, *x_pos++, *y_pos++);
-            itrans4x4Lossless (mb, uv, *x_pos++, *y_pos++);
-            itrans4x4Lossless (mb, uv, *x_pos  , *y_pos  );
+            itrans4x4Lossless (mb, (eColorPlane)uv, *x_pos++, *y_pos++);
+            itrans4x4Lossless (mb, (eColorPlane)uv, *x_pos++, *y_pos++);
+            itrans4x4Lossless (mb, (eColorPlane)uv, *x_pos++, *y_pos++);
+            itrans4x4Lossless (mb, (eColorPlane)uv, *x_pos  , *y_pos  );
             }
           }
         copyImage (curUV, mbRec, mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
-        slice->isResetCoefCr = FALSE;
+        slice->isResetCoefCr = false;
         }
       else if (smb) {
-        mb->iTrans4x4 = (mb->isLossless == FALSE) ? itrans4x4 : itrans4x4Lossless;
+        mb->iTrans4x4 = (mb->isLossless == false) ? itrans4x4 : itrans4x4Lossless;
         itransSpChroma (mb, uv - 1);
 
         for (joff = 0; joff < decoder->mbCrSizeY; joff += BLOCK_SIZE)
           for(ioff = 0; ioff < decoder->mbCrSizeX ;ioff += BLOCK_SIZE)
-            mb->iTrans4x4 (mb, uv, ioff, joff);
+            mb->iTrans4x4 (mb, (eColorPlane)uv, ioff, joff);
 
         copyImage (curUV, mbRec, mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);
-        slice->isResetCoefCr = FALSE;
+        slice->isResetCoefCr = false;
         }
       else
         copyImage (curUV, slice->mbPred[uv], mb->pixcX, 0, decoder->mbSize[1][0], decoder->mbSize[1][1]);

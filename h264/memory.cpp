@@ -4,6 +4,20 @@
 //}}}
 
 //{{{
+/*!
+** **********************************************************************
+ * \brief
+ *    Exit program if memory allocation failed (using error())
+ * \param where
+ *    string indicating which memory allocation failed
+** **********************************************************************
+ */
+void noMemoryExit (const char* where) {
+   error ("Could not allocate memory");
+  }
+//}}}
+
+//{{{
 int initTopBotPlanes (sPixel** imgFrame, int dim0, sPixel** *imgTopField, sPixel** *imgBotField)
 {
   int i;
@@ -1185,19 +1199,6 @@ void freeMem5Dint (int***** array5D)
 }
 //}}}
 
-//{{{
-/*!
-** **********************************************************************
- * \brief
- *    Exit program if memory allocation failed (using error())
- * \param where
- *    string indicating which memory allocation failed
-** **********************************************************************
- */
-void noMemoryExit (char *where) {
-   error ("Could not allocate memory");
-  }
-//}}}
 //{{{
 /*!
 ** **********************************************************************

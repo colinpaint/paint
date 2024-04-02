@@ -14,7 +14,7 @@ static void allocDecodedPicBuffers (sDecoder* decoder, sDecodedPic* decodedPic, 
     memFree (decodedPic->yBuf);
 
     decodedPic->bufSize = frameSize;
-    decodedPic->yBuf = memAlloc (decodedPic->bufSize);
+    decodedPic->yBuf = (byte*)memAlloc (decodedPic->bufSize);
     decodedPic->uBuf = decodedPic->yBuf + lumaSize;
     decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
 
@@ -283,7 +283,7 @@ static void flushDirectOutput (sDecoder* decoder) {
 void allocOutput (sDecoder* decoder) {
 
   decoder->outBuffer = allocFrameStore();
-  decoder->pendingOut = calloc (sizeof(sPicture), 1);
+  decoder->pendingOut = (sPicture*)calloc (sizeof(sPicture), 1);
   decoder->pendingOut->imgUV = NULL;
   decoder->pendingOut->imgY = NULL;
   }

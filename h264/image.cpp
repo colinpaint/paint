@@ -1407,7 +1407,7 @@ void initOldSlice (sOldSlice* oldSlice) {
   oldSlice->frameNum = INT_MAX;
 
   oldSlice->nalRefIdc = INT_MAX;
-  oldSlice->isIDR = FALSE;
+  oldSlice->isIDR = false;
 
   oldSlice->picOrderCountLsb = UINT_MAX;
   oldSlice->deltaPicOrderCountBot = INT_MAX;
@@ -1985,7 +1985,7 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   output->bitDepth[2] = source->bitDepth[2] = decoder->bitDepthChroma;
 
   output->colourModel = source->colourModel;
-  output->yuvFormat = source->yuvFormat = sps->chromaFormatIdc;
+  output->yuvFormat = source->yuvFormat = (eYuvFormat)sps->chromaFormatIdc;
   }
 //}}}
 
@@ -2290,7 +2290,7 @@ static void endDecodeFrame (sDecoder* decoder) {
       decodedPic = decodedPic->next;
       }
 
-    decoder->debug.outSliceType = sliceType;
+    decoder->debug.outSliceType = (eSliceType)sliceType;
 
     sprintf (decoder->debug.outStr, "%d %d:%d:%02d %3dms ->%s-> poc:%d pic:%d -> %d",
              decoder->decodeFrameNum,
@@ -2464,7 +2464,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->frameNum = slice->frameNum;
   picture->recoveryFrame = (unsigned int)((int)slice->frameNum == decoder->recoveryFrameNum);
   picture->codedFrame = (slice->picStructure == eFrame);
-  picture->chromaFormatIdc = activeSps->chromaFormatIdc;
+  picture->chromaFormatIdc = (eYuvFormat)activeSps->chromaFormatIdc;
   picture->frameMbOnly = activeSps->frameMbOnly;
   picture->cropFlag = activeSps->cropFlag;
   if (picture->cropFlag) {
@@ -2755,7 +2755,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
       decoder->coding.picStructure = slice->botField ? eBotField : eTopField;
       }
     else {
-      slice->botField = FALSE;
+      slice->botField = false;
       decoder->coding.picStructure = eFrame;
       }
     }
@@ -3015,7 +3015,7 @@ static int readSlice (sSlice* slice) {
     switch (nalu->unitType) {
       case NALU_TYPE_SLICE:
       //{{{
-      case NALU_TYPE_IDR:
+      case NALU_TYPE_IDR: {
         // recovery
         if (decoder->recoveryPoint || nalu->unitType == NALU_TYPE_IDR) {
           if (!decoder->recoveryPointFound) {
@@ -3087,10 +3087,11 @@ static int readSlice (sSlice* slice) {
           printf ("%s\n", decoder->debug.sliceStr);
 
         return curHeader;
+        }
       //}}}
 
       //{{{
-      case NALU_TYPE_SPS:
+      case NALU_TYPE_SPS: {
         int spsId = readNaluSps (decoder, nalu);
         if (decoder->param.spsDebug) {
           char str[128];
@@ -3098,9 +3099,10 @@ static int readSlice (sSlice* slice) {
           printf ("%s\n", str);
           }
         break;
+        }
       //}}}
       //{{{
-      case NALU_TYPE_PPS:
+      case NALU_TYPE_PPS: {
         int ppsId = readNaluPps (decoder, nalu);
         if (decoder->param.ppsDebug) {
           char str[128];
@@ -3108,6 +3110,7 @@ static int readSlice (sSlice* slice) {
           printf ("%s\n", str);
           }
         break;
+        }
       //}}}
 
       case NALU_TYPE_SEI:
@@ -3115,20 +3118,20 @@ static int readSlice (sSlice* slice) {
         break;
 
       //{{{
-      case NALU_TYPE_DPA:
+      case NALU_TYPE_DPA: {
         printf ("DPA id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
 
         if (!decoder->recoveryPointFound)
           break;
 
         // read dataPartition A
-        slice->isIDR = FALSE;
+        slice->isIDR = false;
         slice->refId = nalu->refId;
         slice->noDataPartitionB = 1;
         slice->noDataPartitionC = 1;
         slice->dataPartitionMode = eDataPartition3;
         slice->maxDataPartitions = 3;
-        s = slice->dataPartitions[0].stream;
+        sBitStream* s = slice->dataPartitions[0].stream;
         s->errorFlag = 0;
         s->bitStreamOffset = s->readLen = 0;
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
@@ -3217,6 +3220,7 @@ static int readSlice (sSlice* slice) {
           goto processNalu;
 
         return curHeader;
+        }
       //}}}
       //{{{
       case NALU_TYPE_DPB:
@@ -3246,7 +3250,7 @@ static int readSlice (sSlice* slice) {
 //{{{
 static void decodeSlice (sSlice* slice) {
 
-  Boolean endOfSlice = FALSE;
+  bool endOfSlice = false;
 
   slice->codCount = -1;
 
@@ -3321,8 +3325,8 @@ int decodeFrame (sDecoder* decoder) {
     slice->numDecodedMbs = 0;
     slice->coefCount = -1;
     slice->pos = 0;
-    slice->isResetCoef = FALSE;
-    slice->isResetCoefCr = FALSE;
+    slice->isResetCoef = false;
+    slice->isResetCoefCr = false;
 
     curHeader = readSlice (slice);
     slice->curHeader = curHeader;

@@ -714,7 +714,7 @@ static int intra4x4_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff
   for (int i = 0; i < 4; ++i)
     getAffNeighbour (mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
 
-  int block_available_left;
+  int block_available_left = 1;
   if (decoder->activePps->hasConstrainedIntraPred)
     for (int i = 0, block_available_left = 1; i < 4; ++i)
       block_available_left &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
@@ -1011,7 +1011,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int i
   for (int i = 0; i < 4; ++i)
     getAffNeighbour(mb, ioff -1 , joff +i , decoder->mbSize[eLuma], &pix_a[i]);
 
-  int block_available_left;
+  int block_available_left = 1;
   if (decoder->activePps->hasConstrainedIntraPred)
     for (int i = 0, block_available_left = 1; i < 4; ++i)
       block_available_left &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;

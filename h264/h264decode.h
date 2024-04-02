@@ -20,19 +20,9 @@ typedef struct dec_set_t {
   int bDecCompAdapt;
   } DecSet_t;
 
-//{{{
-#ifdef __cplusplus
-  extern "C" {
-#endif
-//}}}
-  int SetOptsDecoder (DecSet_t* pDecOpts);
+int SetOptsDecoder (DecSet_t* pDecOpts);
 
-  sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize);
-  int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList);
-  void finishDecoder (sDecoder* decoder, sDecodedPic** decPicList);
-  void closeDecoder (sDecoder* decoder);
-//{{{
-#ifdef __cplusplus
-  }
-#endif
-//}}}
+sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize);
+int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList);
+void finishDecoder (sDecoder* decoder, sDecodedPic** decPicList);
+void closeDecoder (sDecoder* decoder);

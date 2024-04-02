@@ -23,15 +23,6 @@ typedef uint16 distpel;   // distortion type (for pixels)
 typedef int32  distblk;   // distortion type (for sMacroBlock)
 typedef int32  transpel;  // transformed coefficient type
 
-//! Boolean Type
-#ifdef FALSE
-  #define Boolean int
-#else
-  typedef enum {
-    FALSE,
-    TRUE
-    } Boolean;
-#endif
 
 #define MAX_NUM_SLICES          8
 #define MAX_REFERENCE_PICTURES  32       // H.264 allows 32 fields
@@ -473,10 +464,10 @@ typedef struct MacroBlock {
   int     mbIndexC;
   int     mbIndexD;
 
-  Boolean mbAvailA;
-  Boolean mbAvailB;
-  Boolean mbAvailC;
-  Boolean mbAvailD;
+  bool mbAvailA;
+  bool mbAvailB;
+  bool mbAvailC;
+  bool mbAvailD;
 
   sBlockPos mb;
   int     blockX;
@@ -494,9 +485,9 @@ typedef struct MacroBlock {
   int     qpc[2];               // QP chroma
   int     qpScaled[MAX_PLANE];  // QP scaled for all comps.
 
-  Boolean isLossless;
-  Boolean isIntraBlock;
-  Boolean isVblock;
+  bool isLossless;
+  bool isIntraBlock;
+  bool isVblock;
   int     DeblockCall;
 
   short   sliceNum;
@@ -527,7 +518,7 @@ typedef struct MacroBlock {
   short deblockFilterC0Offset;
   short deblockFilterBetaOffset;
 
-  Boolean mbField;
+  bool mbField;
 
   // Flag for MBAFF deblocking;
   byte  mixedModeEdgeFlag;
@@ -536,8 +527,8 @@ typedef struct MacroBlock {
   byte strengthV[4][4];
   byte strengthH[4][16];
 
-  Boolean lumaTransformSize8x8flag;
-  Boolean noMbPartLessThan8x8Flag;
+  bool lumaTransformSize8x8flag;
+  bool noMbPartLessThan8x8Flag;
 
   // virtual methods
   void (*iTrans4x4) (struct MacroBlock*, eColorPlane, int, int);
@@ -632,7 +623,7 @@ typedef struct Slice {
   int idrPicId;
   int refId;
   int transform8x8Mode;
-  Boolean chroma444notSeparate; // indicates chroma 4:4:4 coding with isSeperateColourPlane equal to zero
+  bool chroma444notSeparate; // indicates chroma 4:4:4 coding with isSeperateColourPlane equal to zero
 
   int topPoc;   // poc for this top field
   int botPoc;   // poc of bottom field of frame
@@ -712,8 +703,8 @@ typedef struct Slice {
   int   noDataPartitionB;  // non-zero, if data dataPartition B is lost
   int   noDataPartitionC;  // non-zero, if data dataPartition C is lost
 
-  Boolean   isResetCoef;
-  Boolean   isResetCoefCr;
+  bool   isResetCoef;
+  bool   isResetCoefCr;
   sPixel*** mbPred;
   sPixel*** mbRec;
   int***    mbRess;
@@ -1052,7 +1043,7 @@ static inline int isFrextProfile (unsigned profileIdc) {
   }
 //}}}
 //{{{
-static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrainedSet3flag) {
+static inline int isHiIntraOnlyProfile (unsigned profileIdc, bool constrainedSet3flag) {
   return (((profileIdc == FREXT_Hi10P) ||
            (profileIdc == FREXT_Hi422) ||
            (profileIdc == FREXT_Hi444)) && constrainedSet3flag) ||
@@ -1060,33 +1051,23 @@ static inline int isHiIntraOnlyProfile (unsigned profileIdc, Boolean constrained
   }
 //}}}
 
-//{{{
-#ifdef __cplusplus
-  extern "C" {
-#endif
-//}}}
-  extern sDecoder* gDecoder;
+extern sDecoder* gDecoder;
 
-  extern void error (char* text);
+extern void error (const char* text);
 
-  extern void initGlobalBuffers (sDecoder* decoder);
-  extern void freeGlobalBuffers (sDecoder* decoder);
-  extern void freeLayerBuffers (sDecoder* decoder);
+extern void initGlobalBuffers (sDecoder* decoder);
+extern void freeGlobalBuffers (sDecoder* decoder);
+extern void freeLayerBuffers (sDecoder* decoder);
 
-  extern sDataPartition* allocDataPartitions (int n);
-  extern void freeDataPartitions (sDataPartition* dataPartitions, int n);
+extern sDataPartition* allocDataPartitions (int n);
+extern void freeDataPartitions (sDataPartition* dataPartitions, int n);
 
-  extern sSlice* allocSlice (sDecoder* decoder);
+extern sSlice* allocSlice (sDecoder* decoder);
 
-  extern sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
-  extern void clearDecodedPictures (sDecoder* decoder);
-  extern void freeDecodedPictures (sDecodedPic* decodedPic);
+extern sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
+extern void clearDecodedPictures (sDecoder* decoder);
+extern void freeDecodedPictures (sDecodedPic* decodedPic);
 
-  // For 4:4:4 independent mode
-  extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);
-  extern void makeFramePictureJV (sDecoder* decoder );
-//{{{
-#ifdef __cplusplus
-}
-#endif
-//}}}
+// For 4:4:4 independent mode
+extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);
+extern void makeFramePictureJV (sDecoder* decoder );

@@ -2,7 +2,7 @@
 #include "global.h"
 #include "buffer.h"
 
-extern void noMemoryExit (char *where);
+extern void noMemoryExit (const char* where);
 //{{{
 static inline void* memAlloc (size_t nitems) {
 

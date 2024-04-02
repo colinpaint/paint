@@ -50,7 +50,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
   sPicture** list0 = slice->listX[LIST_0 + listOffset];
   sPicture** list1 = slice->listX[LIST_1 + listOffset];
 
-  Boolean has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) |
+  bool has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) |
                        (mb->b8mode[2] == 0) | (mb->b8mode[3] == 0);
   if (has_direct) {
     int mv_scale = 0;
@@ -355,7 +355,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 //{{{
 static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
 {
-  Boolean has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) | (mb->b8mode[2] == 0) | (mb->b8mode[3] == 0);
+  bool has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) | (mb->b8mode[2] == 0) | (mb->b8mode[3] == 0);
 
   if (has_direct)
   {
@@ -514,7 +514,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
 //{{{
 static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
 {
-  Boolean has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) | (mb->b8mode[2] == 0) | (mb->b8mode[3] == 0);
+  bool has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) | (mb->b8mode[2] == 0) | (mb->b8mode[3] == 0);
 
   if (has_direct)
   {
@@ -1630,7 +1630,7 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
 
   for(uv = 0; uv < 2; uv++)
   {
-    mb->iTrans4x4 = (mb->isLossless == FALSE) ? itrans4x4 : itrans4x4Lossless;
+    mb->iTrans4x4 = (mb->isLossless == false) ? itrans4x4 : itrans4x4Lossless;
 
     curUV = picture->imgUV[uv];
 
@@ -1658,7 +1658,7 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
           copyImage4x4(&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
         }
       }
-      slice->isResetCoefCr = FALSE;
+      slice->isResetCoefCr = false;
     }
     else if (mb->mbType == SI4MB)
     {
@@ -1672,7 +1672,7 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
           copyImage4x4 (&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
         }
       }
-      slice->isResetCoefCr = FALSE;
+      slice->isResetCoefCr = false;
     }
     else
     {

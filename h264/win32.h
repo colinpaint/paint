@@ -58,13 +58,13 @@
   #define OPENFLAGS_READ  O_RDONLY
   #define OPEN_PERMISSIONS S_IRUSR | S_IWUSR
 
-  #if __STDC_VERSION__ >= 199901L
+  //#if __STDC_VERSION__ >= 199901L
      /* "inline" is a keyword */
-  #else
-    #define inline /* nothing */
-  #endif
+  //#else
+  //  #define inline /* nothing */
+  //#endif
 
-  #define forceinline inline
+  //#define forceinline inline
 
   typedef long long int64;
   typedef unsigned long long  uint64;

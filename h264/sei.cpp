@@ -68,23 +68,23 @@ typedef enum {
 //{{{  frame_packing_arrangement_information_struct
 typedef struct {
   unsigned int  frame_packing_arrangement_id;
-  Boolean       frame_packing_arrangement_cancel_flag;
+  bool       frame_packing_arrangement_cancel_flag;
   unsigned char frame_packing_arrangement_type;
-  Boolean       quincunx_sampling_flag;
+  bool       quincunx_sampling_flag;
   unsigned char content_interpretation_type;
-  Boolean       spatial_flipping_flag;
-  Boolean       frame0_flipped_flag;
-  Boolean       field_views_flag;
-  Boolean       current_frame_is_frame0_flag;
-  Boolean       frame0_self_contained_flag;
-  Boolean       frame1_self_contained_flag;
+  bool       spatial_flipping_flag;
+  bool       frame0_flipped_flag;
+  bool       field_views_flag;
+  bool       current_frame_is_frame0_flag;
+  bool       frame0_self_contained_flag;
+  bool       frame1_self_contained_flag;
   unsigned char frame0_grid_position_x;
   unsigned char frame0_grid_position_y;
   unsigned char frame1_grid_position_x;
   unsigned char frame1_grid_position_y;
   unsigned char frame_packing_arrangement_reserved_byte;
   unsigned int  frame_packing_arrangement_repetition_period;
-  Boolean       frame_packing_arrangement_extension_flag;
+  bool       frame_packing_arrangement_extension_flag;
   } frame_packing_arrangement_information_struct;
 //}}}
 //{{{  Green_metadata_information_struct
@@ -168,7 +168,7 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
     return;
     }
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -178,7 +178,7 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
 
     int cpb_removal_len = 24;
     int dpb_output_len = 24;
-    Boolean cpbDpb = (Boolean)(activeSps->hasVui &&
+    bool cpbDpb = (bool)(activeSps->hasVui &&
                                (activeSps->vuiSeqParams.nal_hrd_parameters_present_flag ||
                                 activeSps->vuiSeqParams.vcl_hrd_parameters_present_flag));
 
@@ -319,7 +319,7 @@ static void processPictureTiming (byte* payload, int size, sDecoder* decoder) {
 //{{{
 static void processPanScan (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -348,7 +348,7 @@ static void processPanScan (byte* payload, int size, sDecoder* decoder) {
 //{{{
 static void processRecoveryPoint (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -370,7 +370,7 @@ static void processRecoveryPoint (byte* payload, int size, sDecoder* decoder) {
 //{{{
 static void processDecRefPicMarkingRepetition (byte* payload, int size, sDecoder* decoder, sSlice *slice) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -406,7 +406,7 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
   int m, n, left, right, top, bottom,directx, directy;
   byte*** map;
 
-  buf = malloc (sizeof(sBitStream));
+  buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -564,7 +564,7 @@ static void process_spare_pic (byte* payload, int size, sDecoder* decoder) {
 //{{{
 static void process_subsequence_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -601,7 +601,7 @@ static void process_subsequence_layer_characteristics_info (byte* payload, int s
   sBitStream* buf;
   long num_sub_layers, accurate_statistics_flag, average_bit_rate, average_frame_rate;
 
-  buf = malloc (sizeof(sBitStream));
+  buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamLen = size;
   buf->bitStreamOffset = 0;
@@ -628,7 +628,7 @@ static void process_subsequence_layer_characteristics_info (byte* payload, int s
 //{{{
 static void process_subsequence_characteristics_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamLen = size;
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
@@ -684,7 +684,7 @@ static void process_subsequence_characteristics_info (byte* payload, int size, s
 static void process_scene_information (byte* payload, int size, sDecoder* decoder) {
 
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamLen = size;
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
@@ -726,7 +726,7 @@ static void process_filler_payload_info (byte* payload, int size, sDecoder* deco
 //{{{
 static void process_full_frame_freeze_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -748,7 +748,7 @@ static void process_full_frame_freeze_release_info (byte* payload, int size, sDe
 //{{{
 static void process_full_frame_snapshot_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -764,7 +764,7 @@ static void process_full_frame_snapshot_info (byte* payload, int size, sDecoder*
 //{{{
 static void process_progressive_refinement_start_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -781,7 +781,7 @@ static void process_progressive_refinement_start_info (byte* payload, int size, 
 //{{{
 static void process_progressive_refinement_end_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -796,7 +796,7 @@ static void process_progressive_refinement_end_info (byte* payload, int size, sD
 //{{{
 static void process_motion_constrained_slice_group_set_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -837,7 +837,7 @@ static void processFilmGrain (byte* payload, int size, sDecoder* decoder) {
   int comp_model_value;
   int film_grain_characteristics_repetition_period;
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -903,7 +903,7 @@ static void processFilmGrain (byte* payload, int size, sDecoder* decoder) {
 //{{{
 static void processDeblockFilterDisplayPref (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -926,7 +926,7 @@ static void processDeblockFilterDisplayPref (byte* payload, int size, sDecoder* 
 //{{{
 static void processStereoVideo (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -955,7 +955,7 @@ static void processStereoVideo (byte* payload, int size, sDecoder* decoder) {
 //{{{
 static void processBufferingPeriod (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -1002,7 +1002,7 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
 
   frame_packing_arrangement_information_struct seiFramePackingArrangement;
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -1015,7 +1015,7 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
     readU1( "SEI frame_packing_arrangement_cancel_flag", buf);
   printf("frame_packing_arrangement_id = %d\n", seiFramePackingArrangement.frame_packing_arrangement_id);
   printf("frame_packing_arrangement_cancel_flag = %d\n", seiFramePackingArrangement.frame_packing_arrangement_cancel_flag);
-  if ( seiFramePackingArrangement.frame_packing_arrangement_cancel_flag == FALSE ) {
+  if ( seiFramePackingArrangement.frame_packing_arrangement_cancel_flag == false ) {
     seiFramePackingArrangement.frame_packing_arrangement_type =
       (unsigned char)readUv( 7, "SEI frame_packing_arrangement_type", buf);
     seiFramePackingArrangement.quincunx_sampling_flag =
@@ -1039,7 +1039,7 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
     printf ("current_frame_is_frame0_flag      = %d\n", seiFramePackingArrangement.current_frame_is_frame0_flag);
     printf ("frame0_self_contained_flag        = %d\n", seiFramePackingArrangement.frame0_self_contained_flag);
     printf ("frame1_self_contained_flag        = %d\n", seiFramePackingArrangement.frame1_self_contained_flag);
-    if (seiFramePackingArrangement.quincunx_sampling_flag == FALSE &&
+    if (seiFramePackingArrangement.quincunx_sampling_flag == false &&
         seiFramePackingArrangement.frame_packing_arrangement_type != 5 )  {
       seiFramePackingArrangement.frame0_grid_position_x =
         (unsigned char)readUv( 4, "SEI frame0_grid_position_x", buf);
@@ -1070,7 +1070,7 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
 //{{{
 static void process_post_filter_hints_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
@@ -1107,7 +1107,7 @@ static void process_post_filter_hints_info (byte* payload, int size, sDecoder* d
 //{{{
 static void process_green_metadata_info (byte* payload, int size, sDecoder* decoder) {
 
-  sBitStream* buf = malloc (sizeof(sBitStream));
+  sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;

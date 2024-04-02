@@ -188,7 +188,7 @@ static int FmoGenerateMapUnitToSliceGroupMap (sDecoder* decoder, sSlice* slice) 
   if (decoder->mapUnitToSliceGroupMap)
     free (decoder->mapUnitToSliceGroupMap);
 
-  if ((decoder->mapUnitToSliceGroupMap = malloc ((NumSliceGroupMapUnits) * sizeof (int))) == NULL) {
+  if ((decoder->mapUnitToSliceGroupMap = (int*)malloc ((NumSliceGroupMapUnits) * sizeof (int))) == NULL) {
     printf ("cannot allocated %d bytes for decoder->mapUnitToSliceGroupMap, exit\n", (int) ( (pps->picSizeMapUnitsMinus1+1) * sizeof (int)));
     exit (-1);
     }
@@ -236,7 +236,7 @@ static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *slice) {
   if (decoder->mbToSliceGroupMap)
     free (decoder->mbToSliceGroupMap);
 
-  if ((decoder->mbToSliceGroupMap = malloc ((decoder->picSizeInMbs) * sizeof (int))) == NULL) {
+  if ((decoder->mbToSliceGroupMap = (int*)malloc ((decoder->picSizeInMbs) * sizeof (int))) == NULL) {
     printf ("cannot allocate %d bytes for decoder->mbToSliceGroupMap, exit\n",
             (int) ((decoder->picSizeInMbs) * sizeof (int)));
     exit (-1);

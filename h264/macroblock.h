@@ -144,7 +144,7 @@ extern void getNeighbours (sMacroBlock* mb, sPixelPos *block, int mb_x, int mb_y
 
 extern void startMacroblock (sSlice* slice, sMacroBlock** mb);
 extern int decodeMacroblock (sMacroBlock* mb, sPicture* picture);
-extern Boolean exitMacroblock (sSlice* slice, int eos_bit);
+extern bool exitMacroblock (sSlice* slice, int eos_bit);
 
 extern void updateQp (sMacroBlock* mb, int qp);
 

@@ -214,7 +214,7 @@ static int outputDpbFrame (sDPB* dpb) {
 // picMotion
 //{{{
 void allocPicMotion (sPicMotionOld* motion, int sizeY, int sizeX) {
-  motion->mbField = calloc (sizeY * sizeX, sizeof(byte));
+  motion->mbField = (byte*)calloc (sizeY * sizeX, sizeof(byte));
   }
 //}}}
 //{{{
@@ -229,7 +229,7 @@ void freePicMotion (sPicMotionOld* motion) {
 //{{{
 sFrameStore* allocFrameStore() {
 
-  sFrameStore* fs = calloc (1, sizeof(sFrameStore));
+  sFrameStore* fs = (sFrameStore*)calloc (1, sizeof(sFrameStore));
 
   fs->isUsed = 0;
   fs->isReference = 0;
@@ -663,7 +663,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
                         int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput) {
 
   sSps* activeSps = decoder->activeSps;
-  sPicture* s = calloc (1, sizeof(sPicture));
+  sPicture* s = (sPicture*)calloc (1, sizeof(sPicture));
 
   if (picStructure != eFrame) {
     sizeY /= 2;
@@ -730,7 +730,7 @@ sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
   if (!decoder->activeSps->frameMbOnly && picStructure != eFrame)
     for (int j = 0; j < MAX_NUM_SLICES; j++)
       for (int i = 0; i < 2; i++) {
-        s->listX[j][i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
+        s->listX[j][i] = (sPicture**)calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
         if (!s->listX[j][i])
           noMemoryExit ("allocPicture: s->listX[i]");
         }
@@ -1552,15 +1552,15 @@ void initDpb (sDecoder* decoder, sDPB* dpb, int type) {
   dpb->refFramesInBuffer = 0;
   dpb->longTermRefFramesInBuffer = 0;
 
-  dpb->fs = calloc (dpb->size, sizeof (sFrameStore*));
+  dpb->fs = (sFrameStore**)calloc (dpb->size, sizeof (sFrameStore*));
   if (!dpb->fs)
     noMemoryExit ("initDpb: dpb->fs");
 
-  dpb->fsRef = calloc (dpb->size, sizeof (sFrameStore*));
+  dpb->fsRef = (sFrameStore**)calloc (dpb->size, sizeof (sFrameStore*));
   if (!dpb->fsRef)
     noMemoryExit ("initDpb: dpb->fsRef");
 
-  dpb->fsLongTermRef = calloc (dpb->size, sizeof (sFrameStore*));
+  dpb->fsLongTermRef = (sFrameStore**)calloc (dpb->size, sizeof (sFrameStore*));
   if (!dpb->fsLongTermRef)
     noMemoryExit ("initDpb: dpb->fsLongTermRef");
 
@@ -1597,15 +1597,15 @@ void reInitDpb (sDecoder* decoder, sDPB* dpb, int type) {
     if (dpb->size < activeSps->numRefFrames)
       error ("DPB size at specified level is smaller than the specified number of reference frames\n");
 
-    dpb->fs = realloc (dpb->fs, dpbSize * sizeof (sFrameStore*));
+    dpb->fs = (sFrameStore**)realloc (dpb->fs, dpbSize * sizeof (sFrameStore*));
     if (!dpb->fs)
       noMemoryExit ("reInitDpb: dpb->fs");
 
-    dpb->fsRef = realloc(dpb->fsRef, dpbSize * sizeof (sFrameStore*));
+    dpb->fsRef = (sFrameStore**)realloc(dpb->fsRef, dpbSize * sizeof (sFrameStore*));
     if (!dpb->fsRef)
       noMemoryExit ("reInitDpb: dpb->fsRef");
 
-    dpb->fsLongTermRef = realloc(dpb->fsLongTermRef, dpbSize * sizeof (sFrameStore*));
+    dpb->fsLongTermRef = (sFrameStore**)realloc(dpb->fsLongTermRef, dpbSize * sizeof (sFrameStore*));
     if (!dpb->fsLongTermRef)
       noMemoryExit ("reInitDpb: dpb->fsLongTermRef");
 
@@ -2155,10 +2155,10 @@ void initListsSliceP (sSlice* slice) {
     slice->listXsize[0] = (char) list0idx;
     }
   else {
-    fsList0 = calloc (dpb->size, sizeof(sFrameStore*));
+    fsList0 = (sFrameStore**)calloc (dpb->size, sizeof(sFrameStore*));
     if (!fsList0)
       noMemoryExit ("initLists: fsList0");
-    fsListLongTerm = calloc (dpb->size, sizeof(sFrameStore*));
+    fsListLongTerm = (sFrameStore**)calloc (dpb->size, sizeof(sFrameStore*));
     if (!fsListLongTerm)
       noMemoryExit ("initLists: fsListLongTerm");
 
@@ -2251,9 +2251,9 @@ void initListsSliceB (sSlice* slice) {
     //}}}
   else {
     //{{{  field
-    fsList0 = calloc(dpb->size, sizeof (sFrameStore*));
-    fs_list1 = calloc(dpb->size, sizeof (sFrameStore*));
-    fsListLongTerm = calloc(dpb->size, sizeof (sFrameStore*));
+    fsList0 = (sFrameStore**)calloc(dpb->size, sizeof (sFrameStore*));
+    fs_list1 = (sFrameStore**)calloc(dpb->size, sizeof (sFrameStore*));
+    fsListLongTerm = (sFrameStore**)calloc(dpb->size, sizeof (sFrameStore*));
     slice->listXsize[0] = 0;
     slice->listXsize[1] = 1;
 
@@ -2358,11 +2358,11 @@ void allocRefPicListReordeBuffer (sSlice* slice) {
 
   if (slice->sliceType != eSliceI && slice->sliceType != eSliceSI) {
     int size = slice->numRefIndexActive[LIST_0] + 1;
-    if ((slice->modPicNumsIdc[LIST_0] = calloc (size ,sizeof(int))) == NULL)
+    if ((slice->modPicNumsIdc[LIST_0] = (int*)calloc (size ,sizeof(int))) == NULL)
        noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l0");
-    if ((slice->absDiffPicNumMinus1[LIST_0] = calloc (size,sizeof(int))) == NULL)
+    if ((slice->absDiffPicNumMinus1[LIST_0] = (int*)calloc (size,sizeof(int))) == NULL)
        noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l0");
-    if ((slice->longTermPicIndex[LIST_0] = calloc (size,sizeof(int))) == NULL)
+    if ((slice->longTermPicIndex[LIST_0] = (int*)calloc (size,sizeof(int))) == NULL)
        noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l0");
     }
   else {
@@ -2373,11 +2373,11 @@ void allocRefPicListReordeBuffer (sSlice* slice) {
 
   if (slice->sliceType == eSliceB) {
     int size = slice->numRefIndexActive[LIST_1] + 1;
-    if ((slice->modPicNumsIdc[LIST_1] = calloc (size,sizeof(int))) == NULL)
+    if ((slice->modPicNumsIdc[LIST_1] = (int*)calloc (size,sizeof(int))) == NULL)
       noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l1");
-    if ((slice->absDiffPicNumMinus1[LIST_1] = calloc (size,sizeof(int))) == NULL)
+    if ((slice->absDiffPicNumMinus1[LIST_1] = (int*)calloc (size,sizeof(int))) == NULL)
       noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l1");
-    if ((slice->longTermPicIndex[LIST_1] = calloc (size,sizeof(int))) == NULL)
+    if ((slice->longTermPicIndex[LIST_1] = (int*)calloc (size,sizeof(int))) == NULL)
       noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l1");
     }
   else {

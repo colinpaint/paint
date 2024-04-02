@@ -1574,12 +1574,12 @@ private:
       }
     }
   //}}}
-  static inline const ImVec4 kGrey =   {0.5f, 0.5f, 0.5f, 1.f};
-  static inline const ImVec4 kWhite =  {1.f,  1.f,  1.f,  1.f};
-  static inline const ImVec4 kYellow = {1.f,  1.f,  0.5f, 1.f};
-  static inline const ImVec4 kRed =    {1.f,  0.5f, 0.5f, 1.f};
-  static inline const ImVec4 kBlue =   {0.5f, 0.5f, 1.f,  1.f};
-  static inline const ImVec4 kMauve =  {1.f,  0.f,  0.5f, 1.f};
+  static constexpr ImVec4 kGrey =   {0.5f, 0.5f, 0.5f, 1.f};
+  static constexpr ImVec4 kWhite =  {1.f,  1.f,  1.f,  1.f};
+  static constexpr ImVec4 kYellow = {1.f,  1.f,  0.5f, 1.f};
+  static constexpr ImVec4 kRed =    {1.f,  0.5f, 0.5f, 1.f};
+  static constexpr ImVec4 kBlue =   {0.5f, 0.5f, 1.f,  1.f};
+  static constexpr ImVec4 kMauve =  {1.f,  0.f,  0.5f, 1.f};
 
   // vars
   cView* mView;

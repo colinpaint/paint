@@ -6,9 +6,10 @@
 //}}}
 
 //{{{
-int readUeV (char* label, sBitStream* s) {
+int readUeV (const char* label, sBitStream* s) {
 
-  sSyntaxElement symbol = {.value1 = 0 };
+  sSyntaxElement symbol;
+  symbol.value1 = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   readsSyntaxElement_VLC (&symbol, s);
@@ -20,9 +21,10 @@ int readUeV (char* label, sBitStream* s) {
   }
 //}}}
 //{{{
-int readSeV (char* label, sBitStream* s) {
+int readSeV (const char* label, sBitStream* s) {
 
-  sSyntaxElement symbol = {.value1 = 0 };
+  sSyntaxElement symbol;
+  symbol.value1 = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_se;
   readsSyntaxElement_VLC (&symbol, s);
@@ -34,9 +36,10 @@ int readSeV (char* label, sBitStream* s) {
   }
 //}}}
 //{{{
-int readUv (int LenInBits, char* label, sBitStream* s) {
+int readUv (int LenInBits, const char* label, sBitStream* s) {
 
-  sSyntaxElement symbol = {.value1 = 0 };
+  sSyntaxElement symbol;
+  symbol.value1 = 0;
   symbol.inf = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
@@ -50,9 +53,10 @@ int readUv (int LenInBits, char* label, sBitStream* s) {
   }
 //}}}
 //{{{
-int readIv (int LenInBits, char* label, sBitStream* s) {
+int readIv (int LenInBits, const char* label, sBitStream* s) {
 
-  sSyntaxElement symbol = {.value1 = 0 };
+  sSyntaxElement symbol;
+  symbol.value1 = 0;
   symbol.inf = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
@@ -69,8 +73,8 @@ int readIv (int LenInBits, char* label, sBitStream* s) {
   }
 //}}}
 //{{{
-Boolean readU1 (char* label, sBitStream* s) {
-  return (Boolean)readUv (1, label, s);
+bool readU1 (const char* label, sBitStream* s) {
+  return (bool)readUv (1, label, s);
   }
 //}}}
 
@@ -234,16 +238,16 @@ int moreRbspData (byte buffer[], int totalBitOffset,int bytecount) {
   // there is more until we're in the last byte
   long byteoffset = (totalBitOffset >> 3);      // byte from start of buffer
   if (byteoffset < (bytecount - 1))
-    return TRUE;
+    return true;
   else {
     int bitOffset   = (7 - (totalBitOffset & 0x07));      // bit from start of byte
-    byte *cur_byte  = &(buffer[byteoffset]);
+    byte* cur_byte  = &(buffer[byteoffset]);
     // read one bit
-    int controlBit     = controlBit = ((*cur_byte)>> (bitOffset--)) & 0x01;      // control bit for current bit posision
+    int controlBit = ((*cur_byte)>> (bitOffset--)) & 0x01;   // control bit for current bit posision
 
     // a stop bit has to be one
-    if (controlBit==0)
-      return TRUE;
+    if (controlBit == 0)
+      return true;
     else {
       int cnt = 0;
       while (bitOffset>=0 && !cnt)

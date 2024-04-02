@@ -477,9 +477,9 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
 
     MbP = &(decoder->mbData[pixP.mbIndex]);
     // Neighboring Frame MBs
-    if ((mb->mbField == FALSE && MbP->mbField == FALSE)) {
+    if ((mb->mbField == false && MbP->mbField == false)) {
       mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
-      if (mb->isIntraBlock == TRUE || MbP->isIntraBlock == TRUE) {
+      if (mb->isIntraBlock == true || MbP->isIntraBlock == true) {
         //printf("idx %d %d %d %d %d\n", idx, pixP.x, pixP.y, pixP.posX, pixP.posY);
         // Start with Strength=3. or Strength=4 for Mb-edge
         StrValue = (edge == 0) ? 4 : 3;
@@ -560,7 +560,7 @@ static void get_strength_ver_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
                          (p->mbAffFrame && !MbP->mbField && !mb->mbField)) ||
                          ((p->mbAffFrame || (p->picStructure!=eFrame))))) ? 4 : 3;
 
-        if (mb->isIntraBlock == FALSE && MbP->isIntraBlock == FALSE) {
+        if (mb->isIntraBlock == false && MbP->isIntraBlock == false) {
           if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
             Strength[idx] = 2 ;
           else {
@@ -658,7 +658,7 @@ static void get_strength_hor_MBAff (byte* Strength, sMacroBlock* mb, int edge, i
     mb->mixedModeEdgeFlag = (byte) (mb->mbField != MbP->mbField);
 
     // Set intra mode deblocking
-    if (mb->isIntraBlock == TRUE || MbP->isIntraBlock == TRUE) {
+    if (mb->isIntraBlock == true || MbP->isIntraBlock == true) {
       StrValue = (edge == 0 && (!MbP->mbField && !mb->mbField)) ? 4 : 3;
       for (i = 0; i < MB_BLOCK_SIZE; i ++ ) Strength[i] = StrValue;
       }
@@ -757,13 +757,13 @@ static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
     for (i = 0; i < BLOCK_SIZE; i ++ ) Strength[i] = StrValue;
   }
   else {
-    if (mb->isIntraBlock == FALSE) {
+    if (mb->isIntraBlock == false) {
       sMacroBlock *MbP;
       int xQ = (edge << 2) - 1;
       sMacroBlock *neighbour = get_non_aff_neighbour_luma (mb, xQ, 0);
       MbP = (edge) ? mb : neighbour;
 
-      if (edge || MbP->isIntraBlock == FALSE) {
+      if (edge || MbP->isIntraBlock == false) {
         if (edge && (slice->sliceType == eSliceP && mb->mbType == PSKIP))
           for (i = 0; i < BLOCK_SIZE; i ++ )
             Strength[i] = 0;
@@ -867,12 +867,12 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
       Strength[i] = StrValue;
     }
   else {
-    if (mb->isIntraBlock == FALSE) {
+    if (mb->isIntraBlock == false) {
       sMacroBlock* MbP;
       int yQ = (edge < BLOCK_SIZE ? (edge << 2) - 1: 0);
       sMacroBlock* neighbor = get_non_aff_neighbour_luma(mb, 0, yQ);
       MbP = (edge) ? mb : neighbor;
-      if (edge || MbP->isIntraBlock == FALSE) {
+      if (edge || MbP->isIntraBlock == false) {
         if (edge && (slice->sliceType == eSliceP && mb->mbType == PSKIP))
           for (i = 0; i < BLOCK_SIZE; i ++)
             Strength[i] = 0;

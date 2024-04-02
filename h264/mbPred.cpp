@@ -28,7 +28,7 @@ int mbPredIntra4x4 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture
   int j_pos, i_pos;
   int ioff,joff;
   int block8x8;   // needed for ABT
-  mb->iTrans4x4 = (mb->isLossless == FALSE) ? itrans4x4 : invResidualTrans4x4;
+  mb->iTrans4x4 = (mb->isLossless == false) ? itrans4x4 : invResidualTrans4x4;
 
   for (block8x8 = 0; block8x8 < 4; block8x8++)
   {
@@ -60,7 +60,7 @@ int mbPredIntra4x4 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture
     intra_cr_decoding(mb, yuv);
 
   if (mb->codedBlockPattern != 0)
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
   return 1;
 }
 //}}}
@@ -80,7 +80,7 @@ int mbPredIntra16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
     intra_cr_decoding(mb, yuv);
   }
 
-  mb->slice->isResetCoef = FALSE;
+  mb->slice->isResetCoef = false;
   return 1;
 }
 //}}}
@@ -91,7 +91,7 @@ int mbPredIntra8x8 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture
   int yuv = picture->chromaFormatIdc - 1;
 
   int block8x8;   // needed for ABT
-  mb->iTrans8x8 = (mb->isLossless == FALSE) ? itrans8x8 : invResidualTrans8x8;
+  mb->iTrans8x8 = (mb->isLossless == false) ? itrans8x8 : invResidualTrans8x8;
 
   for (block8x8 = 0; block8x8 < 4; block8x8++) {
     // 8x8 BLOCK TYPE
@@ -112,7 +112,7 @@ int mbPredIntra8x8 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture
     intra_cr_decoding(mb, yuv);
 
   if (mb->codedBlockPattern != 0)
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
   return 1;
 }
 //}}}
@@ -223,7 +223,7 @@ int mbPredPinter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
   int i = 0, j = 0, k;
 
   sSlice* slice = mb->slice;
-  int smb = slice->sliceType == eSliceSP && (mb->isIntraBlock == FALSE);
+  int smb = slice->sliceType == eSliceSP && (mb->isIntraBlock == false);
 
   setChromaVector (mb);
 
@@ -248,7 +248,7 @@ int mbPredPinter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
   iTransform (mb, plane, smb);
 
   if (mb->codedBlockPattern != 0)
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
 
   return 1;
   }
@@ -264,7 +264,7 @@ int mbPredPinter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
   iTransform (mb, plane, smb);
 
   if (mb->codedBlockPattern != 0)
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
 
   return 1;
   }
@@ -282,7 +282,7 @@ int mbPredPinter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
   iTransform (mb, plane, smb);
 
   if (mb->codedBlockPattern != 0)
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
 
   return 1;
   }
@@ -300,7 +300,7 @@ int mbPredPinter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
      iTransform (mb, plane, smb);
 
      if (mb->codedBlockPattern != 0)
-       slice->isResetCoef = FALSE;
+       slice->isResetCoef = false;
 
      return 1;
      }
@@ -482,7 +482,7 @@ int mbPredBd8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
     }
   else {
     iTransform (mb, plane, 0);
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
     }
   return 1;
   }
@@ -584,7 +584,7 @@ int mbPredBd4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
   }
   else {
     iTransform (mb, plane, 0);
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
     }
 
   return 1;
@@ -769,7 +769,7 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
     }
   else {
     iTransform (mb, plane, 0);
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
     }
 
   return 1;
@@ -930,7 +930,7 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
     }
   else {
     iTransform (mb, plane, 0);
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
     }
 
   return 1;
@@ -1037,7 +1037,7 @@ int mbPredBinter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
   iTransform (mb, plane, 0);
   if (mb->codedBlockPattern != 0)
-    slice->isResetCoef = FALSE;
+    slice->isResetCoef = false;
 
   return 1;
   }
@@ -1078,8 +1078,8 @@ int mbPredIpcm (sMacroBlock* mb) {
 
   // for cabac decoding of Dquant
   slice->lastDquant = 0;
-  slice->isResetCoef = FALSE;
-  slice->isResetCoefCr = FALSE;
+  slice->isResetCoef = false;
+  slice->isResetCoefCr = false;
   return 1;
   }
 //}}}

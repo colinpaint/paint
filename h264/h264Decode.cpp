@@ -23,7 +23,7 @@
 sDecoder* gDecoder;
 
 //{{{
-void error (char* text) {
+void error (const char* text) {
 
   fprintf (stderr, "--- Error -> %s\n", text);
   if (gDecoder)
@@ -67,7 +67,7 @@ sSlice* allocSlice (sDecoder* decoder) {
     slice->refFlag[i] = 1;
 
   for (int i = 0; i < 6; i++) {
-    slice->listX[i] = calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
+    slice->listX[i] = (sPicture**)calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
     if (!slice->listX[i])
       noMemoryExit ("allocSlice - slice->listX[i]");
     }
@@ -430,7 +430,7 @@ void closeDecoder (sDecoder* decoder) {
   for (unsigned i = 0; i < MAX_PPS; i++) {
     if (decoder->pps[i].ok && decoder->pps[i].sliceGroupId)
       free (decoder->pps[i].sliceGroupId);
-    decoder->pps[i].ok = FALSE;
+    decoder->pps[i].ok = false;
     }
 
   freeDpb (decoder->dpb);
