@@ -6,8 +6,6 @@
 #include "image.h"
 #include "fmo.h"
 #include "nalu.h"
-#include "sps.h"
-#include "pps.h"
 #include "sei.h"
 #include "output.h"
 #include "mbAccess.h"

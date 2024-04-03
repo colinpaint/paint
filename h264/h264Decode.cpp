@@ -8,8 +8,6 @@
 #include "fmo.h"
 #include "output.h"
 #include "cabac.h"
-#include "sps.h"
-#include "pps.h"
 #include "sei.h"
 #include "erc.h"
 #include "quant.h"

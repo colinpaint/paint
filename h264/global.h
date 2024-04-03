@@ -13,8 +13,8 @@
 
 #include "frame.h"
 #include "nalu.h"
-#include "sps.h"
-#include "pps.h"
+#include "cSps.h"
+#include "cPps.h"
 
 #define MAX_NUM_SLICES          8
 #define MAX_REFERENCE_PICTURES  32       // H.264 allows 32 fields

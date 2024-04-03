@@ -3,7 +3,6 @@
 #include "memory.h"
 
 #include "image.h"
-#include "pps.h"
 #include "nalu.h"
 #include "vlc.h"
 

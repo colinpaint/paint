@@ -7,7 +7,6 @@
 #include "sei.h"
 #include "vlc.h"
 #include "buffer.h"
-#include "sps.h"
 #include "image.h"
 //}}}
 

@@ -2,7 +2,6 @@
 #include "global.h"
 #include "memory.h"
 
-#include "sps.h"
 #include "nalu.h"
 #include "vlc.h"
 #include "erc.h"
