@@ -95,7 +95,7 @@ int cSps::readNalu (sDecoder* decoder, sNalu* nalu) {
   dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen = RBSPtoSODB (dataPartition->stream->bitStreamBuffer, nalu->len-1);
 
   cSps sps;
-  sps.readSpsFromStream (decoder, dataPartition, nalu->len);
+  sps.readFromStream (decoder, dataPartition, nalu->len);
   freeDataPartitions (dataPartition, 1);
 
   if (!decoder->sps[sps.id].isEqual (sps))
@@ -104,6 +104,116 @@ int cSps::readNalu (sDecoder* decoder, sNalu* nalu) {
   memcpy (&decoder->sps[sps.id], &sps, sizeof(cSps));
 
   return sps.id;
+  }
+//}}}
+
+//{{{
+void cSps::readFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen) {
+
+  naluLen = naluLen;
+
+  sBitStream* s = dataPartition->stream;
+
+  profileIdc = (eProfileIDC)readUv (8, "SPS profileIdc", s);
+  if ((profileIdc != BASELINE) && (profileIdc != MAIN) && (profileIdc != EXTENDED) &&
+      (profileIdc != FREXT_HP) && (profileIdc != FREXT_Hi10P) &&
+      (profileIdc != FREXT_Hi422) && (profileIdc != FREXT_Hi444) &&
+      (profileIdc != FREXT_CAVLC444))
+    printf ("IDC - invalid %d\n", profileIdc);
+
+  constrainedSet0Flag = readU1 ("SPS constrainedSet0Flag", s);
+  constrainedSet1Flag = readU1 ("SPS constrainedSet1Flag", s);
+  constrainedSet2Flag = readU1 ("SPS constrainedSet2Flag", s);
+  constrainedSet3flag = readU1 ("SPS constrainedSet3flag", s);
+  int reservedZero = readUv (4, "SPS reservedZero4bits", s);
+
+  levelIdc = readUv (8, "SPS levelIdc", s);
+  id = readUeV ("SPS spsId", s);
+
+  // Fidelity Range Extensions stuff
+  chromaFormatIdc = 1;
+  bit_depth_luma_minus8 = 0;
+  bit_depth_chroma_minus8 = 0;
+  useLosslessQpPrime = 0;
+  isSeperateColourPlane = 0;
+
+  //{{{  read fidelity range
+  if ((profileIdc == FREXT_HP) ||
+      (profileIdc == FREXT_Hi10P) ||
+      (profileIdc == FREXT_Hi422) ||
+      (profileIdc == FREXT_Hi444) ||
+      (profileIdc == FREXT_CAVLC444)) {
+    // read fidelity range
+    chromaFormatIdc = readUeV ("SPS chromaFormatIdc", s);
+    if (chromaFormatIdc == YUV444)
+      isSeperateColourPlane = readU1 ("SPS isSeperateColourPlane", s);
+    bit_depth_luma_minus8 = readUeV ("SPS bit_depth_luma_minus8", s);
+    bit_depth_chroma_minus8 = readUeV ("SPS bit_depth_chroma_minus8", s);
+    if ((bit_depth_luma_minus8+8 > sizeof(sPixel)*8) ||
+        (bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
+      error ("Source picture has higher bit depth than sPixel data type");
+
+    useLosslessQpPrime = readU1 ("SPS losslessQpPrimeYzero", s);
+
+    hasSeqScalingMatrix = readU1 ("SPS hasSeqScalingMatrix", s);
+    if (hasSeqScalingMatrix) {
+      uint32_t n_ScalingList = (chromaFormatIdc != YUV444) ? 8 : 12;
+      for (uint32_t i = 0; i < n_ScalingList; i++) {
+        hasSeqScalingList[i] = readU1 ("SPS hasSeqScalingList", s);
+        if (hasSeqScalingList[i]) {
+          if (i < 6)
+            scalingList (scalingList4x4[i], 16, &useDefaultScalingMatrix4x4[i], s);
+          else
+            scalingList (scalingList8x8[i-6], 64, &useDefaultScalingMatrix8x8[i-6], s);
+          }
+        }
+      }
+    }
+  //}}}
+  log2maxFrameNumMinus4 = readUeV ("SPS log2maxFrameNumMinus4", s);
+  //{{{  read POC
+  pocType = readUeV ("SPS pocType", s);
+
+  if (pocType == 0)
+    log2maxPocLsbMinus4 = readUeV ("SPS log2maxPocLsbMinus4", s);
+
+  else if (pocType == 1) {
+    deltaPicOrderAlwaysZero = readU1 ("SPS deltaPicOrderAlwaysZero", s);
+    offsetNonRefPic = readSeV ("SPS offsetNonRefPic", s);
+    offsetTopBotField = readSeV ("SPS offsetTopBotField", s);
+    numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
+    for (uint32_t i = 0; i < numRefFramesPocCycle; i++)
+      offsetForRefFrame[i] = readSeV ("SPS offsetRefFrame[i]", s);
+    }
+  //}}}
+
+  numRefFrames = readUeV ("SPS numRefFrames", s);
+  allowGapsFrameNum = readU1 ("SPS allowGapsFrameNum", s);
+
+  picWidthMbsMinus1 = readUeV ("SPS picWidthMbsMinus1", s);
+  picHeightMapUnitsMinus1 = readUeV ("SPS picHeightMapUnitsMinus1", s);
+
+  frameMbOnly = readU1 ("SPS frameMbOnly", s);
+  if (!frameMbOnly)
+    mbAffFlag = readU1 ("SPS mbAffFlag", s);
+
+  isDirect8x8inference = readU1 ("SPS isDirect8x8inference", s);
+
+  //{{{  read crop
+  hasCrop = readU1 ("SPS hasCrop", s);
+  if (hasCrop) {
+    cropLeft = readUeV ("SPS cropLeft", s);
+    cropRight = readUeV ("SPS cropRight", s);
+    cropTop = readUeV ("SPS cropTop", s);
+    cropBot = readUeV ("SPS cropBot", s);
+    }
+  //}}}
+  hasVui = (bool)readU1 ("SPS hasVui", s);
+
+  vuiSeqParams.matrix_coefficients = 2;
+  readVuiFromStream (dataPartition);
+
+  ok = true;
   }
 //}}}
 
@@ -237,114 +347,5 @@ void cSps::readVuiFromStream (sDataPartition* dataPartition) {
       vuiSeqParams.max_dec_frame_buffering = readUeV ("VUI max_dec_frame_buffering", s);
       }
     }
-  }
-//}}}
-//{{{
-void cSps::readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen) {
-
-  naluLen = naluLen;
-
-  sBitStream* s = dataPartition->stream;
-
-  profileIdc = (eProfileIDC)readUv (8, "SPS profileIdc", s);
-  if ((profileIdc != BASELINE) && (profileIdc != MAIN) && (profileIdc != EXTENDED) &&
-      (profileIdc != FREXT_HP) && (profileIdc != FREXT_Hi10P) &&
-      (profileIdc != FREXT_Hi422) && (profileIdc != FREXT_Hi444) &&
-      (profileIdc != FREXT_CAVLC444))
-    printf ("IDC - invalid %d\n", profileIdc);
-
-  constrainedSet0Flag = readU1 ("SPS constrainedSet0Flag", s);
-  constrainedSet1Flag = readU1 ("SPS constrainedSet1Flag", s);
-  constrainedSet2Flag = readU1 ("SPS constrainedSet2Flag", s);
-  constrainedSet3flag = readU1 ("SPS constrainedSet3flag", s);
-  int reservedZero = readUv (4, "SPS reservedZero4bits", s);
-
-  levelIdc = readUv (8, "SPS levelIdc", s);
-  id = readUeV ("SPS spsId", s);
-
-  // Fidelity Range Extensions stuff
-  chromaFormatIdc = 1;
-  bit_depth_luma_minus8 = 0;
-  bit_depth_chroma_minus8 = 0;
-  useLosslessQpPrime = 0;
-  isSeperateColourPlane = 0;
-
-  //{{{  read fidelity range
-  if ((profileIdc == FREXT_HP) ||
-      (profileIdc == FREXT_Hi10P) ||
-      (profileIdc == FREXT_Hi422) ||
-      (profileIdc == FREXT_Hi444) ||
-      (profileIdc == FREXT_CAVLC444)) {
-    // read fidelity range
-    chromaFormatIdc = readUeV ("SPS chromaFormatIdc", s);
-    if (chromaFormatIdc == YUV444)
-      isSeperateColourPlane = readU1 ("SPS isSeperateColourPlane", s);
-    bit_depth_luma_minus8 = readUeV ("SPS bit_depth_luma_minus8", s);
-    bit_depth_chroma_minus8 = readUeV ("SPS bit_depth_chroma_minus8", s);
-    if ((bit_depth_luma_minus8+8 > sizeof(sPixel)*8) ||
-        (bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
-      error ("Source picture has higher bit depth than sPixel data type");
-
-    useLosslessQpPrime = readU1 ("SPS losslessQpPrimeYzero", s);
-
-    hasSeqScalingMatrix = readU1 ("SPS hasSeqScalingMatrix", s);
-    if (hasSeqScalingMatrix) {
-      uint32_t n_ScalingList = (chromaFormatIdc != YUV444) ? 8 : 12;
-      for (uint32_t i = 0; i < n_ScalingList; i++) {
-        hasSeqScalingList[i] = readU1 ("SPS hasSeqScalingList", s);
-        if (hasSeqScalingList[i]) {
-          if (i < 6)
-            scalingList (scalingList4x4[i], 16, &useDefaultScalingMatrix4x4[i], s);
-          else
-            scalingList (scalingList8x8[i-6], 64, &useDefaultScalingMatrix8x8[i-6], s);
-          }
-        }
-      }
-    }
-  //}}}
-  log2maxFrameNumMinus4 = readUeV ("SPS log2maxFrameNumMinus4", s);
-  //{{{  read POC
-  pocType = readUeV ("SPS pocType", s);
-
-  if (pocType == 0)
-    log2maxPocLsbMinus4 = readUeV ("SPS log2maxPocLsbMinus4", s);
-
-  else if (pocType == 1) {
-    deltaPicOrderAlwaysZero = readU1 ("SPS deltaPicOrderAlwaysZero", s);
-    offsetNonRefPic = readSeV ("SPS offsetNonRefPic", s);
-    offsetTopBotField = readSeV ("SPS offsetTopBotField", s);
-    numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
-    for (uint32_t i = 0; i < numRefFramesPocCycle; i++)
-      offsetForRefFrame[i] = readSeV ("SPS offsetRefFrame[i]", s);
-    }
-  //}}}
-
-  numRefFrames = readUeV ("SPS numRefFrames", s);
-  allowGapsFrameNum = readU1 ("SPS allowGapsFrameNum", s);
-
-  picWidthMbsMinus1 = readUeV ("SPS picWidthMbsMinus1", s);
-  picHeightMapUnitsMinus1 = readUeV ("SPS picHeightMapUnitsMinus1", s);
-
-  frameMbOnly = readU1 ("SPS frameMbOnly", s);
-  if (!frameMbOnly)
-    mbAffFlag = readU1 ("SPS mbAffFlag", s);
-
-  isDirect8x8inference = readU1 ("SPS isDirect8x8inference", s);
-
-  //{{{  read crop
-  hasCrop = readU1 ("SPS hasCrop", s);
-  if (hasCrop) {
-    cropLeft = readUeV ("SPS cropLeft", s);
-    cropRight = readUeV ("SPS cropRight", s);
-    cropTop = readUeV ("SPS cropTop", s);
-    cropBot = readUeV ("SPS cropBot", s);
-    }
-  //}}}
-  hasVui = (bool)readU1 ("SPS hasVui", s);
-
-  vuiSeqParams.matrix_coefficients = 2;
-  readVuiFromStream (dataPartition);
-
-  ok = true;
   }
 //}}}

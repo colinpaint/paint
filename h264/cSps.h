@@ -118,7 +118,7 @@ public:
     }
   //}}}
 
-  void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen);
+  void readFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen);
 
   //{{{  vars
   bool     ok = false;
