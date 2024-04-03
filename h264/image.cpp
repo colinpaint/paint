@@ -24,6 +24,10 @@
 
 #include <math.h>
 #include <limits.h>
+
+// utils
+#include "../common/basicTypes.h"
+#include "../common/cLog.h"
 //}}}
 //{{{  static const tables
 #define CTX_UNUSED {0,64}

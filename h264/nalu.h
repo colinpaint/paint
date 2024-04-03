@@ -49,7 +49,7 @@ typedef struct Nalu {
   eNaluType  unitType;     // NALU_TYPE_xxxx
   eNalRefIdc refId;        // NALU_PRIORITY_xxxx
   byte*      buf;          // contains the first byte followed by the EBSP
-  uint16     lostPackets;  // true, if packet loss is detected
+  uint16_t     lostPackets;  // true, if packet loss is detected
   } sNalu;
 
 struct sDecoder;

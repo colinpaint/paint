@@ -1012,7 +1012,7 @@ static void markPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex, int
   int addTop, addBot;
 
   if (p->picStructure == eFrame) {
-    for (uint32 i = 0; i < dpb->refFramesInBuffer; i++) {
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fsRef[i]->isReference == 3) {
         if ((!dpb->fsRef[i]->frame->isLongTerm)&&(dpb->fsRef[i]->frame->picNum == picNumX)) {
           dpb->fsRef[i]->longTermFrameIndex = dpb->fsRef[i]->frame->longTermFrameIndex
@@ -1046,7 +1046,7 @@ static void markPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex, int
       addBot = 1;
       }
 
-    for (uint32 i = 0; i < dpb->refFramesInBuffer; i++) {
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fsRef[i]->isReference & 1) {
         if ((!dpb->fsRef[i]->topField->isLongTerm) &&
             (dpb->fsRef[i]->topField->picNum == picNumX)) {
@@ -1094,7 +1094,7 @@ static void markPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex, int
 //{{{
 static void unmarkLongTermFrameForRefByFrameIndex (sDpb* dpb, int longTermFrameIndex) {
 
-  for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+  for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
     if (dpb->fsLongTermRef[i]->longTermFrameIndex == longTermFrameIndex)
       unmarkForLongTermRef (dpb->fsLongTermRef[i]);
   }
@@ -1102,7 +1102,7 @@ static void unmarkLongTermFrameForRefByFrameIndex (sDpb* dpb, int longTermFrameI
 //{{{
 static void unmarkLongTermForRef (sDpb* dpb, sPicture* p, int longTermPicNum) {
 
-  for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+  for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (p->picStructure == eFrame) {
       if ((dpb->fsLongTermRef[i]->isReference==3) && (dpb->fsLongTermRef[i]->isLongTerm==3))
         if (dpb->fsLongTermRef[i]->frame->longTermPicNum == longTermPicNum)
@@ -1143,7 +1143,7 @@ static void unmarkShortTermForRef (sDpb* dpb, sPicture* p, int diffPicNumMinus1)
 {
   int picNumX = getPicNumX(p, diffPicNumMinus1);
 
-  for (uint32 i = 0; i < dpb->refFramesInBuffer; i++) {
+  for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
     if (p->picStructure == eFrame) {
       if ((dpb->fsRef[i]->isReference == 3) && (dpb->fsRef[i]->isLongTerm == 0)) {
         if (dpb->fsRef[i]->frame->picNum == picNumX) {
@@ -1218,7 +1218,7 @@ static void updateMaxLongTermFrameIndex (sDpb* dpb, int maxLongTermFrameIndexPlu
   dpb->maxLongTermPicIndex = maxLongTermFrameIndexPlus1 - 1;
 
   // check for invalid frames
-  for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+  for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
     if (dpb->fsLongTermRef[i]->longTermFrameIndex > dpb->maxLongTermPicIndex)
       unmarkForLongTermRef(dpb->fsLongTermRef[i]);
   }
@@ -1349,7 +1349,7 @@ static void slidingWindowMemoryManagement (sDpb* dpb, sPicture* p) {
 
   // if this is a reference pic with sliding window, unmark first ref frame
   if (dpb->refFramesInBuffer == imax (1, dpb->numRefFrames) - dpb->longTermRefFramesInBuffer) {
-    for (uint32 i = 0; i < dpb->usedSize; i++) {
+    for (uint32_t i = 0; i < dpb->usedSize; i++) {
       if (dpb->fs[i]->isReference && (!(dpb->fs[i]->isLongTerm))) {
         unmarkForRef (dpb->fs[i]);
         updateRefList (dpb);
@@ -1366,14 +1366,14 @@ static void idrMemoryManagement (sDpb* dpb, sPicture* p) {
 
   if (p->noOutputPriorPicFlag) {
     // free all stored pictures
-    for (uint32 i = 0; i < dpb->usedSize; i++) {
+    for (uint32_t i = 0; i < dpb->usedSize; i++) {
       // reset all reference settings
       freeFrameStore (dpb->fs[i]);
       dpb->fs[i] = allocFrameStore();
       }
-    for (uint32 i = 0; i < dpb->refFramesInBuffer; i++)
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       dpb->fsRef[i]=NULL;
-    for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
       dpb->fsLongTermRef[i]=NULL;
     dpb->usedSize = 0;
     }
@@ -1400,7 +1400,7 @@ static void idrMemoryManagement (sDpb* dpb, sPicture* p) {
 //{{{
 static sPicture* getLongTermPic (sSlice* slice, sDpb* dpb, int LongtermPicNum) {
 
-  for (uint32 i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+  for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (slice->picStructure == eFrame) {
       if (dpb->fsLongTermRef[i]->isReference == 3)
         if ((dpb->fsLongTermRef[i]->frame->isLongTerm)&&(dpb->fsLongTermRef[i]->frame->longTermPicNum == LongtermPicNum))
@@ -1522,7 +1522,7 @@ void getSmallestPoc (sDpb* dpb, int* poc, int* pos) {
 
   *pos = -1;
   *poc = INT_MAX;
-  for (uint32 i = 0; i < dpb->usedSize; i++) {
+  for (uint32_t i = 0; i < dpb->usedSize; i++) {
     if ((*poc > dpb->fs[i]->poc)&&(!dpb->fs[i]->isOutput)) {
       *poc = dpb->fs[i]->poc;
       *pos = i;
@@ -1632,7 +1632,7 @@ void flushDpb (sDpb* dpb) {
     conceal_non_ref_pics (dpb, 0);
 
   // mark all frames unused
-  for (uint32 i = 0; i < dpb->usedSize; i++)
+  for (uint32_t i = 0; i < dpb->usedSize; i++)
     unmarkForRef (dpb->fs[i]);
 
   while (removeUnusedDpb (dpb));
@@ -1647,7 +1647,7 @@ void flushDpb (sDpb* dpb) {
 int removeUnusedDpb (sDpb* dpb) {
 
   // check for frames that were already output and no longer used for reference
-  for (uint32 i = 0; i < dpb->usedSize; i++) {
+  for (uint32_t i = 0; i < dpb->usedSize; i++) {
     if (dpb->fs[i]->isOutput && (!isReference(dpb->fs[i]))) {
       removeFrameDpb(dpb, i);
       return 1;

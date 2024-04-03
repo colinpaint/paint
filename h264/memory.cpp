@@ -1203,20 +1203,20 @@ void freeMem5Dint (int***** array5D)
 /*!
 ** **********************************************************************
  * \brief
- *    Create 2D memory array -> uint16 array2D[dim0][dim1]
+ *    Create 2D memory array -> uint16_t array2D[dim0][dim1]
  *
  * \par Output:
- *    uint16 type array of size dim0 * dim1
+ *    uint16_t type array of size dim0 * dim1
 ** **********************************************************************
  */
-uint16** new_mem2Duint16 (int dim0, int dim1)
+uint16_t** new_mem2Duint16 (int dim0, int dim1)
 {
   int i;
-  uint16** array2D;
+  uint16_t** array2D;
 
-  if(( array2D = (uint16**)memAlloc(dim0 *      sizeof(uint16*))) == NULL)
+  if(( array2D = (uint16_t**)memAlloc(dim0 *      sizeof(uint16_t*))) == NULL)
     noMemoryExit("getMem2Duint16: array2D");
-  if((*array2D = (uint16* )mem_calloc(dim0 * dim1,sizeof(uint16 ))) == NULL)
+  if((*array2D = (uint16_t* )mem_calloc(dim0 * dim1,sizeof(uint16_t ))) == NULL)
     noMemoryExit("getMem2Duint16: array2D");
 
   for(i = 1; i < dim0; i++)
@@ -1230,43 +1230,43 @@ uint16** new_mem2Duint16 (int dim0, int dim1)
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 2D uint16 memory array -> uint16 array2D[dim0][dim1]
+ *    Allocate 2D uint16_t memory array -> uint16_t array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int getMem2Duint16 (uint16*** array2D, int dim0, int dim1)
+int getMem2Duint16 (uint16_t*** array2D, int dim0, int dim1)
 {
   int i;
 
-  if((  *array2D  = (uint16**)memAlloc(dim0 *      sizeof(uint16*))) == NULL)
+  if((  *array2D  = (uint16_t**)memAlloc(dim0 *      sizeof(uint16_t*))) == NULL)
     noMemoryExit("getMem2Duint16: array2D");
 
-  if((*(*array2D) = (uint16* )mem_calloc(dim0 * dim1,sizeof(uint16 ))) == NULL)
+  if((*(*array2D) = (uint16_t* )mem_calloc(dim0 * dim1,sizeof(uint16_t ))) == NULL)
     noMemoryExit("getMem2Duint16: array2D");
 
   for(i = 1; i < dim0; i++)
     (*array2D)[i] = (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(uint16*) + dim1 * sizeof(uint16));
+  return dim0 * (sizeof(uint16_t*) + dim1 * sizeof(uint16_t));
 }
 //}}}
 //{{{
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 3D memory uint16 array -> uint16 array3D[dim0][dim1][dim2]
+ *    Allocate 3D memory uint16_t array -> uint16_t array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int getMem3Duint16 (uint16**** array3D,int dim0, int dim1, int dim2)
+int getMem3Duint16 (uint16_t**** array3D,int dim0, int dim1, int dim2)
 {
-  int  i, mem_size = dim0 * sizeof(uint16**);
+  int  i, mem_size = dim0 * sizeof(uint16_t**);
 
-  if(((*array3D) = (uint16***)memAlloc(dim0 * sizeof(uint16**))) == NULL)
+  if(((*array3D) = (uint16_t***)memAlloc(dim0 * sizeof(uint16_t**))) == NULL)
     noMemoryExit("getMem3Duint16: array3D");
 
   mem_size += getMem2Duint16(*array3D, dim0 * dim1, dim2);
@@ -1281,17 +1281,17 @@ int getMem3Duint16 (uint16**** array3D,int dim0, int dim1, int dim2)
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 4D memory uint16 array -> uint16 array3D[dim0][dim1][dim2][dim3]
+ *    Allocate 4D memory uint16_t array -> uint16_t array3D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int getMem4Duint16 (uint16***** array4D, int dim0, int dim1, int dim2, int dim3)
+int getMem4Duint16 (uint16_t***** array4D, int dim0, int dim1, int dim2, int dim3)
 {
-  int  i, mem_size = dim0 * sizeof(uint16***);
+  int  i, mem_size = dim0 * sizeof(uint16_t***);
 
-  if(((*array4D) = (uint16****)memAlloc(dim0 * sizeof(uint16***))) == NULL)
+  if(((*array4D) = (uint16_t****)memAlloc(dim0 * sizeof(uint16_t***))) == NULL)
     noMemoryExit("getMem4Duint16: array4D");
 
   mem_size += getMem3Duint16(*array4D, dim0 * dim1, dim2, dim3);
@@ -1468,11 +1468,11 @@ int getMem7Dshort (short******** array7D, int dim0, int dim1, int dim2, int dim3
 /*!
 ** **********************************************************************
  * \brief
- *    free 2D uint16 memory array
+ *    free 2D uint16_t memory array
  *    which was allocated with getMem2Duint16()
 ** **********************************************************************
  */
-void freeMem2Duint16 (uint16** array2D)
+void freeMem2Duint16 (uint16_t** array2D)
 {
   if (array2D)
   {
@@ -1487,11 +1487,11 @@ void freeMem2Duint16 (uint16** array2D)
 /*!
 ** **********************************************************************
  * \brief
- *    free 3D uint16 memory array
+ *    free 3D uint16_t memory array
  *    which was allocated with getMem3Duint16()
 ** **********************************************************************
  */
-void freeMem3Duint16 (uint16*** array3D)
+void freeMem3Duint16 (uint16_t*** array3D)
 {
   if (array3D)
   {
@@ -1504,11 +1504,11 @@ void freeMem3Duint16 (uint16*** array3D)
 /*!
 ** **********************************************************************
  * \brief
- *    free 4D uint16 memory array
+ *    free 4D uint16_t memory array
  *    which was allocated with getMem4Duint16()
 ** **********************************************************************
  */
-void freeMem4Duint16 (uint16**** array4D)
+void freeMem4Duint16 (uint16_t**** array4D)
 {
   if (array4D)
   {

@@ -155,7 +155,7 @@ unsigned int binaryArithmeticDecodeSymbol (sCabacDecodeEnv* cabacDecodeEnv, sBiC
   unsigned int* value = &cabacDecodeEnv->value;
   unsigned int* range = &cabacDecodeEnv->range;
 
-  uint16* state = &biContext->state;
+  uint16_t* state = &biContext->state;
   unsigned int rLPS = rLPS_table_64x4[*state][(*range >> 6) & 0x03];
   int* bitsLeft = &cabacDecodeEnv->bitsLeft;
 
@@ -253,12 +253,12 @@ void binaryArithmeticInitContext (int qp, sBiContext* context, const char* ini) 
 
   if (pstate >= 64) {
     pstate = imin (126, pstate);
-    context->state = (uint16)(pstate - 64);
+    context->state = (uint16_t)(pstate - 64);
     context->MPS = 1;
     }
   else {
     pstate = imax (1, pstate);
-    context->state = (uint16)(63 - pstate);
+    context->state = (uint16_t)(63 - pstate);
     context->MPS = 0;
     }
   }

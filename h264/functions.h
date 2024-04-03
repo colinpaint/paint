@@ -2,6 +2,28 @@
 #include <math.h>
 #include <limits.h>
 
+//{{{  enum eMBModeType
+enum eMBModeType {
+  PSKIP        =  0,
+  BSKIP_DIRECT =  0,
+  P16x16       =  1,
+  P16x8        =  2,
+  P8x16        =  3,
+  SMB8x8       =  4,
+  SMB8x4       =  5,
+  SMB4x8       =  6,
+  SMB4x4       =  7,
+  P8x8         =  8,
+  I4MB         =  9,
+  I16MB        = 10,
+  IBLOCK       = 11,
+  SI4MB        = 12,
+  I8MB         = 13,
+  IPCM         = 14,
+  MAXMODE      = 15
+  };
+//}}}
+
 static inline short smin (short a, short b) { return (short) (((a) < (b)) ? (a) : (b)); }
 static inline short smax (short a, short b) { return (short) (((a) > (b)) ? (a) : (b)); }
 static inline int imin (int a, int b) { return ((a) < (b)) ? (a) : (b); }

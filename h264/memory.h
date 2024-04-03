@@ -54,9 +54,9 @@ extern int getMem4Dint (int** ***array4D, int dim0, int dim1, int dim2, int dim3
 extern int getMem4Dint64 (int64** ***array4D, int dim0, int dim1, int dim2, int dim3);
 extern int getMem5Dint (int** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4);
 
-extern uint16** new_mem2Duint16 (int dim0, int dim1);
-extern int getMem2Duint16 (uint16** *array2D, int dim0, int dim1);
-extern int getMem3Duint16 (uint16** **array3D,int dim0, int dim1, int dim2);
+extern uint16_t** new_mem2Duint16 (int dim0, int dim1);
+extern int getMem2Duint16 (uint16_t** *array2D, int dim0, int dim1);
+extern int getMem3Duint16 (uint16_t** **array3D,int dim0, int dim1, int dim2);
 
 extern int getMem2Ddistblk (distblk** *array2D, int dim0, int dim1);
 extern int getMem3Ddistblk (distblk** **array3D, int dim0, int dim1, int dim2);
@@ -118,8 +118,8 @@ extern void freeMem3Dint (int     ** *array3D);
 extern void freeMem4Dint (int    ** **array4D);
 extern void freeMem5Dint (int   ** ***array5D);
 
-extern void freeMem2Duint16 (uint16** array2D);
-extern void freeMem3Duint16 (uint16** *array3D);
+extern void freeMem2Duint16 (uint16_t** array2D);
+extern void freeMem3Duint16 (uint16_t** *array3D);
 
 extern void freeMem2Dint64 (int64    ** array2D);
 extern void freeMem3Dint64 (int64   ** *array3D);

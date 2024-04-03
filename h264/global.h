@@ -1,6 +1,8 @@
 #pragma once
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
+#define NOMINMAX
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -8,20 +10,19 @@
 #include <time.h>
 #include <sys/timeb.h>
 
+#include <cstdint>
+#include <string>
+
 //{{{  defines
 typedef unsigned char  byte;   // byte type definition
-typedef unsigned char  uint8;  // type definition for unsigned char (same as byte, 8 bits)
-typedef unsigned short uint16; // type definition for unsigned short (16 bits)
-typedef unsigned int   uint32; // type definition for unsigned int (32 bits)
-
-typedef char  int8;
-typedef short int16;
-typedef int   int32;
+//typedef unsigned char  uint8_t;  // type definition for unsigned char (same as byte, 8 bits)
+typedef unsigned short uint16_t; // type definition for unsigned short (16 bits)
+//typedef unsigned int   uint32_t; // type definition for unsigned int (32 bits)
 
 typedef byte   sPixel;    // pixel type
-typedef uint16 distpel;   // distortion type (for pixels)
-typedef int32  distblk;   // distortion type (for sMacroBlock)
-typedef int32  transpel;  // transformed coefficient type
+typedef uint16_t distpel;   // distortion type (for pixels)
+typedef int32_t  distblk;   // distortion type (for sMacroBlock)
+typedef int32_t  transpel;  // transformed coefficient type
 
 
 #define MAX_NUM_SLICES          8
@@ -33,7 +34,7 @@ typedef int32  transpel;  // transformed coefficient type
 #define MCBUF_CHROMA_PAD_X      16
 #define MCBUF_CHROMA_PAD_Y      8
 
-#define NUM_BLOCK_TYPES        22
+#define NUM_BLOCK_TYPES         22
 
 #define BLOCK_SHIFT            2
 #define BLOCK_SIZE             4
@@ -72,7 +73,7 @@ typedef int32  transpel;  // transformed coefficient type
 #define INVALIDINDEX     (-135792468)
 
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
-#define ZEROBYTES_SHORTSTARTCODE  2 //indicates the number of zero bytes in the short start-code prefix
+#define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the short start-code prefix
 //}}}
 
 #include "win32.h"
@@ -81,27 +82,6 @@ typedef int32  transpel;  // transformed coefficient type
 #include "sps.h"
 #include "pps.h"
 
-//{{{  enum eMBModeType
-typedef enum {
-  PSKIP        =  0,
-  BSKIP_DIRECT =  0,
-  P16x16       =  1,
-  P16x8        =  2,
-  P8x16        =  3,
-  SMB8x8       =  4,
-  SMB8x4       =  5,
-  SMB4x8       =  6,
-  SMB4x4       =  7,
-  P8x8         =  8,
-  I4MB         =  9,
-  I16MB        = 10,
-  IBLOCK       = 11,
-  SI4MB        = 12,
-  I8MB         = 13,
-  IPCM         = 14,
-  MAXMODE      = 15
-  } eMBModeType;
-//}}}
 #include "functions.h"
 //}}}
 
@@ -327,7 +307,7 @@ typedef enum {
 
 //{{{
 struct sBiContext {
-  uint16        state; // index into state-table CP
+  uint16_t        state; // index into state-table CP
   unsigned char MPS;   // least probable symbol 0/1 CP
   unsigned char dummy; // for alignment
   };
