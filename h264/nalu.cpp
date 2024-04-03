@@ -58,13 +58,13 @@ sAnnexB* allocAnnexB (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void freeAnnexB (sAnnexB** p_annexB) {
+void freeAnnexB (sAnnexB** annexB) {
 
-  free ((*p_annexB)->naluBuffer);
-  (*p_annexB)->naluBuffer = NULL;
+  free ((*annexB)->naluBuffer);
+  (*annexB)->naluBuffer = NULL;
 
-  free (*p_annexB);
-  *p_annexB = NULL;
+  free (*annexB);
+  *annexB = NULL;
   }
 //}}}
 

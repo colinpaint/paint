@@ -2244,41 +2244,39 @@ static void endDecodeFrame (sDecoder* decoder) {
   if (picStructure == eTopField || picStructure == eFrame) {
     //{{{
     if (sliceType == eSliceI && isIdr)
-      strcpy (decoder->debug.sliceTypeStr, "IDR");
+      decoder->debug.sliceTypeString = "IDR";
     else if (sliceType == eSliceI)
-      strcpy (decoder->debug.sliceTypeStr, " I ");
+      decoder->debug.sliceTypeString = " I ";
     else if (sliceType == eSliceP)
-      strcpy (decoder->debug.sliceTypeStr, " P ");
+      decoder->debug.sliceTypeString = " P ";
     else if (sliceType == eSliceSP)
-      strcpy (decoder->debug.sliceTypeStr, "SP ");
+      decoder->debug.sliceTypeString = "SP ";
     else if  (sliceType == eSliceSI)
-      strcpy (decoder->debug.sliceTypeStr, "SI ");
+      decoder->debug.sliceTypeString = "SI ";
     else if (refpic)
-      strcpy (decoder->debug.sliceTypeStr, " B ");
+      decoder->debug.sliceTypeString = " B ";
     else
-      strcpy (decoder->debug.sliceTypeStr, " b ");
+      decoder->debug.sliceTypeString = " b ";
     if (picStructure == eFrame)
-      strncat (decoder->debug.sliceTypeStr, "    ", 8 - strlen (decoder->debug.sliceTypeStr));
-    decoder->debug.sliceTypeStr[3] = 0;
+      decoder->debug.sliceTypeString += "    ";
     }
     //}}}
   else if (picStructure == eBotField) {
     //{{{
     if (sliceType == eSliceI && isIdr)
-      strncat (decoder->debug.sliceTypeStr, "|IDR", 8-strlen (decoder->debug.sliceTypeStr));
+      decoder->debug.sliceTypeString += "|IDR";
     else if (sliceType == eSliceI)
-      strncat (decoder->debug.sliceTypeStr, "| I ", 8-strlen (decoder->debug.sliceTypeStr));
+      decoder->debug.sliceTypeString += "| I ";
     else if (sliceType == eSliceP)
-      strncat (decoder->debug.sliceTypeStr, "| P ", 8-strlen (decoder->debug.sliceTypeStr));
+      decoder->debug.sliceTypeString += "| P ";
     else if (sliceType == eSliceSP)
-      strncat (decoder->debug.sliceTypeStr, "|SP ", 8-strlen (decoder->debug.sliceTypeStr));
+      decoder->debug.sliceTypeString += "|SP ";
     else if  (sliceType == eSliceSI)
-      strncat (decoder->debug.sliceTypeStr, "|SI ", 8-strlen (decoder->debug.sliceTypeStr));
+      decoder->debug.sliceTypeString += "|SI ";
     else if (refpic)
-      strncat (decoder->debug.sliceTypeStr, "| B ", 8-strlen (decoder->debug.sliceTypeStr));
+      decoder->debug.sliceTypeString += "| B ";
     else
-      strncat (decoder->debug.sliceTypeStr, "| b ", 8-strlen (decoder->debug.sliceTypeStr));
-    decoder->debug.sliceTypeStr[8] = 0;
+      decoder->debug.sliceTypeString += "| b ";
     }
     //}}}
   if ((picStructure == eFrame) || picStructure == eBotField) {
@@ -2300,7 +2298,7 @@ static void endDecodeFrame (sDecoder* decoder) {
              decoder->decodeFrameNum,
              decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
              (int)timeNorm (timeDiff (&decoder->debug.startTime, &decoder->debug.endTime)),
-             decoder->debug.sliceTypeStr,
+             decoder->debug.sliceTypeString,
              pocNum, picNum, numOutputFrames);
 
     if (decoder->param.outDebug)

@@ -3,23 +3,18 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <assert.h>
-#include <time.h>
-#include <sys/timeb.h>
-
 #include <cstdint>
 #include <string>
+#include <stdlib.h>
+#include <time.h>
 
 #include "win32.h"
+#include "functions.h"
+
 #include "frame.h"
 #include "nalu.h"
 #include "sps.h"
 #include "pps.h"
-
-#include "functions.h"
 
 //{{{  defines
 #define MAX_NUM_SLICES          8
@@ -839,7 +834,7 @@ struct sDebug {
   std::string profileString;
 
   eSliceType  sliceType;
-  char        sliceTypeStr[9];
+  std::string sliceTypeString;
   std::string sliceString;
 
   eSliceType  outSliceType;

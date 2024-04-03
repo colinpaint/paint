@@ -41,28 +41,28 @@ typedef enum {
   NALU_PRIORITY_HIGHEST     = 3
   } eNalRefIdc;
 //}}}
-typedef struct Nalu {
+struct sNalu {
   int        startCodeLen; // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
   uint32_t   len;          // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
   uint32_t   maxSize;      // NAL Unit Buffer size
   int        forbiddenBit; // should be always false
   eNaluType  unitType;     // NALU_TYPE_xxxx
   eNalRefIdc refId;        // NALU_PRIORITY_xxxx
-  uint8_t*      buf;          // contains the first uint8_t followed by the EBSP
-  uint16_t     lostPackets;  // true, if packet loss is detected
-  } sNalu;
+  uint8_t*   buf;          // contains the first uint8_t followed by the EBSP
+  uint16_t   lostPackets;  // true, if packet loss is detected
+  };
 
 struct sDecoder;
-extern sAnnexB* allocAnnexB (sDecoder* decoder);
-extern void openAnnexB (sAnnexB* annexB, uint8_t* chunk, size_t chunkSize);
-extern void resetAnnexB (sAnnexB* annexB);
-extern void freeAnnexB (sAnnexB** p_annexB);
+sAnnexB* allocAnnexB (sDecoder* decoder);
+void openAnnexB (sAnnexB* annexB, uint8_t* chunk, size_t chunkSize);
+void resetAnnexB (sAnnexB* annexB);
+void freeAnnexB (sAnnexB** annexB);
 
-extern sNalu* allocNALU (int);
-extern void freeNALU (sNalu* n);
+sNalu* allocNALU (int);
+void freeNALU (sNalu* n);
 
-extern void checkZeroByteVCL (sDecoder* decoder, sNalu* nalu);
-extern void checkZeroByteNonVCL (sDecoder* decoder, sNalu* nalu);
+void checkZeroByteVCL (sDecoder* decoder, sNalu* nalu);
+void checkZeroByteNonVCL (sDecoder* decoder, sNalu* nalu);
 
-extern int readNalu (sDecoder* decoder, sNalu* nalu);
-extern int RBSPtoSODB (uint8_t* bitStreamBuffer, int lastBytePos);
+int readNalu (sDecoder* decoder, sNalu* nalu);
+int RBSPtoSODB (uint8_t* bitStreamBuffer, int lastBytePos);
