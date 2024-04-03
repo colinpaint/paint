@@ -1221,7 +1221,7 @@ public:
       //{{{  draw decoder info
       ImGui::PushFont (testApp.getMonoFont());
 
-      ImGui::TextColored (kWhite, decoder->debug.profileStr.c_str());
+      ImGui::TextColored (kWhite, decoder->debug.profileString.c_str());
       mDebugLines = 1;
 
       int spsIndex = 0;
@@ -1240,9 +1240,9 @@ public:
         ppsIndex++;
         }
 
-      ImGui::TextColored (getSliceColor (decoder->debug.sliceType), decoder->debug.sliceStr);
+      ImGui::TextColored (getSliceColor (decoder->debug.sliceType), decoder->debug.sliceString.c_str());
       ImGui::SameLine();
-      ImGui::TextColored (getSliceColor (decoder->debug.outSliceType), decoder->debug.outStr.c_str());
+      ImGui::TextColored (getSliceColor (decoder->debug.outSliceType), decoder->debug.outString.c_str());
       mDebugLines++;
 
       ImGui::PopFont();

@@ -833,17 +833,17 @@ struct sParam {
 //}}}
 //{{{
 struct sDebug {
-  TIME_T  startTime;
-  TIME_T  endTime;
+  TIME_T      startTime;
+  TIME_T      endTime;
 
-  std::string profileStr;
+  std::string profileString;
 
-  eSliceType sliceType;
-  char    sliceTypeStr[9];
-  char    sliceStr[128];
+  eSliceType  sliceType;
+  char        sliceTypeStr[9];
+  std::string sliceString;
 
-  eSliceType outSliceType;
-  std::string outStr;
+  eSliceType  outSliceType;
+  std::string outString;
   };
 //}}}
 //{{{

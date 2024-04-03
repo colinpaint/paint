@@ -124,7 +124,7 @@ static void processUserDataT35 (uint8_t* payload, int size, sDecoder* decoder) {
   if (decoder->param.seiDebug) {
     int offset = 0;
     int itu_t_t35_country_code = payload[offset++];
-    printf("ITU-T:%d", itu_t_t35_country_code);
+    printf ("ITU-T:%d", itu_t_t35_country_code);
 
     if (itu_t_t35_country_code == 0xFF) {
       int itu_t_t35_country_code_extension_byte = payload[offset++];

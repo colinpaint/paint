@@ -2296,7 +2296,7 @@ static void endDecodeFrame (sDecoder* decoder) {
 
     decoder->debug.outSliceType = (eSliceType)sliceType;
 
-    decoder->debug.outStr = fmt::format ("{} {}:{}:{:2d} {:3d}ms ->{}-> poc:{} pic:{} -> {}",
+    decoder->debug.outString = fmt::format ("{} {}:{}:{:2d} {:3d}ms ->{}-> poc:{} pic:{} -> {}",
              decoder->decodeFrameNum,
              decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
              (int)timeNorm (timeDiff (&decoder->debug.startTime, &decoder->debug.endTime)),
@@ -2304,7 +2304,7 @@ static void endDecodeFrame (sDecoder* decoder) {
              pocNum, picNum, numOutputFrames);
 
     if (decoder->param.outDebug)
-      cLog::log (LOGINFO, "-> " + decoder->debug.outStr);
+      cLog::log (LOGINFO, "-> " + decoder->debug.outString);
     //}}}
 
     // I or P pictures ?
@@ -2524,19 +2524,19 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
 
     // debug spsStr
-    decoder->debug.profileStr = fmt::format ("profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
+    decoder->debug.profileString = fmt::format ("profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
              decoder->coding.profileIdc,
              decoder->param.source.width[0], decoder->param.source.height[0],
              decoder->coding.width, decoder->coding.height,
              decoder->coding.yuvFormat == YUV400 ? " 400 ":
                decoder->coding.yuvFormat == YUV420 ? " 420":
                  decoder->coding.yuvFormat == YUV422 ? " 422":" 4:4:4",
-             decoder->param.source.bitDepth[0], 
-             decoder->param.source.bitDepth[1], 
+             decoder->param.source.bitDepth[0],
+             decoder->param.source.bitDepth[1],
              decoder->param.source.bitDepth[2]);
 
     // print profile debug
-    cLog::log (LOGINFO, decoder->debug.profileStr);
+    cLog::log (LOGINFO, decoder->debug.profileString);
     }
     //}}}
 
@@ -3084,13 +3084,13 @@ static int readSlice (sSlice* slice) {
 
         // debug
         decoder->debug.sliceType = slice->sliceType;
-        sprintf (decoder->debug.sliceStr, "%s:%d:%6d -> pps:%d frame:%2d %c %s%s",
+        decoder->debug.sliceString = fmt::format ("{}:{}:{:6d} -> pps:{} frame:{:2d} {} {}{}",
                  (nalu->unitType == NALU_TYPE_IDR) ? "IDR":"SLC", slice->refId, nalu->len,
                  slice->ppsId, slice->frameNum,
                  slice->sliceType ? (slice->sliceType == 1) ? 'B':((slice->sliceType == 2) ? 'I':'?'):'P',
                  slice->fieldPic ? " field":"", slice->mbAffFrame ? " mbAff":"");
         if (decoder->param.sliceDebug)
-          cLog::log (LOGINFO, decoder->debug.sliceStr);
+          cLog::log (LOGINFO, decoder->debug.sliceString);
 
         return curHeader;
         }
@@ -3099,7 +3099,7 @@ static int readSlice (sSlice* slice) {
       //{{{
       case NALU_TYPE_SPS: {
         int spsId = readNaluSps (decoder, nalu);
-        if (decoder->param.spsDebug) 
+        if (decoder->param.spsDebug)
           cLog::log (LOGINFO, getSpsString (&decoder->sps[spsId]));
         break;
         }
@@ -3107,7 +3107,7 @@ static int readSlice (sSlice* slice) {
       //{{{
       case NALU_TYPE_PPS: {
         int ppsId = readNaluPps (decoder, nalu);
-        if (decoder->param.ppsDebug) 
+        if (decoder->param.ppsDebug)
           cLog::log (LOGINFO, getPpsString (&decoder->pps[ppsId]));
         break;
         }
