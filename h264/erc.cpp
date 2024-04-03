@@ -727,7 +727,6 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
   if(numOfPredBlocks == 0)
   {
     return 0;
-    // assert (numOfPredBlocks != 0); !!!KS hmm, trying to continue...
   }
   return (distortion/numOfPredBlocks);
 }
@@ -1668,8 +1667,6 @@ static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDpb* dpb)
   /* get the last ref pic in dpb */
   sPicture *refPic = get_last_ref_pic_from_dpb(dpb);
 
-  assert(refPic != NULL);
-
   /* copy all the struc from this to current conceal pic */
   decoder->concealSliceType = eSliceP;
   copy_to_conceal(refPic, picture, decoder);
@@ -1996,8 +1993,6 @@ void conceal_non_ref_pics (sDpb* dpb, int diff)
         conceal_to_picture->framePoc = missingpoc;
         conceal_to_picture->poc = missingpoc;
         conceal_from_picture = get_pic_from_dpb(dpb, missingpoc, &pos);
-
-        assert(conceal_from_picture != NULL);
 
         dpb->usedSize = pos + 1;
 

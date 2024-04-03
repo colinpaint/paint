@@ -101,7 +101,6 @@ static void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStruct
 
   sDecoder* decoder = dpb->decoder;
 
-  assert (picStructure != eFrame);
   if (curr_pic_num < 0)
     curr_pic_num += (2 * decoder->coding.maxFrameNum);
 
@@ -1257,9 +1256,6 @@ static void adaptiveMemoryManagement (sDpb* dpb, sPicture* p) {
 
   decoder->lastHasMmco5 = 0;
 
-  assert (!p->isIDR);
-  assert (p->adaptRefPicBufFlag);
-
   while (p->decRefPicMarkBuffer) {
     tmp_drpm = p->decRefPicMarkBuffer;
     switch (tmp_drpm->memManagement) {
@@ -1344,8 +1340,6 @@ static void adaptiveMemoryManagement (sDpb* dpb, sPicture* p) {
 //}}}
 //{{{
 static void slidingWindowMemoryManagement (sDpb* dpb, sPicture* p) {
-
-  assert (!p->isIDR);
 
   // if this is a reference pic with sliding window, unmark first ref frame
   if (dpb->refFramesInBuffer == imax (1, dpb->numRefFrames) - dpb->longTermRefFramesInBuffer) {

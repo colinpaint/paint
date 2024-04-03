@@ -796,7 +796,6 @@ bool exitMacroblock (sSlice* slice, int eos_bit) {
     slice->mbIndex = FmoGetNextMBNr (decoder, slice->mbIndex);
     if (slice->mbIndex == -1) {
       // End of sSlice group, MUST be end of slice
-      assert (slice->nalStartCode (slice, eos_bit) == true);
       return true;
       }
 

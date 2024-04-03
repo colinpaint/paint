@@ -224,8 +224,6 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
 //{{{
 static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
 
-  assert (frameStore->isUsed < 3);
-
   if (frameStore->isUsed & 0x01) {
     // we have a top field, construct an empty bottom field
     sPicture* picture = frameStore->topField;

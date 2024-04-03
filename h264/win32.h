@@ -3,8 +3,6 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <assert.h>
 
 #if defined(WIN32) || defined (WIN64)
   //{{{  windows
@@ -56,16 +54,6 @@
   #define OPENFLAGS_READ  O_RDONLY
   #define OPEN_PERMISSIONS S_IRUSR | S_IWUSR
 
-  //#if __STDC_VERSION__ >= 199901L
-     /* "inline" is a keyword */
-  //#else
-  //  #define inline /* nothing */
-  //#endif
-
-  //#define forceinline inline
-
-  typedef long long int64_t;
-  typedef uint32_t long long  uint64;
   #define FORMAT_OFF_T "lld"
 
   #ifndef INT64_MIN

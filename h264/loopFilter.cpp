@@ -1420,8 +1420,6 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
 
     mb->DeblockCall = 1;
     getMbPos (decoder, mbIndex, decoder->mbSize[eLuma], &mb_x, &mb_y);
-    if (mb->mbType == I8MB)
-      assert(mb->lumaTransformSize8x8flag);
 
     filterNon8x8LumaEdgesFlag[1] = filterNon8x8LumaEdgesFlag[3] = !(mb->lumaTransformSize8x8flag);
 
@@ -1578,9 +1576,6 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
     mb->DeblockCall = 1;
     getMbPos (decoder, mbIndex, decoder->mbSize[eLuma], &mb_x, &mb_y);
 
-    if (mb->mbType == I8MB)
-      assert(mb->lumaTransformSize8x8flag);
-
     filterNon8x8LumaEdgesFlag[1] =
       filterNon8x8LumaEdgesFlag[3] = !(mb->lumaTransformSize8x8flag);
 
@@ -1676,9 +1671,6 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
 
     mb->DeblockCall = 1;
     getMbPos (decoder, mbIndex, decoder->mbSize[eLuma], &mb_x, &mb_y);
-
-    if (mb->mbType == I8MB)
-      assert (mb->lumaTransformSize8x8flag);
 
     filterNon8x8LumaEdgesFlag[1] = filterNon8x8LumaEdgesFlag[3] = !(mb->lumaTransformSize8x8flag);
 

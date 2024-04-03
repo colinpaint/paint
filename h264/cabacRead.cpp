@@ -1350,7 +1350,6 @@ void setReadCbpCoefsCabac (sSlice* slice) {
       break;
 
     default:
-      assert (1);
       slice->readCBPcoeffs = NULL;
       break;
     }

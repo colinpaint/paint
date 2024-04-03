@@ -340,8 +340,6 @@ int FmoGetLastMBInSliceGroup (sDecoder* decoder, int SliceGroup) {
 //{{{
 int FmoGetSliceGroupId (sDecoder* decoder, int mb) {
 
-  assert (mb < (int) decoder->picSizeInMbs);
-  assert (decoder->mbToSliceGroupMap != NULL);
   return decoder->mbToSliceGroupMap[mb];
   }
 //}}}
