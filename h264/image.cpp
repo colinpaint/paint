@@ -28,7 +28,7 @@
 #include "../common/cLog.h"
 //}}}
 namespace {
-  //{{{  static const tables
+  //{{{  const tables
   #define CTX_UNUSED {0,64}
   #define CTX_UNDEF  {0,63}
 
@@ -1390,6 +1390,7 @@ namespace {
       //}}}
     }
   //}}}
+
   //{{{
   void fillWeightedPredParam (sSlice* slice) {
 
@@ -1491,6 +1492,7 @@ namespace {
       }
     }
   //}}}
+
   //{{{
   void setCoding (sDecoder* decoder) {
 
@@ -1786,6 +1788,7 @@ namespace {
     output->yuvFormat = source->yuvFormat = (eYuvFormat)sps->chromaFormatIdc;
     }
   //}}}
+
   //{{{
   void reorderLists (sSlice* slice) {
 
