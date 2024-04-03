@@ -25,8 +25,8 @@ typedef enum {
   V210       =  4  // Video Clarity 422 format (10 bits)
   } ePixelFormat;
 
-typedef struct FrameFormat {
-  eYuvFormat yuvFormat;         // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
+struct sFrameFormat {
+  eYuvFormat   yuvFormat;       // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
   eColorModel  colourModel;     // 4:4:4 format (0: YUV, 1: RGB, 2: XYZ)
   ePixelFormat pixelFormat;     // pixel format support for certain interleaved yuv sources
 
@@ -38,4 +38,4 @@ typedef struct FrameFormat {
 
   int          sizeCmp[3];      // component sizes (width * height)
   int          bitDepth[3];     // component bit depth
-  } sFrameFormat;
+  };

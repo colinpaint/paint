@@ -369,8 +369,8 @@ struct sPicMotion;
 struct sMacroBlock;
 struct sSlice;
 struct sDecoder;
-//{{{  sBitStream
-typedef struct {
+//{{{
+struct sBitStream {
   // cavlc Decoding
   uint8_t* bitStreamBuffer; // codebuffer for read bytes
   int   bitStreamOffset; // position in the codebuffer, bit-oriented
@@ -380,42 +380,42 @@ typedef struct {
   // cabac Decoding
   int   readLen;         // position in the codebuffer
   int   codeLen;         // overall codebuffer length
-  } sBitStream;
+  };
 //}}}
-//{{{  sCabacDecodeEnv
-typedef struct {
+//{{{
+struct sCabacDecodeEnv {
   uint32_t range;
   uint32_t value;
-  int          bitsLeft;
-  uint8_t*        codeStream;
-  int*         codeStreamLen;
-  } sCabacDecodeEnv;
+  int      bitsLeft;
+  uint8_t* codeStream;
+  int*     codeStreamLen;
+  };
 //}}}
-//{{{  sSyntaxElement
-typedef struct SyntaxElement {
-  int          type;        // type of syntax element for data part.
-  int          value1;      // numerical value of syntax element
-  int          value2;      // for blocked symbols, e.g. run/level
-  int          len;         // length of code
-  int          inf;         // info part of eCavlc code
+//{{{
+struct sSyntaxElement {
+  int      type;        // type of syntax element for data part.
+  int      value1;      // numerical value of syntax element
+  int      value2;      // for blocked symbols, e.g. run/level
+  int      len;         // length of code
+  int      inf;         // info part of eCavlc code
   uint32_t bitpattern;  // cavlc bitpattern
-  int          context;     // cabac context
-  int          k;           // cabac context for coeff_count,uv
+  int      context;     // cabac context
+  int      k;           // cabac context for coeff_count,uv
 
   // eCavlc mapping to syntaxElement
   void (*mapping) (int, int, int*, int*);
 
   // eCabac actual coding method of each individual syntax element type
-  void (*reading) (sMacroBlock*, struct SyntaxElement*, sCabacDecodeEnv*);
-  } sSyntaxElement;
+  void (*reading) (sMacroBlock*, sSyntaxElement*, sCabacDecodeEnv*);
+  };
 //}}}
-//{{{  sDataPartition
-typedef struct DataPartition {
-  sBitStream* stream;
+//{{{
+struct sDataPartition {
+  sBitStream*     stream;
   sCabacDecodeEnv cabacDecodeEnv;
 
-  int (*readSyntaxElement) (sMacroBlock*, struct SyntaxElement*, struct DataPartition*);
-  } sDataPartition;
+  int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
+  };
 //}}}
 //{{{
 struct sMotionVec {
@@ -505,9 +505,9 @@ struct sMacroBlock {
   void (*iTrans8x8) (sMacroBlock*, eColorPlane, int, int);
   void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, int16_t, sPicMotion**, int, int, int, int, int);
   int  (*readStoreCBPblockBit) (sMacroBlock*, sCabacDecodeEnv*, int);
-  char (*readRefPictureIndex) (sMacroBlock*, struct SyntaxElement*, struct DataPartition*, char, int);
-  void (*readCompCoef4x4cabac) (sMacroBlock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
-  void (*readCompCoef8x8cabac) (sMacroBlock*, struct SyntaxElement*, eColorPlane);
+  char (*readRefPictureIndex) (sMacroBlock*, sSyntaxElement*, sDataPartition*, char, int);
+  void (*readCompCoef4x4cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane, int(*)[4], int, int);
+  void (*readCompCoef8x8cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane);
   void (*readCompCoef4x4cavlc) (sMacroBlock*, eColorPlane, int(*)[4], int, int, uint8_t**);
   void (*readCompCoef8x8cavlc) (sMacroBlock*, eColorPlane, int(*)[8], int, int, uint8_t**);
   };
