@@ -5,10 +5,168 @@
 #include "nalu.h"
 //}}}
 
-//{{{
-static void dumpNalu (sNalu* nalu) {
+namespace {
+  //{{{
+  int findStartCode (uint8_t* buf, int zerosInStartcode) {
 
-  switch (nalu->unitType) {
+    for (int i = 0; i < zerosInStartcode; i++)
+      if (*(buf++) != 0)
+        return 0;
+
+    if (*buf != 1)
+      return 0;
+
+    return 1;
+    }
+  //}}}
+  }
+
+// sAnnexB
+//{{{
+sAnnexB::sAnnexB (sDecoder* decoder) {
+  naluBuffer = (uint8_t*)malloc (decoder->nalu->maxSize);
+  }
+//}}}
+//{{{
+sAnnexB::~sAnnexB() {
+  free (naluBuffer);
+  }
+//}}}
+
+//{{{
+void sAnnexB::open (uint8_t* chunk, size_t chunkSize) {
+
+  buffer = chunk;
+  bufferSize = chunkSize;
+
+  bufferPtr = chunk;
+  bytesInBuffer = chunkSize;
+  }
+//}}}
+//{{{
+void sAnnexB::reset() {
+
+  bytesInBuffer = bufferSize;
+  bufferPtr = buffer;
+  }
+//}}}
+
+//{{{
+uint8_t sAnnexB::getByte() {
+
+  if (bytesInBuffer) {
+    bytesInBuffer--;
+    return *bufferPtr++;
+    }
+
+  return 0;
+  }
+//}}}
+
+//{{{
+sNalu::sNalu (int bufferSize) {
+
+  buf = (uint8_t*)calloc (bufferSize, sizeof (uint8_t));
+  maxSize = bufferSize;
+  }
+//}}}
+//{{{
+sNalu::~sNalu() {
+
+  free (buf);
+  }
+//}}}
+
+// sNalu
+//{{{
+void sNalu::checkZeroByteVCL (sDecoder* decoder) {
+
+  int CheckZeroByte = 0;
+
+  // This function deals only with VCL NAL units
+  if (!(unitType >= NALU_TYPE_SLICE && unitType <= NALU_TYPE_IDR))
+    return;
+
+  if (decoder->gotLastNalu)
+    decoder->naluCount = 0;
+  decoder->naluCount++;
+
+  // the first VCL NAL unit that is the first NAL unit after last VCL NAL unit indicates
+  // the start of a new access unit and hence the first NAL unit of the new access unit.
+  // (sounds like a tongue twister :-)
+  if (decoder->naluCount == 1)
+    CheckZeroByte = 1;
+  decoder->gotLastNalu = 1;
+
+  // because it is not a very serious problem, we do not exit here
+  if (CheckZeroByte && startCodeLen == 3)
+    printf ("warning: zero_byte shall exist\n");
+   }
+//}}}
+//{{{
+void sNalu::checkZeroByteNonVCL (sDecoder* decoder) {
+
+  int CheckZeroByte = 0;
+
+  // This function deals only with non-VCL NAL units
+  if (unitType >= 1 &&
+      unitType <= 5)
+    return;
+
+  // for SPS and PPS, zero_byte shall exist
+  if (unitType == NALU_TYPE_SPS || unitType == NALU_TYPE_PPS)
+    CheckZeroByte = 1;
+
+  // check the possibility of the current NALU to be the start of a new access unit, according to 7.4.1.2.3
+  if (unitType == NALU_TYPE_AUD || unitType == NALU_TYPE_SPS ||
+      unitType == NALU_TYPE_PPS || unitType == NALU_TYPE_SEI ||
+      (unitType >= 13 && unitType <= 18)) {
+    if (decoder->gotLastNalu) {
+      // deliver the last access unit to decoder
+      decoder->gotLastNalu = 0;
+      decoder->naluCount = 0;
+      }
+    }
+  decoder->naluCount++;
+
+  // for the first NAL unit in an access unit, zero_byte shall exists
+  if (decoder->naluCount == 1)
+    CheckZeroByte = 1;
+
+  if (CheckZeroByte && startCodeLen == 3)
+    printf ("Warning: zero_byte should exist\n");
+    //because it is not a very serious problem, we do not exit here
+  }
+//}}}
+
+//{{{
+int sNalu::readNalu (sDecoder* decoder) {
+
+  int ret = getNALU (decoder->annexB, decoder);
+  if (ret < 0)
+    error ("error getting NALU");
+  if (ret == 0)
+    return 0;
+
+  // In some cases, zero_byte shall be present.
+  // If current NALU is a VCL NALU, we can't tell whether it is the first VCL NALU at this point,
+  // so only non-VCL NAL unit is checked here.
+  checkZeroByteNonVCL (decoder);
+  ret = NALUtoRBSP();
+  if (ret < 0)
+    error ("NALU invalid startcode");
+
+  // Got a NALU
+  if (forbiddenBit)
+    error ("NALU with forbiddenBit set");
+
+  return len;
+  }
+//}}}
+//{{{
+void sNalu::debug() {
+
+  switch (unitType) {
     case NALU_TYPE_IDR:
       printf ("IDR");
       break;
@@ -44,169 +202,14 @@ static void dumpNalu (sNalu* nalu) {
     }
 
   printf (" %c:%d:%d:%d:%d\n",
-          nalu->startCodeLen == 4 ? 'l':'s', nalu->forbiddenBit, nalu->refId, nalu->unitType, nalu->len);
+          startCodeLen == 4 ? 'l':'s', forbiddenBit, refId, unitType, len);
 
   }
 //}}}
 
+// private
 //{{{
-sAnnexB* allocAnnexB (sDecoder* decoder) {
-
-  sAnnexB* annexB = (sAnnexB*)calloc (1, sizeof(sAnnexB));
-  annexB->naluBuffer = (uint8_t*)malloc (decoder->nalu->maxSize);
-  return annexB;
-  }
-//}}}
-//{{{
-void freeAnnexB (sAnnexB** annexB) {
-
-  free ((*annexB)->naluBuffer);
-  (*annexB)->naluBuffer = NULL;
-
-  free (*annexB);
-  *annexB = NULL;
-  }
-//}}}
-
-//{{{
-void openAnnexB (sAnnexB* annexB, uint8_t* chunk, size_t chunkSize) {
-
-  annexB->buffer = chunk;
-  annexB->bufferSize = chunkSize;
-
-  annexB->bufferPtr = chunk;
-  annexB->bytesInBuffer = chunkSize;
-  }
-//}}}
-//{{{
-void resetAnnexB (sAnnexB* annexB) {
-
-  annexB->bytesInBuffer = annexB->bufferSize;
-  annexB->bufferPtr = annexB->buffer;
-  }
-//}}}
-
-//{{{
-sNalu* allocNALU (int buffersize) {
-
-  sNalu* nalu = (sNalu*)calloc (1, sizeof(sNalu));
-  if (nalu == NULL)
-    noMemoryExit ("AllocNALU");
-
-  nalu->buf = (uint8_t*)calloc (buffersize, sizeof (uint8_t));
-  if (nalu->buf == NULL) {
-    free (nalu);
-    noMemoryExit ("AllocNALU buffer");
-    }
-  nalu->maxSize = buffersize;
-
-  return nalu;
-  }
-//}}}
-//{{{
-void freeNALU (sNalu* n) {
-
-  if (n != NULL) {
-    if (n->buf != NULL) {
-      free (n->buf);
-      n->buf = NULL;
-      }
-    free (n);
-    }
-  }
-//}}}
-
-//{{{
-void checkZeroByteVCL (sDecoder* decoder, sNalu* nalu) {
-
-  int CheckZeroByte = 0;
-
-  // This function deals only with VCL NAL units
-  if (!(nalu->unitType >= NALU_TYPE_SLICE &&
-        nalu->unitType <= NALU_TYPE_IDR))
-    return;
-
-  if (decoder->gotLastNalu)
-    decoder->naluCount = 0;
-  decoder->naluCount++;
-
-  // the first VCL NAL unit that is the first NAL unit after last VCL NAL unit indicates
-  // the start of a new access unit and hence the first NAL unit of the new access unit.
-  // (sounds like a tongue twister :-)
-  if (decoder->naluCount == 1)
-    CheckZeroByte = 1;
-  decoder->gotLastNalu = 1;
-
-  // because it is not a very serious problem, we do not exit here
-  if (CheckZeroByte && nalu->startCodeLen == 3)
-    printf ("warning: zero_byte shall exist\n");
-   }
-//}}}
-//{{{
-void checkZeroByteNonVCL (sDecoder* decoder, sNalu* nalu) {
-
-  int CheckZeroByte = 0;
-
-  // This function deals only with non-VCL NAL units
-  if (nalu->unitType >= 1 &&
-      nalu->unitType <= 5)
-    return;
-
-  // for SPS and PPS, zero_byte shall exist
-  if (nalu->unitType == NALU_TYPE_SPS ||
-      nalu->unitType == NALU_TYPE_PPS)
-    CheckZeroByte = 1;
-
-  // check the possibility of the current NALU to be the start of a new access unit, according to 7.4.1.2.3
-  if (nalu->unitType == NALU_TYPE_AUD ||
-      nalu->unitType == NALU_TYPE_SPS ||
-      nalu->unitType == NALU_TYPE_PPS ||
-      nalu->unitType == NALU_TYPE_SEI ||
-      (nalu->unitType >= 13 && nalu->unitType <= 18)) {
-    if (decoder->gotLastNalu) {
-      // deliver the last access unit to decoder
-      decoder->gotLastNalu = 0;
-      decoder->naluCount = 0;
-      }
-    }
-  decoder->naluCount++;
-
-  // for the first NAL unit in an access unit, zero_byte shall exists
-  if (decoder->naluCount == 1)
-    CheckZeroByte = 1;
-
-  if (CheckZeroByte && nalu->startCodeLen == 3)
-    printf ("Warning: zero_byte should exist\n");
-    //because it is not a very serious problem, we do not exit here
-  }
-//}}}
-
-//{{{
-static inline uint8_t getByte (sAnnexB* annexB) {
-
-  if (annexB->bytesInBuffer) {
-    annexB->bytesInBuffer--;
-    return *annexB->bufferPtr++;
-    }
-
-  return 0;
-  }
-//}}}
-//{{{
-static inline int findStartCode (uint8_t* buf, int zerosInStartcode) {
-
-  for (int i = 0; i < zerosInStartcode; i++)
-    if (*(buf++) != 0)
-      return 0;
-
-  if (*buf != 1)
-    return 0;
-
-  return 1;
-  }
-//}}}
-//{{{
-static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
+int sNalu::getNALU (sAnnexB* annexB, sDecoder* decoder) {
 
   int naluBufCount = 0;
   uint8_t* naluBufPtr = annexB->naluBuffer;
@@ -221,7 +224,7 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
   else
     while (annexB->bytesInBuffer) {
       naluBufCount++;
-      if ((*(naluBufPtr++) = getByte (annexB)) != 0)
+      if ((*(naluBufPtr++) = annexB->getByte()) != 0)
         break;
       }
 
@@ -245,10 +248,10 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
 
   int leadingZero8BitsCount = 0;
   if (naluBufCount == 3)
-    nalu->startCodeLen = 3;
+    startCodeLen = 3;
   else {
     leadingZero8BitsCount = naluBufCount - 4;
-    nalu->startCodeLen = 4;
+    startCodeLen = 4;
     }
   //{{{  only 1st uint8_t stream NAL unit can have leading_zero_8bits
   if (!annexB->isFirstByteStreamNALU && leadingZero8BitsCount > 0) {
@@ -269,21 +272,21 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
       while (*(naluBufPtr--) == 0)
         naluBufCount--;
 
-      nalu->len = (naluBufCount - 1) - leadingZero8BitsCount;
-      memcpy (nalu->buf, annexB->naluBuffer + leadingZero8BitsCount, nalu->len);
-      nalu->forbiddenBit = (*(nalu->buf) >> 7) & 1;
-      nalu->refId = (eNalRefIdc)((*(nalu->buf) >> 5) & 3);
-      nalu->unitType = (eNaluType)((*(nalu->buf)) & 0x1f);
+      len = (naluBufCount - 1) - leadingZero8BitsCount;
+      memcpy (buf, annexB->naluBuffer + leadingZero8BitsCount, len);
+      forbiddenBit = (*(buf) >> 7) & 1;
+      refId = (eNalRefIdc)((*(buf) >> 5) & 3);
+      unitType = (eNaluType)((*(buf)) & 0x1f);
       annexB->nextStartCodeBytes = 0;
 
       if (decoder->param.naluDebug)
-        dumpNalu (nalu);
+        debug();
 
       return (naluBufCount - 1);
       }
       //}}}
     naluBufCount++;
-    *(naluBufPtr++) = getByte (annexB);
+    *(naluBufPtr++) = annexB->getByte();
     info3 = findStartCode (naluBufPtr - 4, 3);
     if (info3 != 1) {
       info2 = findStartCode (naluBufPtr - 3, 2);
@@ -316,28 +319,28 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
   // - size of Buf is naluBufCount - rewind,
   // - naluBufCount is the number of bytes excluding the next start code,
   // - naluBufCount - LeadingZero8BitsCount is the size of the NALU.
-  nalu->len = naluBufCount - leadingZero8BitsCount;
-  memcpy (nalu->buf, annexB->naluBuffer + leadingZero8BitsCount, nalu->len);
-  nalu->forbiddenBit = (*(nalu->buf) >> 7) & 1;
-  nalu->refId = (eNalRefIdc)((*(nalu->buf) >> 5) & 3);
-  nalu->unitType = (eNaluType)((*(nalu->buf)) & 0x1f);
-  nalu->lostPackets = 0;
+  len = naluBufCount - leadingZero8BitsCount;
+  memcpy (buf, annexB->naluBuffer + leadingZero8BitsCount, len);
+  forbiddenBit = (*(buf) >> 7) & 1;
+  refId = (eNalRefIdc)((*(buf) >> 5) & 3);
+  unitType = (eNaluType)((*(buf)) & 0x1f);
+  lostPackets = 0;
 
   if (decoder->param.naluDebug)
-    dumpNalu (nalu);
+    debug();
 
   return naluBufCount;
   }
 //}}}
 //{{{
-static int NALUtoRBSP (sNalu* nalu) {
+int sNalu::NALUtoRBSP() {
 // NetworkAbstractionLayerUnit to RawByteSequencePayload
 
-  uint8_t* bitStreamBuffer = nalu->buf;
-  int endBytePos = nalu->len;
+  uint8_t* bitStreamBuffer = buf;
+  int endBytePos = len;
   if (endBytePos < 1) {
-    nalu->len = endBytePos;
-    return nalu->len;
+    len = endBytePos;
+    return len;
     }
 
   int count = 0;
@@ -345,8 +348,8 @@ static int NALUtoRBSP (sNalu* nalu) {
   for (int i = 1; i < endBytePos; ++i) {
     // in NAL unit, 0x000000, 0x000001 or 0x000002 shall not occur at any uint8_t-aligned position
     if ((count == ZEROBYTES_SHORTSTARTCODE) && (bitStreamBuffer[i] < 0x03)) {
-      nalu->len = -1;
-      return nalu->len;
+      len = -1;
+      return len;
       }
 
     if ((count == ZEROBYTES_SHORTSTARTCODE) && (bitStreamBuffer[i] == 0x03)) {
@@ -354,15 +357,15 @@ static int NALUtoRBSP (sNalu* nalu) {
       // except when cabac_zero_word is used
       // , in which case the last three bytes of this NAL unit must be 0x000003
       if ((i < endBytePos-1) && (bitStreamBuffer[i+1] > 0x03)) {
-        nalu->len = -1;
-        return nalu->len;
+        len = -1;
+        return len;
         }
 
       // if cabac_zero_word, final uint8_t of NALunit(0x03) is discarded
       // and the last two bytes of RBSP must be 0x0000
       if (i == endBytePos-1) {
-        nalu->len = j;
-        return nalu->len;
+        len = j;
+        return len;
         }
 
       ++i;
@@ -377,38 +380,15 @@ static int NALUtoRBSP (sNalu* nalu) {
     ++j;
     }
 
-  nalu->len = j;
-  return nalu->len;
+  len = j;
+  return len;
   }
 //}}}
 //{{{
-int readNalu (sDecoder* decoder, sNalu* nalu) {
-
-  int ret = getNALU (decoder->annexB, decoder, nalu);
-  if (ret < 0)
-    error ("error getting NALU");
-  if (ret == 0)
-    return 0;
-
-  // In some cases, zero_byte shall be present.
-  // If current NALU is a VCL NALU, we can't tell whether it is the first VCL NALU at this point,
-  // so only non-VCL NAL unit is checked here.
-  checkZeroByteNonVCL (decoder, nalu);
-  ret = NALUtoRBSP (nalu);
-  if (ret < 0)
-    error ("NALU invalid startcode");
-
-  // Got a NALU
-  if (nalu->forbiddenBit)
-    error ("NALU with forbiddenBit set");
-
-  return nalu->len;
-  }
-//}}}
-
-//{{{
-int RBSPtoSODB (uint8_t* bitStreamBuffer, int lastBytePos) {
+int sNalu::RBSPtoSODB (uint8_t* bitStreamBuffer) {
 // RawByteSequencePayload to StringOfDataBits
+
+  int lastBytePos = len - 1;
 
   // find trailing 1
   int bitOffset = 0;

@@ -122,13 +122,9 @@ static void freeSlice (sSlice *slice) {
 //{{{
 static void freeDecoder (sDecoder* decoder) {
 
-  freeAnnexB (&decoder->annexB);
-
+  free (decoder->annexB);
   free (decoder->dpb);
-  decoder->dpb = NULL;
-
   free (decoder);
-  decoder = NULL;
 
   free (decoder->oldSlice);
   decoder->oldSlice = NULL;
@@ -143,11 +139,11 @@ static void freeDecoder (sDecoder* decoder) {
     free (decoder->sliceList);
     }
 
-  freeNALU (decoder->nalu);
-  decoder->nalu = NULL;
+  free (decoder->nalu);
 
   freeDecodedPictures (decoder->outDecodedPics);
   free (decoder);
+  decoder = nullptr;
   }
 //}}}
 
@@ -358,9 +354,9 @@ sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize) {
   decoder->concealMode = param->concealMode;
 
   // init nalu, annexB
-  decoder->nalu = allocNALU (MAX_CODED_FRAME_SIZE);
-  decoder->annexB = allocAnnexB (decoder);
-  openAnnexB (decoder->annexB, chunk, chunkSize);
+  decoder->nalu = new sNalu (MAX_CODED_FRAME_SIZE);
+  decoder->annexB = new sAnnexB (decoder);
+  decoder->annexB->open (chunk, chunkSize);
 
   // init slice
   decoder->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice*));
@@ -410,7 +406,7 @@ void finishDecoder (sDecoder* decoder, sDecodedPic** decPicList) {
   clearDecodedPics (decoder);
   flushDpb (decoder->dpb);
 
-  resetAnnexB (decoder->annexB);
+  decoder->annexB->reset();
 
   decoder->newFrame = 0;
   decoder->prevFrameNum = 0;

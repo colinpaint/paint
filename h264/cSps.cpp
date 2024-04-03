@@ -92,7 +92,7 @@ int cSps::readNalu (sDecoder* decoder, sNalu* nalu) {
   dataPartition->stream->errorFlag = 0;
   dataPartition->stream->readLen = dataPartition->stream->bitStreamOffset = 0;
   memcpy (dataPartition->stream->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
-  dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen = RBSPtoSODB (dataPartition->stream->bitStreamBuffer, nalu->len-1);
+  dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen = nalu->RBSPtoSODB (dataPartition->stream->bitStreamBuffer);
 
   cSps sps;
   sps.readFromStream (decoder, dataPartition, nalu->len);
