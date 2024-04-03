@@ -427,7 +427,7 @@ void closeDecoder (sDecoder* decoder) {
 
   ercClose (decoder, decoder->ercErrorVar);
 
-  for (uint32_t i = 0; i < MAX_PPS; i++) {
+  for (uint32_t i = 0; i < kMaxPps; i++) {
     if (decoder->pps[i].ok && decoder->pps[i].sliceGroupId)
       free (decoder->pps[i].sliceGroupId);
     decoder->pps[i].ok = false;

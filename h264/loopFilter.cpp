@@ -1416,7 +1416,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
     sPixel*** imgUV = p->imgUV;
     sSlice* slice = mb->slice;
     int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrame && mb->mbField)) ? 2 : 4;
-    sSps* activeSps = decoder->activeSps;
+    cSps* activeSps = decoder->activeSps;
 
     mb->DeblockCall = 1;
     getMbPos (decoder, mbIndex, decoder->mbSize[eLuma], &mb_x, &mb_y);
@@ -1573,7 +1573,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
 
     sSlice* slice = mb->slice;
     int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrame && mb->mbField)) ? 2 : 4;
-    sSps* activeSps = decoder->activeSps;
+    cSps* activeSps = decoder->activeSps;
 
     mb->DeblockCall = 1;
     getMbPos (decoder, mbIndex, decoder->mbSize[eLuma], &mb_x, &mb_y);
@@ -1672,7 +1672,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
     sPixel** *imgUV = p->imgUV;
     sSlice* slice = mb->slice;
     int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrame && mb->mbField)) ? 2 : 4;
-    sSps* activeSps = decoder->activeSps;
+    cSps* activeSps = decoder->activeSps;
 
     mb->DeblockCall = 1;
     getMbPos (decoder, mbIndex, decoder->mbSize[eLuma], &mb_x, &mb_y);

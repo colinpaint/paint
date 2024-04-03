@@ -1211,7 +1211,7 @@ static void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
 //{{{
 void decodePOC (sDecoder* decoder, sSlice* slice) {
 
-  sSps* activeSps = decoder->activeSps;
+  cSps* activeSps = decoder->activeSps;
   uint32_t maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
 
   switch (activeSps->pocType) {
@@ -1807,7 +1807,7 @@ static void setCoding (sDecoder* decoder) {
   }
 //}}}
 //{{{
-static void setCodingParam (sDecoder* decoder, sSps* sps) {
+static void setCodingParam (sDecoder* decoder, cSps* sps) {
 
   // maximum vertical motion vector range in luma quarter pixel units
   decoder->coding.profileIdc = sps->profileIdc;
@@ -1926,7 +1926,7 @@ static void setCodingParam (sDecoder* decoder, sSps* sps) {
   }
 //}}}
 //{{{
-static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFrameFormat* output) {
+static void setFormat (sDecoder* decoder, cSps* sps, sFrameFormat* source, sFrameFormat* output) {
 
   static const int kSubWidthC[4] = { 1, 2, 2, 1};
   static const int kSubHeightC[4] = { 1, 2, 1, 1};
@@ -2316,7 +2316,7 @@ static void endDecodeFrame (sDecoder* decoder) {
 static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   sDpb* dpb = slice->dpb;
-  sSps* activeSps = decoder->activeSps;
+  cSps* activeSps = decoder->activeSps;
 
   decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (slice->fieldPic+1);
   decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
@@ -2488,11 +2488,11 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 //{{{
 static void useParameterSet (sDecoder* decoder, sSlice* slice) {
 
-  sPps* pps = &decoder->pps[slice->ppsId];
+  cPps* pps = &decoder->pps[slice->ppsId];
   if (!pps->ok)
     cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid ppsId:{}", slice->ppsId));
 
-  sSps* sps = &decoder->sps[pps->spsId];
+  cSps* sps = &decoder->sps[pps->spsId];
   if (!sps->ok)
     cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid spsId:{} ppsId:{}", slice->ppsId, pps->spsId));
 
@@ -2740,7 +2740,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   slice->transform8x8Mode = decoder->activePps->hasTransform8x8mode;
   slice->chroma444notSeparate = (decoder->activeSps->chromaFormatIdc == YUV444) && !decoder->coding.isSeperateColourPlane;
 
-  sSps* activeSps = decoder->activeSps;
+  cSps* activeSps = decoder->activeSps;
   slice->frameNum = readUv (activeSps->log2maxFrameNumMinus4 + 4, "SLC frameNum", s);
   if (slice->isIDR) {
     decoder->preFrameNum = slice->frameNum;
@@ -3095,7 +3095,7 @@ static int readSlice (sSlice* slice) {
 
       //{{{
       case NALU_TYPE_SPS: {
-        int spsId = sSps::readNalu (decoder, nalu);
+        int spsId = cSps::readNalu (decoder, nalu);
         if (decoder->param.spsDebug)
           cLog::log (LOGINFO, decoder->sps[spsId].getString());
         break;
@@ -3103,7 +3103,7 @@ static int readSlice (sSlice* slice) {
       //}}}
       //{{{
       case NALU_TYPE_PPS: {
-        int ppsId = sPps::readNalu (decoder, nalu);
+        int ppsId = cPps::readNalu (decoder, nalu);
         if (decoder->param.ppsDebug)
           cLog::log (LOGINFO, decoder->pps[ppsId].getString());
         break;

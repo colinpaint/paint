@@ -72,7 +72,7 @@ namespace {
   }
 
 //{{{
-string sSps::getString() {
+string cSps::getString() {
 
   return fmt::format ("SPS:{}:{} -> mb:{}x{} {}:{}:{}:{} refFrames:{} pocType:{} {}",
                       id, naluLen,
@@ -87,7 +87,7 @@ string sSps::getString() {
 
 // static
 //{{{
-int sSps::readNalu (sDecoder* decoder, sNalu* nalu) {
+int cSps::readNalu (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->stream->errorFlag = 0;
@@ -95,14 +95,14 @@ int sSps::readNalu (sDecoder* decoder, sNalu* nalu) {
   memcpy (dataPartition->stream->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
   dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen = RBSPtoSODB (dataPartition->stream->bitStreamBuffer, nalu->len-1);
 
-  sSps sps;
+  cSps sps;
   sps.readSpsFromStream (decoder, dataPartition, nalu->len);
   freeDataPartitions (dataPartition, 1);
 
   if (!decoder->sps[sps.id].isEqual (sps))
     cLog::log (LOGINFO, fmt::format ("-----> readNaluSps new sps id:%d", sps.id));
 
-  memcpy (&decoder->sps[sps.id], &sps, sizeof(sSps));
+  memcpy (&decoder->sps[sps.id], &sps, sizeof(cSps));
 
   return sps.id;
   }
@@ -110,7 +110,7 @@ int sSps::readNalu (sDecoder* decoder, sNalu* nalu) {
 
 // private
 //{{{
-bool sSps::isEqual (sSps& sps) {
+bool cSps::isEqual (cSps& sps) {
 
   if (!ok || !sps.ok)
     return false;
@@ -170,7 +170,7 @@ bool sSps::isEqual (sSps& sps) {
   }
 //}}}
 //{{{
-void sSps::readVuiFromStream (sDataPartition* dataPartition) {
+void cSps::readVuiFromStream (sDataPartition* dataPartition) {
 
   sBitStream* s = dataPartition->stream;
   if (hasVui) {
@@ -241,7 +241,7 @@ void sSps::readVuiFromStream (sDataPartition* dataPartition) {
   }
 //}}}
 //{{{
-void sSps::readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen) {
+void cSps::readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen) {
 
   naluLen = naluLen;
 

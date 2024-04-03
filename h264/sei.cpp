@@ -161,7 +161,7 @@ static void processReserved (uint8_t* payload, int size, sDecoder* decoder) {
 //{{{
 static void processPictureTiming (uint8_t* payload, int size, sDecoder* decoder) {
 
-  sSps* activeSps = decoder->activeSps;
+  cSps* activeSps = decoder->activeSps;
   if (!activeSps) {
     if (decoder->param.seiDebug)
       printf ("pictureTiming - no active SPS\n");
@@ -961,7 +961,7 @@ static void processBufferingPeriod (uint8_t* payload, int size, sDecoder* decode
   buf->bitStreamLen = size;
 
   int spsId = readUeV ("SEI spsId", buf);
-  sSps* sps = &decoder->sps[spsId];
+  cSps* sps = &decoder->sps[spsId];
   //useSps (decoder, sps);
 
   if (decoder->param.seiDebug)

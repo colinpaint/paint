@@ -2,9 +2,9 @@
 #include "global.h"
 #include "nalu.h"
 
-#define MAX_PPS 4
+constexpr int kMaxPps = 4;
 
-class sPps {
+class cPps {
 public:
   static int readNalu (sDecoder* decoder, sNalu* nalu);
   std::string getString();

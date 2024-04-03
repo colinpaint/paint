@@ -1768,7 +1768,7 @@ struct sConcealNode * init_node (sPicture* picture, int missingpoc ) {
 void init_lists_for_non_reference_loss (sDpb* dpb, int currSliceType, ePicStructure currPicStructure)
 {
   sDecoder* decoder = dpb->decoder;
-  sSps *activeSps = decoder->activeSps;
+  cSps *activeSps = decoder->activeSps;
 
   uint32_t i;
   int j;

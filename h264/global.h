@@ -16,7 +16,6 @@
 #include "sps.h"
 #include "pps.h"
 
-//{{{  defines
 #define MAX_NUM_SLICES          8
 #define MAX_REFERENCE_PICTURES  32       // H.264 allows 32 fields
 #define MAX_CODED_FRAME_SIZE    8000000  // bytes for one frame
@@ -27,7 +26,6 @@
 #define MCBUF_CHROMA_PAD_Y      8
 
 #define NUM_BLOCK_TYPES         22
-
 #define BLOCK_SHIFT            2
 #define BLOCK_SIZE             4
 #define BLOCK_SIZE_8x8         8
@@ -60,13 +58,11 @@
 
 // Quantization parameter range
 #define MAX_QP           51
-
 #define MAX_PLANE        3
 #define INVALIDINDEX     (-135792468)
 
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
 #define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
-//}}}
 //}}}
 
 typedef uint8_t sPixel;
@@ -569,8 +565,8 @@ struct sOldSlice {
 struct sSlice {
   sDecoder* decoder;
 
-  sPps* activePps;
-  sSps* activeSps;
+  cPps* activePps;
+  cSps* activeSps;
   sDpb* dpb;
 
   eSliceType sliceType;
@@ -840,12 +836,12 @@ struct sDecoder {
   sAnnexB*     annexB;
 
   // sps
-  sSps         sps[32];
-  sSps*        activeSps;
+  cSps         sps[kMaxSps];
+  cSps*        activeSps;
 
   // pps
-  sPps         pps[MAX_PPS];
-  sPps*        activePps;
+  cPps         pps[kMaxPps];
+  cPps*        activePps;
 
   int          decodeFrameNum;
   int          idrFrameNum;

@@ -662,7 +662,7 @@ void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore) {
 sPicture* allocPicture (sDecoder* decoder, ePicStructure picStructure,
                         int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput) {
 
-  sSps* activeSps = decoder->activeSps;
+  cSps* activeSps = decoder->activeSps;
   sPicture* s = (sPicture*)calloc (1, sizeof(sPicture));
 
   if (picStructure != eFrame) {
@@ -783,7 +783,7 @@ void freePicture (sPicture* picture) {
 //{{{
 void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
 
-  sSps* activeSps = decoder->activeSps;
+  cSps* activeSps = decoder->activeSps;
 
   int tmp1 = slice->deltaPicOrderCount[0];
   int tmp2 = slice->deltaPicOrderCount[1];
@@ -873,7 +873,7 @@ static void checkNumDpbFrames (sDpb* dpb) {
   }
 //}}}
 //{{{
-static int getDpbSize (sDecoder* decoder, sSps *activeSps) {
+static int getDpbSize (sDecoder* decoder, cSps *activeSps) {
 
   int pic_size_mb = (activeSps->picWidthMbsMinus1 + 1) * (activeSps->picHeightMapUnitsMinus1 + 1) * (activeSps->frameMbOnly?1:2);
   int size = 0;
@@ -1534,7 +1534,7 @@ void getSmallestPoc (sDpb* dpb, int* poc, int* pos) {
 //{{{
 void initDpb (sDecoder* decoder, sDpb* dpb, int type) {
 
-  sSps* activeSps = decoder->activeSps;
+  cSps* activeSps = decoder->activeSps;
 
   dpb->decoder = decoder;
   if (dpb->initDone)
@@ -1589,7 +1589,7 @@ void initDpb (sDecoder* decoder, sDpb* dpb, int type) {
 //{{{
 void reInitDpb (sDecoder* decoder, sDpb* dpb, int type) {
 
-  sSps* activeSps = decoder->activeSps;
+  cSps* activeSps = decoder->activeSps;
   int dpbSize = getDpbSize (decoder, activeSps) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
   dpb->numRefFrames = activeSps->numRefFrames;
 
@@ -1844,7 +1844,7 @@ void freeDpb (sDpb* dpb) {
 
 // image
 //{{{
-void initImage (sDecoder* decoder, sImage* image, sSps* sps) {
+void initImage (sDecoder* decoder, sImage* image, cSps* sps) {
 
   // allocate memory for reference frame buffers: image->frm_data
   image->format = decoder->param.output;
@@ -2033,7 +2033,7 @@ void reorderRefPicList (sSlice* slice, int curList) {
 void updatePicNum (sSlice* slice) {
 
   sDecoder* decoder = slice->decoder;
-  sSps* activeSps = decoder->activeSps;
+  cSps* activeSps = decoder->activeSps;
 
   int addTop = 0;
   int addBot = 0;

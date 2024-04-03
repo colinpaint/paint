@@ -13,7 +13,7 @@ using namespace std;
 //}}}
 
 //{{{
-static int isEqualPps (sPps* pps1, sPps* pps2) {
+static int isEqualPps (cPps* pps1, cPps* pps2) {
 
   if (!pps1->ok || !pps2->ok)
     return 0;
@@ -124,7 +124,7 @@ static void scalingList (int* scalingList, int scalingListSize, bool* useDefault
 //}}}
 
 //{{{
-static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, sPps* pps, int naluLen) {
+static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, cPps* pps, int naluLen) {
 // read PPS from NALU
 
   sBitStream* s = dataPartition->stream;
@@ -229,7 +229,7 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 //}}}
 
 //{{{
-string sPps::getString() {
+string cPps::getString() {
 
   return fmt::format ("PPS:{}:{} -> sps:{}{} sliceGroups:{} L:{}:{}{}{}{}{}{}{} biPredIdc:{}{}",
                       id,
@@ -250,7 +250,7 @@ string sPps::getString() {
   }
 //}}}
 //{{{
-int sPps::readNalu (sDecoder* decoder, sNalu* nalu) {
+int cPps::readNalu (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->stream->errorFlag = 0;
@@ -259,7 +259,7 @@ int sPps::readNalu (sDecoder* decoder, sNalu* nalu) {
   dataPartition->stream->bitStreamLen = RBSPtoSODB (dataPartition->stream->bitStreamBuffer, nalu->len-1);
   dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen;
 
-  sPps pps = { 0 };
+  cPps pps = { 0 };
   pps.naluLen = nalu->len;
   readPpsFromStream (decoder, dataPartition, &pps, nalu->len);
   freeDataPartitions (dataPartition, 1);
@@ -273,7 +273,7 @@ int sPps::readNalu (sDecoder* decoder, sNalu* nalu) {
     free (decoder->pps[pps.id].sliceGroupId);
 
   // - takes ownership, if any, of pps->sliceGroupId calloc
-  memcpy (&decoder->pps[pps.id], &pps, sizeof (sPps));
+  memcpy (&decoder->pps[pps.id], &pps, sizeof (cPps));
 
   return pps.id;
   }

@@ -179,8 +179,8 @@ void freeQuant (sDecoder* decoder) {
 //{{{
 void useQuantParams (sSlice* slice) {
 
-  sSps* sps = slice->activeSps;
-  sPps* pps = slice->activePps;
+  cSps* sps = slice->activeSps;
+  cPps* pps = slice->activePps;
 
   if (!pps->hasPicScalingMatrix && !sps->hasSeqScalingMatrix) {
     for (int i = 0; i < 12; i++)

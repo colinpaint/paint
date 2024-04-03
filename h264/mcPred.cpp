@@ -1821,7 +1821,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
 {
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
-  sSps *activeSps = slice->activeSps;
+  cSps *activeSps = slice->activeSps;
   sPixel** tempBlockL0 = slice->tempBlockL0;
   sPixel** tempBlockL1 = slice->tempBlockL1;
   static const int mv_mul = 16; // 4 * 4
@@ -1914,7 +1914,7 @@ static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* pic
 {
   sDecoder* decoder = mb->decoder;
   sSlice* slice = mb->slice;
-  sSps *activeSps = slice->activeSps;
+  cSps *activeSps = slice->activeSps;
   sPixel** tempBlockL0 = slice->tempBlockL0;
   sPixel** tempBlockL1 = slice->tempBlockL1;
   static const int mv_mul = 16; // 4 * 4

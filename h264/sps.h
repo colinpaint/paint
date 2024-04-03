@@ -2,8 +2,8 @@
 #include "global.h"
 #include "nalu.h"
 
-constexpr int MAX_SPS = 4;
-constexpr int MAX_REF_FRAMES_POC = 16;
+constexpr int kMaxSps = 4;
+constexpr int kMaxRefframesPoc = 16;
 
 //{{{  enum eProfileIDC
 typedef enum {
@@ -83,12 +83,12 @@ struct sVui {
   };
 //}}}
 
-class sSps {
+class cSps {
 public:
   static int readNalu (sDecoder* decoder, sNalu* nalu);
 
   std::string getString();
-  bool isEqual (sSps& sps);
+  bool isEqual (cSps& sps);
   //{{{
   bool isBLprofile() {
     return (profileIdc == BASELINE) ||
@@ -159,7 +159,7 @@ public:
   int      offsetNonRefPic = 0;                         // se(v)
   int      offsetTopBotField = 0;                       // se(v)
   uint32_t numRefFramesPocCycle = 0;                    // ue(v)
-  int      offsetForRefFrame[MAX_REF_FRAMES_POC] = {0}; // se(v)
+  int      offsetForRefFrame[kMaxRefframesPoc] = {0}; // se(v)
   //}}}
 
   uint32_t numRefFrames;                 // ue(v)
