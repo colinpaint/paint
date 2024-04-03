@@ -417,11 +417,11 @@ typedef struct DataPartition {
   int (*readSyntaxElement) (sMacroBlock*, struct SyntaxElement*, struct DataPartition*);
   } sDataPartition;
 //}}}
-//{{{  sMotionVec
-typedef struct {
+//{{{
+struct sMotionVec {
   int16_t mvX;
   int16_t mvY;
-  } sMotionVec;
+  };
 //}}}
 //{{{
 struct sMacroBlock {
@@ -528,8 +528,8 @@ struct sImage {
   int bot_stride[MAX_PLANE];
   };
 //}}}
-//{{{  sDecodedPic
-typedef struct DecodedPic {
+//{{{
+struct sDecodedPic {
   int ok;
 
   int yuvFormat; // 4:0:0, 4:2:0, 4:2:2, 4:4:4
@@ -547,8 +547,8 @@ typedef struct DecodedPic {
 
   int poc;
 
-  struct DecodedPic* next;
-  } sDecodedPic;
+  sDecodedPic* next;
+  };
 //}}}
 //{{{
 struct sDecodedRefPicMark {
