@@ -1320,6 +1320,14 @@ public:
   //}}}
 
 private:
+  //{{{  color constexpr
+  static constexpr ImVec4 kGrey =   {0.5f, 0.5f, 0.5f, 1.f};
+  static constexpr ImVec4 kWhite =  {1.f,  1.f,  1.f,  1.f};
+  static constexpr ImVec4 kYellow = {1.f,  1.f,  0.5f, 1.f};
+  static constexpr ImVec4 kRed =    {1.f,  0.5f, 0.5f, 1.f};
+  static constexpr ImVec4 kBlue =   {0.5f, 0.5f, 1.f,  1.f};
+  static constexpr ImVec4 kMauve =  {1.f,  0.f,  0.5f, 1.f};
+  //}}}
   //{{{
   class cView {
   public:
@@ -1516,6 +1524,7 @@ private:
     cQuad* mVideoQuad = nullptr;
     };
   //}}}
+
   //{{{
   void keyboard (cTestApp& testApp) {
 
@@ -1574,12 +1583,6 @@ private:
       }
     }
   //}}}
-  static constexpr ImVec4 kGrey =   {0.5f, 0.5f, 0.5f, 1.f};
-  static constexpr ImVec4 kWhite =  {1.f,  1.f,  1.f,  1.f};
-  static constexpr ImVec4 kYellow = {1.f,  1.f,  0.5f, 1.f};
-  static constexpr ImVec4 kRed =    {1.f,  0.5f, 0.5f, 1.f};
-  static constexpr ImVec4 kBlue =   {0.5f, 0.5f, 1.f,  1.f};
-  static constexpr ImVec4 kMauve =  {1.f,  0.f,  0.5f, 1.f};
 
   // vars
   cView* mView;

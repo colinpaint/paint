@@ -596,8 +596,8 @@ typedef struct DecodedRefPicMark {
   struct DecodedRefPicMark* next;
   } sDecodedRefPicMark;
 //}}}
-//{{{  sOldSlice
-typedef struct {
+//{{{
+struct sOldSlice {
   unsigned fieldPic;
   unsigned frameNum;
 
@@ -611,7 +611,7 @@ typedef struct {
   int      isIDR;
   int      idrPicId;
   int      ppsId;
-  } sOldSlice;
+  };
 //}}}
 //{{{
 struct sSlice {
