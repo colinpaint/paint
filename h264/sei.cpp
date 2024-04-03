@@ -67,38 +67,38 @@ typedef enum {
 //}}}
 //{{{  frame_packing_arrangement_information_struct
 typedef struct {
-  unsigned int  frame_packing_arrangement_id;
+  uint32_t  frame_packing_arrangement_id;
   bool       frame_packing_arrangement_cancel_flag;
-  unsigned char frame_packing_arrangement_type;
+  uint8_t frame_packing_arrangement_type;
   bool       quincunx_sampling_flag;
-  unsigned char content_interpretation_type;
+  uint8_t content_interpretation_type;
   bool       spatial_flipping_flag;
   bool       frame0_flipped_flag;
   bool       field_views_flag;
   bool       current_frame_is_frame0_flag;
   bool       frame0_self_contained_flag;
   bool       frame1_self_contained_flag;
-  unsigned char frame0_grid_position_x;
-  unsigned char frame0_grid_position_y;
-  unsigned char frame1_grid_position_x;
-  unsigned char frame1_grid_position_y;
-  unsigned char frame_packing_arrangement_reserved_byte;
-  unsigned int  frame_packing_arrangement_repetition_period;
+  uint8_t frame0_grid_position_x;
+  uint8_t frame0_grid_position_y;
+  uint8_t frame1_grid_position_x;
+  uint8_t frame1_grid_position_y;
+  uint8_t frame_packing_arrangement_reserved_byte;
+  uint32_t  frame_packing_arrangement_repetition_period;
   bool       frame_packing_arrangement_extension_flag;
   } frame_packing_arrangement_information_struct;
 //}}}
 //{{{  Green_metadata_information_struct
 typedef struct {
-  unsigned char  green_metadata_type;
-  unsigned char  period_type;
-  unsigned short num_seconds;
-  unsigned short num_pictures;
-  unsigned char percent_non_zero_macroblocks;
-  unsigned char percent_intra_coded_macroblocks;
-  unsigned char percent_six_tap_filtering;
-  unsigned char percent_alpha_point_deblocking_instance;
-  unsigned char xsd_metric_type;
-  unsigned short xsd_metric_value;
+  uint8_t  green_metadata_type;
+  uint8_t  period_type;
+  uint16_t num_seconds;
+  uint16_t num_pictures;
+  uint8_t percent_non_zero_macroblocks;
+  uint8_t percent_intra_coded_macroblocks;
+  uint8_t percent_six_tap_filtering;
+  uint8_t percent_alpha_point_deblocking_instance;
+  uint8_t xsd_metric_type;
+  uint16_t xsd_metric_value;
   } Green_metadata_information_struct;
 //}}}
 
@@ -972,7 +972,7 @@ static void processBufferingPeriod (byte* payload, int size, sDecoder* decoder) 
     int initial_cpb_removal_delay;
     int initial_cpb_removal_delay_offset;
     if (sps->vuiSeqParams.nal_hrd_parameters_present_flag) {
-      for (unsigned k = 0; k < sps->vuiSeqParams.nal_hrd_parameters.cpb_cnt_minus1+1; k++) {
+      for (uint32_t k = 0; k < sps->vuiSeqParams.nal_hrd_parameters.cpb_cnt_minus1+1; k++) {
         initial_cpb_removal_delay = readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        , buf);
         initial_cpb_removal_delay_offset = readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" , buf);
         if (decoder->param.seiDebug) {
@@ -983,7 +983,7 @@ static void processBufferingPeriod (byte* payload, int size, sDecoder* decoder) 
       }
 
     if (sps->vuiSeqParams.vcl_hrd_parameters_present_flag) {
-      for (unsigned k = 0; k < sps->vuiSeqParams.vcl_hrd_parameters.cpb_cnt_minus1+1; k++) {
+      for (uint32_t k = 0; k < sps->vuiSeqParams.vcl_hrd_parameters.cpb_cnt_minus1+1; k++) {
         initial_cpb_removal_delay = readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        , buf);
         initial_cpb_removal_delay_offset = readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" , buf);
         if (decoder->param.seiDebug) {
@@ -1010,18 +1010,18 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
   printf ("Frame packing arrangement\n");
 
   seiFramePackingArrangement.frame_packing_arrangement_id =
-    (unsigned int)readUeV( "SEI frame_packing_arrangement_id", buf);
+    (uint32_t)readUeV( "SEI frame_packing_arrangement_id", buf);
   seiFramePackingArrangement.frame_packing_arrangement_cancel_flag =
     readU1( "SEI frame_packing_arrangement_cancel_flag", buf);
   printf("frame_packing_arrangement_id = %d\n", seiFramePackingArrangement.frame_packing_arrangement_id);
   printf("frame_packing_arrangement_cancel_flag = %d\n", seiFramePackingArrangement.frame_packing_arrangement_cancel_flag);
   if ( seiFramePackingArrangement.frame_packing_arrangement_cancel_flag == false ) {
     seiFramePackingArrangement.frame_packing_arrangement_type =
-      (unsigned char)readUv( 7, "SEI frame_packing_arrangement_type", buf);
+      (uint8_t)readUv( 7, "SEI frame_packing_arrangement_type", buf);
     seiFramePackingArrangement.quincunx_sampling_flag =
       readU1 ("SEI quincunx_sampling_flag", buf );
     seiFramePackingArrangement.content_interpretation_type =
-      (unsigned char)readUv( 6, "SEI content_interpretation_type", buf);
+      (uint8_t)readUv( 6, "SEI content_interpretation_type", buf);
     seiFramePackingArrangement.spatial_flipping_flag = readU1 ("SEI spatial_flipping_flag", buf);
     seiFramePackingArrangement.frame0_flipped_flag = readU1 ("SEI frame0_flipped_flag", buf);
     seiFramePackingArrangement.field_views_flag = readU1 ("SEI field_views_flag", buf);
@@ -1042,21 +1042,21 @@ static void process_frame_packing_arrangement_info (byte* payload, int size, sDe
     if (seiFramePackingArrangement.quincunx_sampling_flag == false &&
         seiFramePackingArrangement.frame_packing_arrangement_type != 5 )  {
       seiFramePackingArrangement.frame0_grid_position_x =
-        (unsigned char)readUv( 4, "SEI frame0_grid_position_x", buf);
+        (uint8_t)readUv( 4, "SEI frame0_grid_position_x", buf);
       seiFramePackingArrangement.frame0_grid_position_y =
-        (unsigned char)readUv( 4, "SEI frame0_grid_position_y", buf);
+        (uint8_t)readUv( 4, "SEI frame0_grid_position_y", buf);
       seiFramePackingArrangement.frame1_grid_position_x =
-        (unsigned char)readUv( 4, "SEI frame1_grid_position_x", buf);
+        (uint8_t)readUv( 4, "SEI frame1_grid_position_x", buf);
       seiFramePackingArrangement.frame1_grid_position_y =
-        (unsigned char)readUv( 4, "SEI frame1_grid_position_y", buf);
+        (uint8_t)readUv( 4, "SEI frame1_grid_position_y", buf);
 
       printf ("frame0_grid_position_x = %d\n", seiFramePackingArrangement.frame0_grid_position_x);
       printf ("frame0_grid_position_y = %d\n", seiFramePackingArrangement.frame0_grid_position_y);
       printf ("frame1_grid_position_x = %d\n", seiFramePackingArrangement.frame1_grid_position_x);
       printf ("frame1_grid_position_y = %d\n", seiFramePackingArrangement.frame1_grid_position_y);
     }
-    seiFramePackingArrangement.frame_packing_arrangement_reserved_byte = (unsigned char)readUv( 8, "SEI frame_packing_arrangement_reserved_byte", buf);
-    seiFramePackingArrangement.frame_packing_arrangement_repetition_period = (unsigned int)readUeV( "SEI frame_packing_arrangement_repetition_period", buf);
+    seiFramePackingArrangement.frame_packing_arrangement_reserved_byte = (uint8_t)readUv( 8, "SEI frame_packing_arrangement_reserved_byte", buf);
+    seiFramePackingArrangement.frame_packing_arrangement_repetition_period = (uint32_t)readUeV( "SEI frame_packing_arrangement_repetition_period", buf);
     printf("frame_packing_arrangement_reserved_byte = %d\n", seiFramePackingArrangement.frame_packing_arrangement_reserved_byte);
     printf("frame_packing_arrangement_repetition_period  = %d\n", seiFramePackingArrangement.frame_packing_arrangement_repetition_period);
   }
@@ -1075,27 +1075,27 @@ static void process_post_filter_hints_info (byte* payload, int size, sDecoder* d
   buf->bitStreamOffset = 0;
   buf->bitStreamLen = size;
 
-  unsigned int filter_hint_size_y = readUeV("SEI filter_hint_size_y", buf); // interpret post-filter hint SEI here
-  unsigned int filter_hint_size_x = readUeV("SEI filter_hint_size_x", buf); // interpret post-filter hint SEI here
-  unsigned int filter_hint_type = readUv(2, "SEI filter_hint_type", buf); // interpret post-filter hint SEI here
+  uint32_t filter_hint_size_y = readUeV("SEI filter_hint_size_y", buf); // interpret post-filter hint SEI here
+  uint32_t filter_hint_size_x = readUeV("SEI filter_hint_size_x", buf); // interpret post-filter hint SEI here
+  uint32_t filter_hint_type = readUv(2, "SEI filter_hint_type", buf); // interpret post-filter hint SEI here
 
   int** *filter_hint;
   getMem3Dint (&filter_hint, 3, filter_hint_size_y, filter_hint_size_x);
 
-  for (unsigned int color_component = 0; color_component < 3; color_component ++)
-    for (unsigned int cy = 0; cy < filter_hint_size_y; cy ++)
-      for (unsigned int cx = 0; cx < filter_hint_size_x; cx ++)
+  for (uint32_t color_component = 0; color_component < 3; color_component ++)
+    for (uint32_t cy = 0; cy < filter_hint_size_y; cy ++)
+      for (uint32_t cx = 0; cx < filter_hint_size_x; cx ++)
         filter_hint[color_component][cy][cx] = readSeV("SEI filter_hint", buf); // interpret post-filter hint SEI here
 
-  unsigned int additional_extension_flag = readU1("SEI additional_extension_flag", buf); // interpret post-filter hint SEI here
+  uint32_t additional_extension_flag = readU1("SEI additional_extension_flag", buf); // interpret post-filter hint SEI here
 
   printf ("Post-filter hint\n");
   printf ("post_filter_hint_size_y %d \n", filter_hint_size_y);
   printf ("post_filter_hint_size_x %d \n", filter_hint_size_x);
   printf ("post_filter_hint_type %d \n",   filter_hint_type);
-  for (unsigned int color_component = 0; color_component < 3; color_component ++)
-    for (unsigned int cy = 0; cy < filter_hint_size_y; cy ++)
-      for (unsigned int cx = 0; cx < filter_hint_size_x; cx ++)
+  for (uint32_t color_component = 0; color_component < 3; color_component ++)
+    for (uint32_t cy = 0; cy < filter_hint_size_y; cy ++)
+      for (uint32_t cx = 0; cx < filter_hint_size_x; cx ++)
         printf (" post_filter_hint[%d][%d][%d] %d \n", color_component, cy, cx, filter_hint[color_component][cy][cx]);
 
   printf ("additional_extension_flag %d \n", additional_extension_flag);
@@ -1115,30 +1115,30 @@ static void process_green_metadata_info (byte* payload, int size, sDecoder* deco
   printf ("GreenMetadataInfo\n");
 
   Green_metadata_information_struct seiGreenMetadataInfo;
-  seiGreenMetadataInfo.green_metadata_type = (unsigned char)readUv(8, "SEI green_metadata_type", buf);
+  seiGreenMetadataInfo.green_metadata_type = (uint8_t)readUv(8, "SEI green_metadata_type", buf);
   printf ("green_metadata_type = %d\n", seiGreenMetadataInfo.green_metadata_type);
 
   if (seiGreenMetadataInfo.green_metadata_type == 0) {
-      seiGreenMetadataInfo.period_type=(unsigned char)readUv(8, "SEI green_metadata_period_type", buf);
+      seiGreenMetadataInfo.period_type=(uint8_t)readUv(8, "SEI green_metadata_period_type", buf);
     printf ("green_metadata_period_type = %d\n", seiGreenMetadataInfo.period_type);
 
     if (seiGreenMetadataInfo.period_type == 2) {
-      seiGreenMetadataInfo.num_seconds = (unsigned short)readUv(16, "SEI green_metadata_num_seconds", buf);
+      seiGreenMetadataInfo.num_seconds = (uint16_t)readUv(16, "SEI green_metadata_num_seconds", buf);
       printf ("green_metadata_num_seconds = %d\n", seiGreenMetadataInfo.num_seconds);
       }
     else if (seiGreenMetadataInfo.period_type == 3) {
-      seiGreenMetadataInfo.num_pictures = (unsigned short)readUv(16, "SEI green_metadata_num_pictures", buf);
+      seiGreenMetadataInfo.num_pictures = (uint16_t)readUv(16, "SEI green_metadata_num_pictures", buf);
       printf ("green_metadata_num_pictures = %d\n", seiGreenMetadataInfo.num_pictures);
       }
 
     seiGreenMetadataInfo.percent_non_zero_macroblocks =
-      (unsigned char)readUv(8, "SEI percent_non_zero_macroblocks", buf);
+      (uint8_t)readUv(8, "SEI percent_non_zero_macroblocks", buf);
     seiGreenMetadataInfo.percent_intra_coded_macroblocks =
-      (unsigned char)readUv(8, "SEI percent_intra_coded_macroblocks", buf);
+      (uint8_t)readUv(8, "SEI percent_intra_coded_macroblocks", buf);
     seiGreenMetadataInfo.percent_six_tap_filtering =
-      (unsigned char)readUv(8, "SEI percent_six_tap_filtering", buf);
+      (uint8_t)readUv(8, "SEI percent_six_tap_filtering", buf);
     seiGreenMetadataInfo.percent_alpha_point_deblocking_instance =
-      (unsigned char)readUv(8, "SEI percent_alpha_point_deblocking_instance", buf);
+      (uint8_t)readUv(8, "SEI percent_alpha_point_deblocking_instance", buf);
 
     printf ("percent_non_zero_macroblocks = %f\n", (float)seiGreenMetadataInfo.percent_non_zero_macroblocks/255);
     printf ("percent_intra_coded_macroblocks = %f\n", (float)seiGreenMetadataInfo.percent_intra_coded_macroblocks/255);
@@ -1146,8 +1146,8 @@ static void process_green_metadata_info (byte* payload, int size, sDecoder* deco
     printf ("percent_alpha_point_deblocking_instance      = %f\n", (float)seiGreenMetadataInfo.percent_alpha_point_deblocking_instance/255);
     }
   else if (seiGreenMetadataInfo.green_metadata_type == 1) {
-    seiGreenMetadataInfo.xsd_metric_type = (unsigned char)readUv(8, "SEI: xsd_metric_type", buf);
-    seiGreenMetadataInfo.xsd_metric_value = (unsigned short)readUv(16, "SEI xsd_metric_value", buf);
+    seiGreenMetadataInfo.xsd_metric_type = (uint8_t)readUv(8, "SEI: xsd_metric_type", buf);
+    seiGreenMetadataInfo.xsd_metric_value = (uint16_t)readUv(16, "SEI xsd_metric_value", buf);
     printf ("xsd_metric_type      = %d\n", seiGreenMetadataInfo.xsd_metric_type);
     if (seiGreenMetadataInfo.xsd_metric_type == 0)
       printf("xsd_metric_value      = %f\n", (float)seiGreenMetadataInfo.xsd_metric_value/100);

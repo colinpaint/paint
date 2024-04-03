@@ -1808,12 +1808,12 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
 void deblockPicture (sDecoder* decoder, sPicture* p) {
 
   if (p->mbAffFrame)
-    for (unsigned i = 0; i < p->picSizeInMbs; ++i)
+    for (uint32_t i = 0; i < p->picSizeInMbs; ++i)
       deblockMb (decoder, p, i) ;
   else {
-    for (unsigned i = 0; i < p->picSizeInMbs; ++i)
+    for (uint32_t i = 0; i < p->picSizeInMbs; ++i)
       getDeblockStrength (decoder, p, i ) ;
-    for (unsigned i = 0; i < p->picSizeInMbs; ++i)
+    for (uint32_t i = 0; i < p->picSizeInMbs; ++i)
       performDeblock (decoder, p, i) ;
     }
   }

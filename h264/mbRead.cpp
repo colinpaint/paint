@@ -675,7 +675,7 @@ static void readIntra4x4macroblocCavlc (sMacroBlock* mb, const byte* dpMap)
     se.type = SE_HEADER;
 
     // read eCavlc transform_size_8x8_flag
-    se.len = (int64)1;
+    se.len = (int64_t)1;
     readsSyntaxElement_FLC (&se, dataPartition->stream);
 
     mb->lumaTransformSize8x8flag = (bool)se.value1;
@@ -707,7 +707,7 @@ static void readIntra4x4macroblockCabac (sMacroBlock* mb, const byte* dpMap) {
 
     // read eCavlc transform_size_8x8_flag
     if (dataPartition->stream->errorFlag) {
-      se.len = (int64) 1;
+      se.len = (int64_t) 1;
       readsSyntaxElement_FLC (&se, dataPartition->stream);
       }
     else
@@ -819,7 +819,7 @@ static void readIcavlcMacroblock (sMacroBlock* mb) {
 
   // read MB aff
   if (slice->mbAffFrame && (mbNum & 0x01) == 0) {
-    se.len = (int64) 1;
+    se.len = (int64_t) 1;
     readsSyntaxElement_FLC (&se, dataPartition->stream);
     mb->mbField = (bool)se.value1;
     }
@@ -927,7 +927,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
     if (slice->codCount == 0) {
       // read MB aff
       if ((((mbNum & 0x01) == 0) || ((mbNum & 0x01) && prevMbSkipped))) {
-        se.len = (int64) 1;
+        se.len = (int64_t) 1;
         readsSyntaxElement_FLC (&se, dataPartition->stream);
         mb->mbField = (bool)se.value1;
         }
@@ -949,7 +949,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
 
       // read field flag of bottom block
       if (slice->codCount == 0 && ((mbNum & 0x01) == 0)) {
-        se.len = (int64) 1;
+        se.len = (int64_t) 1;
         readsSyntaxElement_FLC (&se, dataPartition->stream);
         dataPartition->stream->bitStreamOffset--;
         mb->mbField = (bool)se.value1;
@@ -1076,7 +1076,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
     if (slice->codCount == 0) {
       // read MB aff
       if (((mbNum & 0x01) == 0) || ((mbNum & 0x01) && prevMbSkipped)) {
-        se.len = (int64) 1;
+        se.len = (int64_t) 1;
         readsSyntaxElement_FLC (&se, dataPartition->stream);
         mb->mbField = (bool)se.value1;
         }
@@ -1097,7 +1097,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
 
       // read field flag of bottom block
       if ((slice->codCount == 0) && ((mbNum & 0x01) == 0)) {
-        se.len = (int64) 1;
+        se.len = (int64_t) 1;
         readsSyntaxElement_FLC (&se, dataPartition->stream);
         dataPartition->stream->bitStreamOffset--;
         mb->mbField = (bool)se.value1;
@@ -1187,7 +1187,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
   // read MB aff
   if (slice->mbAffFrame && (mbNum & 0x01) == 0) {
     if (dataPartition->stream->errorFlag) {
-      se.len = (int64)1;
+      se.len = (int64_t)1;
       readsSyntaxElement_FLC (&se, dataPartition->stream);
       }
     else {
@@ -1225,7 +1225,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
 
       // read eCavlc transform_size_8x8_flag
       if (dataPartition->stream->errorFlag) {
-        se.len = (int64) 1;
+        se.len = (int64_t) 1;
         readsSyntaxElement_FLC (&se, dataPartition->stream);
         }
       else

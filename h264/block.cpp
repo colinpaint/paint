@@ -573,7 +573,7 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
       mbRec = slice->mbRec[uv];
       if (!smb && (mb->codedBlockPattern >> 4)) {
         if (mb->isLossless == false) {
-          const unsigned char *x_pos, *y_pos;
+          const uint8_t *x_pos, *y_pos;
           for (int b8 = 0; b8 < (decoder->coding.numUvBlocks); ++b8) {
             x_pos = subblk_offset_x[1][b8];
             y_pos = subblk_offset_y[1][b8];
@@ -587,8 +587,8 @@ void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
           }
         else {
           for (int b8 = 0; b8 < (decoder->coding.numUvBlocks); ++b8) {
-            const unsigned char* x_pos = subblk_offset_x[1][b8];
-            const unsigned char* y_pos = subblk_offset_y[1][b8];
+            const uint8_t* x_pos = subblk_offset_x[1][b8];
+            const uint8_t* y_pos = subblk_offset_y[1][b8];
             for (int i = 0 ; i < decoder->mbCrSizeY ; i ++)
               for (int j = 0 ; j < decoder->mbCrSizeX ; j ++)
                 slice->mbRess[uv][i][j] = slice->cof[uv][i][j] ;

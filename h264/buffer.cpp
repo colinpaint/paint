@@ -97,7 +97,7 @@ static void genFieldRefIds (sDecoder* decoder, sPicture* p) {
 //}}}
 //{{{
 static void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStructure, int longTermFrameIndex,
-                                              int mark_current, unsigned curr_frame_num, int curr_pic_num) {
+                                              int mark_current, uint32_t curr_frame_num, int curr_pic_num) {
 
   sDecoder* decoder = dpb->decoder;
 
@@ -105,7 +105,7 @@ static void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStruct
   if (curr_pic_num < 0)
     curr_pic_num += (2 * decoder->coding.maxFrameNum);
 
-  for (unsigned i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+  for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (dpb->fsLongTermRef[i]->longTermFrameIndex == longTermFrameIndex) {
       if (picStructure == eTopField) {
         if (dpb->fsLongTermRef[i]->isLongTerm == 3)
@@ -124,7 +124,7 @@ static void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStruct
                 unmarkForLongTermRef (dpb->fsLongTermRef[i]);
             }
             else {
-              if ((dpb->fsLongTermRef[i]->frameNum) != (unsigned)(curr_pic_num >> 1))
+              if ((dpb->fsLongTermRef[i]->frameNum) != (uint32_t)(curr_pic_num >> 1))
                 unmarkForLongTermRef (dpb->fsLongTermRef[i]);
               }
             }
@@ -148,7 +148,7 @@ static void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStruct
                 unmarkForLongTermRef (dpb->fsLongTermRef[i]);
               }
             else {
-              if ((dpb->fsLongTermRef[i]->frameNum) != (unsigned)(curr_pic_num >> 1))
+              if ((dpb->fsLongTermRef[i]->frameNum) != (uint32_t)(curr_pic_num >> 1))
                 unmarkForLongTermRef (dpb->fsLongTermRef[i]);
               }
             }
@@ -829,7 +829,7 @@ void fillFrameNumGap (sDecoder* decoder, sSlice* slice) {
 static void dumpDpb (sDpb* dpb) {
 
 #ifdef DUMP_DPB
-  for (unsigned i = 0; i < dpb->usedSize; i++) {
+  for (uint32_t i = 0; i < dpb->usedSize; i++) {
     printf ("(");
     printf ("fn=%d  ", dpb->fs[i]->frameNum);
     if (dpb->fs[i]->isUsed & 1) {
@@ -1187,7 +1187,7 @@ static void assignLongTermFrameIndex (sDpb* dpb, sPicture* p, int diffPicNumMinu
 
   else {
     ePicStructure picStructure = eFrame;
-    for (unsigned i = 0; i < dpb->refFramesInBuffer; i++) {
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fsRef[i]->isReference & 1) {
         if (dpb->fsRef[i]->topField->picNum == picNumX) {
           picStructure = eTopField;
@@ -1231,7 +1231,7 @@ static void unmarkAllLongTermForRef (sDpb* dpb) {
 //{{{
 static void unmarkAllShortTermForRef (sDpb* dpb) {
 
-  for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++)
+  for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
     unmarkForRef (dpb->fsRef[i]);
   updateRefList (dpb);
   }
@@ -1489,7 +1489,7 @@ static void genPicListFromFrameList (ePicStructure currStructure, sFrameStore** 
 //{{{
 void updateRefList (sDpb* dpb) {
 
-  unsigned i, j;
+  uint32_t i, j;
   for (i = 0, j = 0; i < dpb->usedSize; i++)
     if (isShortTermReference (dpb->fs[i]))
       dpb->fsRef[j++]=dpb->fs[i];
@@ -1503,7 +1503,7 @@ void updateRefList (sDpb* dpb) {
 //{{{
 void updateLongTermRefList (sDpb* dpb) {
 
-  unsigned i, j;
+  uint32_t i, j;
   for (i = 0, j = 0; i < dpb->usedSize; i++)
     if (isLongTermReference (dpb->fs[i]))
       dpb->fsLongTermRef[j++] = dpb->fs[i];
@@ -1564,7 +1564,7 @@ void initDpb (sDecoder* decoder, sDpb* dpb, int type) {
   if (!dpb->fsLongTermRef)
     noMemoryExit ("initDpb: dpb->fsLongTermRef");
 
-  for (unsigned i = 0; i < dpb->size; i++) {
+  for (uint32_t i = 0; i < dpb->size; i++) {
     dpb->fs[i] = allocFrameStore();
     dpb->fsRef[i] = NULL;
     dpb->fsLongTermRef[i] = NULL;
@@ -1705,7 +1705,7 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
 
   // picture error conceal
   if (decoder->concealMode != 0)
-    for (unsigned i = 0; i < dpb->size; i++)
+    for (uint32_t i = 0; i < dpb->size; i++)
       if (dpb->fs[i]->isReference)
         dpb->fs[i]->concealRef = 1;
 
@@ -1738,7 +1738,7 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
 
   // check for duplicate frame number in short term reference buffer
   if ((picture->usedForReference) && (!picture->isLongTerm))
-    for (unsigned i = 0; i < dpb->refFramesInBuffer; i++)
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->frameNum == picture->frameNum)
         error ("duplicate frameNum in short-term reference picture buffer");
 
@@ -1804,7 +1804,7 @@ void removeFrameDpb (sDpb* dpb, int pos) {
   // move empty framestore to end of buffer
   sFrameStore* tmp = dpb->fs[pos];
 
-  for (unsigned i = pos; i < dpb->usedSize-1; i++)
+  for (uint32_t i = pos; i < dpb->usedSize-1; i++)
     dpb->fs[i] = dpb->fs[i+1];
 
   dpb->fs[dpb->usedSize-1] = tmp;
@@ -1816,7 +1816,7 @@ void freeDpb (sDpb* dpb) {
 
   sDecoder* decoder = dpb->decoder;
   if (dpb->fs) {
-    for (unsigned i = 0; i < dpb->size; i++)
+    for (uint32_t i = 0; i < dpb->size; i++)
       freeFrameStore (dpb->fs[i]);
     free (dpb->fs);
     dpb->fs = NULL;
@@ -1869,7 +1869,7 @@ void initImage (sDecoder* decoder, sImage* image, sSps* sps) {
     if (decoder->coding.yuvFormat != YUV400) {
       getMem2Dpel (&(image->frm_data[1]), decoder->heightCr, decoder->widthCr);
       getMem2Dpel (&(image->frm_data[2]), decoder->heightCr, decoder->widthCr);
-      if (sizeof(sPixel) == sizeof(unsigned char)) {
+      if (sizeof(sPixel) == sizeof(uint8_t)) {
         for (int k = 1; k < 3; k++)
           memset (image->frm_data[k][0], 128, decoder->heightCr * decoder->widthCr * sizeof(sPixel));
         }
@@ -2041,7 +2041,7 @@ void updatePicNum (sSlice* slice) {
 
   sDpb* dpb = slice->dpb;
   if (slice->picStructure == eFrame) {
-    for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++) {
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fsRef[i]->isUsed == 3 ) {
         if ((dpb->fsRef[i]->frame->usedForReference)&&(!dpb->fsRef[i]->frame->isLongTerm)) {
           if (dpb->fsRef[i]->frameNum > slice->frameNum )
@@ -2054,7 +2054,7 @@ void updatePicNum (sSlice* slice) {
       }
 
     // update longTermPicNum
-    for (unsigned int i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
       if (dpb->fsLongTermRef[i]->isUsed == 3) {
         if (dpb->fsLongTermRef[i]->frame->isLongTerm)
           dpb->fsLongTermRef[i]->frame->longTermPicNum = dpb->fsLongTermRef[i]->frame->longTermFrameIndex;
@@ -2071,7 +2071,7 @@ void updatePicNum (sSlice* slice) {
       addBot = 1;
       }
 
-    for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++) {
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->fsRef[i]->isReference) {
         if( dpb->fsRef[i]->frameNum > slice->frameNum )
           dpb->fsRef[i]->frameNumWrap = dpb->fsRef[i]->frameNum - maxFrameNum;
@@ -2085,7 +2085,7 @@ void updatePicNum (sSlice* slice) {
       }
 
     // update longTermPicNum
-    for (unsigned int i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
       if (dpb->fsLongTermRef[i]->isLongTerm & 1)
         dpb->fsLongTermRef[i]->topField->longTermPicNum = 2 * dpb->fsLongTermRef[i]->topField->longTermFrameIndex + addTop;
       if (dpb->fsLongTermRef[i]->isLongTerm & 2)
@@ -2097,7 +2097,7 @@ void updatePicNum (sSlice* slice) {
 //{{{
 sPicture* getShortTermPic (sSlice* slice, sDpb* dpb, int picNum) {
 
-  for (unsigned i = 0; i < dpb->refFramesInBuffer; i++) {
+  for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
     if (slice->picStructure == eFrame) {
       if (dpb->fsRef[i]->isReference == 3)
         if ((!dpb->fsRef[i]->frame->isLongTerm)&&(dpb->fsRef[i]->frame->picNum == picNum))
@@ -2136,7 +2136,7 @@ void initListsSliceP (sSlice* slice) {
   sFrameStore** fsListLongTerm;
 
   if (slice->picStructure == eFrame) {
-    for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++)
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isUsed == 3)
         if ((dpb->fsRef[i]->frame->usedForReference) && (!dpb->fsRef[i]->frame->isLongTerm))
           slice->listX[0][list0idx++] = dpb->fsRef[i]->frame;
@@ -2146,7 +2146,7 @@ void initListsSliceP (sSlice* slice) {
     slice->listXsize[0] = (char) list0idx;
 
     // long term handling
-    for (unsigned int i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
       if (dpb->fsLongTermRef[i]->isUsed == 3)
         if (dpb->fsLongTermRef[i]->frame->isLongTerm)
           slice->listX[0][list0idx++] = dpb->fsLongTermRef[i]->frame;
@@ -2162,7 +2162,7 @@ void initListsSliceP (sSlice* slice) {
     if (!fsListLongTerm)
       noMemoryExit ("initLists: fsListLongTerm");
 
-    for (unsigned int i = 0; i < dpb->refFramesInBuffer; i++)
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isReference)
         fsList0[list0idx++] = dpb->fsRef[i];
     qsort ((void*)fsList0, list0idx, sizeof(sFrameStore*), compareFsByFrameNumDescending);
@@ -2170,7 +2170,7 @@ void initListsSliceP (sSlice* slice) {
     genPicListFromFrameList(slice->picStructure, fsList0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
 
     // long term handling
-    for (unsigned int i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
       fsListLongTerm[listLtIndex++] = dpb->fsLongTermRef[i];
     qsort ((void*)fsListLongTerm, listLtIndex, sizeof(sFrameStore*), compareFsbyLtPicIndexAscending);
     genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
@@ -2185,9 +2185,9 @@ void initListsSliceP (sSlice* slice) {
   slice->listXsize[1] = (char)imin (slice->listXsize[1], slice->numRefIndexActive[LIST_1]);
 
   // set the unused list entries to NULL
-  for (unsigned int i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
+  for (uint32_t i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
     slice->listX[0][i] = decoder->noReferencePicture;
-  for (unsigned int i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
+  for (uint32_t i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
     slice->listX[1][i] = decoder->noReferencePicture;
   }
 //}}}
@@ -2197,7 +2197,7 @@ void initListsSliceB (sSlice* slice) {
   sDecoder* decoder = slice->decoder;
   sDpb* dpb = slice->dpb;
 
-  unsigned int i;
+  uint32_t i;
   int j;
 
   int list0idx = 0;
@@ -2330,7 +2330,7 @@ void initMbAffLists (sDecoder* decoder, sSlice* slice) {
 //   listX[5]: list1 for current_field==bottom
 
   for (int i = 2; i < 6; i++) {
-    for (unsigned j = 0; j < MAX_LIST_SIZE; j++)
+    for (uint32_t j = 0; j < MAX_LIST_SIZE; j++)
       slice->listX[i][j] = decoder->noReferencePicture;
     slice->listXsize[i] = 0;
     }

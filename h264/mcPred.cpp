@@ -1785,8 +1785,8 @@ void prepare_direct_params (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl
       }
     }
 
-  *l0_rFrame = (char)imin (imin((unsigned char)l0_refA, (unsigned char)l0_refB), (unsigned char)l0_refC);
-  *l1_rFrame = (char)imin (imin ((unsigned char)l1_refA, (unsigned char)l1_refB), (unsigned char)l1_refC);
+  *l0_rFrame = (char)imin (imin((uint8_t)l0_refA, (uint8_t)l0_refB), (uint8_t)l0_refC);
+  *l1_rFrame = (char)imin (imin ((uint8_t)l1_refA, (uint8_t)l1_refB), (uint8_t)l1_refC);
 
   if (*l0_rFrame >= 0)
     mb->GetMVPredictor (mb, pixelPos, pmvl0, *l0_rFrame, mvInfo, LIST_0, 0, 0, 16, 16);

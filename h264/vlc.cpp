@@ -80,13 +80,13 @@ bool readU1 (const char* label, sBitStream* s) {
 
 //{{{
 void linfo_ue (int len, int info, int* value1, int* dummy) {
-  *value1 = (int) (((unsigned int) 1 << (len >> 1)) + (unsigned int) (info) - 1);
+  *value1 = (int) (((uint32_t) 1 << (len >> 1)) + (uint32_t) (info) - 1);
   }
 //}}}
 //{{{
 void linfo_se (int len, int info, int* value1, int* dummy) {
 
-  unsigned int n = ((unsigned int) 1 << (len >> 1)) + (unsigned int) info - 1;
+  uint32_t n = ((uint32_t) 1 << (len >> 1)) + (uint32_t) info - 1;
   *value1 = (n + 1) >> 1;
 
   // lsb is signed bit
@@ -323,7 +323,7 @@ static int code_from_bitstream_2d (sSyntaxElement* se, sBitStream* s, const byte
 
   // Apply bitOffset to three bytes (maximum that may be traversed by ShowBitsThres)
   // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
-  unsigned int inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
+  uint32_t inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
   // Offset is constant so apply before extracting different numbers of bits
   inf <<= (*bitStreamOffset & 0x07);
   // Arithmetic shift so wipe any sign which may be extended inside ShowBitsThres

@@ -689,7 +689,7 @@ int** new_mem2Dint (int dim0, int dim1)
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 2D memory array -> unsigned char array2D[dim0][dim1]
+ *    Allocate 2D memory array -> uint8_t array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
@@ -764,32 +764,32 @@ int getMem2Dint_pad (int*** array2D, int dim0, int dim1, int iPadY, int iPadX)
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 2D memory array -> int64 array2D[dim0][dim1]
+ *    Allocate 2D memory array -> int64_t array2D[dim0][dim1]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int getMem2Dint64 (int64*** array2D, int dim0, int dim1)
+int getMem2Dint64 (int64_t*** array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (int64**)memAlloc(dim0 *      sizeof(int64*))) == NULL)
+  if((*array2D    = (int64_t**)memAlloc(dim0 *      sizeof(int64_t*))) == NULL)
     noMemoryExit("getMem2Dint64: array2D");
-  if((*(*array2D) = (int64* )mem_calloc(dim0 * dim1,sizeof(int64 ))) == NULL)
+  if((*(*array2D) = (int64_t* )mem_calloc(dim0 * dim1,sizeof(int64_t ))) == NULL)
     noMemoryExit("getMem2Dint64: array2D");
 
   for(i = 1; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(int64*) + dim1 * sizeof(int64));
+  return dim0 * (sizeof(int64_t*) + dim1 * sizeof(int64_t));
 }
 //}}}
 //{{{
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 3D memory array -> unsigned char array3D[dim0][dim1][dim2]
+ *    Allocate 3D memory array -> uint8_t array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
@@ -814,7 +814,7 @@ int getMem3D (byte**** array3D, int dim0, int dim1, int dim2)
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 4D memory array -> unsigned char array4D[dim0][dim1][dim2][dim3]
+ *    Allocate 4D memory array -> uint8_t array4D[dim0][dim1][dim2][dim3]
  *
  * \par Output:
  *    memory size in bytes
@@ -864,17 +864,17 @@ int getMem3Dint (int**** array3D, int dim0, int dim1, int dim2)
 /*!
 ** **********************************************************************
  * \brief
- *    Allocate 3D memory array -> int64 array3D[dim0][dim1][dim2]
+ *    Allocate 3D memory array -> int64_t array3D[dim0][dim1][dim2]
  *
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************
  */
-int getMem3Dint64 (int64**** array3D, int dim0, int dim1, int dim2)
+int getMem3Dint64 (int64_t**** array3D, int dim0, int dim1, int dim2)
 {
-  int  i, mem_size = dim0 * sizeof(int64**);
+  int  i, mem_size = dim0 * sizeof(int64_t**);
 
-  if(((*array3D) = (int64***)memAlloc(dim0 * sizeof(int64**))) == NULL)
+  if(((*array3D) = (int64_t***)memAlloc(dim0 * sizeof(int64_t**))) == NULL)
     noMemoryExit("getMem3Dint64: array3D");
 
   mem_size += getMem2Dint64(*array3D, dim0 * dim1, dim2);
@@ -959,11 +959,11 @@ int getMem4Dint (int***** array4D, int dim0, int dim1, int dim2, int dim3)
 }
 //}}}
 //{{{
-int getMem4Dint64 (int64***** array4D, int dim0, int dim1, int dim2, int dim3)
+int getMem4Dint64 (int64_t***** array4D, int dim0, int dim1, int dim2, int dim3)
 {
-  int  i, mem_size = dim0 * sizeof(int64***);
+  int  i, mem_size = dim0 * sizeof(int64_t***);
 
-  if(((*array4D) = (int64****)memAlloc(dim0 * sizeof(int64***))) == NULL)
+  if(((*array4D) = (int64_t****)memAlloc(dim0 * sizeof(int64_t***))) == NULL)
     noMemoryExit("getMem4Dint64: array4D");
 
   mem_size += getMem3Dint64(*array4D, dim0 * dim1, dim2, dim3);
@@ -1056,7 +1056,7 @@ void freeMem2Dint_pad (int** array2D, int iPadY, int iPadX)
  *    which was allocated with getMem2Dint64()
 ** **********************************************************************
  */
-void freeMem2Dint64 (int64** array2D)
+void freeMem2Dint64 (int64_t** array2D)
 {
   if (array2D)
   {
@@ -1125,7 +1125,7 @@ void freeMem3Dint (int*** array3D)
  *    which was allocated with getMem3Dint64()
 ** **********************************************************************
  */
-void freeMem3Dint64 (int64*** array3D)
+void freeMem3Dint64 (int64_t*** array3D)
 {
   if (array3D)
   {
@@ -1162,7 +1162,7 @@ void freeMem4Dint (int**** array4D)
 }
 //}}}
 //{{{
-void freeMem4Dint64 (int64**** array4D)
+void freeMem4Dint64 (int64_t**** array4D)
 {
   if (array4D)
   {

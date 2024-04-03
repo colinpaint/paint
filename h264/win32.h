@@ -34,8 +34,6 @@
   //#define  inline   _inline
   #define forceinline __forceinline
 
-  typedef __int64 int64;
-  typedef unsigned __int64   uint64;
   #define FORMAT_OFF_T "I64d"
 
   #ifndef INT64_MIN
@@ -66,8 +64,8 @@
 
   //#define forceinline inline
 
-  typedef long long int64;
-  typedef unsigned long long  uint64;
+  typedef long long int64_t;
+  typedef uint32_t long long  uint64;
   #define FORMAT_OFF_T "lld"
 
   #ifndef INT64_MIN
@@ -78,5 +76,5 @@
 
 extern void getTime (TIME_T* time);
 extern void initTime();
-extern int64 timeDiff (TIME_T* start, TIME_T* end);
-extern int64 timeNorm (int64 cur_time);
+extern int64_t timeDiff (TIME_T* start, TIME_T* end);
+extern int64_t timeNorm (int64_t cur_time);

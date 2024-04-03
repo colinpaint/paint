@@ -28,11 +28,11 @@ static int isEqualPps (sPps* pps1, sPps* pps2) {
     if (!equal)
       return equal;
     if (pps1->sliceGroupMapType == 0) {
-      for (unsigned i = 0; i <= pps1->numSliceGroupsMinus1; i++)
+      for (uint32_t i = 0; i <= pps1->numSliceGroupsMinus1; i++)
         equal &= (pps1->runLengthMinus1[i] == pps2->runLengthMinus1[i]);
       }
     else if (pps1->sliceGroupMapType == 2) {
-      for (unsigned i = 0; i < pps1->numSliceGroupsMinus1; i++) {
+      for (uint32_t i = 0; i < pps1->numSliceGroupsMinus1; i++) {
         equal &= (pps1->topLeft[i] == pps2->topLeft[i]);
         equal &= (pps1->botRight[i] == pps2->botRight[i]);
         }
@@ -47,7 +47,7 @@ static int isEqualPps (sPps* pps1, sPps* pps2) {
       equal &= (pps1->picSizeMapUnitsMinus1 == pps2->picSizeMapUnitsMinus1);
       if (!equal)
         return equal;
-      for (unsigned i = 0; i <= pps1->picSizeMapUnitsMinus1; i++)
+      for (uint32_t i = 0; i <= pps1->picSizeMapUnitsMinus1; i++)
         equal &= (pps1->sliceGroupId[i] == pps2->sliceGroupId[i]);
       }
     }
@@ -68,7 +68,7 @@ static int isEqualPps (sPps* pps1, sPps* pps2) {
   equal &= (pps1->hasTransform8x8mode == pps2->hasTransform8x8mode);
   equal &= (pps1->hasPicScalingMatrix == pps2->hasPicScalingMatrix);
   if (pps1->hasPicScalingMatrix) {
-    for (unsigned i = 0; i < (6 + ((unsigned)pps1->hasTransform8x8mode << 1)); i++) {
+    for (uint32_t i = 0; i < (6 + ((uint32_t)pps1->hasTransform8x8mode << 1)); i++) {
       equal &= (pps1->picScalingListPresentFlag[i] == pps2->picScalingListPresentFlag[i]);
       if (pps1->picScalingListPresentFlag[i]) {
         if (i < 6)
@@ -138,13 +138,13 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 
     switch (pps->sliceGroupMapType) {
       case 0: {
-        for (unsigned i = 0; i <= pps->numSliceGroupsMinus1; i++)
+        for (uint32_t i = 0; i <= pps->numSliceGroupsMinus1; i++)
           pps->runLengthMinus1 [i] = readUeV ("PPS runLengthMinus1 [i]", s);
         break;
         }
 
       case 2: {
-        for (unsigned i = 0; i < pps->numSliceGroupsMinus1; i++) {
+        for (uint32_t i = 0; i < pps->numSliceGroupsMinus1; i++) {
           pps->topLeft [i] = readUeV ("PPS topLeft [i]", s);
           pps->botRight [i] = readUeV ("PPS botRight [i]", s);
           }
@@ -169,7 +169,7 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 
         pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
         pps->sliceGroupId = (byte*)calloc (pps->picSizeMapUnitsMinus1+1, 1);
-        for (unsigned i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
+        for (uint32_t i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
           pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
         break;
         }
@@ -202,8 +202,8 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
     pps->hasPicScalingMatrix = readU1 ("PPS hasPicScalingMatrix", s);
     if (pps->hasPicScalingMatrix) {
       int chromaFormatIdc = decoder->sps[pps->spsId].chromaFormatIdc;
-      unsigned n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->hasTransform8x8mode;
-      for (unsigned i = 0; i < n_ScalingList; i++) {
+      uint32_t n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * pps->hasTransform8x8mode;
+      for (uint32_t i = 0; i < n_ScalingList; i++) {
         pps->picScalingListPresentFlag[i]= readU1 ("PPS picScalingListPresentFlag", s);
         if (pps->picScalingListPresentFlag[i]) {
           if (i < 6)

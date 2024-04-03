@@ -94,15 +94,15 @@ static const byte* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2c
 //}}}
 
 //{{{
-static unsigned int unary_bin_max_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context,
-                                          int ctx_offset, unsigned int max_symbol) {
+static uint32_t unary_bin_max_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context,
+                                          int ctx_offset, uint32_t max_symbol) {
 
-  unsigned int symbol =  binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
+  uint32_t symbol =  binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
 
   if (symbol == 0 || (max_symbol == 0))
     return symbol;
   else {
-    unsigned int l;
+    uint32_t l;
     context += ctx_offset;
     symbol = 0;
     do {
@@ -118,14 +118,14 @@ static unsigned int unary_bin_max_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiCo
   }
 //}}}
 //{{{
-static unsigned int unary_bin_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context, int ctx_offset) {
+static uint32_t unary_bin_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context, int ctx_offset) {
 
-  unsigned int symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
+  uint32_t symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
 
   if (symbol == 0)
     return 0;
   else {
-    unsigned int l;
+    uint32_t l;
     context += ctx_offset;;
     symbol = 0;
     do {
@@ -139,9 +139,9 @@ static unsigned int unary_bin_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContex
   }
 //}}}
 //{{{
-static unsigned int exp_golomb_decode_eq_prob (sCabacDecodeEnv* cabacDecodeEnv, int k) {
+static uint32_t exp_golomb_decode_eq_prob (sCabacDecodeEnv* cabacDecodeEnv, int k) {
 
-  unsigned int l;
+  uint32_t l;
   int symbol = 0;
   int binary_symbol = 0;
 
@@ -158,19 +158,19 @@ static unsigned int exp_golomb_decode_eq_prob (sCabacDecodeEnv* cabacDecodeEnv, 
     if (binaryArithmeticDecodeSymbolEqProb(cabacDecodeEnv)==1)
       binary_symbol |= (1 << k);
 
-  return (unsigned int)(symbol + binary_symbol);
+  return (uint32_t)(symbol + binary_symbol);
   }
 //}}}
 //{{{
-static unsigned int unary_exp_golomb_level_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context) {
+static uint32_t unary_exp_golomb_level_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context) {
 
-  unsigned int symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
+  uint32_t symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
 
   if (symbol == 0)
     return 0;
   else {
-    unsigned int l, k = 1;
-    unsigned int exp_start = 13;
+    uint32_t l, k = 1;
+    uint32_t exp_start = 13;
     symbol = 0;
     do {
       l = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
@@ -185,17 +185,17 @@ static unsigned int unary_exp_golomb_level_decode (sCabacDecodeEnv* cabacDecodeE
   }
 //}}}
 //{{{
-static unsigned int unary_exp_golomb_mv_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context, unsigned int max_bin) {
+static uint32_t unary_exp_golomb_mv_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context, uint32_t max_bin) {
 
-  unsigned int symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
+  uint32_t symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
 
   if (symbol == 0)
     return 0;
 
   else {
-    unsigned int exp_start = 8;
-    unsigned int l,k = 1;
-    unsigned int bin = 1;
+    uint32_t exp_start = 8;
+    uint32_t l,k = 1;
+    uint32_t bin = 1;
     symbol = 0;
     ++context;
     do {
@@ -224,7 +224,7 @@ void cabacNewSlice (sSlice* slice) {
 //{{{
 int cabacStartCode (sSlice* slice, int eos_bit) {
 
-  unsigned int bit;
+  uint32_t bit;
   if (eos_bit) {
     const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
@@ -1332,30 +1332,30 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
   if (codedBlockPatternBit) {
     sCodedBlockPattern * codedBlockPatterns = mb->codedBlockPatterns;
     if (type == LUMA_8x8) {
-      codedBlockPatterns[0].bits |= ((int64) 0x33 << bit);
+      codedBlockPatterns[0].bits |= ((int64_t) 0x33 << bit);
       if (picture->chromaFormatIdc == YUV444)
-        codedBlockPatterns[0].bits8x8 |= ((int64) 0x33 << bit);
+        codedBlockPatterns[0].bits8x8 |= ((int64_t) 0x33 << bit);
       }
     else if (type == CB_8x8) {
-      codedBlockPatterns[1].bits8x8 |= ((int64) 0x33 << bit);
-      codedBlockPatterns[1].bits |= ((int64) 0x33 << bit);
+      codedBlockPatterns[1].bits8x8 |= ((int64_t) 0x33 << bit);
+      codedBlockPatterns[1].bits |= ((int64_t) 0x33 << bit);
       }
     else if (type == CR_8x8) {
-      codedBlockPatterns[2].bits8x8 |= ((int64) 0x33 << bit);
-      codedBlockPatterns[2].bits |= ((int64) 0x33 << bit);
+      codedBlockPatterns[2].bits8x8 |= ((int64_t) 0x33 << bit);
+      codedBlockPatterns[2].bits |= ((int64_t) 0x33 << bit);
       }
     else if (type == LUMA_8x4)
-      codedBlockPatterns[0].bits |= ((int64) 0x03 << bit);
+      codedBlockPatterns[0].bits |= ((int64_t) 0x03 << bit);
     else if (type == CB_8x4)
-      codedBlockPatterns[1].bits |= ((int64) 0x03 << bit);
+      codedBlockPatterns[1].bits |= ((int64_t) 0x03 << bit);
     else if (type == CR_8x4)
-      codedBlockPatterns[2].bits |= ((int64) 0x03 << bit);
+      codedBlockPatterns[2].bits |= ((int64_t) 0x03 << bit);
     else if (type == LUMA_4x8)
-      codedBlockPatterns[0].bits |= ((int64) 0x11<< bit);
+      codedBlockPatterns[0].bits |= ((int64_t) 0x11<< bit);
     else if (type == CB_4x8)
-      codedBlockPatterns[1].bits |= ((int64)0x11<< bit);
+      codedBlockPatterns[1].bits |= ((int64_t)0x11<< bit);
     else if (type == CR_4x8)
-      codedBlockPatterns[2].bits |= ((int64)0x11<< bit);
+      codedBlockPatterns[2].bits |= ((int64_t)0x11<< bit);
     else if ((type == CB_4x4) || (type == CB_16AC) || (type == CB_16DC))
       codedBlockPatterns[1].bits |= i64power2 (bit);
     else if ((type == CR_4x4) || (type == CR_16AC) || (type == CR_16DC))
@@ -1485,7 +1485,7 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     if (codedBlockPatternBit) {
       // set bits for current block ---
       bit = 1 + j + (i >> 2);
-      mb->codedBlockPatterns[0].bits |= ((int64) 0x03 << bit   );
+      mb->codedBlockPatterns[0].bits |= ((int64_t) 0x03 << bit   );
       }
     }
     //}}}
@@ -1518,7 +1518,7 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     if (codedBlockPatternBit) {
       // set bits for current block ---
       bit = 1 + j + (i >> 2);
-      mb->codedBlockPatterns[0].bits   |= ((int64) 0x11 << bit   );
+      mb->codedBlockPatterns[0].bits   |= ((int64_t) 0x11 << bit   );
       }
     }
     //}}}
@@ -1560,7 +1560,7 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
 
     // set bits for current block ---
     int bit = 1 + j + (i >> 2);
-    mb->codedBlockPatterns[0].bits |= ((int64) 0x33 << bit   );
+    mb->codedBlockPatterns[0].bits |= ((int64_t) 0x33 << bit   );
     }
     //}}}
   else if (type == CHROMA_DC || type == CHROMA_DC_2x4 || type == CHROMA_DC_4x4) {

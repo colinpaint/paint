@@ -559,7 +559,7 @@ static void readCompCoef4x4cavlc (sMacroBlock* mb, eColorPlane plane,
   const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const byte *pos_scan_4x4 = pos_scan4x4[0];
   int start_scan = IS_I16MB(mb) ? 1 : 0;
-  int64 *cur_cbp = &mb->codedBlockPatterns[plane].blk;
+  int64_t *cur_cbp = &mb->codedBlockPatterns[plane].blk;
   int cur_context;
 
   if (IS_I16MB(mb)) {
@@ -625,7 +625,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
 
   const byte (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
-  int64* cur_cbp = &mb->codedBlockPatterns[plane].blk;
+  int64_t* cur_cbp = &mb->codedBlockPatterns[plane].blk;
 
   int coef_ctr, cur_context;
   if (IS_I16MB(mb)) {
@@ -687,7 +687,7 @@ static void readCompCoef8x8cavlc (sMacroBlock* mb, eColorPlane plane,
 
   const byte (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
-  int64 *cur_cbp = &mb->codedBlockPatterns[plane].blk;
+  int64_t *cur_cbp = &mb->codedBlockPatterns[plane].blk;
   int coef_ctr, cur_context;
 
   if (IS_I16MB(mb)) {
@@ -754,7 +754,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
 
   const byte (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
-  int64*cur_cbp = &mb->codedBlockPatterns[plane].blk;
+  int64_t*cur_cbp = &mb->codedBlockPatterns[plane].blk;
 
   int coef_ctr, cur_context;
   if (IS_I16MB(mb)) {
@@ -1104,7 +1104,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
         coef_ctr=-1;
         for(k = 0; k < numcoeff; ++k) {
           if (levarr[k] != 0) {
-            mb->codedBlockPatterns[0].blk |= ((int64)0xff0000) << (ll<<2);
+            mb->codedBlockPatterns[0].blk |= ((int64_t)0xff0000) << (ll<<2);
             coef_ctr += runarr[k]+1;
             i0 = SCAN_YUV422[coef_ctr][0];
             j0 = SCAN_YUV422[coef_ctr][1];

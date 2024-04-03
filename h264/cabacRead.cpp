@@ -16,8 +16,8 @@ static void readCompCoef8x8cabacLossless (sMacroBlock* mb, sSyntaxElement* se, e
     sDecoder* decoder = mb->decoder;
     sSlice* slice = mb->slice;
 
-    int64 cbp_mask = (int64) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
-    int64 *cur_cbp = &mb->codedBlockPatterns[plane].blk;
+    int64_t cbp_mask = (int64_t) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
+    int64_t *cur_cbp = &mb->codedBlockPatterns[plane].blk;
 
     // select scan type
     const byte* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
@@ -73,7 +73,7 @@ static void readCompCoef8x8mbCabacLossless (sMacroBlock* mb, sSyntaxElement* se,
 //}}}
 //{{{
 static void readCompCoefx4smbCabac (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
-                                           int blockY, int blockX, int start_scan, int64 *cbp_blk) {
+                                           int blockY, int blockX, int start_scan, int64_t *cbp_blk) {
 
   int i,j,k;
   int i0, j0;
@@ -151,7 +151,7 @@ static void readCompCoef4x4cabacLossless (sMacroBlock* mb, sSyntaxElement* se, e
   else
     se->context = (IS_I16MB(mb) ? CR_16AC: CR_4x4);
 
-  int64* cbp_blk = &mb->codedBlockPatterns[plane].blk;
+  int64_t* cbp_blk = &mb->codedBlockPatterns[plane].blk;
   for (int blockY = 0; blockY < MB_BLOCK_SIZE; blockY += BLOCK_SIZE_8x8) /* all modes */
     for (int blockX = 0; blockX < MB_BLOCK_SIZE; blockX += BLOCK_SIZE_8x8)
       if (codedBlockPattern & (1 << ((blockY >> 2) + (blockX >> 3))))  // are there any coeff in current block at all
@@ -167,7 +167,7 @@ static void readCompCoef4x4cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
   int start_scan = IS_I16MB (mb)? 1 : 0;
   int blockY, blockX;
   int i, j;
-  int64 *cbp_blk = &mb->codedBlockPatterns[plane].blk;
+  int64_t *cbp_blk = &mb->codedBlockPatterns[plane].blk;
 
   if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
     se->context = (IS_I16MB(mb) ? LUMA_16AC: LUMA_4x4);
@@ -242,8 +242,8 @@ static void readCompCoef8x8cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
 
     sSlice* slice = mb->slice;
 
-    int64 cbp_mask = (int64) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
-    int64* cur_cbp = &mb->codedBlockPatterns[plane].blk;
+    int64_t cbp_mask = (int64_t) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
+    int64_t* cur_cbp = &mb->codedBlockPatterns[plane].blk;
 
     // select scan type
     const byte* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
@@ -907,7 +907,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
 
             level = se.value1;
             if (level != 0) {
-              codedBlockPatterns->blk |= ((int64)0xff0000) << (ll<<2) ;
+              codedBlockPatterns->blk |= ((int64_t)0xff0000) << (ll<<2) ;
               coef_ctr += se.value2 + 1;
               i0 = SCAN_YUV422[coef_ctr][0];
               j0 = SCAN_YUV422[coef_ctr][1];

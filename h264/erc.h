@@ -97,8 +97,8 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
 void ercClose (sDecoder* decoder, sErcVariables *errorVar );
 void ercSetErrorConcealment (sErcVariables *errorVar, int value );
 
-void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar );
-void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar );
+void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables *errorVar );
+void ercStopSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables *errorVar );
 void ercMarksegmentLost (int picSizeX, sErcVariables *errorVar );
 void ercMarksegmentOK (int picSizeX, sErcVariables *errorVar );
 void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, sErcVariables *errorVar );

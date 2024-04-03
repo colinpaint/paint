@@ -9,24 +9,24 @@ struct sPps{
   bool   ok;
   int       naluLen;
 
-  unsigned  id;                               // ue(v)
-  unsigned  spsId;                            // ue(v)
+  uint32_t  id;                               // ue(v)
+  uint32_t  spsId;                            // ue(v)
   int       entropyCoding;                    // u(1)
   bool   frameBotField;                    // u(1)
 
-  unsigned int numSliceGroupsMinus1;          // ue(v)
-  unsigned int sliceGroupMapType;             // ue(v)
+  uint32_t numSliceGroupsMinus1;          // ue(v)
+  uint32_t sliceGroupMapType;             // ue(v)
   //{{{  optional sliceGroupMapType fields
   // sliceGroupMapType 0
-  unsigned int runLengthMinus1[8];            // ue(v)
+  uint32_t runLengthMinus1[8];            // ue(v)
   // sliceGroupMapType 2
-  unsigned int topLeft[8];                    // ue(v)
-  unsigned int botRight[8];                   // ue(v)
+  uint32_t topLeft[8];                    // ue(v)
+  uint32_t botRight[8];                   // ue(v)
   // sliceGroupMapType 3 || 4 || 5
   bool   sliceGroupChangeDirectionFlag;    // u(1)
-  unsigned int sliceGroupChangeRateMius1;     // ue(v)
+  uint32_t sliceGroupChangeRateMius1;     // ue(v)
   // sliceGroupMapType 6
-  unsigned int picSizeMapUnitsMinus1;         // ue(v)
+  uint32_t picSizeMapUnitsMinus1;         // ue(v)
   byte*     sliceGroupId;                     // complete MBAmap u(v)
   //}}}
 
@@ -34,7 +34,7 @@ struct sPps{
   int       numRefIndexL1defaultActiveMinus1; // ue(v)
 
   bool   hasWeightedPred;                  // u(1)
-  unsigned  weightedBiPredIdc;                // u(2)
+  uint32_t  weightedBiPredIdc;                // u(2)
 
   int       picInitQpMinus26;                 // se(v)
   int       picInitQsMinus26;                 // se(v)

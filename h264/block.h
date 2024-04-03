@@ -3,7 +3,7 @@
 
 //{{{
 //! look up tables for FRExt_chroma support
-static const unsigned char subblk_offset_x[3][8][4] = {
+static const uint8_t subblk_offset_x[3][8][4] = {
   {
     {0, 4, 0, 4},
     {0, 4, 0, 4},
@@ -37,7 +37,7 @@ static const unsigned char subblk_offset_x[3][8][4] = {
 };
 //}}}
 //{{{
-static const unsigned char subblk_offset_y[3][8][4] = {
+static const uint8_t subblk_offset_y[3][8][4] = {
   {
     {0, 0, 4, 4},
     {0, 0, 4, 4},

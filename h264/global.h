@@ -14,12 +14,9 @@
 #include <string>
 
 //{{{  defines
-typedef unsigned char  byte;   // byte type definition
-//typedef unsigned char  uint8_t;  // type definition for unsigned char (same as byte, 8 bits)
-typedef unsigned short uint16_t; // type definition for unsigned short (16 bits)
-//typedef unsigned int   uint32_t; // type definition for unsigned int (32 bits)
+typedef uint8_t  byte;      // byte type definition
 
-typedef byte   sPixel;    // pixel type
+typedef byte     sPixel;    // pixel type
 typedef uint16_t distpel;   // distortion type (for pixels)
 typedef int32_t  distblk;   // distortion type (for sMacroBlock)
 typedef int32_t  transpel;  // transformed coefficient type
@@ -308,8 +305,8 @@ typedef enum {
 //{{{
 struct sBiContext {
   uint16_t        state; // index into state-table CP
-  unsigned char MPS;   // least probable symbol 0/1 CP
-  unsigned char dummy; // for alignment
+  uint8_t MPS;   // least probable symbol 0/1 CP
+  uint8_t dummy; // for alignment
   };
 //}}}
 //{{{  struct sMotionContexts
@@ -370,9 +367,9 @@ struct sPixelPos {
 //}}}
 //{{{
 struct sCodedBlockPattern {
-  int64 blk;
-  int64 bits;
-  int64 bits8x8;
+  int64_t blk;
+  int64_t bits;
+  int64_t bits8x8;
   };
 //}}}
 
@@ -398,8 +395,8 @@ typedef struct {
 //}}}
 //{{{  sCabacDecodeEnv
 typedef struct {
-  unsigned int range;
-  unsigned int value;
+  uint32_t range;
+  uint32_t value;
   int          bitsLeft;
   byte*        codeStream;
   int*         codeStreamLen;
@@ -412,7 +409,7 @@ typedef struct SyntaxElement {
   int          value2;      // for blocked symbols, e.g. run/level
   int          len;         // length of code
   int          inf;         // info part of eCavlc code
-  unsigned int bitpattern;  // cavlc bitpattern
+  uint32_t bitpattern;  // cavlc bitpattern
   int          context;     // cabac context
   int          k;           // cabac context for coeff_count,uv
 
@@ -578,11 +575,11 @@ typedef struct DecodedRefPicMark {
 //}}}
 //{{{
 struct sOldSlice {
-  unsigned fieldPic;
-  unsigned frameNum;
+  uint32_t fieldPic;
+  uint32_t frameNum;
 
   int      nalRefIdc;
-  unsigned picOrderCountLsb;
+  uint32_t picOrderCountLsb;
 
   int      deltaPicOrderCountBot;
   int      deltaPicOrderCount[2];
@@ -614,18 +611,18 @@ struct sSlice {
   int framePoc; // poc of this frame
 
   // pocMode 0
-  unsigned int picOrderCountLsb;
+  uint32_t picOrderCountLsb;
   int deletaPicOrderCountBot;
   signed int PicOrderCntMsb;
 
   // pocMode 1
   int deltaPicOrderCount[2];
-  unsigned int AbsFrameNum;
+  uint32_t AbsFrameNum;
   int thisPoc;
 
   // information need to move to slice
-  unsigned int  mbIndex;
-  unsigned int  numDecodedMbs;
+  uint32_t  mbIndex;
+  uint32_t  numDecodedMbs;
 
   short         curSliceIndex;
   int           codCount;    // Current count of number of skipped macroblocks in a row
@@ -642,10 +639,10 @@ struct sSlice {
   int           sliceQsDelta;
 
   int           cabacInitIdc;     // cabac model number
-  unsigned int  frameNum;
+  uint32_t  frameNum;
 
   ePicStructure picStructure;
-  unsigned int  fieldPic;
+  uint32_t  fieldPic;
   byte          botField;
   int           startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
@@ -716,10 +713,10 @@ struct sSlice {
   int pos;
 
   // weighted pred
-  unsigned short hasWeightedPred;
-  unsigned short weightedBiPredIdc;
-  unsigned short lumaLog2weightDenom;
-  unsigned short chromaLog2weightDenom;
+  uint16_t hasWeightedPred;
+  uint16_t weightedBiPredIdc;
+  uint16_t lumaLog2weightDenom;
+  uint16_t chromaLog2weightDenom;
   int***         weightedPredWeight;   // weight in [list][index][component] order
   int***         weightedPredOffset;   // offset in [list][index][component] order
   int****        weightedBiPredWeight;  // weight in [list][fw_index][bw_index][component] order
@@ -785,7 +782,7 @@ struct sCoding {
   int bitDepthLumaQpScale;
   int bitDepthChromaQpScale;
   int maxPelValueComp[MAX_PLANE];          // max value that one picture element (pixel) can take (depends on pic_unit_bitDepth)
-  unsigned int dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
+  uint32_t dcPredValueComp[MAX_PLANE]; // component value for DC prediction (depends on component pel bit depth)
 
   int numUvBlocks;
   int numCdcCoeff;
@@ -793,10 +790,10 @@ struct sCoding {
   int useLosslessQpPrime;
 
   // macroblocks
-  unsigned int picWidthMbs;
-  unsigned int picHeightMapUnits;
-  unsigned int frameHeightMbs;
-  unsigned int frameSizeMbs;
+  uint32_t picWidthMbs;
+  uint32_t picHeightMapUnits;
+  uint32_t frameHeightMbs;
+  uint32_t frameSizeMbs;
 
   int mbCrSizeX;
   int mbCrSizeY;
@@ -877,8 +874,8 @@ struct sDecoder {
 
   int          decodeFrameNum;
   int          idrFrameNum;
-  unsigned int preFrameNum;  // last decoded slice. For detecting gap in frameNum.
-  unsigned int prevFrameNum; // number of previous slice
+  uint32_t preFrameNum;  // last decoded slice. For detecting gap in frameNum.
+  uint32_t prevFrameNum; // number of previous slice
   int          newFrame;
 
   int          nonConformingStream;
@@ -949,19 +946,19 @@ struct sDecoder {
 
   // - mode 0:
   signed int   prevPocMsb;
-  unsigned int prevPocLsb;
+  uint32_t prevPocLsb;
   int          lastPicBotField;
 
   // - mode 1:
   signed int   expectedPOC, pocCycleCount, frameNumPocCycle;
-  unsigned int previousFrameNum;
-  unsigned int frameNumOffset;
+  uint32_t previousFrameNum;
+  uint32_t frameNumOffset;
   int          expectedDeltaPerPocCycle;
   int          thisPoc;
   int          previousFrameNumOffset;
 
-  unsigned int picHeightInMbs;
-  unsigned int picSizeInMbs;
+  uint32_t picHeightInMbs;
+  uint32_t picSizeInMbs;
 
   int          noOutputPriorPicFlag;
 
@@ -990,7 +987,7 @@ struct sDecoder {
   struct ConcealNode* concealTail;
   int                 concealMode;
   int                 earlierMissingPoc;
-  unsigned int        concealFrame;
+  uint32_t        concealFrame;
   int                 idrConcealFlag;
   int                 concealSliceType;
 
@@ -1007,7 +1004,7 @@ struct sDecoder {
 //}}}
 
 //{{{
-static inline int isBLprofile (unsigned profileIdc) {
+static inline int isBLprofile (uint32_t profileIdc) {
   return (profileIdc == BASELINE) ||
          (profileIdc == MAIN) ||
          (profileIdc == EXTENDED) ||
@@ -1017,7 +1014,7 @@ static inline int isBLprofile (unsigned profileIdc) {
   }
 //}}}
 //{{{
-static inline int isFrextProfile (unsigned profileIdc) {
+static inline int isFrextProfile (uint32_t profileIdc) {
 // we allow all FRExt tools, when no profile is active
 
   return (profileIdc == NO_PROFILE) ||
@@ -1027,7 +1024,7 @@ static inline int isFrextProfile (unsigned profileIdc) {
   }
 //}}}
 //{{{
-static inline int isHiIntraOnlyProfile (unsigned profileIdc, bool constrainedSet3flag) {
+static inline int isHiIntraOnlyProfile (uint32_t profileIdc, bool constrainedSet3flag) {
   return (((profileIdc == FREXT_Hi10P) ||
            (profileIdc == FREXT_Hi422) ||
            (profileIdc == FREXT_Hi444)) && constrainedSet3flag) ||

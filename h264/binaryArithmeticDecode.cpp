@@ -112,12 +112,12 @@ static const byte renorm_table_32[32] = {
 //}}}
 
 //{{{
-static unsigned int getByte (sCabacDecodeEnv* cabacDecodeEnv) {
+static uint32_t getByte (sCabacDecodeEnv* cabacDecodeEnv) {
   return cabacDecodeEnv->codeStream[(*cabacDecodeEnv->codeStreamLen)++];
   }
 //}}}
 //{{{
-static unsigned int getWord (sCabacDecodeEnv* cabacDecodeEnv) {
+static uint32_t getWord (sCabacDecodeEnv* cabacDecodeEnv) {
 
   int* len = cabacDecodeEnv->codeStreamLen;
   byte* p_code_strm = &cabacDecodeEnv->codeStream[*len];
@@ -128,7 +128,7 @@ static unsigned int getWord (sCabacDecodeEnv* cabacDecodeEnv) {
 //}}}
 
 //{{{
-void arithmeticDecodeStartDecoding (sCabacDecodeEnv* cabacDecodeEnv, unsigned char* code_buffer, int firstbyte, int* codeLen) {
+void arithmeticDecodeStartDecoding (sCabacDecodeEnv* cabacDecodeEnv, uint8_t* code_buffer, int firstbyte, int* codeLen) {
 
   cabacDecodeEnv->codeStream = code_buffer;
   cabacDecodeEnv->codeStreamLen = codeLen;
@@ -149,14 +149,14 @@ int arithmeticDecodeBitsRead (sCabacDecodeEnv* cabacDecodeEnv) {
 //}}}
 
 //{{{
-unsigned int binaryArithmeticDecodeSymbol (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* biContext) {
+uint32_t binaryArithmeticDecodeSymbol (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* biContext) {
 
-  unsigned int bit = biContext->MPS;
-  unsigned int* value = &cabacDecodeEnv->value;
-  unsigned int* range = &cabacDecodeEnv->range;
+  uint32_t bit = biContext->MPS;
+  uint32_t* value = &cabacDecodeEnv->value;
+  uint32_t* range = &cabacDecodeEnv->range;
 
   uint16_t* state = &biContext->state;
-  unsigned int rLPS = rLPS_table_64x4[*state][(*range >> 6) & 0x03];
+  uint32_t rLPS = rLPS_table_64x4[*state][(*range >> 6) & 0x03];
   int* bitsLeft = &cabacDecodeEnv->bitsLeft;
 
   *range -= rLPS;
@@ -196,10 +196,10 @@ unsigned int binaryArithmeticDecodeSymbol (sCabacDecodeEnv* cabacDecodeEnv, sBiC
   }
 //}}}
 //{{{
-unsigned int binaryArithmeticDecodeSymbolEqProb (sCabacDecodeEnv* cabacDecodeEnv) {
+uint32_t binaryArithmeticDecodeSymbolEqProb (sCabacDecodeEnv* cabacDecodeEnv) {
 
   int tmp_value;
-  unsigned int* value = &cabacDecodeEnv->value;
+  uint32_t* value = &cabacDecodeEnv->value;
 
   int* bitsLeft = &cabacDecodeEnv->bitsLeft;
   if (--(*bitsLeft) == 0) {
@@ -218,9 +218,9 @@ unsigned int binaryArithmeticDecodeSymbolEqProb (sCabacDecodeEnv* cabacDecodeEnv
   }
 //}}}
 //{{{
-unsigned int binaryArithmeticDecodeFinal (sCabacDecodeEnv* cabacDecodeEnv) {
+uint32_t binaryArithmeticDecodeFinal (sCabacDecodeEnv* cabacDecodeEnv) {
 
-  unsigned int range  = cabacDecodeEnv->range - 2;
+  uint32_t range  = cabacDecodeEnv->range - 2;
 
   int value = cabacDecodeEnv->value;
   value -= (range << cabacDecodeEnv->bitsLeft);

@@ -23,8 +23,8 @@ struct sPicture {
   int           topPoc;
   int           botPoc;
   int           framePoc;
-  unsigned int  frameNum;
-  unsigned int  recoveryFrame;
+  uint32_t  frameNum;
+  uint32_t  recoveryFrame;
 
   int           picNum;
   int           longTermPicNum;
@@ -42,8 +42,8 @@ struct sPicture {
   int           size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
   int           codedFrame;
   int           mbAffFrame;
-  unsigned      picWidthMbs;
-  unsigned      picSizeInMbs;
+  uint32_t      picWidthMbs;
+  uint32_t      picSizeInMbs;
   int           lumaPadX;
   int           lumaPadY;
   int           chromaPadX;
@@ -102,8 +102,8 @@ struct sFrameStore {
   int       isOrigReference; // original marking by nalRefIdc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
   int       isNonExistent;
 
-  unsigned  frameNum;
-  unsigned  recoveryFrame;
+  uint32_t  frameNum;
+  uint32_t  recoveryFrame;
 
   int       frameNumWrap;
   int       longTermFrameIndex;
@@ -125,10 +125,10 @@ struct sDpb {
   sFrameStore** fsRef;
   sFrameStore** fsLongTermRef;
 
-  unsigned size;
-  unsigned usedSize;
-  unsigned refFramesInBuffer;
-  unsigned longTermRefFramesInBuffer;
+  uint32_t size;
+  uint32_t usedSize;
+  uint32_t refFramesInBuffer;
+  uint32_t longTermRefFramesInBuffer;
 
   int lastOutputPoc;
   int maxLongTermPicIndex;

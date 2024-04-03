@@ -1676,7 +1676,7 @@ static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDpb* dpb)
 }
 //}}}
 //{{{
-static sPicture* get_pic_from_dpb (sDpb* dpb, int missingpoc, unsigned int *pos)
+static sPicture* get_pic_from_dpb (sDpb* dpb, int missingpoc, uint32_t *pos)
 {
   sDecoder* decoder = dpb->decoder;
   int usedSize = dpb->usedSize - 1;
@@ -1732,8 +1732,8 @@ static void update_ref_list_for_concealment (sDpb* dpb) {
 
   sDecoder* decoder = dpb->decoder;
 
-  unsigned j = 0;
-  for (unsigned i = 0; i < dpb->usedSize; i++)
+  uint32_t j = 0;
+  for (uint32_t i = 0; i < dpb->usedSize; i++)
     if (dpb->fs[i]->concealRef)
       dpb->fsRef[j++] = dpb->fs[i];
 
@@ -1770,7 +1770,7 @@ void init_lists_for_non_reference_loss (sDpb* dpb, int currSliceType, ePicStruct
   sDecoder* decoder = dpb->decoder;
   sSps *activeSps = decoder->activeSps;
 
-  unsigned i;
+  uint32_t i;
   int j;
   int maxFrameNum = 1 << (activeSps->log2maxFrameNumMinus4 + 4);
 
@@ -1966,7 +1966,7 @@ void conceal_non_ref_pics (sDpb* dpb, int diff)
 {
   sDecoder* decoder = dpb->decoder;
   int missingpoc = 0;
-  unsigned int i, pos = 0;
+  uint32_t i, pos = 0;
   sPicture *conceal_from_picture = NULL;
   sPicture *conceal_to_picture = NULL;
   struct ConcealNode *concealment_ptr = NULL;
@@ -2031,7 +2031,7 @@ void sliding_window_poc_management (sDpb* dpb, sPicture *p)
   if (dpb->usedSize == dpb->size)
   {
     sDecoder* decoder = dpb->decoder;
-    unsigned int i;
+    uint32_t i;
 
     for(i=0;i<dpb->size-1; i++)
       decoder->dpbPoc[i] = decoder->dpbPoc[i+1];
@@ -2267,7 +2267,7 @@ void ercSetErrorConcealment (sErcVariables *errorVar, int value ) {
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar ) {
+void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables *errorVar ) {
 
   if ( errorVar && errorVar->conceal ) {
     errorVar->segmentCorrupted = 0;
@@ -2292,7 +2292,7 @@ void ercStartSegment (int currMBNum, int segment, unsigned int bitPos, sErcVaria
  *      Variables for error detector
 ** **********************************************************************
  */
-void ercStopSegment (int currMBNum, int segment, unsigned int bitPos, sErcVariables *errorVar ) {
+void ercStopSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables *errorVar ) {
 
   if ( errorVar && errorVar->conceal ) {
     errorVar->segments[ segment ].endMBPos = (short) currMBNum;

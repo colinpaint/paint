@@ -1212,7 +1212,7 @@ static void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
 void decodePOC (sDecoder* decoder, sSlice* slice) {
 
   sSps* activeSps = decoder->activeSps;
-  unsigned int maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
+  uint32_t maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
 
   switch (activeSps->pocType) {
     //{{{
@@ -1297,7 +1297,7 @@ void decodePOC (sDecoder* decoder, sSlice* slice) {
       // 3rd
       decoder->expectedDeltaPerPocCycle = 0;
       if (activeSps->numRefFramesPocCycle)
-        for (unsigned i = 0; i < activeSps->numRefFramesPocCycle; i++)
+        for (uint32_t i = 0; i < activeSps->numRefFramesPocCycle; i++)
           decoder->expectedDeltaPerPocCycle += activeSps->offsetForRefFrame[i];
 
       if (slice->AbsFrameNum) {
@@ -2120,7 +2120,7 @@ static void mbAffPostProc (sDecoder* decoder) {
   sPixel** imgY = picture->imgY;
   sPixel*** imgUV = picture->imgUV;
 
-  for (unsigned i = 0; i < picture->picSizeInMbs; i += 2) {
+  for (uint32_t i = 0; i < picture->picSizeInMbs; i += 2) {
     if (picture->motion.mbField[i]) {
       short x0;
       short y0;
@@ -2466,7 +2466,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   picture->picNum = slice->frameNum;
   picture->frameNum = slice->frameNum;
-  picture->recoveryFrame = (unsigned int)((int)slice->frameNum == decoder->recoveryFrameNum);
+  picture->recoveryFrame = (uint32_t)((int)slice->frameNum == decoder->recoveryFrameNum);
   picture->codedFrame = (slice->picStructure == eFrame);
   picture->chromaFormatIdc = (eYuvFormat)activeSps->chromaFormatIdc;
   picture->frameMbOnly = activeSps->frameMbOnly;
@@ -2715,7 +2715,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 //   - then setup the active parameter sets
 // - read the rest of the slice header
 
-  unsigned partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_HEADER];
+  uint32_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_HEADER];
   sBitStream* s = slice->dataPartitions[partitionIndex].stream;
 
   slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
@@ -2850,21 +2850,21 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     slice->redundantSliceRefIndex = slice->absDiffPicNumMinus1[LIST_0][0] + 1;
   //}}}
   //{{{  read weightedPredWeight
-  slice->hasWeightedPred = (unsigned short)(((slice->sliceType == eSliceP) || (slice->sliceType == eSliceSP))
+  slice->hasWeightedPred = (uint16_t)(((slice->sliceType == eSliceP) || (slice->sliceType == eSliceSP))
                               ? decoder->activePps->hasWeightedPred
                               : ((slice->sliceType == eSliceB) && (decoder->activePps->weightedBiPredIdc == 1)));
 
-  slice->weightedBiPredIdc = (unsigned short)((slice->sliceType == eSliceB) &&
+  slice->weightedBiPredIdc = (uint16_t)((slice->sliceType == eSliceB) &&
                                               (decoder->activePps->weightedBiPredIdc > 0));
 
   if ((decoder->activePps->hasWeightedPred &&
        ((slice->sliceType == eSliceP) || (slice->sliceType == eSliceSP))) ||
       ((decoder->activePps->weightedBiPredIdc == 1) && (slice->sliceType == eSliceB))) {
-    slice->lumaLog2weightDenom = (unsigned short)readUeV ("SLC lumaLog2weightDenom", s);
+    slice->lumaLog2weightDenom = (uint16_t)readUeV ("SLC lumaLog2weightDenom", s);
     slice->wpRoundLuma = slice->lumaLog2weightDenom ? 1 << (slice->lumaLog2weightDenom - 1) : 0;
 
     if (activeSps->chromaFormatIdc) {
-      slice->chromaLog2weightDenom = (unsigned short)readUeV ("SLC chromaLog2weightDenom", s);
+      slice->chromaLog2weightDenom = (uint16_t)readUeV ("SLC chromaLog2weightDenom", s);
       slice->wpRoundChroma = slice->chromaLog2weightDenom ? 1 << (slice->chromaLog2weightDenom - 1) : 0;
       }
 

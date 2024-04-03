@@ -39,7 +39,7 @@ static int isEqualSps (sSps* sps1, sSps* sps2) {
     if (!equal)
       return equal;
 
-    for (unsigned i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
+    for (uint32_t i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
       equal &= (sps1->offsetForRefFrame[i] == sps2->offsetForRefFrame[i]);
     }
 
@@ -111,7 +111,7 @@ static void readHrdFromStream (sDataPartition* dataPartition, sHRD* hrd) {
   hrd->bit_rate_scale = readUv (4, "VUI bit_rate_scale", s);
   hrd->cpb_size_scale = readUv (4, "VUI cpb_size_scale", s);
 
-  unsigned int SchedSelIdx;
+  uint32_t SchedSelIdx;
   for (SchedSelIdx = 0; SchedSelIdx <= hrd->cpb_cnt_minus1; SchedSelIdx++) {
     hrd->bit_rate_value_minus1[ SchedSelIdx] = readUeV ("VUI bit_rate_value_minus1", s);
     hrd->cpb_size_value_minus1[ SchedSelIdx] = readUeV ("VUI cpb_size_value_minus1", s);
@@ -134,8 +134,8 @@ static void readVuiFromStream (sDataPartition* dataPartition, sSps* sps) {
     if (sps->vuiSeqParams.aspect_ratio_info_present_flag) {
       sps->vuiSeqParams.aspect_ratio_idc = readUv ( 8, "VUI aspect_ratio_idc", s);
       if (255 == sps->vuiSeqParams.aspect_ratio_idc) {
-        sps->vuiSeqParams.sar_width = (unsigned short)readUv (16, "VUI sar_width", s);
-        sps->vuiSeqParams.sar_height = (unsigned short)readUv (16, "VUI sar_height", s);
+        sps->vuiSeqParams.sar_width = (uint16_t)readUv (16, "VUI sar_width", s);
+        sps->vuiSeqParams.sar_height = (uint16_t)readUv (16, "VUI sar_height", s);
         }
       }
 
@@ -246,8 +246,8 @@ static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 
     sps->hasSeqScalingMatrix = readU1 ("SPS hasSeqScalingMatrix", s);
     if (sps->hasSeqScalingMatrix) {
-      unsigned int n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
-      for (unsigned int i = 0; i < n_ScalingList; i++) {
+      uint32_t n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
+      for (uint32_t i = 0; i < n_ScalingList; i++) {
         sps->hasSeqScalingList[i] = readU1 ("SPS hasSeqScalingList", s);
         if (sps->hasSeqScalingList[i]) {
           if (i < 6)
@@ -271,7 +271,7 @@ static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
     sps->offsetNonRefPic = readSeV ("SPS offsetNonRefPic", s);
     sps->offsetTopBotField = readSeV ("SPS offsetTopBotField", s);
     sps->numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
-    for (unsigned int i = 0; i < sps->numRefFramesPocCycle; i++)
+    for (uint32_t i = 0; i < sps->numRefFramesPocCycle; i++)
       sps->offsetForRefFrame[i] = readSeV ("SPS offsetRefFrame[i]", s);
     }
   //}}}

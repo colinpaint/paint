@@ -63,8 +63,8 @@ static inline int imedian_old (int a, int b, int c) {
 
 static inline double dmin (double a, double b) { return ((a) < (b)) ? (a) : (b); }
 static inline double dmax (double a, double b) { return ((a) > (b)) ? (a) : (b); }
-static inline int64 i64min (int64 a, int64 b) { return ((a) < (b)) ? (a) : (b); }
-static inline int64 i64max (int64 a, int64 b) { return ((a) > (b)) ? (a) : (b); }
+static inline int64_t i64min (int64_t a, int64_t b) { return ((a) < (b)) ? (a) : (b); }
+static inline int64_t i64max (int64_t a, int64_t b) { return ((a) > (b)) ? (a) : (b); }
 static inline distblk distblkmin (distblk a, distblk b) { return ((a) < (b)) ? (a) : (b); }
 static inline distblk distblkmax (distblk a, distblk b) { return ((a) > (b)) ? (a) : (b); }
 
@@ -85,16 +85,16 @@ static inline int iabs (int x) {
   }
 //}}}
 //{{{
-static inline int64 i64abs (int64 x) {
+static inline int64_t i64abs (int64_t x) {
 
-  static const int64 INT64_BITS = (sizeof(int64) * CHAR_BIT) - 1;
-  int64 y = x >> INT64_BITS;
+  static const int64_t INT64_BITS = (sizeof(int64_t) * CHAR_BIT) - 1;
+  int64_t y = x >> INT64_BITS;
   return (x ^ y) - y;
   }
 //}}}
 static inline double dabs (double x) { return ((x) < 0) ? -(x) : (x); }
 static inline int iabs2 (int x) { return x * x; }
-static inline int64 i64abs2 (int64 x) { return x * x; }
+static inline int64_t i64abs2 (int64_t x) { return x * x; }
 static inline double dabs2 (double x) { return x * x; }
 
 static inline int isign (int x) { return ( (x > 0) - (x < 0)); }
@@ -106,7 +106,7 @@ static inline int rshift_rnd(int x, int a) {
   }
 //}}}
 //{{{
-static inline unsigned long rshift_rnd_ul (unsigned long x, int a) {
+static inline uint32_t rshift_rnd_ul (uint32_t x, int a) {
   return (a > 0) ? ((x + (1 << (a-1) )) >> a) : (x << (-a));
 }
 //}}}
@@ -117,7 +117,7 @@ static inline int rshift_rnd_sign (int x, int a) {
   }
 //}}}
 //{{{
-static inline unsigned int rshift_rnd_us (unsigned int x, unsigned int a) {
+static inline uint32_t rshift_rnd_us (uint32_t x, uint32_t a) {
   return (a > 0) ? ((x + (1 << (a-1))) >> a) : x;
   }
 //}}}
@@ -127,7 +127,7 @@ static inline int rshift_rnd_sf (int x, int a) {
   }
 //}}}
 static inline int shift_off_sf (int x, int o, int a) { return ((x + o) >> a); }
-static inline unsigned int rshift_rnd_us_sf (unsigned int x, unsigned int a) { return ((x + (1 << (a-1))) >> a); }
+static inline uint32_t rshift_rnd_us_sf (uint32_t x, uint32_t a) { return ((x + (1 << (a-1))) >> a); }
 
 //{{{
 static inline int iClip1 (int high, int x) {
@@ -175,7 +175,7 @@ static inline int power2 (int x)
 }
 //}}}
 //{{{
-static const int64 po2[64] =
+static const int64_t po2[64] =
   {0x1,0x2,0x4,0x8,
    0x10,0x20,0x40,0x80,
    0x100,0x200,0x400,0x800,
@@ -191,15 +191,15 @@ static const int64 po2[64] =
    0x1000000000000,0x2000000000000,0x4000000000000,0x8000000000000,
    0x10000000000000,0x20000000000000,0x40000000000000,0x80000000000000,
    0x100000000000000,0x200000000000000,0x400000000000000,0x800000000000000,
-   0x1000000000000000,0x2000000000000000,0x4000000000000000,(int64)0x8000000000000000};
+   0x1000000000000000,0x2000000000000000,0x4000000000000000,(int64_t)0x8000000000000000};
 //}}}
 //{{{
-static inline int64 i64power2 (int x) {
+static inline int64_t i64power2 (int x) {
   return ((x > 63) ? 0 : po2[x]);
   }
 //}}}
 //{{{
-static inline int getBit (int64 x, int n) {
+static inline int getBit (int64_t x, int n) {
   return (int)(((x >> n) & 1));
   }
 //}}}
@@ -210,11 +210,11 @@ static inline int is_intra_mb (short mbType) {
 //}}}
 
 //{{{
-static inline unsigned ceilLog2 (unsigned value) {
+static inline uint32_t ceilLog2 (uint32_t value) {
 
-  unsigned result = 0;
+  uint32_t result = 0;
 
-  unsigned temp = value - 1;
+  uint32_t temp = value - 1;
   while (!temp) {
     temp >>= 1;
     result++;
@@ -224,11 +224,11 @@ static inline unsigned ceilLog2 (unsigned value) {
   }
 //}}}
 //{{{
-static inline unsigned ceilLog2sf (unsigned value) {
+static inline uint32_t ceilLog2sf (uint32_t value) {
 
-  unsigned result = 0;
+  uint32_t result = 0;
 
-  unsigned temp = value - 1;
+  uint32_t temp = value - 1;
   while (temp > 0) {
     temp >>= 1;
     result++;

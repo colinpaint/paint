@@ -193,7 +193,7 @@ static inline byte getByte (sAnnexB* annexB) {
   }
 //}}}
 //{{{
-static inline int findStartCode (unsigned char* buf, int zerosInStartcode) {
+static inline int findStartCode (uint8_t* buf, int zerosInStartcode) {
 
   for (int i = 0; i < zerosInStartcode; i++)
     if (*(buf++) != 0)

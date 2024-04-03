@@ -47,11 +47,11 @@ extern int getMem4D (byte** ***array4D, int dim0, int dim1, int dim2, int dim3);
 extern int** new_mem2Dint (int dim0, int dim1);
 extern int getMem2Dint (int** *array2D, int dim0, int dim1);
 extern int getMem2Dint_pad (int** *array2D, int dim0, int dim1, int iPadY, int iPadX);
-extern int getMem2Dint64 (int64** *array2D, int dim0, int dim1);
+extern int getMem2Dint64 (int64_t** *array2D, int dim0, int dim1);
 extern int getMem3Dint (int** **array3D, int dim0, int dim1, int dim2);
-extern int getMem3Dint64 (int64** **array3D, int dim0, int dim1, int dim2);
+extern int getMem3Dint64 (int64_t** **array3D, int dim0, int dim1, int dim2);
 extern int getMem4Dint (int** ***array4D, int dim0, int dim1, int dim2, int dim3);
-extern int getMem4Dint64 (int64** ***array4D, int dim0, int dim1, int dim2, int dim3);
+extern int getMem4Dint64 (int64_t** ***array4D, int dim0, int dim1, int dim2, int dim3);
 extern int getMem5Dint (int** ****array5D, int dim0, int dim1, int dim2, int dim3, int dim4);
 
 extern uint16_t** new_mem2Duint16 (int dim0, int dim1);
@@ -121,9 +121,9 @@ extern void freeMem5Dint (int   ** ***array5D);
 extern void freeMem2Duint16 (uint16_t** array2D);
 extern void freeMem3Duint16 (uint16_t** *array3D);
 
-extern void freeMem2Dint64 (int64    ** array2D);
-extern void freeMem3Dint64 (int64   ** *array3D);
-extern void freeMem4Dint64 (int64    ** **array4D);
+extern void freeMem2Dint64 (int64_t    ** array2D);
+extern void freeMem3Dint64 (int64_t   ** *array3D);
+extern void freeMem4Dint64 (int64_t    ** **array4D);
 
 extern void freeMem2Ddistblk (distblk    ** array2D);
 extern void freeMem3Ddistblk (distblk   ** *array3D);

@@ -52,7 +52,7 @@ static const byte SCAN_YUV422[8][2] = {
 };
 //}}}
 //{{{
-static const unsigned char cbp_blk_chroma[8][4] = {
+static const uint8_t cbp_blk_chroma[8][4] = {
   {16, 17, 18, 19},
   {20, 21, 22, 23},
   {24, 25, 26, 27},
@@ -64,7 +64,7 @@ static const unsigned char cbp_blk_chroma[8][4] = {
 };
 //}}}
 //{{{
-static const unsigned char cofuv_blk_x[3][8][4] = {
+static const uint8_t cofuv_blk_x[3][8][4] = {
   { {0, 1, 0, 1},
     {0, 1, 0, 1},
     {0, 0, 0, 0},
@@ -94,7 +94,7 @@ static const unsigned char cofuv_blk_x[3][8][4] = {
 };
 //}}}
 //{{{
-static const unsigned char cofuv_blk_y[3][8][4] = {
+static const uint8_t cofuv_blk_y[3][8][4] = {
   { { 0, 0, 1, 1},
     { 0, 0, 1, 1},
     { 0, 0, 0, 0},

@@ -192,16 +192,16 @@ void initGlobalBuffers (sDecoder* decoder) {
 
   // alloc coding
   if (decoder->coding.isSeperateColourPlane) {
-    for (unsigned i = 0; i < MAX_PLANE; ++i)
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
       if (!decoder->mbDataJV[i])
         decoder->mbDataJV[i] = (sMacroBlock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroBlock));
-    for (unsigned i = 0; i < MAX_PLANE; ++i)
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
       if (!decoder->intraBlockJV[i])
         decoder->intraBlockJV[i] = (char*)calloc (decoder->coding.frameSizeMbs, sizeof(char));
-    for (unsigned i = 0; i < MAX_PLANE; ++i)
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
       if (!decoder->predModeJV[i])
        getMem2D (&(decoder->predModeJV[i]), 4*decoder->coding.frameHeightMbs, 4*decoder->coding.picWidthMbs);
-    for (unsigned i = 0; i < MAX_PLANE; ++i)
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
       if (!decoder->siBlockJV[i])
         getMem2Dint (&(decoder->siBlockJV[i]), decoder->coding.frameHeightMbs, decoder->coding.picWidthMbs);
     }
@@ -221,7 +221,7 @@ void initGlobalBuffers (sDecoder* decoder) {
   if (!decoder->picPos) {
     decoder->picPos = (sBlockPos*)calloc (decoder->coding.frameSizeMbs + 1, sizeof(sBlockPos));
     sBlockPos* blockPos = decoder->picPos;
-    for (unsigned i = 0; i < decoder->coding.frameSizeMbs+1; ++i) {
+    for (uint32_t i = 0; i < decoder->coding.frameSizeMbs+1; ++i) {
       blockPos[i].x = (short)(i % decoder->coding.picWidthMbs);
       blockPos[i].y = (short)(i / decoder->coding.picWidthMbs);
       }
@@ -427,7 +427,7 @@ void closeDecoder (sDecoder* decoder) {
 
   ercClose (decoder, decoder->ercErrorVar);
 
-  for (unsigned i = 0; i < MAX_PPS; i++) {
+  for (uint32_t i = 0; i < MAX_PPS; i++) {
     if (decoder->pps[i].ok && decoder->pps[i].sliceGroupId)
       free (decoder->pps[i].sliceGroupId);
     decoder->pps[i].ok = false;

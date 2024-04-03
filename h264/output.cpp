@@ -31,7 +31,7 @@ static void allocDecodedPicBuffers (sDecoder* decoder, sDecodedPic* decodedPic, 
 //}}}
 
 //{{{
-static void img2buf (sPixel** imgX, unsigned char* buf,
+static void img2buf (sPixel** imgX, uint8_t* buf,
                      int sizeX, int sizeY, int symbolSizeInBytes,
                      int cropLeft, int cropRight, int cropTop, int cropBot, int outStride) {
 
