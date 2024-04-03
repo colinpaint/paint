@@ -69,10 +69,10 @@ typedef struct ErcVariables {
   } sErcVariables;
 //}}}
 //{{{
-struct ConcealNode {
+struct sConcealNode {
   sPicture* picture;
   int       missingpocs;
-  struct ConcealNode* next;
+  sConcealNode* next;
   };
 //}}}
 #define xPosMB(currMBNum,picSizeX) ((currMBNum)%((picSizeX)>>4))
@@ -83,7 +83,7 @@ int ercConcealIntraFrame (sDecoder* decoder, frame *recfr,
 int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
                           int picSizeX, int picSizeY, sErcVariables *errorVar, int chromaFormatIdc );
 
-extern struct ConcealNode* init_node (sPicture* , int );
+extern struct sConcealNode* init_node (sPicture* , int );
 extern void init_lists_for_non_reference_loss (sDpb* dpb, int , ePicStructure );
 extern void concealLostFrames (sDpb* dpb, sSlice *slice);
 extern void conceal_non_ref_pics (sDpb* dpb, int diff);

@@ -1221,31 +1221,28 @@ public:
       //{{{  draw decoder info
       ImGui::PushFont (testApp.getMonoFont());
 
-      ImGui::TextColored (kWhite, decoder->debug.profileStr);
+      ImGui::TextColored (kWhite, decoder->debug.profileStr.c_str());
       mDebugLines = 1;
 
-      char str[128];
       int spsIndex = 0;
       while (decoder->sps[spsIndex].ok) {
-        getSpsStr (&decoder->sps[spsIndex], str);
         bool active = &decoder->sps[spsIndex] == decoder->activeSps;
-        ImGui::TextColored (active ? kYellow : kGrey, str);
+        ImGui::TextColored (active ? kYellow : kGrey, getSpsString (&decoder->sps[spsIndex]).c_str());
         mDebugLines++;
         spsIndex++;
         }
 
       int ppsIndex = 0;
       while (decoder->pps[ppsIndex].ok) {
-        getPpsStr (&decoder->pps[ppsIndex], str);
         bool active = &decoder->pps[ppsIndex] == decoder->activePps;
-        ImGui::TextColored (active ? kYellow : kGrey, str);
+        ImGui::TextColored (active ? kYellow : kGrey, getPpsString (&decoder->pps[ppsIndex]).c_str());
         mDebugLines++;
         ppsIndex++;
         }
 
       ImGui::TextColored (getSliceColor (decoder->debug.sliceType), decoder->debug.sliceStr);
       ImGui::SameLine();
-      ImGui::TextColored (getSliceColor (decoder->debug.outSliceType), decoder->debug.outStr);
+      ImGui::TextColored (getSliceColor (decoder->debug.outSliceType), decoder->debug.outStr.c_str());
       mDebugLines++;
 
       ImGui::PopFont();

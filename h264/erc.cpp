@@ -1705,7 +1705,7 @@ static int comp (const void *i, const void *j) {
   }
 //}}}
 //{{{
-static void add_node (sDecoder* decoder, struct ConcealNode *concealment_new )
+static void add_node (sDecoder* decoder, struct sConcealNode *concealment_new )
 {
   if( decoder->concealHead == NULL ) {
     decoder->concealTail = decoder->concealHead = concealment_new;
@@ -1716,7 +1716,7 @@ static void add_node (sDecoder* decoder, struct ConcealNode *concealment_new )
 }
 //}}}
 //{{{
-static void delete_node (sDecoder* decoder, struct ConcealNode *ptr ) {
+static void delete_node (sDecoder* decoder, struct sConcealNode *ptr ) {
 
   // We only need to delete the first node in the linked list
   if( ptr == decoder->concealHead ) {
@@ -1742,11 +1742,11 @@ static void update_ref_list_for_concealment (sDpb* dpb) {
 //}}}
 
 //{{{
-struct ConcealNode * init_node (sPicture* picture, int missingpoc ) {
+struct sConcealNode * init_node (sPicture* picture, int missingpoc ) {
 
-  struct ConcealNode* ptr = (struct ConcealNode *) calloc( 1, sizeof(struct ConcealNode ) );
+  struct sConcealNode* ptr = (struct sConcealNode *) calloc( 1, sizeof(struct sConcealNode ) );
   if ( ptr == NULL )
-    return (struct ConcealNode *) NULL;
+    return (struct sConcealNode *) NULL;
   else {
     ptr->picture = picture;
     ptr->missingpocs = missingpoc;
@@ -1969,7 +1969,7 @@ void conceal_non_ref_pics (sDpb* dpb, int diff)
   uint32_t i, pos = 0;
   sPicture *conceal_from_picture = NULL;
   sPicture *conceal_to_picture = NULL;
-  struct ConcealNode *concealment_ptr = NULL;
+  struct sConcealNode *concealment_ptr = NULL;
   int temp_used_size = dpb->usedSize;
 
   if(dpb->usedSize == 0 )

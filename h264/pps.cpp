@@ -6,6 +6,10 @@
 #include "pps.h"
 #include "nalu.h"
 #include "vlc.h"
+
+#include "../common/cLog.h"
+
+using namespace std;
 //}}}
 
 //{{{
@@ -225,24 +229,24 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 //}}}
 
 //{{{
-void getPpsStr (sPps* pps, char* str) {
+string getPpsString (sPps* pps) {
 
-  sprintf (str, "PPS:%d:%d -> sps:%d%s sliceGroups:%d L:%d:%d%s%s%s%s%s%s biPredIdc:%d%s",
-           pps->id,
-           pps->naluLen,
-           pps->spsId,
-           pps->entropyCoding ? " cabac":" cavlc",
-           pps->numSliceGroupsMinus1,
-           pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1,
-           pps->hasDeblockFilterControl ? " deblock":"",
-           pps->hasWeightedPred ? " pred":"",
-           pps->hasConstrainedIntraPred ? " intra":"",
-           pps->redundantPicCountPresent ? " redundant":"",
-           pps->hasMoreData && pps->hasTransform8x8mode ? " 8x8":"",
-           pps->hasMoreData && pps->hasPicScalingMatrix ? " scaling":"",
-           pps->weightedBiPredIdc,
-           pps->frameBotField ? " botField":""
-           );
+  return fmt::format ("PPS:{}:{} -> sps:{}{} sliceGroups:{} L:{}:{}{}{}{}{}{}{} biPredIdc:{}{}",
+                      pps->id,
+                      pps->naluLen,
+                      pps->spsId,
+                      pps->entropyCoding ? " cabac":" cavlc",
+                      pps->numSliceGroupsMinus1,
+                      pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1,
+                      pps->hasDeblockFilterControl ? " deblock":"",
+                      pps->hasWeightedPred ? " pred":"",
+                      pps->hasConstrainedIntraPred ? " intra":"",
+                      pps->redundantPicCountPresent ? " redundant":"",
+                      pps->hasMoreData && pps->hasTransform8x8mode ? " 8x8":"",
+                      pps->hasMoreData && pps->hasPicScalingMatrix ? " scaling":"",
+                      pps->weightedBiPredIdc,
+                      pps->frameBotField ? " botField":""
+                      );
   }
 //}}}
 //{{{

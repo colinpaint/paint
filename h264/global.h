@@ -366,6 +366,7 @@ struct sCodedBlockPattern {
   };
 //}}}
 
+struct sConcealNode;
 struct sFrameStore;
 struct sPicture;
 struct sDpb;
@@ -554,8 +555,8 @@ typedef struct DecodedPic {
   struct DecodedPic* next;
   } sDecodedPic;
 //}}}
-//{{{  sDecodedRefPicMark
-typedef struct DecodedRefPicMark {
+//{{{
+struct sDecodedRefPicMark {
   int memManagement;
   int diffPicNumMinus1;
 
@@ -563,8 +564,8 @@ typedef struct DecodedRefPicMark {
   int longTermFrameIndex;
   int maxLongTermFrameIndexPlus1;
 
-  struct DecodedRefPicMark* next;
-  } sDecodedRefPicMark;
+  sDecodedRefPicMark* next;
+  };
 //}}}
 //{{{
 struct sOldSlice {
@@ -835,15 +836,14 @@ struct sDebug {
   TIME_T  startTime;
   TIME_T  endTime;
 
-  char    profileStr[128];
+  std::string profileStr;
 
   eSliceType sliceType;
   char    sliceTypeStr[9];
   char    sliceStr[128];
 
   eSliceType outSliceType;
-  //std::string outStr;
-  char outStr[128];
+  std::string outStr;
   };
 //}}}
 //{{{
@@ -868,8 +868,8 @@ struct sDecoder {
 
   int          decodeFrameNum;
   int          idrFrameNum;
-  uint32_t preFrameNum;  // last decoded slice. For detecting gap in frameNum.
-  uint32_t prevFrameNum; // number of previous slice
+  uint32_t     preFrameNum;  // last decoded slice. For detecting gap in frameNum.
+  uint32_t     prevFrameNum; // number of previous slice
   int          newFrame;
 
   int          nonConformingStream;
@@ -925,14 +925,14 @@ struct sDecoder {
   // sCoding
   sCoding      coding;
   sBlockPos*   picPos;
-  uint8_t****     nzCoeff;
+  uint8_t****  nzCoeff;
   sMacroBlock* mbData;              // array containing all MBs of a whole frame
   char*        intraBlock;
-  uint8_t**       predMode;            // prediction type [90][74]
+  uint8_t**    predMode;            // prediction type [90][74]
   int**        siBlock;
   sMacroBlock* mbDataJV[MAX_PLANE];
   char*        intraBlockJV[MAX_PLANE];
-  uint8_t**       predModeJV[MAX_PLANE];
+  uint8_t**    predModeJV[MAX_PLANE];
   int**        siBlockJV[MAX_PLANE];
 
   // POC
@@ -940,25 +940,25 @@ struct sDecoder {
 
   // - mode 0:
   signed int   prevPocMsb;
-  uint32_t prevPocLsb;
+  uint32_t     prevPocLsb;
   int          lastPicBotField;
 
   // - mode 1:
   signed int   expectedPOC, pocCycleCount, frameNumPocCycle;
-  uint32_t previousFrameNum;
-  uint32_t frameNumOffset;
+  uint32_t     previousFrameNum;
+  uint32_t     frameNumOffset;
   int          expectedDeltaPerPocCycle;
   int          thisPoc;
   int          previousFrameNumOffset;
 
-  uint32_t picHeightInMbs;
-  uint32_t picSizeInMbs;
+  uint32_t     picHeightInMbs;
+  uint32_t     picSizeInMbs;
 
   int          noOutputPriorPicFlag;
 
   // non-zero: i-th previous frame is correct
-  int  isPrimaryOk;    // if primary frame is correct, 0: incorrect
-  int  isRedundantOk;  // if redundant frame is correct, 0:incorrect
+  int isPrimaryOk;    // if primary frame is correct, 0: incorrect
+  int isRedundantOk;  // if redundant frame is correct, 0:incorrect
 
   int* qpPerMatrix;
   int* qpRemMatrix;
@@ -966,24 +966,24 @@ struct sDecoder {
   // Error parameters
   struct ObjectBuffer* ercObjectList;
   struct ErcVariables* ercErrorVar;
-  int  ercMvPerMb;
-  int  ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
+  int ercMvPerMb;
+  int ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
 
   // fmo
   int* mbToSliceGroupMap;
   int* mapUnitToSliceGroupMap;
-  int  sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  int sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
   // picture error conceal
   // concealHead points to first node in list, concealTail points to last node in list
   // Initialize both to NULL, meaning no nodes in list yet
-  struct ConcealNode* concealHead;
-  struct ConcealNode* concealTail;
-  int                 concealMode;
-  int                 earlierMissingPoc;
-  uint32_t        concealFrame;
-  int                 idrConcealFlag;
-  int                 concealSliceType;
+  sConcealNode* concealHead;
+  sConcealNode* concealTail;
+  int           concealMode;
+  int           earlierMissingPoc;
+  uint32_t      concealFrame;
+  int           idrConcealFlag;
+  int           concealSliceType;
 
   // virtual functions
   void (*getNeighbour) (sMacroBlock*, int, int, int[2], sPixelPos*);

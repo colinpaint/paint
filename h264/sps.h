@@ -70,24 +70,24 @@ typedef struct {
 
 // sSps
 struct sSps {
-  bool  ok;
+  bool     ok;
   int      naluLen;
 
   uint32_t profileIdc;              // u(8)
-  bool  constrained_set0_flag;       // u(1)
-  bool  constrained_set1_flag;       // u(1)
-  bool  constrained_set2_flag;       // u(1)
-  bool  constrainedSet3flag;         // u(1)
+  bool     constrained_set0_flag;   // u(1)
+  bool     constrained_set1_flag;   // u(1)
+  bool     constrained_set2_flag;   // u(1)
+  bool     constrainedSet3flag;     // u(1)
   uint32_t levelIdc;                // u(8)
   uint32_t id;                      // ue(v)
 
   uint32_t chromaFormatIdc;         // ue(v)
-  uint32_t isSeperateColourPlane;       // u(1)
+  uint32_t isSeperateColourPlane;   // u(1)
   uint32_t bit_depth_luma_minus8;   // ue(v)
   uint32_t bit_depth_chroma_minus8; // ue(v)
   int      useLosslessQpPrime;
 
-  bool  hasSeqScalingMatrix;         // u(1)
+  bool     hasSeqScalingMatrix;     // u(1)
   //{{{  optional scalingMatrix fields
   int      hasSeqScalingList[12]; // u(1)
   int      scalingList4x4[6][16];             // se(v)
@@ -109,18 +109,17 @@ struct sSps {
   //}}}
 
   uint32_t numRefFrames;            // ue(v)
-  bool  allowGapsFrameNum;           // u(1)
+  bool     allowGapsFrameNum;       // u(1)
 
   uint32_t picWidthMbsMinus1;       // ue(v)
   uint32_t picHeightMapUnitsMinus1; // ue(v)
 
-  bool  frameMbOnly;                 // u(1)
+  bool     frameMbOnly;             // u(1)
   //{{{  optional mbAffFlag
   bool  mbAffFlag;                   // u(1)
   //}}}
 
-  bool  isDirect8x8inference;        // u(1)
-
+  bool     isDirect8x8inference;    // u(1)
   //{{{  optional crop
   bool  cropFlag;                    // u(1)
   uint32_t cropLeft;                // ue(v)
@@ -134,5 +133,5 @@ struct sSps {
   //}}}
   };
 
-extern int readNaluSps (sDecoder* decoder, sNalu* nalu);
-extern void getSpsStr (sSps* sps, char* str);
+std::string getSpsString (sSps* sps);
+int readNaluSps (sDecoder* decoder, sNalu* nalu);

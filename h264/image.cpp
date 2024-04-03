@@ -2296,7 +2296,7 @@ static void endDecodeFrame (sDecoder* decoder) {
 
     decoder->debug.outSliceType = (eSliceType)sliceType;
 
-    sprintf (decoder->debug.outStr, "%d %d:%d:%02d %3dms ->%s-> poc:%d pic:%d -> %d",
+    decoder->debug.outStr = fmt::format ("{} {}:{}:{:2d} {:3d}ms ->{}-> poc:{} pic:{} -> {}",
              decoder->decodeFrameNum,
              decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
              (int)timeNorm (timeDiff (&decoder->debug.startTime, &decoder->debug.endTime)),
@@ -2304,7 +2304,7 @@ static void endDecodeFrame (sDecoder* decoder) {
              pocNum, picNum, numOutputFrames);
 
     if (decoder->param.outDebug)
-      cLog::log(LOGINFO, decoder->debug.outStr);
+      cLog::log (LOGINFO, "-> " + decoder->debug.outStr);
     //}}}
 
     // I or P pictures ?
@@ -2492,11 +2492,11 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
 
   sPps* pps = &decoder->pps[slice->ppsId];
   if (!pps->ok)
-    cLog::log (LOGINFO, "useParameterSet - invalid ppsId:%d", slice->ppsId);
+    cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid ppsId:{}", slice->ppsId));
 
   sSps* sps = &decoder->sps[pps->spsId];
   if (!sps->ok)
-    cLog::log (LOGINFO, "useParameterSet - invalid spsId:%d ppsId:%d", slice->ppsId, pps->spsId);
+    cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid spsId:{} ppsId:{}", slice->ppsId, pps->spsId));
 
   if (sps != decoder->activeSps) {
     //{{{  new sps
@@ -2524,14 +2524,16 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
 
     // debug spsStr
-    sprintf (decoder->debug.profileStr, "profile:%d %dx%d %dx%d%s %d:%d:%d",
+    decoder->debug.profileStr = fmt::format ("profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
              decoder->coding.profileIdc,
              decoder->param.source.width[0], decoder->param.source.height[0],
              decoder->coding.width, decoder->coding.height,
-             decoder->coding.yuvFormat == YUV400 ? " 4:0:0 ":
-               decoder->coding.yuvFormat == YUV420 ? " 4:2:0":
-                 decoder->coding.yuvFormat == YUV422 ? " 4:2:2":" 4:4:4",
-             decoder->param.source.bitDepth[0], decoder->param.source.bitDepth[1], decoder->param.source.bitDepth[2]);
+             decoder->coding.yuvFormat == YUV400 ? " 400 ":
+               decoder->coding.yuvFormat == YUV420 ? " 420":
+                 decoder->coding.yuvFormat == YUV422 ? " 422":" 4:4:4",
+             decoder->param.source.bitDepth[0], 
+             decoder->param.source.bitDepth[1], 
+             decoder->param.source.bitDepth[2]);
 
     // print profile debug
     cLog::log (LOGINFO, decoder->debug.profileStr);
@@ -3097,22 +3099,16 @@ static int readSlice (sSlice* slice) {
       //{{{
       case NALU_TYPE_SPS: {
         int spsId = readNaluSps (decoder, nalu);
-        if (decoder->param.spsDebug) {
-          char str[128];
-          getSpsStr (&decoder->sps[spsId], str);
-          cLog::log (LOGINFO, str);
-          }
+        if (decoder->param.spsDebug) 
+          cLog::log (LOGINFO, getSpsString (&decoder->sps[spsId]));
         break;
         }
       //}}}
       //{{{
       case NALU_TYPE_PPS: {
         int ppsId = readNaluPps (decoder, nalu);
-        if (decoder->param.ppsDebug) {
-          char str[128];
-          getPpsStr (&decoder->pps[ppsId], str);
-          cLog::log (LOGINFO, str);
-          }
+        if (decoder->param.ppsDebug) 
+          cLog::log (LOGINFO, getPpsString (&decoder->pps[ppsId]));
         break;
         }
       //}}}
