@@ -63,6 +63,7 @@ uint8_t cAnnexB::getByte() {
   }
 //}}}
 
+// cNalu
 //{{{
 cNalu::cNalu (int bufferSize) {
 
@@ -77,7 +78,6 @@ cNalu::~cNalu() {
   }
 //}}}
 
-// cNalu
 //{{{
 void cNalu::checkZeroByteVCL (sDecoder* decoder) {
 
@@ -332,6 +332,7 @@ int cNalu::getNALU (cAnnexB* annexB, sDecoder* decoder) {
   return naluBufCount;
   }
 //}}}
+
 //{{{
 int cNalu::NALUtoRBSP() {
 // NetworkAbstractionLayerUnit to RawByteSequencePayload
