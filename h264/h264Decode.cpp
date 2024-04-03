@@ -390,8 +390,8 @@ sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize) {
 int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList) {
 
   clearDecodedPics (decoder);
-  
-  int result;
+
+  int result = 0;
   int decodeFrameResult = decodeFrame (decoder);
   if (decodeFrameResult == eSOP)
     result = DEC_SUCCEED;

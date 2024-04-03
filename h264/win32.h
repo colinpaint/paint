@@ -42,7 +42,6 @@
   #include <sys/time.h>
   #include <sys/stat.h>
   #include <time.h>
-  #include <stdint.h>
 
   #define TIMEB    timeb
   #define TIME_T   struct timeval

@@ -7,7 +7,6 @@
 #include <string>
 #include <string.h> // for memset
 #include <stdlib.h>
-#include <time.h>
 
 #include "win32.h"
 #include "functions.h"
