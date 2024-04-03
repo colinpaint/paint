@@ -10,17 +10,7 @@ typedef enum {
   DEC_NEED_DATA = 2,
   DEC_INVALID_PARAM = 3,
   DEC_ERRMASK = 0x8000
-  } DecErrCode;
-
-typedef struct dec_set_t {
-  int iPostprocLevel; // valid interval are [0..100]
-  int bDBEnable;
-  int bAllLayers;
-  int time_incr;
-  int bDecCompAdapt;
-  } DecSet_t;
-
-int SetOptsDecoder (DecSet_t* pDecOpts);
+  } eDecErrCode;
 
 sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize);
 int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList);

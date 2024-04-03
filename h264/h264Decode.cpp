@@ -390,17 +390,18 @@ sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize) {
 int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList) {
 
   clearDecodedPics (decoder);
-
-  int iRet = decodeFrame (decoder);
-  if (iRet == eSOP)
-    iRet = DEC_SUCCEED;
-  else if (iRet == eEOS)
-    iRet = DEC_EOS;
+  
+  int result;
+  int decodeFrameResult = decodeFrame (decoder);
+  if (decodeFrameResult == eSOP)
+    result = DEC_SUCCEED;
+  else if (decodeFrameResult == eEOS)
+    result = DEC_EOS;
   else
-    iRet |= DEC_ERRMASK;
+    result |= DEC_ERRMASK;
 
   *decPicList = decoder->outDecodedPics;
-  return iRet;
+  return result;
   }
 //}}}
 //{{{

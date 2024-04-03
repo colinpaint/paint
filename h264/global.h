@@ -66,7 +66,6 @@
 #define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
 //}}}
 
-typedef uint8_t sPixel;
 //{{{  enum eStartEnd
 typedef enum {
   eEOS = 1, // End Of Sequence
@@ -282,6 +281,7 @@ struct sPicMotion;
 struct sMacroBlock;
 struct sSlice;
 struct sDecoder;
+typedef uint8_t sPixel;
 //{{{
 struct sBiContext {
   uint16_t        state; // index into state-table CP
