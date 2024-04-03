@@ -2255,8 +2255,6 @@ static void endDecodeFrame (sDecoder* decoder) {
       decoder->debug.sliceTypeString = " B ";
     else
       decoder->debug.sliceTypeString = " b ";
-    if (picStructure == eFrame)
-      decoder->debug.sliceTypeString += "    ";
     }
     //}}}
   else if (picStructure == eBotField) {

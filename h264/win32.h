@@ -1,7 +1,5 @@
 #pragma once
-#define _CRT_SECURE_NO_WARNINGS
 #include <fcntl.h>
-#include <stdlib.h>
 #include <stdio.h>
 
 #if defined(WIN32) || defined (WIN64)
