@@ -86,7 +86,7 @@ string cSps::getString() {
 
 // static
 //{{{
-int cSps::readNalu (sDecoder* decoder, sNalu* nalu) {
+int cSps::readNalu (sDecoder* decoder, cNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->stream->errorFlag = 0;

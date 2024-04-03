@@ -831,9 +831,9 @@ struct sDecoder {
   // nalu
   int          gotLastNalu;
   int          naluCount;
-  sNalu*       nalu;
-  sNalu*       pendingNalu;
-  sAnnexB*     annexB;
+  cNalu*       nalu;
+  cNalu*       pendingNalu;
+  cAnnexB*     annexB;
 
   // sps
   cSps         sps[kMaxSps];

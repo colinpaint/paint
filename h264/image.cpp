@@ -2798,7 +2798,7 @@ namespace {
     sDecoder* decoder = slice->decoder;
 
     for (;;) {
-      sNalu* nalu = decoder->nalu;
+      cNalu* nalu = decoder->nalu;
       if (decoder->pendingNalu) {
         nalu = decoder->pendingNalu;
         decoder->pendingNalu = NULL;
@@ -2808,13 +2808,13 @@ namespace {
 
     processNalu:
       switch (nalu->unitType) {
-        case sNalu::NALU_TYPE_SLICE:
+        case cNalu::NALU_TYPE_SLICE:
         //{{{
-        case sNalu::NALU_TYPE_IDR: {
+        case cNalu::NALU_TYPE_IDR: {
           // recovery
-          if (decoder->recoveryPoint || nalu->unitType == sNalu::NALU_TYPE_IDR) {
+          if (decoder->recoveryPoint || nalu->unitType == cNalu::NALU_TYPE_IDR) {
             if (!decoder->recoveryPointFound) {
-              if (nalu->unitType != sNalu::NALU_TYPE_IDR) {
+              if (nalu->unitType != cNalu::NALU_TYPE_IDR) {
                 cLog::log (LOGINFO,  "-> decoding without IDR");
                 decoder->nonConformingStream = 1;
                 }
@@ -2827,7 +2827,7 @@ namespace {
             break;
 
           // read sliceHeader
-          slice->isIDR = (nalu->unitType == sNalu::NALU_TYPE_IDR);
+          slice->isIDR = (nalu->unitType == cNalu::NALU_TYPE_IDR);
           slice->refId = nalu->refId;
           slice->dataPartitionMode = eDataPartition1;
           slice->maxDataPartitions = 1;
@@ -2874,7 +2874,7 @@ namespace {
           // debug
           decoder->debug.sliceType = slice->sliceType;
           decoder->debug.sliceString = fmt::format ("{}:{}:{:6d} -> pps:{} frame:{:2d} {} {}{}",
-                   (nalu->unitType == sNalu::NALU_TYPE_IDR) ? "IDR":"SLC", slice->refId, nalu->len,
+                   (nalu->unitType == cNalu::NALU_TYPE_IDR) ? "IDR":"SLC", slice->refId, nalu->len,
                    slice->ppsId, slice->frameNum,
                    slice->sliceType ? (slice->sliceType == 1) ? 'B':((slice->sliceType == 2) ? 'I':'?'):'P',
                    slice->fieldPic ? " field":"", slice->mbAffFrame ? " mbAff":"");
@@ -2886,7 +2886,7 @@ namespace {
         //}}}
 
         //{{{
-        case sNalu::NALU_TYPE_SPS: {
+        case cNalu::NALU_TYPE_SPS: {
           int spsId = cSps::readNalu (decoder, nalu);
           if (decoder->param.spsDebug)
             cLog::log (LOGINFO, decoder->sps[spsId].getString());
@@ -2894,7 +2894,7 @@ namespace {
           }
         //}}}
         //{{{
-        case sNalu::NALU_TYPE_PPS: {
+        case cNalu::NALU_TYPE_PPS: {
           int ppsId = cPps::readNalu (decoder, nalu);
           if (decoder->param.ppsDebug)
             cLog::log (LOGINFO, decoder->pps[ppsId].getString());
@@ -2902,12 +2902,12 @@ namespace {
           }
         //}}}
 
-        case sNalu::NALU_TYPE_SEI:
+        case cNalu::NALU_TYPE_SEI:
           processSei (nalu->buf, nalu->len, decoder, slice);
           break;
 
         //{{{
-        case sNalu::NALU_TYPE_DPA: {
+        case cNalu::NALU_TYPE_DPA: {
           cLog::log (LOGINFO, "DPA id:%d:%d len:%d", slice->refId, slice->sliceType, nalu->len);
 
           if (!decoder->recoveryPointFound)
@@ -2951,7 +2951,7 @@ namespace {
           if (!nalu->readNalu (decoder))
             return curHeader;
 
-          if (sNalu::NALU_TYPE_DPB == nalu->unitType) {
+          if (cNalu::NALU_TYPE_DPB == nalu->unitType) {
             //{{{  got nalu dataPartitionB
             s = slice->dataPartitions[1].stream;
             s->errorFlag = 0;
@@ -2979,7 +2979,7 @@ namespace {
           else
             slice->noDataPartitionB = 1;
 
-          if (sNalu::NALU_TYPE_DPC == nalu->unitType) {
+          if (cNalu::NALU_TYPE_DPC == nalu->unitType) {
             //{{{  got nalu dataPartitionC
             s = slice->dataPartitions[2].stream;
             s->errorFlag = 0;
@@ -3004,28 +3004,28 @@ namespace {
             }
 
           // check if we read anything else than the expected dataPartitions
-          if ((nalu->unitType != sNalu::NALU_TYPE_DPB) &&
-              (nalu->unitType != sNalu::NALU_TYPE_DPC) && (!slice->noDataPartitionC))
+          if ((nalu->unitType != cNalu::NALU_TYPE_DPB) &&
+              (nalu->unitType != cNalu::NALU_TYPE_DPC) && (!slice->noDataPartitionC))
             goto processNalu;
 
           return curHeader;
           }
         //}}}
         //{{{
-        case sNalu::NALU_TYPE_DPB:
+        case cNalu::NALU_TYPE_DPB:
           cLog::log (LOGINFO, "dataPartitionB without dataPartitonA");
           break;
         //}}}
         //{{{
-        case sNalu::NALU_TYPE_DPC:
+        case cNalu::NALU_TYPE_DPC:
           cLog::log (LOGINFO, "dataPartitionC without dataPartitonA");
           break;
         //}}}
 
-        case sNalu::NALU_TYPE_AUD: break;
-        case sNalu::NALU_TYPE_FILL: break;
-        case sNalu::NALU_TYPE_EOSEQ: break;
-        case sNalu::NALU_TYPE_EOSTREAM: break;
+        case cNalu::NALU_TYPE_AUD: break;
+        case cNalu::NALU_TYPE_FILL: break;
+        case cNalu::NALU_TYPE_EOSEQ: break;
+        case cNalu::NALU_TYPE_EOSTREAM: break;
 
         default:
           cLog::log (LOGINFO, "NALU:%d unknown:%d\n", nalu->len, nalu->unitType);

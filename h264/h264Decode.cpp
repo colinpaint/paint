@@ -354,8 +354,8 @@ sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize) {
   decoder->concealMode = param->concealMode;
 
   // init nalu, annexB
-  decoder->nalu = new sNalu (MAX_CODED_FRAME_SIZE);
-  decoder->annexB = new sAnnexB (decoder);
+  decoder->nalu = new cNalu (MAX_CODED_FRAME_SIZE);
+  decoder->annexB = new cAnnexB (decoder);
   decoder->annexB->open (chunk, chunkSize);
 
   // init slice

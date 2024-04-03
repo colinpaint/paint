@@ -6,7 +6,7 @@ constexpr int kMaxPps = 4;
 
 class cPps {
 public:
-  static int readNalu (sDecoder* decoder, sNalu* nalu);
+  static int readNalu (sDecoder* decoder, cNalu* nalu);
 
   std::string getString();
   bool isEqual (cPps& pps);

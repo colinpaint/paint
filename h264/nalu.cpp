@@ -21,20 +21,20 @@ namespace {
   //}}}
   }
 
-// sAnnexB
+// cAnnexB
 //{{{
-sAnnexB::sAnnexB (sDecoder* decoder) {
+cAnnexB::cAnnexB (sDecoder* decoder) {
   naluBuffer = (uint8_t*)malloc (decoder->nalu->maxSize);
   }
 //}}}
 //{{{
-sAnnexB::~sAnnexB() {
+cAnnexB::~cAnnexB() {
   free (naluBuffer);
   }
 //}}}
 
 //{{{
-void sAnnexB::open (uint8_t* chunk, size_t chunkSize) {
+void cAnnexB::open (uint8_t* chunk, size_t chunkSize) {
 
   buffer = chunk;
   bufferSize = chunkSize;
@@ -44,7 +44,7 @@ void sAnnexB::open (uint8_t* chunk, size_t chunkSize) {
   }
 //}}}
 //{{{
-void sAnnexB::reset() {
+void cAnnexB::reset() {
 
   bytesInBuffer = bufferSize;
   bufferPtr = buffer;
@@ -52,7 +52,7 @@ void sAnnexB::reset() {
 //}}}
 
 //{{{
-uint8_t sAnnexB::getByte() {
+uint8_t cAnnexB::getByte() {
 
   if (bytesInBuffer) {
     bytesInBuffer--;
@@ -64,22 +64,22 @@ uint8_t sAnnexB::getByte() {
 //}}}
 
 //{{{
-sNalu::sNalu (int bufferSize) {
+cNalu::cNalu (int bufferSize) {
 
   buf = (uint8_t*)calloc (bufferSize, sizeof (uint8_t));
   maxSize = bufferSize;
   }
 //}}}
 //{{{
-sNalu::~sNalu() {
+cNalu::~cNalu() {
 
   free (buf);
   }
 //}}}
 
-// sNalu
+// cNalu
 //{{{
-void sNalu::checkZeroByteVCL (sDecoder* decoder) {
+void cNalu::checkZeroByteVCL (sDecoder* decoder) {
 
   int CheckZeroByte = 0;
 
@@ -104,7 +104,7 @@ void sNalu::checkZeroByteVCL (sDecoder* decoder) {
    }
 //}}}
 //{{{
-void sNalu::checkZeroByteNonVCL (sDecoder* decoder) {
+void cNalu::checkZeroByteNonVCL (sDecoder* decoder) {
 
   int CheckZeroByte = 0;
 
@@ -140,7 +140,7 @@ void sNalu::checkZeroByteNonVCL (sDecoder* decoder) {
 //}}}
 
 //{{{
-int sNalu::readNalu (sDecoder* decoder) {
+int cNalu::readNalu (sDecoder* decoder) {
 
   int ret = getNALU (decoder->annexB, decoder);
   if (ret < 0)
@@ -164,7 +164,7 @@ int sNalu::readNalu (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void sNalu::debug() {
+void cNalu::debug() {
 
   switch (unitType) {
     case NALU_TYPE_IDR:
@@ -209,7 +209,7 @@ void sNalu::debug() {
 
 // private
 //{{{
-int sNalu::getNALU (sAnnexB* annexB, sDecoder* decoder) {
+int cNalu::getNALU (cAnnexB* annexB, sDecoder* decoder) {
 
   int naluBufCount = 0;
   uint8_t* naluBufPtr = annexB->naluBuffer;
@@ -333,7 +333,7 @@ int sNalu::getNALU (sAnnexB* annexB, sDecoder* decoder) {
   }
 //}}}
 //{{{
-int sNalu::NALUtoRBSP() {
+int cNalu::NALUtoRBSP() {
 // NetworkAbstractionLayerUnit to RawByteSequencePayload
 
   uint8_t* bitStreamBuffer = buf;
@@ -385,7 +385,7 @@ int sNalu::NALUtoRBSP() {
   }
 //}}}
 //{{{
-int sNalu::RBSPtoSODB (uint8_t* bitStreamBuffer) {
+int cNalu::RBSPtoSODB (uint8_t* bitStreamBuffer) {
 // RawByteSequencePayload to StringOfDataBits
 
   int lastBytePos = len - 1;
