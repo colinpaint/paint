@@ -81,7 +81,7 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   int cropRight;
   int cropTop;
   int cropBottom;
-  if (p->cropFlag) {
+  if (p->hasCrop) {
     cropLeft = SubWidthC [p->chromaFormatIdc] * p->cropLeft;
     cropRight = SubWidthC [p->chromaFormatIdc] * p->cropRight;
     cropTop = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnly ) * p->cropTop;
@@ -171,8 +171,8 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
     decoder->pendingOut->chromaFormatIdc = p->chromaFormatIdc;
 
     decoder->pendingOut->frameMbOnly = p->frameMbOnly;
-    decoder->pendingOut->cropFlag = p->cropFlag;
-    if (decoder->pendingOut->cropFlag) {
+    decoder->pendingOut->hasCrop = p->hasCrop;
+    if (decoder->pendingOut->hasCrop) {
       decoder->pendingOut->cropLeft = p->cropLeft;
       decoder->pendingOut->cropRight = p->cropRight;
       decoder->pendingOut->cropTop = p->cropTop;
@@ -198,8 +198,8 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
   else {
     if ((decoder->pendingOut->sizeX != p->sizeX) || (decoder->pendingOut->sizeY != p->sizeY) ||
         (decoder->pendingOut->frameMbOnly != p->frameMbOnly) ||
-        (decoder->pendingOut->cropFlag != p->cropFlag) ||
-        (decoder->pendingOut->cropFlag &&
+        (decoder->pendingOut->hasCrop != p->hasCrop) ||
+        (decoder->pendingOut->hasCrop &&
          ((decoder->pendingOut->cropLeft != p->cropLeft) || (decoder->pendingOut->cropRight != p->cropRight) ||
           (decoder->pendingOut->cropTop != p->cropTop) || (decoder->pendingOut->cropBot != p->cropBot)))) {
       flushPendingOut (decoder);
@@ -247,8 +247,8 @@ static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
     frameStore->topField->chromaFormatIdc = picture->chromaFormatIdc;
     clearPicture (decoder, frameStore->topField);
 
-    frameStore->topField->cropFlag = frameStore->botField->cropFlag;
-    if (frameStore->topField->cropFlag) {
+    frameStore->topField->hasCrop = frameStore->botField->hasCrop;
+    if (frameStore->topField->hasCrop) {
       frameStore->topField->cropTop = frameStore->botField->cropTop;
       frameStore->topField->cropBot = frameStore->botField->cropBot;
       frameStore->topField->cropLeft = frameStore->botField->cropLeft;

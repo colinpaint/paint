@@ -1227,7 +1227,7 @@ public:
       int spsIndex = 0;
       while (decoder->sps[spsIndex].ok) {
         bool active = &decoder->sps[spsIndex] == decoder->activeSps;
-        ImGui::TextColored (active ? kYellow : kGrey, getSpsString (&decoder->sps[spsIndex]).c_str());
+        ImGui::TextColored (active ? kYellow : kGrey, decoder->sps[spsIndex].getSpsString().c_str());
         mDebugLines++;
         spsIndex++;
         }

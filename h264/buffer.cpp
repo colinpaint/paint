@@ -639,8 +639,8 @@ void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore) {
   frameStore->frame->codedFrame = 0;
 
   frameStore->frame->chromaFormatIdc = frameStore->topField->chromaFormatIdc;
-  frameStore->frame->cropFlag = frameStore->topField->cropFlag;
-  if (frameStore->frame->cropFlag) {
+  frameStore->frame->hasCrop = frameStore->topField->hasCrop;
+  if (frameStore->frame->hasCrop) {
     frameStore->frame->cropTop = frameStore->topField->cropTop;
     frameStore->frame->cropBot = frameStore->topField->cropBot;
     frameStore->frame->cropLeft = frameStore->topField->cropLeft;
@@ -989,7 +989,7 @@ static int getDpbSize (sDecoder* decoder, sSps *activeSps) {
   size /= pic_size_mb;
     size = imin( size, 16);
 
-  if (activeSps->hasVui && activeSps->vuiSeqParams.bitstream_restriction_flag) {
+  if (activeSps->hasVui && activeSps->vuiSeqParams.bitstream_restrictionFlag) {
     int size_vui;
     if ((int)activeSps->vuiSeqParams.max_dec_frame_buffering > size)
       error ("max_dec_frame_buffering larger than MaxDpbSize");

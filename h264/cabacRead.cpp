@@ -339,7 +339,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
   int i0, j0;
   int qp_per, qp_rem;
   int intra = (mb->isIntraBlock == true);
-  int need_transform_size_flag;
+  int need_transform_sizeFlag;
   int (*InvLevelScale4x4)[4] = NULL;
 
   // select scan type
@@ -369,19 +369,19 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
     mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     //============= Transform size flag for INTER MBs =============
-    need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
+    need_transform_sizeFlag = (((mb->mbType >= 1 && mb->mbType <= 3)||
       (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
       && slice->transform8x8Mode);
 
-    if (need_transform_size_flag) {
+    if (need_transform_sizeFlag) {
       se.type =  SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-      se.reading = readMB_transform_size_flag_CABAC;
+      se.reading = readMB_transform_sizeFlag_CABAC;
 
-      // read eCavlc transform_size_8x8_flag
+      // read eCavlc transform_size_8x8Flag
       if (dataPartition->stream->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC(&se, dataPartition->stream);
@@ -494,7 +494,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
   int qp_per_uv[2];
   int qp_rem_uv[2];
   int intra = (mb->isIntraBlock == true);
-  int need_transform_size_flag;
+  int need_transform_sizeFlag;
   int (*InvLevelScale4x4)[4] = NULL;
 
   // select scan type
@@ -530,19 +530,19 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
     mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     // Transform size flag for INTER MBs
-    need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
+    need_transform_sizeFlag = (((mb->mbType >= 1 && mb->mbType <= 3)||
       (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
       && slice->transform8x8Mode);
 
-    if (need_transform_size_flag) {
+    if (need_transform_sizeFlag) {
       se.type =  SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-      se.reading = readMB_transform_size_flag_CABAC;
+      se.reading = readMB_transform_sizeFlag_CABAC;
 
-      // read eCavlc transform_size_8x8_flag
+      // read eCavlc transform_size_8x8Flag
       if (dataPartition->stream->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC (&se, dataPartition->stream);
@@ -726,7 +726,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
   sPicture* picture = slice->picture;
   int yuv = picture->chromaFormatIdc - 1;
   int m6[4];
-  int need_transform_size_flag;
+  int need_transform_sizeFlag;
   int (*InvLevelScale4x4)[4] = NULL;
 
   // select scan type
@@ -759,19 +759,19 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
     mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     // Transform size flag for INTER MBs
-    need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
+    need_transform_sizeFlag = (((mb->mbType >= 1 && mb->mbType <= 3)||
       (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
       && slice->transform8x8Mode);
 
-    if (need_transform_size_flag) {
+    if (need_transform_sizeFlag) {
       se.type = SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-      se.reading = readMB_transform_size_flag_CABAC;
+      se.reading = readMB_transform_sizeFlag_CABAC;
 
-      // read eCavlc transform_size_8x8_flag
+      // read eCavlc transform_size_8x8Flag
       if (dataPartition->stream->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC (&se, dataPartition->stream);
@@ -1062,7 +1062,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
   sDataPartition* dataPartition = NULL;
   sSyntaxElement se;
   if (!IS_I16MB (mb)) {
-    int need_transform_size_flag;
+    int need_transform_sizeFlag;
     // CBP
     se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
       ? SE_CBP_INTRA
@@ -1080,19 +1080,19 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
     mb->codedBlockPattern = codedBlockPattern = se.value1;
 
     // Transform size flag for INTER MBs
-    need_transform_size_flag = (((mb->mbType >= 1 && mb->mbType <= 3)||
+    need_transform_sizeFlag = (((mb->mbType >= 1 && mb->mbType <= 3)||
       (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
       (mb->noMbPartLessThan8x8Flag))
       && mb->mbType != I8MB && mb->mbType != I4MB
       && (mb->codedBlockPattern&15)
       && slice->transform8x8Mode);
 
-    if (need_transform_size_flag) {
+    if (need_transform_sizeFlag) {
       se.type   =  SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-      se.reading = readMB_transform_size_flag_CABAC;
+      se.reading = readMB_transform_sizeFlag_CABAC;
 
-      // read eCavlc transform_size_8x8_flag
+      // read eCavlc transform_size_8x8Flag
       if (dataPartition->stream->errorFlag) {
         se.len = 1;
         readsSyntaxElement_FLC (&se, dataPartition->stream);

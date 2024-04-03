@@ -1934,7 +1934,7 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   // source
   //{{{  crop
   int cropLeft, cropRight, cropTop, cropBot;
-  if (sps->cropFlag) {
+  if (sps->hasCrop) {
     cropLeft = kSubWidthC [sps->chromaFormatIdc] * sps->cropLeft;
     cropRight = kSubWidthC [sps->chromaFormatIdc] * sps->cropRight;
     cropTop = kSubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropTop;
@@ -1947,7 +1947,7 @@ static void setFormat (sDecoder* decoder, sSps* sps, sFrameFormat* source, sFram
   source->height[0] = decoder->coding.height - cropTop - cropBot;
 
   // cropping for chroma
-  if (sps->cropFlag) {
+  if (sps->hasCrop) {
     cropLeft = sps->cropLeft;
     cropRight = sps->cropRight;
     cropTop = (2 - sps->frameMbOnly) * sps->cropTop;
@@ -2088,7 +2088,7 @@ static void copyDecPictureJV (sDecoder* decoder, sPicture* dst, sPicture* src) {
   dst->codedFrame = src->codedFrame;
   dst->chromaFormatIdc = src->chromaFormatIdc;
   dst->frameMbOnly = src->frameMbOnly;
-  dst->cropFlag = src->cropFlag;
+  dst->hasCrop = src->hasCrop;
   dst->cropLeft = src->cropLeft;
   dst->cropRight = src->cropRight;
   dst->cropTop = src->cropTop;
@@ -2468,8 +2468,8 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
   picture->codedFrame = (slice->picStructure == eFrame);
   picture->chromaFormatIdc = (eYuvFormat)activeSps->chromaFormatIdc;
   picture->frameMbOnly = activeSps->frameMbOnly;
-  picture->cropFlag = activeSps->cropFlag;
-  if (picture->cropFlag) {
+  picture->hasCrop = activeSps->hasCrop;
+  if (picture->hasCrop) {
     picture->cropLeft = activeSps->cropLeft;
     picture->cropRight = activeSps->cropRight;
     picture->cropTop = activeSps->cropTop;
@@ -2947,7 +2947,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 
   if ((slice->sliceType == eSliceSP) || (slice->sliceType == eSliceSI)) {
     if (slice->sliceType == eSliceSP)
-      slice->spSwitch = readU1 ("SLC sp_for_switch_flag", s);
+      slice->spSwitch = readU1 ("SLC sp_for_switchFlag", s);
     slice->sliceQsDelta = readSeV ("SLC sliceQsDelta", s);
     slice->qs = 26 + decoder->activePps->picInitQsMinus26 + slice->sliceQsDelta;
     }
@@ -3096,9 +3096,9 @@ static int readSlice (sSlice* slice) {
 
       //{{{
       case NALU_TYPE_SPS: {
-        int spsId = readNaluSps (decoder, nalu);
+        int spsId = sSps::readNaluSps (decoder, nalu);
         if (decoder->param.spsDebug)
-          cLog::log (LOGINFO, getSpsString (&decoder->sps[spsId]));
+          cLog::log (LOGINFO, decoder->sps[spsId].getSpsString());
         break;
         }
       //}}}

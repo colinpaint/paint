@@ -13,318 +13,81 @@
 using namespace std;
 //}}}
 
-//{{{
-static int isEqualSps (sSps* sps1, sSps* sps2) {
-
-  int equal = 1;
-  if ((!sps1->ok) || (!sps2->ok))
-    return 0;
-
-  equal &= (sps1->id == sps2->id);
-  equal &= (sps1->levelIdc == sps2->levelIdc);
-  equal &= (sps1->profileIdc == sps2->profileIdc);
-
-  equal &= (sps1->constrained_set0_flag == sps2->constrained_set0_flag);
-  equal &= (sps1->constrained_set1_flag == sps2->constrained_set1_flag);
-  equal &= (sps1->constrained_set2_flag == sps2->constrained_set2_flag);
-
-  equal &= (sps1->log2maxFrameNumMinus4 == sps2->log2maxFrameNumMinus4);
-  equal &= (sps1->pocType == sps2->pocType);
-  if (!equal)
-    return equal;
-
-  if (sps1->pocType == 0)
-    equal &= (sps1->log2maxPocLsbMinus4 == sps2->log2maxPocLsbMinus4);
-  else if (sps1->pocType == 1) {
-    equal &= (sps1->deltaPicOrderAlwaysZero == sps2->deltaPicOrderAlwaysZero);
-    equal &= (sps1->offsetNonRefPic == sps2->offsetNonRefPic);
-    equal &= (sps1->offsetTopBotField == sps2->offsetTopBotField);
-    equal &= (sps1->numRefFramesPocCycle == sps2->numRefFramesPocCycle);
-    if (!equal)
-      return equal;
-
-    for (uint32_t i = 0 ; i < sps1->numRefFramesPocCycle ;i ++)
-      equal &= (sps1->offsetForRefFrame[i] == sps2->offsetForRefFrame[i]);
-    }
-
-  equal &= (sps1->numRefFrames == sps2->numRefFrames);
-  equal &= (sps1->allowGapsFrameNum == sps2->allowGapsFrameNum);
-  equal &= (sps1->picWidthMbsMinus1 == sps2->picWidthMbsMinus1);
-  equal &= (sps1->picHeightMapUnitsMinus1 == sps2->picHeightMapUnitsMinus1);
-  equal &= (sps1->frameMbOnly == sps2->frameMbOnly);
-  if (!equal) return
-    equal;
-
-  if (!sps1->frameMbOnly)
-    equal &= (sps1->mbAffFlag == sps2->mbAffFlag);
-  equal &= (sps1->isDirect8x8inference == sps2->isDirect8x8inference);
-  equal &= (sps1->cropFlag == sps2->cropFlag);
-  if (!equal)
-    return equal;
-
-  if (sps1->cropFlag) {
-    equal &= (sps1->cropLeft == sps2->cropLeft);
-    equal &= (sps1->cropRight == sps2->cropRight);
-    equal &= (sps1->cropTop == sps2->cropTop);
-    equal &= (sps1->cropBot == sps2->cropBot);
-    }
-  equal &= (sps1->hasVui == sps2->hasVui);
-
-  return equal;
-  }
-//}}}
-//{{{
-// syntax for scaling list matrix values
-static void scalingList (int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix, sBitStream* s) {
-
+namespace {
   //{{{
-  static const uint8_t ZZ_SCAN[16] = {
-    0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
-    };
+  // syntax for scaling list matrix values
+  void scalingList (int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix, sBitStream* s) {
+
+    //{{{
+    static const uint8_t ZZ_SCAN[16] = {
+      0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
+      };
+    //}}}
+    //{{{
+    static const uint8_t ZZ_SCAN8[64] = {
+      0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
+      12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
+      35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
+      58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
+      };
+    //}}}
+
+    int lastScale = 8;
+    int nextScale = 8;
+    for (int j = 0; j < scalingListSize; j++) {
+      int scanj = (scalingListSize == 16) ? ZZ_SCAN[j] : ZZ_SCAN8[j];
+      if (nextScale != 0) {
+        int delta_scale = readSeV ("   : delta_sl   ", s);
+        nextScale = (lastScale + delta_scale + 256) % 256;
+        *useDefaultScalingMatrix = (bool)(scanj == 0 && nextScale == 0);
+        }
+
+      scalingList[scanj] = (nextScale == 0) ? lastScale : nextScale;
+      lastScale = scalingList[scanj];
+      }
+    }
   //}}}
   //{{{
-  static const uint8_t ZZ_SCAN8[64] = {
-    0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
-    12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
-    35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
-    58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
-    };
-  //}}}
+  void readHrdFromStream (sDataPartition* dataPartition, sHrd* hrd) {
 
-  int lastScale = 8;
-  int nextScale = 8;
-  for (int j = 0; j < scalingListSize; j++) {
-    int scanj = (scalingListSize == 16) ? ZZ_SCAN[j] : ZZ_SCAN8[j];
-    if (nextScale != 0) {
-      int delta_scale = readSeV ("   : delta_sl   ", s);
-      nextScale = (lastScale + delta_scale + 256) % 256;
-      *useDefaultScalingMatrix = (bool)(scanj == 0 && nextScale == 0);
+    sBitStream *s = dataPartition->stream;
+    hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
+    hrd->bit_rate_scale = readUv (4, "VUI bit_rate_scale", s);
+    hrd->cpb_size_scale = readUv (4, "VUI cpb_size_scale", s);
+
+    uint32_t SchedSelIdx;
+    for (SchedSelIdx = 0; SchedSelIdx <= hrd->cpb_cnt_minus1; SchedSelIdx++) {
+      hrd->bit_rate_value_minus1[ SchedSelIdx] = readUeV ("VUI bit_rate_value_minus1", s);
+      hrd->cpb_size_value_minus1[ SchedSelIdx] = readUeV ("VUI cpb_size_value_minus1", s);
+      hrd->cbrFlag[ SchedSelIdx ] = readU1 ("VUI cbrFlag", s);
       }
 
-    scalingList[scanj] = (nextScale == 0) ? lastScale : nextScale;
-    lastScale = scalingList[scanj];
-    }
-  }
-//}}}
-
-//{{{
-static void readHrdFromStream (sDataPartition* dataPartition, sHRD* hrd) {
-
-  sBitStream *s = dataPartition->stream;
-  hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
-  hrd->bit_rate_scale = readUv (4, "VUI bit_rate_scale", s);
-  hrd->cpb_size_scale = readUv (4, "VUI cpb_size_scale", s);
-
-  uint32_t SchedSelIdx;
-  for (SchedSelIdx = 0; SchedSelIdx <= hrd->cpb_cnt_minus1; SchedSelIdx++) {
-    hrd->bit_rate_value_minus1[ SchedSelIdx] = readUeV ("VUI bit_rate_value_minus1", s);
-    hrd->cpb_size_value_minus1[ SchedSelIdx] = readUeV ("VUI cpb_size_value_minus1", s);
-    hrd->cbr_flag[ SchedSelIdx ] = readU1 ("VUI cbr_flag", s);
-    }
-
-  hrd->initial_cpb_removal_delay_length_minus1 =
-    readUv (5, "VUI initial_cpb_removal_delay_length_minus1", s);
-  hrd->cpb_removal_delay_length_minus1 = readUv (5, "VUI cpb_removal_delay_length_minus1", s);
-  hrd->dpb_output_delay_length_minus1 = readUv (5, "VUI dpb_output_delay_length_minus1", s);
-  hrd->time_offset_length = readUv (5, "VUI time_offset_length", s);
-  }
-//}}}
-//{{{
-static void readVuiFromStream (sDataPartition* dataPartition, sSps* sps) {
-
-  sBitStream* s = dataPartition->stream;
-  if (sps->hasVui) {
-    sps->vuiSeqParams.aspect_ratio_info_present_flag = readU1 ("VUI aspect_ratio_info_present_flag", s);
-    if (sps->vuiSeqParams.aspect_ratio_info_present_flag) {
-      sps->vuiSeqParams.aspect_ratio_idc = readUv ( 8, "VUI aspect_ratio_idc", s);
-      if (255 == sps->vuiSeqParams.aspect_ratio_idc) {
-        sps->vuiSeqParams.sar_width = (uint16_t)readUv (16, "VUI sar_width", s);
-        sps->vuiSeqParams.sar_height = (uint16_t)readUv (16, "VUI sar_height", s);
-        }
-      }
-
-    sps->vuiSeqParams.overscan_info_present_flag = readU1 ("VUI overscan_info_present_flag", s);
-    if (sps->vuiSeqParams.overscan_info_present_flag)
-      sps->vuiSeqParams.overscan_appropriate_flag = readU1 ("VUI overscan_appropriate_flag", s);
-
-    sps->vuiSeqParams.video_signal_type_present_flag = readU1 ("VUI video_signal_type_present_flag", s);
-    if (sps->vuiSeqParams.video_signal_type_present_flag) {
-      sps->vuiSeqParams.video_format = readUv (3, "VUI video_format", s);
-      sps->vuiSeqParams.video_full_range_flag = readU1 ("VUI video_full_range_flag", s);
-      sps->vuiSeqParams.colour_description_present_flag = readU1 ("VUI color_description_present_flag", s);
-      if (sps->vuiSeqParams.colour_description_present_flag) {
-        sps->vuiSeqParams.colour_primaries = readUv (8, "VUI colour_primaries", s);
-        sps->vuiSeqParams.transfer_characteristics = readUv (8, "VUI transfer_characteristics", s);
-        sps->vuiSeqParams.matrix_coefficients = readUv (8, "VUI matrix_coefficients", s);
-        }
-      }
-
-    sps->vuiSeqParams.chroma_location_info_present_flag = readU1 ("VUI chroma_loc_info_present_flag", s);
-    if (sps->vuiSeqParams.chroma_location_info_present_flag) {
-      sps->vuiSeqParams.chroma_sample_loc_type_top_field = readUeV ("VUI chroma_sample_loc_type_top_field", s);
-      sps->vuiSeqParams.chroma_sample_loc_type_bottom_field = readUeV ("VUI chroma_sample_loc_type_bottom_field", s);
-      }
-
-    sps->vuiSeqParams.timing_info_present_flag = readU1 ("VUI timing_info_present_flag", s);
-    if (sps->vuiSeqParams.timing_info_present_flag) {
-      sps->vuiSeqParams.num_units_in_tick = readUv (32, "VUI num_units_in_tick", s);
-      sps->vuiSeqParams.time_scale = readUv (32,"VUI time_scale", s);
-      sps->vuiSeqParams.fixed_frame_rate_flag = readU1 ("VUI fixed_frame_rate_flag", s);
-      }
-
-    sps->vuiSeqParams.nal_hrd_parameters_present_flag = readU1 ("VUI nal_hrd_parameters_present_flag", s);
-    if (sps->vuiSeqParams.nal_hrd_parameters_present_flag)
-      readHrdFromStream (dataPartition, &(sps->vuiSeqParams.nal_hrd_parameters));
-
-    sps->vuiSeqParams.vcl_hrd_parameters_present_flag = readU1 ("VUI vcl_hrd_parameters_present_flag", s);
-
-    if (sps->vuiSeqParams.vcl_hrd_parameters_present_flag)
-      readHrdFromStream (dataPartition, &(sps->vuiSeqParams.vcl_hrd_parameters));
-
-    if (sps->vuiSeqParams.nal_hrd_parameters_present_flag ||
-        sps->vuiSeqParams.vcl_hrd_parameters_present_flag)
-      sps->vuiSeqParams.low_delay_hrd_flag = readU1 ("VUI low_delay_hrd_flag", s);
-
-    sps->vuiSeqParams.pic_struct_present_flag = readU1 ("VUI pic_struct_present_flag   ", s);
-    sps->vuiSeqParams.bitstream_restriction_flag = readU1 ("VUI bitstream_restriction_flag", s);
-
-    if (sps->vuiSeqParams.bitstream_restriction_flag) {
-      sps->vuiSeqParams.motion_vectors_over_pic_boundaries_flag = readU1 ("VUI motion_vectors_over_pic_boundaries_flag", s);
-      sps->vuiSeqParams.max_bytes_per_pic_denom = readUeV ("VUI max_bytes_per_pic_denom", s);
-      sps->vuiSeqParams.max_bits_per_mb_denom = readUeV ("VUI max_bits_per_mb_denom", s);
-      sps->vuiSeqParams.log2_max_mv_length_horizontal = readUeV ("VUI log2_max_mv_length_horizontal", s);
-      sps->vuiSeqParams.log2_max_mv_length_vertical = readUeV ("VUI log2_max_mv_length_vertical", s);
-      sps->vuiSeqParams.num_reorder_frames = readUeV ("VUI num_reorder_frames", s);
-      sps->vuiSeqParams.max_dec_frame_buffering = readUeV ("VUI max_dec_frame_buffering", s);
-      }
-    }
-  }
-//}}}
-//{{{
-static void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, sSps* sps, int naluLen) {
-
-  sps->naluLen = naluLen;
-
-  sBitStream* s = dataPartition->stream;
-
-  sps->profileIdc = readUv (8, "SPS profileIdc", s);
-  if ((sps->profileIdc != BASELINE) && (sps->profileIdc != MAIN) && (sps->profileIdc != EXTENDED) &&
-      (sps->profileIdc != FREXT_HP) && (sps->profileIdc != FREXT_Hi10P) &&
-      (sps->profileIdc != FREXT_Hi422) && (sps->profileIdc != FREXT_Hi444) &&
-      (sps->profileIdc != FREXT_CAVLC444))
-    printf ("IDC - invalid %d\n", sps->profileIdc);
-
-  sps->constrained_set0_flag = readU1 ("SPS constrained_set0_flag", s);
-  sps->constrained_set1_flag = readU1 ("SPS constrained_set1_flag", s);
-  sps->constrained_set2_flag = readU1 ("SPS constrained_set2_flag", s);
-  sps->constrainedSet3flag = readU1 ("SPS constrainedSet3flag", s);
-  int reserved_zero = readUv (4, "SPS reserved_zero_4bits", s);
-
-  sps->levelIdc = readUv (8, "SPS levelIdc", s);
-  sps->id = readUeV ("SPS spsId", s);
-
-  // Fidelity Range Extensions stuff
-  sps->chromaFormatIdc = 1;
-  sps->bit_depth_luma_minus8 = 0;
-  sps->bit_depth_chroma_minus8 = 0;
-  sps->useLosslessQpPrime = 0;
-  sps->isSeperateColourPlane = 0;
-
-  //{{{  read fidelity range
-  if ((sps->profileIdc == FREXT_HP) ||
-      (sps->profileIdc == FREXT_Hi10P) ||
-      (sps->profileIdc == FREXT_Hi422) ||
-      (sps->profileIdc == FREXT_Hi444) ||
-      (sps->profileIdc == FREXT_CAVLC444)) {
-    // read fidelity range
-    sps->chromaFormatIdc = readUeV ("SPS chromaFormatIdc", s);
-    if (sps->chromaFormatIdc == YUV444)
-      sps->isSeperateColourPlane = readU1 ("SPS isSeperateColourPlane", s);
-    sps->bit_depth_luma_minus8 = readUeV ("SPS bit_depth_luma_minus8", s);
-    sps->bit_depth_chroma_minus8 = readUeV ("SPS bit_depth_chroma_minus8", s);
-    if ((sps->bit_depth_luma_minus8+8 > sizeof(sPixel)*8) ||
-        (sps->bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
-      error ("Source picture has higher bit depth than sPixel data type");
-
-    sps->useLosslessQpPrime = readU1 ("SPS losslessQpPrimeYzero", s);
-
-    sps->hasSeqScalingMatrix = readU1 ("SPS hasSeqScalingMatrix", s);
-    if (sps->hasSeqScalingMatrix) {
-      uint32_t n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
-      for (uint32_t i = 0; i < n_ScalingList; i++) {
-        sps->hasSeqScalingList[i] = readU1 ("SPS hasSeqScalingList", s);
-        if (sps->hasSeqScalingList[i]) {
-          if (i < 6)
-            scalingList (sps->scalingList4x4[i], 16, &sps->useDefaultScalingMatrix4x4[i], s);
-          else
-            scalingList (sps->scalingList8x8[i-6], 64, &sps->useDefaultScalingMatrix8x8[i-6], s);
-          }
-        }
-      }
+    hrd->initial_cpb_removal_delay_length_minus1 =
+      readUv (5, "VUI initial_cpb_removal_delay_length_minus1", s);
+    hrd->cpb_removal_delay_length_minus1 = readUv (5, "VUI cpb_removal_delay_length_minus1", s);
+    hrd->dpb_output_delay_length_minus1 = readUv (5, "VUI dpb_output_delay_length_minus1", s);
+    hrd->time_offset_length = readUv (5, "VUI time_offset_length", s);
     }
   //}}}
-  sps->log2maxFrameNumMinus4 = readUeV ("SPS log2maxFrameNumMinus4", s);
-  //{{{  read POC
-  sps->pocType = readUeV ("SPS pocType", s);
-
-  if (sps->pocType == 0)
-    sps->log2maxPocLsbMinus4 = readUeV ("SPS log2maxPocLsbMinus4", s);
-
-  else if (sps->pocType == 1) {
-    sps->deltaPicOrderAlwaysZero = readU1 ("SPS deltaPicOrderAlwaysZero", s);
-    sps->offsetNonRefPic = readSeV ("SPS offsetNonRefPic", s);
-    sps->offsetTopBotField = readSeV ("SPS offsetTopBotField", s);
-    sps->numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
-    for (uint32_t i = 0; i < sps->numRefFramesPocCycle; i++)
-      sps->offsetForRefFrame[i] = readSeV ("SPS offsetRefFrame[i]", s);
-    }
-  //}}}
-
-  sps->numRefFrames = readUeV ("SPS numRefFrames", s);
-  sps->allowGapsFrameNum = readU1 ("SPS allowGapsFrameNum", s);
-
-  sps->picWidthMbsMinus1 = readUeV ("SPS picWidthMbsMinus1", s);
-  sps->picHeightMapUnitsMinus1 = readUeV ("SPS picHeightMapUnitsMinus1", s);
-
-  sps->frameMbOnly = readU1 ("SPS frameMbOnly", s);
-  if (!sps->frameMbOnly)
-    sps->mbAffFlag = readU1 ("SPS mbAffFlag", s);
-
-  sps->isDirect8x8inference = readU1 ("SPS isDirect8x8inference", s);
-
-  //{{{  read crop
-  sps->cropFlag = readU1 ("SPS cropFlag", s);
-  if (sps->cropFlag) {
-    sps->cropLeft = readUeV ("SPS cropLeft", s);
-    sps->cropRight = readUeV ("SPS cropRight", s);
-    sps->cropTop = readUeV ("SPS cropTop", s);
-    sps->cropBot = readUeV ("SPS cropBot", s);
-    }
-  //}}}
-  sps->hasVui = (bool)readU1 ("SPS hasVui", s);
-
-  sps->vuiSeqParams.matrix_coefficients = 2;
-  readVuiFromStream (dataPartition, sps);
-
-  sps->ok = true;
   }
-//}}}
 
 //{{{
-string getSpsString (sSps* sps) {
+string sSps::getSpsString() {
 
   return fmt::format ("SPS:{}:{} -> mb:{}x{} {}:{}:{}:{} refFrames:{} pocType:{} {}",
-                      sps->id, sps->naluLen,
-                      sps->picWidthMbsMinus1, sps->picHeightMapUnitsMinus1,
-                      sps->cropLeft, sps->cropRight, sps->cropTop, sps->cropBot,
-                      sps->numRefFrames,
-                      sps->pocType,
-                      sps->frameMbOnly ? (sps->mbAffFlag ? "mbAff":"frame"):"field"
+                      id, naluLen,
+                      picWidthMbsMinus1, picHeightMapUnitsMinus1,
+                      cropLeft, cropRight, cropTop, cropBot,
+                      numRefFrames,
+                      pocType,
+                      frameMbOnly ? (mbAffFlag ? "mbAff":"frame"):"field"
                       );
   }
 //}}}
+
+// static
 //{{{
-int readNaluSps (sDecoder* decoder, sNalu* nalu) {
+int sSps::readNaluSps (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->stream->errorFlag = 0;
@@ -332,16 +95,257 @@ int readNaluSps (sDecoder* decoder, sNalu* nalu) {
   memcpy (dataPartition->stream->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
   dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen = RBSPtoSODB (dataPartition->stream->bitStreamBuffer, nalu->len-1);
 
-  sSps sps = { 0 };
-  readSpsFromStream (decoder, dataPartition, &sps, nalu->len);
+  sSps sps;
+  sps.readSpsFromStream (decoder, dataPartition, nalu->len);
   freeDataPartitions (dataPartition, 1);
 
-  if (decoder->sps[sps.id].ok)
-    if (!isEqualSps (&decoder->sps[sps.id], &sps))
-      printf ("-----> readNaluSps new sps id:%d\n", sps.id);
+  if (!decoder->sps[sps.id].isEqual (sps))
+    cLog::log (LOGINFO, fmt::format ("-----> readNaluSps new sps id:%d", sps.id));
 
   memcpy (&decoder->sps[sps.id], &sps, sizeof(sSps));
 
   return sps.id;
+  }
+//}}}
+
+// private
+//{{{
+bool sSps::isEqual (sSps& sps) {
+
+  if (!ok || !sps.ok)
+    return false;
+
+  bool equal = true;
+  equal &= (id == sps.id);
+  equal &= (levelIdc == sps.levelIdc);
+  equal &= (profileIdc == sps.profileIdc);
+
+  equal &= (constrainedSet0Flag == sps.constrainedSet0Flag);
+  equal &= (constrainedSet1Flag == sps.constrainedSet1Flag);
+  equal &= (constrainedSet2Flag == sps.constrainedSet2Flag);
+
+  equal &= (log2maxFrameNumMinus4 == sps.log2maxFrameNumMinus4);
+  equal &= (pocType == sps.pocType);
+  if (!equal)
+    return equal;
+
+  if (pocType == 0)
+    equal &= (log2maxPocLsbMinus4 == sps.log2maxPocLsbMinus4);
+  else if (pocType == 1) {
+    equal &= (deltaPicOrderAlwaysZero == sps.deltaPicOrderAlwaysZero);
+    equal &= (offsetNonRefPic == sps.offsetNonRefPic);
+    equal &= (offsetTopBotField == sps.offsetTopBotField);
+    equal &= (numRefFramesPocCycle == sps.numRefFramesPocCycle);
+    if (!equal)
+      return equal;
+
+    for (uint32_t i = 0 ; i < numRefFramesPocCycle ;i ++)
+      equal &= (offsetForRefFrame[i] == sps.offsetForRefFrame[i]);
+    }
+
+  equal &= (numRefFrames == sps.numRefFrames);
+  equal &= (allowGapsFrameNum == sps.allowGapsFrameNum);
+  equal &= (picWidthMbsMinus1 == sps.picWidthMbsMinus1);
+  equal &= (picHeightMapUnitsMinus1 == sps.picHeightMapUnitsMinus1);
+  equal &= (frameMbOnly == sps.frameMbOnly);
+  if (!equal)
+    return equal;
+
+  if (!frameMbOnly)
+    equal &= (mbAffFlag == sps.mbAffFlag);
+  equal &= (isDirect8x8inference == sps.isDirect8x8inference);
+  equal &= (hasCrop == sps.hasCrop);
+  if (!equal)
+    return equal;
+
+  if (hasCrop) {
+    equal &= (cropLeft == sps.cropLeft);
+    equal &= (cropRight == sps.cropRight);
+    equal &= (cropTop == sps.cropTop);
+    equal &= (cropBot == sps.cropBot);
+    }
+  equal &= (hasVui == sps.hasVui);
+
+  return equal;
+  }
+//}}}
+//{{{
+void sSps::readVuiFromStream (sDataPartition* dataPartition) {
+
+  sBitStream* s = dataPartition->stream;
+  if (hasVui) {
+    vuiSeqParams.aspect_ratio_info_presentFlag = readU1 ("VUI aspect_ratio_info_presentFlag", s);
+    if (vuiSeqParams.aspect_ratio_info_presentFlag) {
+      vuiSeqParams.aspect_ratio_idc = readUv ( 8, "VUI aspect_ratio_idc", s);
+      if (255 == vuiSeqParams.aspect_ratio_idc) {
+        vuiSeqParams.sar_width = (uint16_t)readUv (16, "VUI sar_width", s);
+        vuiSeqParams.sar_height = (uint16_t)readUv (16, "VUI sar_height", s);
+        }
+      }
+
+    vuiSeqParams.overscan_info_presentFlag = readU1 ("VUI overscan_info_presentFlag", s);
+    if (vuiSeqParams.overscan_info_presentFlag)
+      vuiSeqParams.overscan_appropriateFlag = readU1 ("VUI overscan_appropriateFlag", s);
+
+    vuiSeqParams.video_signal_type_presentFlag = readU1 ("VUI video_signal_type_presentFlag", s);
+    if (vuiSeqParams.video_signal_type_presentFlag) {
+      vuiSeqParams.video_format = readUv (3, "VUI video_format", s);
+      vuiSeqParams.video_full_rangeFlag = readU1 ("VUI video_full_rangeFlag", s);
+      vuiSeqParams.colour_description_presentFlag = readU1 ("VUI color_description_presentFlag", s);
+      if (vuiSeqParams.colour_description_presentFlag) {
+        vuiSeqParams.colour_primaries = readUv (8, "VUI colour_primaries", s);
+        vuiSeqParams.transfer_characteristics = readUv (8, "VUI transfer_characteristics", s);
+        vuiSeqParams.matrix_coefficients = readUv (8, "VUI matrix_coefficients", s);
+        }
+      }
+
+    vuiSeqParams.chroma_location_info_presentFlag = readU1 ("VUI chroma_loc_info_presentFlag", s);
+    if (vuiSeqParams.chroma_location_info_presentFlag) {
+      vuiSeqParams.chroma_sample_loc_type_top_field = readUeV ("VUI chroma_sample_loc_type_top_field", s);
+      vuiSeqParams.chroma_sample_loc_type_bottom_field = readUeV ("VUI chroma_sample_loc_type_bottom_field", s);
+      }
+
+    vuiSeqParams.timing_info_presentFlag = readU1 ("VUI timing_info_presentFlag", s);
+    if (vuiSeqParams.timing_info_presentFlag) {
+      vuiSeqParams.num_units_in_tick = readUv (32, "VUI num_units_in_tick", s);
+      vuiSeqParams.time_scale = readUv (32,"VUI time_scale", s);
+      vuiSeqParams.fixed_frame_rateFlag = readU1 ("VUI fixed_frame_rateFlag", s);
+      }
+
+    vuiSeqParams.nal_hrd_parameters_presentFlag = readU1 ("VUI nal_hrd_parameters_presentFlag", s);
+    if (vuiSeqParams.nal_hrd_parameters_presentFlag)
+      readHrdFromStream (dataPartition, &(vuiSeqParams.nal_hrd_parameters));
+
+    vuiSeqParams.vcl_hrd_parameters_presentFlag = readU1 ("VUI vcl_hrd_parameters_presentFlag", s);
+
+    if (vuiSeqParams.vcl_hrd_parameters_presentFlag)
+      readHrdFromStream (dataPartition, &(vuiSeqParams.vcl_hrd_parameters));
+
+    if (vuiSeqParams.nal_hrd_parameters_presentFlag ||
+        vuiSeqParams.vcl_hrd_parameters_presentFlag)
+      vuiSeqParams.low_delay_hrdFlag = readU1 ("VUI low_delay_hrdFlag", s);
+
+    vuiSeqParams.pic_struct_presentFlag = readU1 ("VUI pic_struct_presentFlag   ", s);
+    vuiSeqParams.bitstream_restrictionFlag = readU1 ("VUI bitstream_restrictionFlag", s);
+
+    if (vuiSeqParams.bitstream_restrictionFlag) {
+      vuiSeqParams.motion_vectors_over_pic_boundariesFlag = readU1 ("VUI motion_vectors_over_pic_boundariesFlag", s);
+      vuiSeqParams.max_bytes_per_pic_denom = readUeV ("VUI max_bytes_per_pic_denom", s);
+      vuiSeqParams.max_bits_per_mb_denom = readUeV ("VUI max_bits_per_mb_denom", s);
+      vuiSeqParams.log2_max_mv_length_horizontal = readUeV ("VUI log2_max_mv_length_horizontal", s);
+      vuiSeqParams.log2_max_mv_length_vertical = readUeV ("VUI log2_max_mv_length_vertical", s);
+      vuiSeqParams.num_reorder_frames = readUeV ("VUI num_reorder_frames", s);
+      vuiSeqParams.max_dec_frame_buffering = readUeV ("VUI max_dec_frame_buffering", s);
+      }
+    }
+  }
+//}}}
+//{{{
+void sSps::readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen) {
+
+  naluLen = naluLen;
+
+  sBitStream* s = dataPartition->stream;
+
+  profileIdc = readUv (8, "SPS profileIdc", s);
+  if ((profileIdc != BASELINE) && (profileIdc != MAIN) && (profileIdc != EXTENDED) &&
+      (profileIdc != FREXT_HP) && (profileIdc != FREXT_Hi10P) &&
+      (profileIdc != FREXT_Hi422) && (profileIdc != FREXT_Hi444) &&
+      (profileIdc != FREXT_CAVLC444))
+    printf ("IDC - invalid %d\n", profileIdc);
+
+  constrainedSet0Flag = readU1 ("SPS constrainedSet0Flag", s);
+  constrainedSet1Flag = readU1 ("SPS constrainedSet1Flag", s);
+  constrainedSet2Flag = readU1 ("SPS constrainedSet2Flag", s);
+  constrainedSet3flag = readU1 ("SPS constrainedSet3flag", s);
+  int reserved_zero = readUv (4, "SPS reserved_zero_4bits", s);
+
+  levelIdc = readUv (8, "SPS levelIdc", s);
+  id = readUeV ("SPS spsId", s);
+
+  // Fidelity Range Extensions stuff
+  chromaFormatIdc = 1;
+  bit_depth_luma_minus8 = 0;
+  bit_depth_chroma_minus8 = 0;
+  useLosslessQpPrime = 0;
+  isSeperateColourPlane = 0;
+
+  //{{{  read fidelity range
+  if ((profileIdc == FREXT_HP) ||
+      (profileIdc == FREXT_Hi10P) ||
+      (profileIdc == FREXT_Hi422) ||
+      (profileIdc == FREXT_Hi444) ||
+      (profileIdc == FREXT_CAVLC444)) {
+    // read fidelity range
+    chromaFormatIdc = readUeV ("SPS chromaFormatIdc", s);
+    if (chromaFormatIdc == YUV444)
+      isSeperateColourPlane = readU1 ("SPS isSeperateColourPlane", s);
+    bit_depth_luma_minus8 = readUeV ("SPS bit_depth_luma_minus8", s);
+    bit_depth_chroma_minus8 = readUeV ("SPS bit_depth_chroma_minus8", s);
+    if ((bit_depth_luma_minus8+8 > sizeof(sPixel)*8) ||
+        (bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
+      error ("Source picture has higher bit depth than sPixel data type");
+
+    useLosslessQpPrime = readU1 ("SPS losslessQpPrimeYzero", s);
+
+    hasSeqScalingMatrix = readU1 ("SPS hasSeqScalingMatrix", s);
+    if (hasSeqScalingMatrix) {
+      uint32_t n_ScalingList = (chromaFormatIdc != YUV444) ? 8 : 12;
+      for (uint32_t i = 0; i < n_ScalingList; i++) {
+        hasSeqScalingList[i] = readU1 ("SPS hasSeqScalingList", s);
+        if (hasSeqScalingList[i]) {
+          if (i < 6)
+            scalingList (scalingList4x4[i], 16, &useDefaultScalingMatrix4x4[i], s);
+          else
+            scalingList (scalingList8x8[i-6], 64, &useDefaultScalingMatrix8x8[i-6], s);
+          }
+        }
+      }
+    }
+  //}}}
+  log2maxFrameNumMinus4 = readUeV ("SPS log2maxFrameNumMinus4", s);
+  //{{{  read POC
+  pocType = readUeV ("SPS pocType", s);
+
+  if (pocType == 0)
+    log2maxPocLsbMinus4 = readUeV ("SPS log2maxPocLsbMinus4", s);
+
+  else if (pocType == 1) {
+    deltaPicOrderAlwaysZero = readU1 ("SPS deltaPicOrderAlwaysZero", s);
+    offsetNonRefPic = readSeV ("SPS offsetNonRefPic", s);
+    offsetTopBotField = readSeV ("SPS offsetTopBotField", s);
+    numRefFramesPocCycle = readUeV ("SPS numRefFramesPocCycle", s);
+    for (uint32_t i = 0; i < numRefFramesPocCycle; i++)
+      offsetForRefFrame[i] = readSeV ("SPS offsetRefFrame[i]", s);
+    }
+  //}}}
+
+  numRefFrames = readUeV ("SPS numRefFrames", s);
+  allowGapsFrameNum = readU1 ("SPS allowGapsFrameNum", s);
+
+  picWidthMbsMinus1 = readUeV ("SPS picWidthMbsMinus1", s);
+  picHeightMapUnitsMinus1 = readUeV ("SPS picHeightMapUnitsMinus1", s);
+
+  frameMbOnly = readU1 ("SPS frameMbOnly", s);
+  if (!frameMbOnly)
+    mbAffFlag = readU1 ("SPS mbAffFlag", s);
+
+  isDirect8x8inference = readU1 ("SPS isDirect8x8inference", s);
+
+  //{{{  read crop
+  hasCrop = readU1 ("SPS hasCrop", s);
+  if (hasCrop) {
+    cropLeft = readUeV ("SPS cropLeft", s);
+    cropRight = readUeV ("SPS cropRight", s);
+    cropTop = readUeV ("SPS cropTop", s);
+    cropBot = readUeV ("SPS cropBot", s);
+    }
+  //}}}
+  hasVui = (bool)readU1 ("SPS hasVui", s);
+
+  vuiSeqParams.matrix_coefficients = 2;
+  readVuiFromStream (dataPartition);
+
+  ok = true;
   }
 //}}}

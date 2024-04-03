@@ -674,7 +674,7 @@ static void readIntra4x4macroblocCavlc (sMacroBlock* mb, const uint8_t* dpMap)
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
     se.type = SE_HEADER;
 
-    // read eCavlc transform_size_8x8_flag
+    // read eCavlc transform_size_8x8Flag
     se.len = (int64_t)1;
     readsSyntaxElement_FLC (&se, dataPartition->stream);
 
@@ -703,9 +703,9 @@ static void readIntra4x4macroblockCabac (sMacroBlock* mb, const uint8_t* dpMap) 
    sSyntaxElement se;
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
     se.type = SE_HEADER;
-    se.reading = readMB_transform_size_flag_CABAC;
+    se.reading = readMB_transform_sizeFlag_CABAC;
 
-    // read eCavlc transform_size_8x8_flag
+    // read eCavlc transform_size_8x8Flag
     if (dataPartition->stream->errorFlag) {
       se.len = (int64_t) 1;
       readsSyntaxElement_FLC (&se, dataPartition->stream);
@@ -1221,9 +1221,9 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
     if (slice->transform8x8Mode) {
       se.type = SE_HEADER;
       dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-      se.reading = readMB_transform_size_flag_CABAC;
+      se.reading = readMB_transform_sizeFlag_CABAC;
 
-      // read eCavlc transform_size_8x8_flag
+      // read eCavlc transform_size_8x8Flag
       if (dataPartition->stream->errorFlag) {
         se.len = (int64_t) 1;
         readsSyntaxElement_FLC (&se, dataPartition->stream);
@@ -1272,7 +1272,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
       se.mapping = linfo_ue;
 
     checkNeighbourCabac(mb);
-    se.reading = read_skip_flag_CABAC_p_slice;
+    se.reading = read_skipFlag_CABAC_p_slice;
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
     mb->mbType = (int16_t) se.value1;
@@ -1322,7 +1322,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
       fieldFlagInference (mb);
 
     checkNeighbourCabac(mb);
-    se.reading = read_skip_flag_CABAC_p_slice;
+    se.reading = read_skipFlag_CABAC_p_slice;
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
     mb->mbType = (int16_t)se.value1;
@@ -1420,7 +1420,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
       se.mapping = linfo_ue;
 
     checkNeighbourCabac(mb);
-    se.reading = read_skip_flag_CABAC_b_slice;
+    se.reading = read_skipFlag_CABAC_b_slice;
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
     mb->mbType  = (int16_t)se.value1;
@@ -1475,7 +1475,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
       fieldFlagInference (mb);
 
     checkNeighbourCabac (mb);
-    se.reading = read_skip_flag_CABAC_b_slice;
+    se.reading = read_skipFlag_CABAC_b_slice;
 
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
     mb->mbType = (int16_t)se.value1;

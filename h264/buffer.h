@@ -66,7 +66,7 @@ struct sPicture {
   eYuvFormat chromaFormatIdc;
   int        frameMbOnly;
 
-  int        cropFlag;
+  int        hasCrop;
   int        cropLeft;
   int        cropRight;
   int        cropTop;

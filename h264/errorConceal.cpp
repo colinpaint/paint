@@ -86,7 +86,7 @@ int setEcFlag (sDecoder* decoder, int se) {
   }
 //}}}
 //{{{
-void reset_ec_flags (sDecoder* decoder) {
+void reset_ecFlags (sDecoder* decoder) {
 
   for (int i = 0; i < SE_MAX_ELEMENTS; i++)
     decoder->ecFlag[i] = NO_EC;

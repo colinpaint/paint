@@ -349,7 +349,7 @@ int checkNextMbGetFieldModeCabacSliceP (sSlice* slice, sSyntaxElement* se,
 
   // check_next_mb
   slice->lastDquant = 0;
-  read_skip_flag_CABAC_p_slice (mb, se, cabacDecodeEnv);
+  read_skipFlag_CABAC_p_slice (mb, se, cabacDecodeEnv);
 
   skip = (se->value1 == 0);
 
@@ -426,7 +426,7 @@ int checkNextMbGetFieldModeCabacSliceB (sSlice* slice, sSyntaxElement* se, sData
 
   //  check_next_mb
   slice->lastDquant = 0;
-  read_skip_flag_CABAC_b_slice (mb, se, cabacDecodeEnv);
+  read_skipFlag_CABAC_b_slice (mb, se, cabacDecodeEnv);
 
   skip = (se->value1 == 0 && se->value2 == 0);
   if (!skip) {
@@ -621,7 +621,7 @@ void readB8_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   }
 //}}}
 //{{{
-void read_skip_flag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv) {
+void read_skipFlag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp   != NULL) ? (mb->mbCabacUp  ->skipFlag == 0) : 0;
@@ -634,7 +634,7 @@ void read_skip_flag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDe
   }
 //}}}
 //{{{
-void read_skip_flag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv) {
+void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp->skipFlag == 0) : 0;
@@ -647,7 +647,7 @@ void read_skip_flag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDe
 //}}}
 
 //{{{
-void readMB_transform_size_flag_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv) {
+void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv) {
 
   sSlice* slice = mb->slice;
   sTextureContexts*ctx = slice->textureInfoContexts;
