@@ -72,7 +72,7 @@ namespace {
   }
 
 //{{{
-string sSps::getSpsString() {
+string sSps::getString() {
 
   return fmt::format ("SPS:{}:{} -> mb:{}x{} {}:{}:{}:{} refFrames:{} pocType:{} {}",
                       id, naluLen,
@@ -87,7 +87,7 @@ string sSps::getSpsString() {
 
 // static
 //{{{
-int sSps::readNaluSps (sDecoder* decoder, sNalu* nalu) {
+int sSps::readNalu (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->stream->errorFlag = 0;
@@ -247,7 +247,7 @@ void sSps::readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, 
 
   sBitStream* s = dataPartition->stream;
 
-  profileIdc = readUv (8, "SPS profileIdc", s);
+  profileIdc = (eProfileIDC)readUv (8, "SPS profileIdc", s);
   if ((profileIdc != BASELINE) && (profileIdc != MAIN) && (profileIdc != EXTENDED) &&
       (profileIdc != FREXT_HP) && (profileIdc != FREXT_Hi10P) &&
       (profileIdc != FREXT_Hi422) && (profileIdc != FREXT_Hi444) &&
@@ -258,7 +258,7 @@ void sSps::readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, 
   constrainedSet1Flag = readU1 ("SPS constrainedSet1Flag", s);
   constrainedSet2Flag = readU1 ("SPS constrainedSet2Flag", s);
   constrainedSet3flag = readU1 ("SPS constrainedSet3flag", s);
-  int reserved_zero = readUv (4, "SPS reserved_zero_4bits", s);
+  int reservedZero = readUv (4, "SPS reservedZero4bits", s);
 
   levelIdc = readUv (8, "SPS levelIdc", s);
   id = readUeV ("SPS spsId", s);

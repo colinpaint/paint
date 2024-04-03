@@ -5,6 +5,20 @@
 constexpr int MAX_SPS = 4;
 constexpr int MAX_REF_FRAMES_POC = 16;
 
+//{{{  enum eProfileIDC
+typedef enum {
+  NO_PROFILE     = 0,   // disable profile checking for experimental coding (enables FRExt, but disables MV)
+  FREXT_CAVLC444 = 44,  // YUV 4:4:4/14 "eCavlc 4:4:4"
+  BASELINE       = 66,  // YUV 4:2:0/8  "Baseline"
+  MAIN           = 77,  // YUV 4:2:0/8  "Main"
+  EXTENDED       = 88,  // YUV 4:2:0/8  "Extended"
+  FREXT_HP       = 100, // YUV 4:2:0/8  "High"
+  FREXT_Hi10P    = 110, // YUV 4:2:0/10 "High 10"
+  FREXT_Hi422    = 122, // YUV 4:2:2/10 "High 4:2:2"
+  FREXT_Hi444    = 244, // YUV 4:4:4/14 "High 4:4:4"
+  } eProfileIDC;
+//}}}
+
 struct sDataPartition;
 //{{{
 struct sHrd {
@@ -71,19 +85,52 @@ struct sVui {
 
 class sSps {
 public:
-  static int readNaluSps (sDecoder* decoder, sNalu* nalu);
+  static int readNalu (sDecoder* decoder, sNalu* nalu);
 
-  std::string getSpsString();
+  std::string getString();
+  bool isEqual (sSps& sps);
+  //{{{
+  bool isBLprofile() {
+    return (profileIdc == BASELINE) ||
+           (profileIdc == MAIN) ||
+           (profileIdc == EXTENDED) ||
+           (profileIdc == FREXT_CAVLC444) ||
+           (profileIdc == FREXT_HP) || (profileIdc == FREXT_Hi10P) ||
+           (profileIdc == FREXT_Hi422) || (profileIdc == FREXT_Hi444);
+    }
+  //}}}
+  //{{{
+  bool isFrextProfile() {
+  // we allow all FRExt tools, when no profile is active
 
-  // vars
+    return (profileIdc == NO_PROFILE) ||
+           (profileIdc == FREXT_HP) ||
+           (profileIdc == FREXT_Hi10P) || (profileIdc == FREXT_Hi422) ||
+           (profileIdc == FREXT_Hi444) || (profileIdc == FREXT_CAVLC444);
+    }
+  //}}}
+  //{{{
+  bool isHiIntraOnlyProfile() {
+    return (((profileIdc == FREXT_Hi10P) ||
+             (profileIdc == FREXT_Hi422) ||
+             (profileIdc == FREXT_Hi444)) && constrainedSet3flag) ||
+           (profileIdc == FREXT_CAVLC444);
+    }
+  //}}}
+
+  void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen);
+
+  //{{{  vars
   bool     ok = false;
   int      naluLen = 0;
 
-  uint32_t profileIdc = 0;               // u(8)
+  eProfileIDC profileIdc = NO_PROFILE;   // u(8)
+
   bool     constrainedSet0Flag = false;  // u(1)
   bool     constrainedSet1Flag = false;  // u(1)
   bool     constrainedSet2Flag = false;  // u(1)
   bool     constrainedSet3flag = false;  // u(1)
+
   uint32_t levelIdc = 0;                 // u(8)
   uint32_t id = 0;                       // ue(v)
 
@@ -139,9 +186,8 @@ public:
   //{{{  optional vui
   sVui vuiSeqParams = {0}; // sVui
   //}}}
+  //}}}
 
 private:
-  bool isEqual (sSps& sps);
   void readVuiFromStream (sDataPartition* dataPartition);
-  void readSpsFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen);
   };

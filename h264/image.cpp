@@ -2503,7 +2503,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
 
     decoder->activeSps = sps;
 
-    if (isBLprofile (sps->profileIdc) && !decoder->dpb->initDone)
+    if (sps->isBLprofile() && !decoder->dpb->initDone)
       setCodingParam (decoder, sps);
     setCoding (decoder);
     initGlobalBuffers (decoder);
@@ -2971,8 +2971,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
     slice->deblockFilterBetaOffset = 0;
     }
     //}}}
-  if (isHiIntraOnlyProfile (activeSps->profileIdc, activeSps->constrainedSet3flag) &&
-      !decoder->param.intraProfileDeblocking) {
+  if (activeSps->isHiIntraOnlyProfile() && !decoder->param.intraProfileDeblocking) {
     //{{{  hiIntra deblock
     slice->deblockFilterDisableIdc = 1;
     slice->deblockFilterC0Offset = 0;
@@ -3096,17 +3095,17 @@ static int readSlice (sSlice* slice) {
 
       //{{{
       case NALU_TYPE_SPS: {
-        int spsId = sSps::readNaluSps (decoder, nalu);
+        int spsId = sSps::readNalu (decoder, nalu);
         if (decoder->param.spsDebug)
-          cLog::log (LOGINFO, decoder->sps[spsId].getSpsString());
+          cLog::log (LOGINFO, decoder->sps[spsId].getString());
         break;
         }
       //}}}
       //{{{
       case NALU_TYPE_PPS: {
-        int ppsId = readNaluPps (decoder, nalu);
+        int ppsId = sPps::readNalu (decoder, nalu);
         if (decoder->param.ppsDebug)
-          cLog::log (LOGINFO, getPpsString (&decoder->pps[ppsId]));
+          cLog::log (LOGINFO, decoder->pps[ppsId].getString());
         break;
         }
       //}}}

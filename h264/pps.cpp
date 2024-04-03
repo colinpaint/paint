@@ -229,28 +229,28 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
 //}}}
 
 //{{{
-string getPpsString (sPps* pps) {
+string sPps::getString() {
 
   return fmt::format ("PPS:{}:{} -> sps:{}{} sliceGroups:{} L:{}:{}{}{}{}{}{}{} biPredIdc:{}{}",
-                      pps->id,
-                      pps->naluLen,
-                      pps->spsId,
-                      pps->entropyCoding ? " cabac":" cavlc",
-                      pps->numSliceGroupsMinus1,
-                      pps->numRefIndexL0defaultActiveMinus1, pps->numRefIndexL1defaultActiveMinus1,
-                      pps->hasDeblockFilterControl ? " deblock":"",
-                      pps->hasWeightedPred ? " pred":"",
-                      pps->hasConstrainedIntraPred ? " intra":"",
-                      pps->redundantPicCountPresent ? " redundant":"",
-                      pps->hasMoreData && pps->hasTransform8x8mode ? " 8x8":"",
-                      pps->hasMoreData && pps->hasPicScalingMatrix ? " scaling":"",
-                      pps->weightedBiPredIdc,
-                      pps->frameBotField ? " botField":""
+                      id,
+                      naluLen,
+                      spsId,
+                      entropyCoding ? " cabac":" cavlc",
+                      numSliceGroupsMinus1,
+                      numRefIndexL0defaultActiveMinus1, numRefIndexL1defaultActiveMinus1,
+                      hasDeblockFilterControl ? " deblock":"",
+                      hasWeightedPred ? " pred":"",
+                      hasConstrainedIntraPred ? " intra":"",
+                      redundantPicCountPresent ? " redundant":"",
+                      hasMoreData && hasTransform8x8mode ? " 8x8":"",
+                      hasMoreData && hasPicScalingMatrix ? " scaling":"",
+                      weightedBiPredIdc,
+                      frameBotField ? " botField":""
                       );
   }
 //}}}
 //{{{
-int readNaluPps (sDecoder* decoder, sNalu* nalu) {
+int sPps::readNalu (sDecoder* decoder, sNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->stream->errorFlag = 0;

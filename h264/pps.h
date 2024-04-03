@@ -4,7 +4,11 @@
 
 #define MAX_PPS 4
 
-struct sPps {
+class sPps {
+public:
+  static int readNalu (sDecoder* decoder, sNalu* nalu);
+  std::string getString();
+
   bool     ok;
   int      naluLen;
 
@@ -58,7 +62,3 @@ struct sPps {
 
   int     chromaQpOffset2;                   // se(v)
   };
-
-std::string getPpsString (sPps* pps);
-
-int readNaluPps (sDecoder* decoder, sNalu* nalu);

@@ -70,19 +70,6 @@
 //}}}
 
 typedef uint8_t sPixel;
-//{{{  enum eProfileIDC
-typedef enum {
-  NO_PROFILE     = 0,   // disable profile checking for experimental coding (enables FRExt, but disables MV)
-  FREXT_CAVLC444 = 44,  // YUV 4:4:4/14 "eCavlc 4:4:4"
-  BASELINE       = 66,  // YUV 4:2:0/8  "Baseline"
-  MAIN           = 77,  // YUV 4:2:0/8  "Main"
-  EXTENDED       = 88,  // YUV 4:2:0/8  "Extended"
-  FREXT_HP       = 100, // YUV 4:2:0/8  "High"
-  FREXT_Hi10P    = 110, // YUV 4:2:0/10 "High 10"
-  FREXT_Hi422    = 122, // YUV 4:2:2/10 "High 4:2:2"
-  FREXT_Hi444    = 244, // YUV 4:4:4/14 "High 4:4:4"
-  } eAvcProfileIDC;
-//}}}
 //{{{  enum eStartEnd
 typedef enum {
   eEOS = 1, // End Of Sequence
@@ -290,6 +277,14 @@ typedef enum {
   } eMvPredType;
 //}}}
 
+struct sConcealNode;
+struct sFrameStore;
+struct sPicture;
+struct sDpb;
+struct sPicMotion;
+struct sMacroBlock;
+struct sSlice;
+struct sDecoder;
 //{{{
 struct sBiContext {
   uint16_t        state; // index into state-table CP
@@ -360,15 +355,6 @@ struct sCodedBlockPattern {
   int64_t bits8x8;
   };
 //}}}
-
-struct sConcealNode;
-struct sFrameStore;
-struct sPicture;
-struct sDpb;
-struct sPicMotion;
-struct sMacroBlock;
-struct sSlice;
-struct sDecoder;
 //{{{
 struct sBitStream {
   // cavlc Decoding
@@ -990,35 +976,6 @@ struct sDecoder {
   void (*edgeLoopChromaV) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
   void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
   };
-//}}}
-
-//{{{
-static inline int isBLprofile (uint32_t profileIdc) {
-  return (profileIdc == BASELINE) ||
-         (profileIdc == MAIN) ||
-         (profileIdc == EXTENDED) ||
-         (profileIdc == FREXT_CAVLC444) ||
-         (profileIdc == FREXT_HP) || (profileIdc == FREXT_Hi10P) ||
-         (profileIdc == FREXT_Hi422) || (profileIdc == FREXT_Hi444);
-  }
-//}}}
-//{{{
-static inline int isFrextProfile (uint32_t profileIdc) {
-// we allow all FRExt tools, when no profile is active
-
-  return (profileIdc == NO_PROFILE) ||
-         (profileIdc == FREXT_HP) ||
-         (profileIdc == FREXT_Hi10P) || (profileIdc == FREXT_Hi422) ||
-         (profileIdc == FREXT_Hi444) || (profileIdc == FREXT_CAVLC444);
-  }
-//}}}
-//{{{
-static inline int isHiIntraOnlyProfile (uint32_t profileIdc, bool constrainedSet3flag) {
-  return (((profileIdc == FREXT_Hi10P) ||
-           (profileIdc == FREXT_Hi422) ||
-           (profileIdc == FREXT_Hi444)) && constrainedSet3flag) ||
-         (profileIdc == FREXT_CAVLC444);
-  }
 //}}}
 
 extern sDecoder* gDecoder;
