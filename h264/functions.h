@@ -65,8 +65,8 @@ static inline double dmin (double a, double b) { return ((a) < (b)) ? (a) : (b);
 static inline double dmax (double a, double b) { return ((a) > (b)) ? (a) : (b); }
 static inline int64_t i64min (int64_t a, int64_t b) { return ((a) < (b)) ? (a) : (b); }
 static inline int64_t i64max (int64_t a, int64_t b) { return ((a) > (b)) ? (a) : (b); }
-static inline distblk distblkmin (distblk a, distblk b) { return ((a) < (b)) ? (a) : (b); }
-static inline distblk distblkmax (distblk a, distblk b) { return ((a) > (b)) ? (a) : (b); }
+static inline int32_t distblkmin (int32_t a, int32_t b) { return ((a) < (b)) ? (a) : (b); }
+static inline int32_t distblkmax (int32_t a, int32_t b) { return ((a) > (b)) ? (a) : (b); }
 
 //{{{
 static inline int16_t sabs (int16_t x) {

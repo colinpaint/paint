@@ -886,27 +886,27 @@ int getMem3Dint64 (int64_t**** array3D, int dim0, int dim1, int dim2)
 }
 //}}}
 //{{{
-int getMem2Ddistblk (distblk*** array2D, int dim0, int dim1)
+int getMem2Ddistblk (int32_t*** array2D, int dim0, int dim1)
 {
   int i;
 
-  if((*array2D    = (distblk**)memAlloc(dim0 *      sizeof(distblk*))) == NULL)
+  if((*array2D    = (int32_t**)memAlloc(dim0 *      sizeof(int32_t*))) == NULL)
     noMemoryExit("getMem2Ddistblk: array2D");
-  if((*(*array2D) = (distblk* )mem_calloc(dim0 * dim1,sizeof(distblk ))) == NULL)
+  if((*(*array2D) = (int32_t* )mem_calloc(dim0 * dim1,sizeof(int32_t ))) == NULL)
     noMemoryExit("getMem2Ddistblk: array2D");
 
   for(i = 1; i < dim0; i++)
     (*array2D)[i] =  (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(distblk*) + dim1 * sizeof(distblk));
+  return dim0 * (sizeof(int32_t*) + dim1 * sizeof(int32_t));
 }
 //}}}
 //{{{
-int getMem3Ddistblk (distblk**** array3D, int dim0, int dim1, int dim2)
+int getMem3Ddistblk (int32_t**** array3D, int dim0, int dim1, int dim2)
 {
-  int  i, mem_size = dim0 * sizeof(distblk**);
+  int  i, mem_size = dim0 * sizeof(int32_t**);
 
-  if(((*array3D) = (distblk***)memAlloc(dim0 * sizeof(distblk**))) == NULL)
+  if(((*array3D) = (int32_t***)memAlloc(dim0 * sizeof(int32_t**))) == NULL)
     noMemoryExit("getMem3Ddistblk: array3D");
 
   mem_size += getMem2Ddistblk(*array3D, dim0 * dim1, dim2);
@@ -918,11 +918,11 @@ int getMem3Ddistblk (distblk**** array3D, int dim0, int dim1, int dim2)
 }
 //}}}
 //{{{
-int getMem4Ddistblk (distblk***** array4D, int dim0, int dim1, int dim2, int dim3)
+int getMem4Ddistblk (int32_t***** array4D, int dim0, int dim1, int dim2, int dim3)
 {
-  int  i, mem_size = dim0 * sizeof(distblk***);
+  int  i, mem_size = dim0 * sizeof(int32_t***);
 
-  if(((*array4D) = (distblk****)memAlloc(dim0 * sizeof(distblk***))) == NULL)
+  if(((*array4D) = (int32_t****)memAlloc(dim0 * sizeof(int32_t***))) == NULL)
     noMemoryExit("getMem4Ddistblk: array4D");
 
   mem_size += getMem3Ddistblk(*array4D, dim0 * dim1, dim2, dim3);
@@ -1135,7 +1135,7 @@ void freeMem3Dint64 (int64_t*** array3D)
 }
 //}}}
 //{{{
-void freeMem3Ddistblk (distblk*** array3D)
+void freeMem3Ddistblk (int32_t*** array3D)
 {
   if (array3D)
   {
@@ -1172,7 +1172,7 @@ void freeMem4Dint64 (int64_t**** array4D)
 }
 //}}}
 //{{{
-void freeMem4Ddistblk (distblk**** array4D)
+void freeMem4Ddistblk (int32_t**** array4D)
 {
   if (array4D)
   {
@@ -1998,7 +1998,7 @@ void freeMem3Ddouble (double*** array3D)
 }
 //}}}
 //{{{
-void freeMem2Ddistblk (distblk** array2D)
+void freeMem2Ddistblk (int32_t** array2D)
 {
   if (array2D)
   {

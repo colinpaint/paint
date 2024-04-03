@@ -2002,8 +2002,8 @@ static void reorderLists (sSlice* slice) {
     if (slice->refPicReorderFlag[LIST_0])
       reorderRefPicList (slice, LIST_0);
     if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
-      printf ("------ refPicList0[%d] no refPic %s\n",
-              slice->numRefIndexActive[LIST_0]-1, decoder->nonConformingStream ? "conform":"");
+      cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
+                 slice->numRefIndexActive[LIST_0]-1, decoder->nonConformingStream ? "conform":"");
     else
       slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
     }
@@ -2012,7 +2012,7 @@ static void reorderLists (sSlice* slice) {
     if (slice->refPicReorderFlag[LIST_1])
       reorderRefPicList (slice, LIST_1);
     if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
-      printf ("------ refPicList1[%d] no refPic %s\n",
+       cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
               slice->numRefIndexActive[LIST_0] - 1, decoder->nonConformingStream ? "conform" : "");
     else
       slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
@@ -2304,7 +2304,7 @@ static void endDecodeFrame (sDecoder* decoder) {
              pocNum, picNum, numOutputFrames);
 
     if (decoder->param.outDebug)
-      printf ("-> %s\n", decoder->debug.outStr);
+      cLog::log(LOGINFO, decoder->debug.outStr);
     //}}}
 
     // I or P pictures ?
@@ -2492,11 +2492,11 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
 
   sPps* pps = &decoder->pps[slice->ppsId];
   if (!pps->ok)
-    printf ("useParameterSet - invalid ppsId:%d\n", slice->ppsId);
+    cLog::log (LOGINFO, "useParameterSet - invalid ppsId:%d", slice->ppsId);
 
   sSps* sps = &decoder->sps[pps->spsId];
   if (!sps->ok)
-    printf ("useParameterSet - invalid spsId:%d ppsId:%d\n", slice->ppsId, pps->spsId);
+    cLog::log (LOGINFO, "useParameterSet - invalid spsId:%d ppsId:%d", slice->ppsId, pps->spsId);
 
   if (sps != decoder->activeSps) {
     //{{{  new sps
@@ -2534,7 +2534,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
              decoder->param.source.bitDepth[0], decoder->param.source.bitDepth[1], decoder->param.source.bitDepth[2]);
 
     // print profile debug
-    printf ("%s\n", decoder->debug.profileStr);
+    cLog::log (LOGINFO, decoder->debug.profileStr);
     }
     //}}}
 
@@ -3024,7 +3024,7 @@ static int readSlice (sSlice* slice) {
         if (decoder->recoveryPoint || nalu->unitType == NALU_TYPE_IDR) {
           if (!decoder->recoveryPointFound) {
             if (nalu->unitType != NALU_TYPE_IDR) {
-              printf ("-> decoding without IDR");
+              cLog::log (LOGINFO,  "-> decoding without IDR");
               decoder->nonConformingStream = 1;
               }
             else
@@ -3088,7 +3088,7 @@ static int readSlice (sSlice* slice) {
                  slice->sliceType ? (slice->sliceType == 1) ? 'B':((slice->sliceType == 2) ? 'I':'?'):'P',
                  slice->fieldPic ? " field":"", slice->mbAffFrame ? " mbAff":"");
         if (decoder->param.sliceDebug)
-          printf ("%s\n", decoder->debug.sliceStr);
+          cLog::log (LOGINFO, decoder->debug.sliceStr);
 
         return curHeader;
         }
@@ -3100,7 +3100,7 @@ static int readSlice (sSlice* slice) {
         if (decoder->param.spsDebug) {
           char str[128];
           getSpsStr (&decoder->sps[spsId], str);
-          printf ("%s\n", str);
+          cLog::log (LOGINFO, str);
           }
         break;
         }
@@ -3111,7 +3111,7 @@ static int readSlice (sSlice* slice) {
         if (decoder->param.ppsDebug) {
           char str[128];
           getPpsStr (&decoder->pps[ppsId], str);
-          printf ("%s\n", str);
+          cLog::log (LOGINFO, str);
           }
         break;
         }
@@ -3123,7 +3123,7 @@ static int readSlice (sSlice* slice) {
 
       //{{{
       case NALU_TYPE_DPA: {
-        printf ("DPA id:%d:%d len:%d\n", slice->refId, slice->sliceType, nalu->len);
+        cLog::log (LOGINFO, "DPA id:%d:%d len:%d", slice->refId, slice->sliceType, nalu->len);
 
         if (!decoder->recoveryPointFound)
           break;
@@ -3177,7 +3177,7 @@ static int readSlice (sSlice* slice) {
           slice->noDataPartitionB = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
-            printf ("NALU dataPartitionB does not match dataPartitionA\n");
+            cLog::log (LOGINFO, "NALU dataPartitionB does not match dataPartitionA");
             slice->noDataPartitionB = 1;
             slice->noDataPartitionC = 1;
             }
@@ -3205,7 +3205,7 @@ static int readSlice (sSlice* slice) {
           slice->noDataPartitionC = 0;
           int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
           if ((slice_id_c != slice_id_a) || (nalu->lostPackets)) {
-            printf ("dataPartitionC does not match dataPartitionA\n");
+            cLog::log (LOGINFO, "dataPartitionC does not match dataPartitionA");
             slice->noDataPartitionC = 1;
             }
 
@@ -3228,12 +3228,12 @@ static int readSlice (sSlice* slice) {
       //}}}
       //{{{
       case NALU_TYPE_DPB:
-        printf ("dataPartitionB without dataPartitonA\n");
+        cLog::log (LOGINFO, "dataPartitionB without dataPartitonA");
         break;
       //}}}
       //{{{
       case NALU_TYPE_DPC:
-        printf ("dataPartitionC without dataPartitonA\n");
+        cLog::log (LOGINFO, "dataPartitionC without dataPartitonA");
         break;
       //}}}
 
@@ -3243,7 +3243,7 @@ static int readSlice (sSlice* slice) {
       case NALU_TYPE_EOSTREAM: break;
 
       default:
-        printf ("NALU:%d unknown:%d\n", nalu->len, nalu->unitType);
+        cLog::log (LOGINFO, "NALU:%d unknown:%d\n", nalu->len, nalu->unitType);
         break;
       }
     }

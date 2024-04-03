@@ -13,12 +13,15 @@
 #include <cstdint>
 #include <string>
 
-//{{{  defines
-typedef uint8_t  sPixel;    // pixel type
-//typedef uint16_t distpel;   // distortion type (for pixels)
-typedef int32_t  distblk;   // distortion type (for sMacroBlock)
-//typedef int32_t  transpel;  // transformed coefficient type
+#include "win32.h"
+#include "frame.h"
+#include "nalu.h"
+#include "sps.h"
+#include "pps.h"
 
+#include "functions.h"
+
+//{{{  defines
 #define MAX_NUM_SLICES          8
 #define MAX_REFERENCE_PICTURES  32       // H.264 allows 32 fields
 #define MAX_CODED_FRAME_SIZE    8000000  // bytes for one frame
@@ -69,16 +72,9 @@ typedef int32_t  distblk;   // distortion type (for sMacroBlock)
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
 #define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
 //}}}
-
-#include "win32.h"
-#include "frame.h"
-#include "nalu.h"
-#include "sps.h"
-#include "pps.h"
-
-#include "functions.h"
 //}}}
 
+typedef uint8_t sPixel;
 //{{{  enum eProfileIDC
 typedef enum {
   NO_PROFILE     = 0,   // disable profile checking for experimental coding (enables FRExt, but disables MV)
@@ -846,7 +842,8 @@ struct sDebug {
   char    sliceStr[128];
 
   eSliceType outSliceType;
-  char    outStr[128];
+  //std::string outStr;
+  char outStr[128];
   };
 //}}}
 //{{{
