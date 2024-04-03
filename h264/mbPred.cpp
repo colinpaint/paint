@@ -318,7 +318,7 @@ static inline void updateNeighbourMvs (sPicMotion** motion, const sPicMotion* mv
 //{{{
 int mbPredBd8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture) {
 
-  short refIndex;
+  int16_t refIndex;
   int refList;
 
   int k, i, j, i4, j4, j6;
@@ -442,15 +442,15 @@ int mbPredBd8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
           // In such case, an array is needed for each different reference.
           if (mv_scale == 9999 || slice->listX[LIST_0 + listOffset][mapped_idx]->isLongTerm) {
             mvInfo->mv[LIST_0].mvX = colocated->mv[refList].mvX;
-            mvInfo->mv[LIST_0].mvY = (short) mvY;
+            mvInfo->mv[LIST_0].mvY = (int16_t) mvY;
             mvInfo->mv[LIST_1] = kZeroMv;
             }
           else {
-            mvInfo->mv[LIST_0].mvX = (short) ((mv_scale * colocated->mv[refList].mvX + 128 ) >> 8);
-            mvInfo->mv[LIST_0].mvY = (short) ((mv_scale * mvY/*colocated->mv[refList].mvY*/ + 128 ) >> 8);
+            mvInfo->mv[LIST_0].mvX = (int16_t) ((mv_scale * colocated->mv[refList].mvX + 128 ) >> 8);
+            mvInfo->mv[LIST_0].mvY = (int16_t) ((mv_scale * mvY/*colocated->mv[refList].mvY*/ + 128 ) >> 8);
 
-            mvInfo->mv[LIST_1].mvX = (short) (mvInfo->mv[LIST_0].mvX - colocated->mv[refList].mvX);
-            mvInfo->mv[LIST_1].mvY = (short) (mvInfo->mv[LIST_0].mvY - mvY/*colocated->mv[refList].mvY*/);
+            mvInfo->mv[LIST_1].mvX = (int16_t) (mvInfo->mv[LIST_0].mvX - colocated->mv[refList].mvX);
+            mvInfo->mv[LIST_1].mvY = (int16_t) (mvInfo->mv[LIST_0].mvY - mvY/*colocated->mv[refList].mvY*/);
             }
 
           mvInfo->refIndex[LIST_0] = (char) mapped_idx; // colocated->refIndex[refList];
@@ -461,8 +461,8 @@ int mbPredBd8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
         }
 
       // store reference picture ID determined by direct mode
-      mvInfo->refPic[LIST_0] = list0[(short)mvInfo->refIndex[LIST_0]];
-      mvInfo->refPic[LIST_1] = list1[(short)mvInfo->refIndex[LIST_1]];
+      mvInfo->refPic[LIST_0] = list0[(int16_t)mvInfo->refIndex[LIST_0]];
+      mvInfo->refPic[LIST_1] = list1[(int16_t)mvInfo->refIndex[LIST_1]];
       }
 
     for (k = k_start; k < k_end; k ++) {
@@ -490,7 +490,7 @@ int mbPredBd8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
 //{{{
 int mbPredBd4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture) {
 
-  short refIndex;
+  int16_t refIndex;
   int refList;
 
   sSlice* slice = mb->slice;
@@ -552,10 +552,10 @@ int mbPredBd4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
             mvInfo->mv[LIST_1] = kZeroMv;
             }
           else {
-            mvInfo->mv[LIST_0].mvX = (short) ((mv_scale * colocated->mv[refList].mvX + 128 ) >> 8);
-            mvInfo->mv[LIST_0].mvY = (short) ((mv_scale * colocated->mv[refList].mvY + 128 ) >> 8);
-            mvInfo->mv[LIST_1].mvX = (short) (mvInfo->mv[LIST_0].mvX - colocated->mv[refList].mvX);
-            mvInfo->mv[LIST_1].mvY = (short) (mvInfo->mv[LIST_0].mvY - colocated->mv[refList].mvY);
+            mvInfo->mv[LIST_0].mvX = (int16_t) ((mv_scale * colocated->mv[refList].mvX + 128 ) >> 8);
+            mvInfo->mv[LIST_0].mvY = (int16_t) ((mv_scale * colocated->mv[refList].mvY + 128 ) >> 8);
+            mvInfo->mv[LIST_1].mvX = (int16_t) (mvInfo->mv[LIST_0].mvX - colocated->mv[refList].mvX);
+            mvInfo->mv[LIST_1].mvY = (int16_t) (mvInfo->mv[LIST_0].mvY - colocated->mv[refList].mvY);
             }
 
           mvInfo->refIndex[LIST_0] = (char) mapped_idx; //colocated->refIndex[refList];
@@ -564,8 +564,8 @@ int mbPredBd4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
         }
 
       // store reference picture ID determined by direct mode
-      mvInfo->refPic[LIST_0] = list0[(short)mvInfo->refIndex[LIST_0]];
-      mvInfo->refPic[LIST_1] = list1[(short)mvInfo->refIndex[LIST_1]];
+      mvInfo->refPic[LIST_0] = list0[(int16_t)mvInfo->refIndex[LIST_0]];
+      mvInfo->refPic[LIST_1] = list1[(int16_t)mvInfo->refIndex[LIST_1]];
       }
 
     for (int k = k_start; k < k_end; k ++) {
@@ -633,7 +633,7 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
           mvInfo->refIndex[LIST_1] = -1;
           }
         else {
-          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+          mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
           mvInfo->refPic[LIST_1] = NULL;
           mvInfo->mv[LIST_0] = pmvl0;
           mvInfo->mv[LIST_1] = kZeroMv;
@@ -653,7 +653,7 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
           }
         else {
           mvInfo->refPic[LIST_0] = NULL;
-          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
           mvInfo->mv[LIST_0] = kZeroMv;
           mvInfo->mv[LIST_1] = pmvl1;
           mvInfo->refIndex[LIST_0] = -1;
@@ -669,7 +669,7 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
           mvInfo->refIndex[LIST_0] = 0;
           }
         else {
-          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+          mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
           mvInfo->mv[LIST_0] = pmvl0;
           mvInfo->refIndex[LIST_0] = l0_rFrame;
           }
@@ -680,7 +680,7 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
           mvInfo->refIndex[LIST_1]    = 0;
           }
         else {
-          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
           mvInfo->mv[LIST_1] = pmvl1;
           mvInfo->refIndex[LIST_1] = l1_rFrame;
           }
@@ -713,7 +713,7 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
       for (j4 = mb->blockY; j4 < mb->blockY + BLOCK_MULTIPLE; j4 += 2) {
         for (i4 = mb->blockX; i4 < mb->blockX + BLOCK_MULTIPLE; i4 += 2) {
           mvInfo = &picture->mvInfo[j4][i4];
-          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+          mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
           mvInfo->refPic[LIST_1] = NULL;
           mvInfo->mv[LIST_0] = pmvl0;
           mvInfo->mv[LIST_1] = kZeroMv;
@@ -730,7 +730,7 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
         for (i4 = mb->blockX; i4 < mb->blockX + BLOCK_MULTIPLE; i4 += 2) {
           mvInfo = &picture->mvInfo[j4][i4];
           mvInfo->refPic[LIST_0] = NULL;
-          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
           mvInfo->mv[LIST_0] = kZeroMv;
           mvInfo->mv[LIST_1] = pmvl1;
           mvInfo->refIndex[LIST_0] = -1;
@@ -745,8 +745,8 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
       for (j4 = mb->blockY; j4 < mb->blockY + BLOCK_MULTIPLE; j4 += 2) {
         for (i4 = mb->blockX; i4 < mb->blockX + BLOCK_MULTIPLE; i4 += 2) {
           mvInfo = &picture->mvInfo[j4][i4];
-          mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
-          mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+          mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
+          mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
           mvInfo->mv[LIST_0] = pmvl0;
           mvInfo->mv[LIST_1] = pmvl1;
           mvInfo->refIndex[LIST_0] = l0_rFrame;
@@ -819,7 +819,7 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
             mvInfo->refIndex[LIST_1] = -1;
             }
           else {
-            mvInfo->refPic[LIST_0] = list0[(short)l0_rFrame];
+            mvInfo->refPic[LIST_0] = list0[(int16_t)l0_rFrame];
             mvInfo->refPic[LIST_1] = NULL;
             mvInfo->mv[LIST_0] = pmvl0;
             mvInfo->mv[LIST_1] = kZeroMv;
@@ -839,7 +839,7 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
             }
           else {
             mvInfo->refPic[LIST_0] = NULL;
-            mvInfo->refPic[LIST_1] = list1[(short)l1_rFrame];
+            mvInfo->refPic[LIST_1] = list1[(int16_t)l1_rFrame];
             mvInfo->mv[LIST_0] = kZeroMv;
             mvInfo->mv[LIST_1] = pmvl1;
             mvInfo->refIndex[LIST_0] = -1;
@@ -854,7 +854,7 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
             mvInfo->refIndex[LIST_0] = 0;
             }
           else {
-            mvInfo->refPic[LIST_0] = list0[(short)l0_rFrame];
+            mvInfo->refPic[LIST_0] = list0[(int16_t)l0_rFrame];
             mvInfo->mv[LIST_0] = pmvl0;
             mvInfo->refIndex[LIST_0] = l0_rFrame;
            }
@@ -865,7 +865,7 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
             mvInfo->refIndex[LIST_1] = 0;
             }
           else {
-            mvInfo->refPic[LIST_1] = list1[(short)l1_rFrame];
+            mvInfo->refPic[LIST_1] = list1[(int16_t)l1_rFrame];
             mvInfo->mv[LIST_1] = pmvl1;
             mvInfo->refIndex[LIST_1] = l1_rFrame;
             }
@@ -886,7 +886,7 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
           }
         else if (l1_rFrame == -1) {
           predDir = 0;
-          mvInfo->refPic[LIST_0] = list0[(short)l0_rFrame];
+          mvInfo->refPic[LIST_0] = list0[(int16_t)l0_rFrame];
           mvInfo->refPic[LIST_1] = NULL;
           mvInfo->mv[LIST_0] = pmvl0;
           mvInfo->mv[LIST_1] = kZeroMv;
@@ -896,7 +896,7 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
         else if (l0_rFrame == -1) {
           predDir = 1;
           mvInfo->refPic[LIST_0] = NULL;
-          mvInfo->refPic[LIST_1] = list1[(short)l1_rFrame];
+          mvInfo->refPic[LIST_1] = list1[(int16_t)l1_rFrame];
           mvInfo->mv[LIST_0] = kZeroMv;
           mvInfo->mv[LIST_1] = pmvl1;
           mvInfo->refIndex[LIST_0] = -1;
@@ -904,8 +904,8 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
           }
         else {
           predDir = 2;
-          mvInfo->refPic[LIST_0] = list0[(short)l0_rFrame];
-          mvInfo->refPic[LIST_1] = list1[(short)l1_rFrame];
+          mvInfo->refPic[LIST_0] = list0[(int16_t)l0_rFrame];
+          mvInfo->refPic[LIST_1] = list1[(int16_t)l1_rFrame];
           mvInfo->mv[LIST_0] = pmvl0;
           mvInfo->mv[LIST_1] = pmvl1;
           mvInfo->refIndex[LIST_0] = l0_rFrame;
@@ -1022,8 +1022,8 @@ int mbPredBinter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
           assert (predDir<=2);
           // store reference picture ID determined by direct mode
-          mvInfo->refPic[LIST_0] = list0[(short)mvInfo->refIndex[LIST_0]];
-          mvInfo->refPic[LIST_1] = list1[(short)mvInfo->refIndex[LIST_1]];
+          mvInfo->refPic[LIST_0] = list0[(int16_t)mvInfo->refIndex[LIST_0]];
+          mvInfo->refPic[LIST_1] = list1[(int16_t)mvInfo->refIndex[LIST_1]];
           }
         }
 

@@ -62,12 +62,12 @@ extern int getMem2Ddistblk (distblk*** array2D, int dim0, int dim1);
 extern int getMem3Ddistblk (distblk**** array3D, int dim0, int dim1, int dim2);
 extern int getMem4Ddistblk (distblk***** array4D, int dim0, int dim1, int dim2, int dim3);
 
-extern int getMem2Dshort (short*** array2D, int dim0, int dim1);
-extern int getMem3Dshort (short**** array3D, int dim0, int dim1, int dim2);
-extern int getMem4Dshort (short***** array4D, int dim0, int dim1, int dim2, int dim3);
-extern int getMem5Dshort (short****** array5D, int dim0, int dim1, int dim2, int dim3, int dim4);
-extern int getMem6Dshort (short******* array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5);
-extern int getMem7Dshort (short******** array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6);
+extern int getMem2Dshort (int16_t*** array2D, int dim0, int dim1);
+extern int getMem3Dshort (int16_t**** array3D, int dim0, int dim1, int dim2);
+extern int getMem4Dshort (int16_t***** array4D, int dim0, int dim1, int dim2, int dim3);
+extern int getMem5Dshort (int16_t****** array5D, int dim0, int dim1, int dim2, int dim3, int dim4);
+extern int getMem6Dshort (int16_t******* array6D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5);
+extern int getMem7Dshort (int16_t******** array7D, int dim0, int dim1, int dim2, int dim3, int dim4, int dim5, int dim6);
 
 extern int getMem1Dpel (sPixel** array2D, int dim0);
 extern int getMem2Dpel (sPixel** *array2D, int dim0, int dim1);
@@ -88,9 +88,9 @@ extern int getMem3Dodouble (double**** array2D, int dim0, int dim1, int dim2, in
 extern int getMem2Doint (int*** array2D, int dim0, int dim1, int offset);
 extern int getMem3Doint (int**** array3D, int dim0, int dim1, int dim2, int offset);
 
-extern int get_offset_mem2Dshort(short*** array2D, int rows, int columns, int offset_y, int offset_x);
+extern int get_offset_mem2Dshort(int16_t*** array2D, int rows, int columns, int offset_y, int offset_x);
 
-extern void free_offset_mem2Dshort(short** array2D, int columns, int offset_x, int offset_y);
+extern void free_offset_mem2Dshort(int16_t** array2D, int columns, int offset_x, int offset_y);
 
 extern void freeMem2Dmp (sPicMotion** array2D);
 extern void freeMem3Dmp (sPicMotion*** array2D);
@@ -129,12 +129,12 @@ extern void freeMem2Ddistblk (distblk** array2D);
 extern void freeMem3Ddistblk (distblk*** array3D);
 extern void freeMem4Ddistblk (distblk**** array4D);
 
-extern void freeMem2Dshort (short** array2D);
-extern void freeMem3Dshort (short*** array3D);
-extern void freeMem4Dshort (short**** array4D);
-extern void freeMem5Dshort (short***** array5D);
-extern void freeMem6Dshort (short****** array6D);
-extern void freeMem7Dshort (short******* array7D);
+extern void freeMem2Dshort (int16_t** array2D);
+extern void freeMem3Dshort (int16_t*** array3D);
+extern void freeMem4Dshort (int16_t**** array4D);
+extern void freeMem5Dshort (int16_t***** array5D);
+extern void freeMem6Dshort (int16_t****** array6D);
+extern void freeMem7Dshort (int16_t******* array7D);
 
 extern void freeMem1Dpel (sPixel* array1D);
 extern void freeMem2Dpel (sPixel** array2D);

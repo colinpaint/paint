@@ -827,7 +827,7 @@ static void readIcavlcMacroblock (sMacroBlock* mb) {
   // read MB type
   dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
-  mb->mbType = (short) se.value1;
+  mb->mbType = (int16_t) se.value1;
   if (!dataPartition->stream->errorFlag)
     mb->errorFlag = 0;
 
@@ -876,7 +876,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
       // read MB type
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       ++(se.value1);
-      mb->mbType = (short)se.value1;
+      mb->mbType = (int16_t)se.value1;
       if(!dataPartition->stream->errorFlag)
         mb->errorFlag = 0;
       slice->codCount--;
@@ -935,7 +935,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
       // read MB type
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       ++(se.value1);
-      mb->mbType = (short)se.value1;
+      mb->mbType = (int16_t)se.value1;
       if(!dataPartition->stream->errorFlag)
         mb->errorFlag = 0;
       slice->codCount--;
@@ -1027,7 +1027,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
     if (slice->codCount==0) {
       // read MB type
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
-      mb->mbType = (short)se.value1;
+      mb->mbType = (int16_t)se.value1;
       if (!dataPartition->stream->errorFlag)
         mb->errorFlag = 0;
       slice->codCount--;
@@ -1083,7 +1083,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
 
       // read MB type
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
-      mb->mbType = (short)se.value1;
+      mb->mbType = (int16_t)se.value1;
       if (!dataPartition->stream->errorFlag)
         mb->errorFlag = 0;
       slice->codCount--;
@@ -1203,7 +1203,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
   se.reading = readMB_typeInfo_CABAC_i_slice;
   dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
-  mb->mbType = (short)se.value1;
+  mb->mbType = (int16_t)se.value1;
   if (!dataPartition->stream->errorFlag)
     mb->errorFlag = 0;
 
@@ -1275,7 +1275,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
     se.reading = read_skip_flag_CABAC_p_slice;
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
-    mb->mbType = (short) se.value1;
+    mb->mbType = (int16_t) se.value1;
     mb->skipFlag = (char) (!(se.value1));
     if (!dataPartition->stream->errorFlag)
       mb->errorFlag = 0;
@@ -1284,7 +1284,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
     if (mb->mbType != 0 ) {
       se.reading = readMB_typeInfo_CABAC_p_slice;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
-      mb->mbType = (short) se.value1;
+      mb->mbType = (int16_t) se.value1;
       if(!dataPartition->stream->errorFlag)
         mb->errorFlag = 0;
       }
@@ -1325,7 +1325,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
     se.reading = read_skip_flag_CABAC_p_slice;
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
-    mb->mbType = (short)se.value1;
+    mb->mbType = (int16_t)se.value1;
     mb->skipFlag = (char)(!(se.value1));
 
     if (!dataPartition->stream->errorFlag)
@@ -1357,7 +1357,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
     if (mb->mbType != 0 ) {
       se.reading = readMB_typeInfo_CABAC_p_slice;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
-      mb->mbType = (short) se.value1;
+      mb->mbType = (int16_t) se.value1;
       if (!dataPartition->stream->errorFlag)
         mb->errorFlag = 0;
       }
@@ -1423,7 +1423,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
     se.reading = read_skip_flag_CABAC_b_slice;
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
-    mb->mbType  = (short)se.value1;
+    mb->mbType  = (int16_t)se.value1;
     mb->skipFlag = (char)(!(se.value1));
     mb->codedBlockPattern = se.value2;
     if (!dataPartition->stream->errorFlag)
@@ -1436,7 +1436,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
     if (mb->mbType != 0 ) {
       se.reading = readMB_typeInfo_CABAC_b_slice;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
-      mb->mbType = (short)se.value1;
+      mb->mbType = (int16_t)se.value1;
       if (!dataPartition->stream->errorFlag)
         mb->errorFlag = 0;
       }
@@ -1478,7 +1478,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
     se.reading = read_skip_flag_CABAC_b_slice;
 
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
-    mb->mbType = (short)se.value1;
+    mb->mbType = (int16_t)se.value1;
     mb->skipFlag = (char)(!(se.value1));
     mb->codedBlockPattern = se.value2;
     if (!dataPartition->stream->errorFlag)
@@ -1512,7 +1512,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
     if (mb->mbType != 0 ) {
       se.reading = readMB_typeInfo_CABAC_b_slice;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
-      mb->mbType = (short)se.value1;
+      mb->mbType = (int16_t)se.value1;
       if(!dataPartition->stream->errorFlag)
         mb->errorFlag = 0;
       }

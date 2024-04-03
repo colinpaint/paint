@@ -23,7 +23,7 @@ static const sMotionVec kZeroMv = {0, 0};
 
 //{{{
 static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
-                                           sMotionVec *pmv, short  ref_frame, sPicMotion** mvInfo,
+                                           sMotionVec *pmv, int16_t  ref_frame, sPicMotion** mvInfo,
                                            int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
 
   int mv_a, mv_b, mv_c, pred_vec=0;
@@ -149,15 +149,15 @@ static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
         }
 
     if (hv == 0)
-      pmv->mvX = (short)pred_vec;
+      pmv->mvX = (int16_t)pred_vec;
     else
-      pmv->mvY = (short)pred_vec;
+      pmv->mvY = (int16_t)pred_vec;
     }
   }
 //}}}
 //{{{
 static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
-                                            sMotionVec *pmv, short  ref_frame, sPicMotion** mvInfo,
+                                            sMotionVec *pmv, int16_t  ref_frame, sPicMotion** mvInfo,
                                             int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
   int mvPredType = MVPRED_MEDIAN;
 
@@ -211,8 +211,8 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
         sMotionVec *mv_b = block[1].available ? &mvInfo[block[1].posY][block[1].posX].mv[list] : (sMotionVec *) &kZeroMv;
         sMotionVec *mv_c = block[2].available ? &mvInfo[block[2].posY][block[2].posX].mv[list] : (sMotionVec *) &kZeroMv;
 
-        pmv->mvX = (short)imedian (mv_a->mvX, mv_b->mvX, mv_c->mvX);
-        pmv->mvY = (short)imedian (mv_a->mvY, mv_b->mvY, mv_c->mvY);
+        pmv->mvX = (int16_t)imedian (mv_a->mvX, mv_b->mvX, mv_c->mvX);
+        pmv->mvY = (int16_t)imedian (mv_a->mvY, mv_b->mvY, mv_c->mvY);
       }
       break;
     //}}}
@@ -467,7 +467,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBl
     se->reading= read_dQuant_CABAC;
 
   dataPartition->readSyntaxElement(mb, se, dataPartition);
-  mb->deltaQuant = (short) se->value1;
+  mb->deltaQuant = (int16_t) se->value1;
   if ((mb->deltaQuant < -(26 + decoder->coding.bitDepthLumaQpScale/2)) ||
       (mb->deltaQuant > (25 + decoder->coding.bitDepthLumaQpScale/2))) {
     printf("mb_qp_delta is out of range (%d)\n", mb->deltaQuant);
@@ -562,9 +562,9 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
     if ((mb->b8pdir[0] == list || mb->b8pdir[0]== BI_PRED)) {
       // has forward vector
       int i4, j4, ii, jj;
-      short curr_mvd[2];
+      int16_t curr_mvd[2];
       sMotionVec pred_mv, curr_mv;
-      short (*mvd)[4][2];
+      int16_t (*mvd)[4][2];
       sPicMotion** mvInfo = mb->slice->picture->mvInfo;
       sPixelPos block[4]; // neighbor blocks
       mb->subblockX = 0; // position used for context determination
@@ -581,15 +581,15 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
       // X component
       se->value2 = list; // identifies the component; only used for context determination
       dataPartition->readSyntaxElement(mb, se, dataPartition);
-      curr_mvd[0] = (short) se->value1;
+      curr_mvd[0] = (int16_t) se->value1;
 
       // Y component
       se->value2 += 2; // identifies the component; only used for context determination
       dataPartition->readSyntaxElement(mb, se, dataPartition);
-      curr_mvd[1] = (short) se->value1;
+      curr_mvd[1] = (int16_t) se->value1;
 
-      curr_mv.mvX = (short)(curr_mvd[0] + pred_mv.mvX);  // compute motion vector x
-      curr_mv.mvY = (short)(curr_mvd[1] + pred_mv.mvY);  // compute motion vector y
+      curr_mv.mvX = (int16_t)(curr_mvd[0] + pred_mv.mvX);  // compute motion vector x
+      curr_mv.mvY = (int16_t)(curr_mvd[1] + pred_mv.mvY);  // compute motion vector y
 
       for (jj = j4; jj < j4 + step_v0; ++jj) {
         sPicMotion *mvinfo = mvInfo[jj] + i4;
@@ -605,14 +605,14 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
 
       // now copy all other lines
       for (jj = 1; jj < step_v0; ++jj)
-        memcpy (mvd[jj][0], mvd[0][0],  2 * step_h0 * sizeof(short));
+        memcpy (mvd[jj][0], mvd[0][0],  2 * step_h0 * sizeof(int16_t));
       }
     }
   else {
     int i4, j4, ii, jj;
-    short curr_mvd[2];
+    int16_t curr_mvd[2];
     sMotionVec pred_mv, curr_mv;
-    short (*mvd)[4][2];
+    int16_t (*mvd)[4][2];
     sPicMotion** mvInfo = mb->slice->picture->mvInfo;
     sPixelPos block[4]; // neighbor blocks
 
@@ -643,11 +643,11 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
               for (k = 0; k < 2; ++k) {
                 se->value2   = (k << 1) + list; // identifies the component; only used for context determination
                 dataPartition->readSyntaxElement (mb, se, dataPartition);
-                curr_mvd[k] = (short)se->value1;
+                curr_mvd[k] = (int16_t)se->value1;
                 }
 
-              curr_mv.mvX = (short)(curr_mvd[0] + pred_mv.mvX);  // compute motion vector
-              curr_mv.mvY = (short)(curr_mvd[1] + pred_mv.mvY);  // compute motion vector
+              curr_mv.mvX = (int16_t)(curr_mvd[0] + pred_mv.mvX);  // compute motion vector
+              curr_mv.mvY = (int16_t)(curr_mvd[1] + pred_mv.mvY);  // compute motion vector
 
               for(jj = j4; jj < j4 + step_v; ++jj) {
                 sPicMotion *mvinfo = mvInfo[jj] + i4;
@@ -663,7 +663,7 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
 
               // now copy all other lines
               for (jj = 1; jj < step_v; ++jj)
-                memcpy(&mvd[jj][i][0], &mvd[0][i][0],  2 * step_h * sizeof(short));
+                memcpy(&mvd[jj][i][0], &mvd[0][i][0],  2 * step_h * sizeof(int16_t));
               }
             }
           }
@@ -718,8 +718,8 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
 
   // Update coordinates of the current macroblock
   if (slice->mbAffFrame) {
-    (*mb)->mb.x = (short) (   (mbIndex) % ((2*decoder->coding.width) / MB_BLOCK_SIZE));
-    (*mb)->mb.y = (short) (2*((mbIndex) / ((2*decoder->coding.width) / MB_BLOCK_SIZE)));
+    (*mb)->mb.x = (int16_t) (   (mbIndex) % ((2*decoder->coding.width) / MB_BLOCK_SIZE));
+    (*mb)->mb.y = (int16_t) (2*((mbIndex) / ((2*decoder->coding.width) / MB_BLOCK_SIZE)));
     (*mb)->mb.y += ((*mb)->mb.x & 0x01);
     (*mb)->mb.x >>= 1;
     }
@@ -740,7 +740,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
 
   // Save the slice number of this macroblock. When the macroblock below
   // is coded it will use this to decide if prediction for above is possible
-  (*mb)->sliceNum = (short) slice->curSliceIndex;
+  (*mb)->sliceNum = (int16_t) slice->curSliceIndex;
 
   checkNeighbours (*mb);
 
@@ -751,9 +751,9 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   // Reset syntax element entries in MB struct
   if (slice->sliceType != eSliceI) {
     if (slice->sliceType != eSliceB)
-      memset ((*mb)->mvd[0][0][0], 0, MB_BLOCK_dpS * 2 * sizeof(short));
+      memset ((*mb)->mvd[0][0][0], 0, MB_BLOCK_dpS * 2 * sizeof(int16_t));
     else
-      memset ((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(short));
+      memset ((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(int16_t));
     }
 
   memset ((*mb)->codedBlockPatterns, 0, 3 * sizeof(sCodedBlockPattern));
@@ -819,9 +819,9 @@ bool exitMacroblock (sSlice* slice, int eos_bit) {
 //{{{
 static void interpretMbModeP (sMacroBlock* mb) {
 
-  static const short ICBPTAB[6] = {0,16,32,15,31,47};
+  static const int16_t ICBPTAB[6] = {0,16,32,15,31,47};
 
-  short mbmode = mb->mbType;
+  int16_t mbmode = mb->mbType;
   if (mbmode < 4) {
     mb->mbType = mbmode;
     memset(mb->b8mode, mbmode, 4 * sizeof(char));
@@ -859,9 +859,9 @@ static void interpretMbModeP (sMacroBlock* mb) {
 //{{{
 static void interpretMbModeI (sMacroBlock* mb) {
 
-  static const short ICBPTAB[6] = {0,16,32,15,31,47};
+  static const int16_t ICBPTAB[6] = {0,16,32,15,31,47};
 
-  short mbmode = mb->mbType;
+  int16_t mbmode = mb->mbType;
   if (mbmode == 0) {
     mb->isIntraBlock = true;
     mb->mbType = I4MB;
@@ -911,10 +911,10 @@ static void interpretMbModeB (sMacroBlock* mb) {
     };
   //}}}
 
-  short i, mbmode;
+  int16_t i, mbmode;
 
   //--- set mbtype, b8type, and b8pdir ---
-  short mbtype  = mb->mbType;
+  int16_t mbtype  = mb->mbType;
   if (mbtype == 0) { // direct
     mbmode = 0;
     memset (mb->b8mode, 0, 4 * sizeof(char));
@@ -971,7 +971,7 @@ static void interpretMbModeSI (sMacroBlock* mb) {
   //sDecoder* decoder = mb->decoder;
   const int ICBPTAB[6] = {0,16,32,15,31,47};
 
-  short mbmode = mb->mbType;
+  int16_t mbmode = mb->mbType;
   if (mbmode == 0) {
     mb->isIntraBlock = true;
     mb->mbType = SI4MB;
@@ -1012,7 +1012,7 @@ static void readMotionInfoP (sMacroBlock* mb){
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-  short partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
+  int16_t partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
 
@@ -1046,13 +1046,13 @@ static void readMotionInfoP (sMacroBlock* mb){
   // record reference picture Ids for deblocking decisions
   for (j4 = 0; j4 < 4;++j4)  {
     mvInfo = &p_mv_info[j4][mb->blockX];
-    mvInfo->refPic[LIST_0] = list0[(short) mvInfo->refIndex[LIST_0]];
+    mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
     mvInfo++;
-    mvInfo->refPic[LIST_0] = list0[(short) mvInfo->refIndex[LIST_0]];
+    mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
     mvInfo++;
-    mvInfo->refPic[LIST_0] = list0[(short) mvInfo->refIndex[LIST_0]];
+    mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
     mvInfo++;
-    mvInfo->refPic[LIST_0] = list0[(short) mvInfo->refIndex[LIST_0]];
+    mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
     }
   }
 //}}}
@@ -1108,7 +1108,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   for (j4 = 0; j4 < 4; ++j4) {
     for (i4 = mb->blockX; i4 < mb->blockX + 4; ++i4) {
       sPicMotion *mvInfo = &p_mv_info[j4][i4];
-      short refIndex = mvInfo->refIndex[LIST_0];
+      int16_t refIndex = mvInfo->refIndex[LIST_0];
       mvInfo->refPic[LIST_0] = (refIndex >= 0) ? list0[refIndex] : NULL;
       refIndex = mvInfo->refIndex[LIST_1];
       mvInfo->refPic[LIST_1] = (refIndex >= 0) ? list1[refIndex] : NULL;

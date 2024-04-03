@@ -357,12 +357,12 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
             fsBot->mvInfo[j][i].mv[LIST_1] = frame->mvInfo[jj4][i].mv[LIST_1];
             fsBot->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj4][i].refIndex[LIST_0];
             if (fsBot->mvInfo[j][i].refIndex[LIST_0] >=0)
-              fsBot->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[4][(short) fsBot->mvInfo[j][i].refIndex[LIST_0]];
+              fsBot->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[4][(int16_t) fsBot->mvInfo[j][i].refIndex[LIST_0]];
             else
               fsBot->mvInfo[j][i].refPic[LIST_0] = NULL;
             fsBot->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj4][i].refIndex[LIST_1];
             if (fsBot->mvInfo[j][i].refIndex[LIST_1] >=0)
-              fsBot->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[5][(short) fsBot->mvInfo[j][i].refIndex[LIST_1]];
+              fsBot->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[5][(int16_t) fsBot->mvInfo[j][i].refIndex[LIST_1]];
             else
               fsBot->mvInfo[j][i].refPic[LIST_1] = NULL;
 
@@ -370,12 +370,12 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
             fsTop->mvInfo[j][i].mv[LIST_1] = frame->mvInfo[jj][i].mv[LIST_1];
             fsTop->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj][i].refIndex[LIST_0];
             if (fsTop->mvInfo[j][i].refIndex[LIST_0] >=0)
-              fsTop->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[2][(short) fsTop->mvInfo[j][i].refIndex[LIST_0]];
+              fsTop->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[2][(int16_t) fsTop->mvInfo[j][i].refIndex[LIST_0]];
             else
               fsTop->mvInfo[j][i].refPic[LIST_0] = NULL;
             fsTop->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj][i].refIndex[LIST_1];
             if (fsTop->mvInfo[j][i].refIndex[LIST_1] >=0)
-              fsTop->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[3][(short) fsTop->mvInfo[j][i].refIndex[LIST_1]];
+              fsTop->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[3][(int16_t) fsTop->mvInfo[j][i].refIndex[LIST_1]];
             else
               fsTop->mvInfo[j][i].refPic[LIST_1] = NULL;
             }
@@ -402,7 +402,7 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
             }
           else {
             fsTop->mvInfo[j][i].refIndex[LIST_0] = fsBot->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj][ii].refIndex[LIST_0];
-            fsTop->mvInfo[j][i].refPic[LIST_0] = fsBot->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_0][(short) frame->mvInfo[jj][ii].refIndex[LIST_0]];
+            fsTop->mvInfo[j][i].refPic[LIST_0] = fsBot->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_0][(int16_t) frame->mvInfo[jj][ii].refIndex[LIST_0]];
             }
 
           if (frame->mvInfo[jj][ii].refIndex[LIST_1] == -1) {
@@ -411,7 +411,7 @@ static void dpbSplitField (sDecoder* decoder, sFrameStore* frameStore) {
             }
           else {
             fsTop->mvInfo[j][i].refIndex[LIST_1] = fsBot->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj][ii].refIndex[LIST_1];
-            fsTop->mvInfo[j][i].refPic[LIST_1] = fsBot->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_1][(short) frame->mvInfo[jj][ii].refIndex[LIST_1]];
+            fsTop->mvInfo[j][i].refPic[LIST_1] = fsBot->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_1][(int16_t) frame->mvInfo[jj][ii].refIndex[LIST_1]];
             }
           }
         }
@@ -1433,8 +1433,8 @@ static void genPicListFromFrameList (ePicStructure currStructure, sFrameStore** 
       for ( ; top_idx<list_idx; top_idx++) {
         if (fs_list[top_idx]->isUsed & 1) {
           if (is_ref(fs_list[top_idx]->topField)) {
-            // short term ref pic
-            list[(short) *list_size] = fs_list[top_idx]->topField;
+            // int16_t term ref pic
+            list[(int16_t) *list_size] = fs_list[top_idx]->topField;
             (*list_size)++;
             top_idx++;
             break;
@@ -1445,8 +1445,8 @@ static void genPicListFromFrameList (ePicStructure currStructure, sFrameStore** 
       for ( ; bot_idx<list_idx; bot_idx++) {
         if (fs_list[bot_idx]->isUsed & 2) {
           if (is_ref(fs_list[bot_idx]->botField)) {
-            // short term ref pic
-            list[(short) *list_size] = fs_list[bot_idx]->botField;
+            // int16_t term ref pic
+            list[(int16_t) *list_size] = fs_list[bot_idx]->botField;
             (*list_size)++;
             bot_idx++;
             break;
@@ -1461,8 +1461,8 @@ static void genPicListFromFrameList (ePicStructure currStructure, sFrameStore** 
       for ( ; bot_idx<list_idx; bot_idx++) {
         if (fs_list[bot_idx]->isUsed & 2) {
           if (is_ref(fs_list[bot_idx]->botField)) {
-            // short term ref pic
-            list[(short) *list_size] = fs_list[bot_idx]->botField;
+            // int16_t term ref pic
+            list[(int16_t) *list_size] = fs_list[bot_idx]->botField;
             (*list_size)++;
             bot_idx++;
             break;
@@ -1473,8 +1473,8 @@ static void genPicListFromFrameList (ePicStructure currStructure, sFrameStore** 
       for ( ; top_idx<list_idx; top_idx++) {
         if (fs_list[top_idx]->isUsed & 1) {
           if (is_ref(fs_list[top_idx]->topField)) {
-            // short term ref pic
-            list[(short) *list_size] = fs_list[top_idx]->topField;
+            // int16_t term ref pic
+            list[(int16_t) *list_size] = fs_list[top_idx]->topField;
             (*list_size)++;
             top_idx++;
             break;
@@ -1736,11 +1736,11 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
     outputDpbFrame (dpb);
     }
 
-  // check for duplicate frame number in short term reference buffer
+  // check for duplicate frame number in int16_t term reference buffer
   if ((picture->usedForReference) && (!picture->isLongTerm))
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->frameNum == picture->frameNum)
-        error ("duplicate frameNum in short-term reference picture buffer");
+        error ("duplicate frameNum in int16_t-term reference picture buffer");
 
   // store at end of buffer
   insertPictureDpb (decoder, dpb->fs[dpb->usedSize], picture);
@@ -2150,7 +2150,7 @@ void initListsSliceP (sSlice* slice) {
       if (dpb->fsLongTermRef[i]->isUsed == 3)
         if (dpb->fsLongTermRef[i]->frame->isLongTerm)
           slice->listX[0][list0idx++] = dpb->fsLongTermRef[i]->frame;
-    qsort ((void*)&slice->listX[0][(short)slice->listXsize[0]], list0idx - slice->listXsize[0],
+    qsort ((void*)&slice->listX[0][(int16_t)slice->listXsize[0]], list0idx - slice->listXsize[0],
            sizeof(sPicture*), comparePicByLtPicNumAscending);
     slice->listXsize[0] = (char) list0idx;
     }
@@ -2242,9 +2242,9 @@ void initListsSliceB (sSlice* slice) {
           }
         }
       }
-    qsort ((void *)&slice->listX[0][(short) slice->listXsize[0]], list0idx - slice->listXsize[0],
+    qsort ((void *)&slice->listX[0][(int16_t) slice->listXsize[0]], list0idx - slice->listXsize[0],
            sizeof(sPicture*), comparePicByLtPicNumAscending);
-    qsort ((void *)&slice->listX[1][(short) slice->listXsize[0]], list0idx - slice->listXsize[0],
+    qsort ((void *)&slice->listX[1][(int16_t) slice->listXsize[0]], list0idx - slice->listXsize[0],
            sizeof(sPicture*), comparePicByLtPicNumAscending);
     slice->listXsize[0] = slice->listXsize[1] = (char)list0idx;
     }

@@ -36,7 +36,7 @@ struct sPicture {
   int           nonExisting;
   int           isSeperateColourPlane;
 
-  short         maxSliceId;
+  int16_t         maxSliceId;
 
   int           sizeX, sizeY, sizeXcr, sizeYcr;
   int           size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;

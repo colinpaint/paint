@@ -1825,11 +1825,11 @@ static void setCodingParam (sDecoder* decoder, sSps* sps) {
   // Fidelity Range Extensions stuff (part 1)
   decoder->coding.widthCr = 0;
   decoder->coding.heightCr = 0;
-  decoder->coding.bitDepthLuma = (short)(sps->bit_depth_luma_minus8 + 8);
+  decoder->coding.bitDepthLuma = (int16_t)(sps->bit_depth_luma_minus8 + 8);
   decoder->coding.bitDepthScale[0] = 1 << sps->bit_depth_luma_minus8;
   decoder->coding.bitDepthChroma = 0;
   if (sps->chromaFormatIdc != YUV400) {
-    decoder->coding.bitDepthChroma = (short)(sps->bit_depth_chroma_minus8 + 8);
+    decoder->coding.bitDepthChroma = (int16_t)(sps->bit_depth_chroma_minus8 + 8);
     decoder->coding.bitDepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
     }
 
@@ -2122,16 +2122,16 @@ static void mbAffPostProc (sDecoder* decoder) {
 
   for (uint32_t i = 0; i < picture->picSizeInMbs; i += 2) {
     if (picture->motion.mbField[i]) {
-      short x0;
-      short y0;
+      int16_t x0;
+      int16_t y0;
       getMbPos (decoder, i, decoder->mbSize[eLuma], &x0, &y0);
 
       sPixel tempBuffer[32][16];
       updateMbAff (imgY + y0, tempBuffer, x0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
       if (picture->chromaFormatIdc != YUV400) {
-        x0 = (short)((x0 * decoder->mbCrSizeX) >> 4);
-        y0 = (short)((y0 * decoder->mbCrSizeY) >> 4);
+        x0 = (int16_t)((x0 * decoder->mbCrSizeX) >> 4);
+        y0 = (int16_t)((y0 * decoder->mbCrSizeY) >> 4);
         updateMbAff (imgUV[0] + y0, tempBuffer, x0, decoder->mbCrSizeX, decoder->mbCrSizeY);
         updateMbAff (imgUV[1] + y0, tempBuffer, x0, decoder->mbCrSizeX, decoder->mbCrSizeY);
         }
@@ -2955,10 +2955,10 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
 
   if (decoder->activePps->hasDeblockFilterControl) {
     //{{{  read deblockFilter
-    slice->deblockFilterDisableIdc = (short)readUeV ("SLC disable_deblocking_filter_idc", s);
+    slice->deblockFilterDisableIdc = (int16_t)readUeV ("SLC disable_deblocking_filter_idc", s);
     if (slice->deblockFilterDisableIdc != 1) {
-      slice->deblockFilterC0Offset = (short)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
-      slice->deblockFilterBetaOffset = (short)(2 * readSeV ("SLC slice_beta_offset_div2", s));
+      slice->deblockFilterC0Offset = (int16_t)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
+      slice->deblockFilterBetaOffset = (int16_t)(2 * readSeV ("SLC slice_beta_offset_div2", s));
       }
     else
       slice->deblockFilterC0Offset = slice->deblockFilterBetaOffset = 0;
@@ -3357,8 +3357,8 @@ int decodeFrame (sDecoder* decoder) {
 
     if (((curHeader != eSOP) && (curHeader != eEOS)) ||
         ((curHeader == eSOP) && !decoder->picSliceIndex)) {
-       slice->curSliceIndex = (short)decoder->picSliceIndex;
-       decoder->picture->maxSliceId = (short)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
+       slice->curSliceIndex = (int16_t)decoder->picSliceIndex;
+       decoder->picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, decoder->picture->maxSliceId);
        if (decoder->picSliceIndex > 0) {
          copyPoc (*(decoder->sliceList), slice);
          decoder->sliceList[decoder->picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;

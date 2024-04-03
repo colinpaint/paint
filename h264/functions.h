@@ -24,8 +24,8 @@ enum eMBModeType {
   };
 //}}}
 
-static inline short smin (short a, short b) { return (short) (((a) < (b)) ? (a) : (b)); }
-static inline short smax (short a, short b) { return (short) (((a) > (b)) ? (a) : (b)); }
+static inline int16_t smin (int16_t a, int16_t b) { return (int16_t) (((a) < (b)) ? (a) : (b)); }
+static inline int16_t smax (int16_t a, int16_t b) { return (int16_t) (((a) > (b)) ? (a) : (b)); }
 static inline int imin (int a, int b) { return ((a) < (b)) ? (a) : (b); }
 static inline long lmin( long a, long b) { return ((a) < (b)) ? (a) : (b); }
 static inline int imin3 (int a, int b, int c) { return ((a) < (b)) ? imin(a, c) : imin(b, c); }
@@ -69,11 +69,11 @@ static inline distblk distblkmin (distblk a, distblk b) { return ((a) < (b)) ? (
 static inline distblk distblkmax (distblk a, distblk b) { return ((a) > (b)) ? (a) : (b); }
 
 //{{{
-static inline short sabs (short x) {
+static inline int16_t sabs (int16_t x) {
 
-  static const short SHORT_BITS = (sizeof(short) * CHAR_BIT) - 1;
-  short y = (short) (x >> SHORT_BITS);
-  return (short) ((x ^ y) - y);
+  static const int16_t SHORT_BITS = (sizeof(int16_t) * CHAR_BIT) - 1;
+  int16_t y = (int16_t) (x >> SHORT_BITS);
+  return (int16_t) ((x ^ y) - y);
   }
 //}}}
 //{{{
@@ -203,7 +203,7 @@ static inline int getBit (int64_t x, int n) {
   }
 //}}}
 //{{{
-static inline int is_intra_mb (short mbType) {
+static inline int is_intra_mb (int16_t mbType) {
   return (mbType==SI4MB || mbType==I4MB || mbType==I16MB || mbType==I8MB || mbType==IPCM);
   }
 //}}}

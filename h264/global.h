@@ -67,7 +67,7 @@ typedef int32_t  distblk;   // distortion type (for sMacroBlock)
 #define INVALIDINDEX     (-135792468)
 
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
-#define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the short start-code prefix
+#define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
 //}}}
 
 #include "win32.h"
@@ -348,18 +348,18 @@ struct sTextureContexts {
 //}}}
 //{{{
 struct sBlockPos {
-  short x;
-  short y;
+  int16_t x;
+  int16_t y;
   };
 //}}}
 //{{{
 struct sPixelPos {
   int   available;
   int   mbIndex;
-  short x;
-  short y;
-  short posX;
-  short posY;
+  int16_t x;
+  int16_t y;
+  int16_t posX;
+  int16_t posY;
   };
 //}}}
 //{{{
@@ -427,8 +427,8 @@ typedef struct DataPartition {
 //}}}
 //{{{  sMotionVec
 typedef struct {
-  short mvX;
-  short mvY;
+  int16_t mvX;
+  int16_t mvY;
   } sMotionVec;
 //}}}
 //{{{
@@ -468,11 +468,11 @@ struct sMacroBlock {
   bool isVblock;
   int     DeblockCall;
 
-  short   sliceNum;
+  int16_t   sliceNum;
   char    errorFlag;            // error indicator flag that enables conceal
   char    dplFlag;           // error indicator flag that signals a missing data dataPartition
-  short   deltaQuant;        // for rate control
-  short   listOffset;
+  int16_t   deltaQuant;        // for rate control
+  int16_t   listOffset;
 
   sMacroBlock* mbCabacUp;   // pointer to neighboring MB (eCabac)
   sMacroBlock* mbCabacLeft; // pointer to neighboring MB (eCabac)
@@ -481,8 +481,8 @@ struct sMacroBlock {
   sMacroBlock* mbLeft;  // neighbors for loopfilter
 
   // some storage of macroblock syntax elements for global access
-  short   mbType;
-  short   mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][blockY][blockX][x,y]
+  int16_t   mbType;
+  int16_t   mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][blockY][blockX][x,y]
   int     codedBlockPattern;
   sCodedBlockPattern codedBlockPatterns[3];
 
@@ -492,9 +492,9 @@ struct sMacroBlock {
   char  dpcmMode;
   char  chromaPredMode;       // chroma intra prediction mode
   char  skipFlag;
-  short deblockFilterDisableIdc;
-  short deblockFilterC0Offset;
-  short deblockFilterBetaOffset;
+  int16_t deblockFilterDisableIdc;
+  int16_t deblockFilterC0Offset;
+  int16_t deblockFilterBetaOffset;
 
   bool mbField;
 
@@ -511,7 +511,7 @@ struct sMacroBlock {
   // virtual methods
   void (*iTrans4x4) (sMacroBlock*, eColorPlane, int, int);
   void (*iTrans8x8) (sMacroBlock*, eColorPlane, int, int);
-  void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, short, sPicMotion**, int, int, int, int, int);
+  void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, int16_t, sPicMotion**, int, int, int, int, int);
   int  (*readStoreCBPblockBit) (sMacroBlock*, sCabacDecodeEnv*, int);
   char (*readRefPictureIndex) (sMacroBlock*, struct SyntaxElement*, struct DataPartition*, char, int);
   void (*readCompCoef4x4cabac) (sMacroBlock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
@@ -621,7 +621,7 @@ struct sSlice {
   uint32_t  mbIndex;
   uint32_t  numDecodedMbs;
 
-  short         curSliceIndex;
+  int16_t         curSliceIndex;
   int           codCount;    // Current count of number of skipped macroblocks in a row
   int           allrefzero;
 
@@ -673,9 +673,9 @@ struct sSlice {
   int*  absDiffPicNumMinus1[2];
   int*  longTermPicIndex[2];
 
-  short deblockFilterDisableIdc; // Disable deblocking filter on slice
-  short deblockFilterC0Offset;   // Alpha and C0 offset for filtering slice
-  short deblockFilterBetaOffset; // Beta offset for filtering slice
+  int16_t deblockFilterDisableIdc; // Disable deblocking filter on slice
+  int16_t deblockFilterC0Offset;   // Alpha and C0 offset for filtering slice
+  int16_t deblockFilterBetaOffset; // Beta offset for filtering slice
 
   int   ppsId;             // ID of picture parameter set the slice is referring to
   int   noDataPartitionB;  // non-zero, if data dataPartition B is lost
@@ -717,8 +717,8 @@ struct sSlice {
   int***         weightedPredWeight;   // weight in [list][index][component] order
   int***         weightedPredOffset;   // offset in [list][index][component] order
   int****        weightedBiPredWeight;  // weight in [list][fw_index][bw_index][component] order
-  short          wpRoundLuma;
-  short          wpRoundChroma;
+  int16_t          wpRoundLuma;
+  int16_t          wpRoundChroma;
 
   // for signalling to the neighbour logic that this is a deblocker call
   int            maxMbVmvR;   // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc
@@ -773,8 +773,8 @@ struct sCoding {
 
   // bits
   int picUnitBitSizeDisk;
-  short bitDepthLuma;
-  short bitDepthChroma;
+  int16_t bitDepthLuma;
+  int16_t bitDepthChroma;
   int bitDepthScale[2];
   int bitDepthLumaQpScale;
   int bitDepthChromaQpScale;
@@ -922,8 +922,8 @@ struct sDecoder {
   int mbSize[3][2];
   int mbSizeBlock[3][2];
   int mbSizeShift[3][2];
-  short bitDepthLuma;
-  short bitDepthChroma;
+  int16_t bitDepthLuma;
+  int16_t bitDepthChroma;
 
   // sCoding
   sCoding      coding;
@@ -990,7 +990,7 @@ struct sDecoder {
 
   // virtual functions
   void (*getNeighbour) (sMacroBlock*, int, int, int[2], sPixelPos*);
-  void (*getMbBlockPos) (sBlockPos*, int, short*, short*);
+  void (*getMbBlockPos) (sBlockPos*, int, int16_t*, int16_t*);
   void (*getStrengthV) (sMacroBlock*, int, int, sPicture*);
   void (*getStrengthH) (sMacroBlock*, int, int, sPicture*);
   void (*edgeLoopLumaV) (eColorPlane, sPixel**, uint8_t*, sMacroBlock*, int);

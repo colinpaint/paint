@@ -21,20 +21,20 @@
 #define ERC_BLOCK_EMPTY             0
 
 //{{{
-#define isSplitted(object_list,currMBNum) \
+#define isSplit(object_list,currMBNum) \
     ((object_list+((currMBNum)<<2))->regionMode >= REGMODE_SPLITTED)
 //}}}
 //{{{
 /* this can be used as isBlock(...,INTRA) or isBlock(...,INTER_COPY) */
 #define isBlock(object_list,currMBNum,comp,regMode) \
-    (isSplitted(object_list,currMBNum) ? \
+    (isSplit(object_list,currMBNum) ? \
      ((object_list+((currMBNum)<<2)+(comp))->regionMode == REGMODE_##regMode##_8x8) : \
      ((object_list+((currMBNum)<<2))->regionMode == REGMODE_##regMode))
 //}}}
 //{{{
 /* this can be used as getParam(...,mv) or getParam(...,xMin) or getParam(...,yMin) */
 #define getParam(object_list,currMBNum,comp,param) \
-    (isSplitted(object_list,currMBNum) ? \
+    (isSplit(object_list,currMBNum) ? \
      ((object_list+((currMBNum)<<2)+(comp))->param) : \
      ((object_list+((currMBNum)<<2))->param))
 //}}}
@@ -783,8 +783,8 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
   getMem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
   /* Update coordinates of the current concealed macroblock */
-  mb->mb.x = (short) (x/MB_BLOCK_SIZE);
-  mb->mb.y = (short) (y/MB_BLOCK_SIZE);
+  mb->mb.x = (int16_t) (x/MB_BLOCK_SIZE);
+  mb->mb.y = (int16_t) (y/MB_BLOCK_SIZE);
   mb->blockY = mb->mb.y * BLOCK_SIZE;
   mb->piccY = mb->mb.y * decoder->mbCrSizeY;
   mb->blockX = mb->mb.x * BLOCK_SIZE;
@@ -1087,7 +1087,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
           else
           {
             /* if neighbour MB is splitted, try both neighbour blocks */
-            for (predSplitted = isSplitted(object_list, predMBNum),
+            for (predSplitted = isSplit(object_list, predMBNum),
               compPred = compSplit1;
               predSplitted >= 0;
               compPred = compSplit2,
@@ -1377,8 +1377,8 @@ static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
 
   /* Update coordinates of the current concealed macroblock */
 
-  mb->mb.x = (short) (x/BLOCK_SIZE);
-  mb->mb.y = (short) (y/BLOCK_SIZE);
+  mb->mb.x = (int16_t) (x/BLOCK_SIZE);
+  mb->mb.y = (int16_t) (y/BLOCK_SIZE);
   mb->blockY = mb->mb.y * BLOCK_SIZE;
   mb->piccY = mb->mb.y * decoder->mbCrSizeY/4;
   mb->blockX = mb->mb.x * BLOCK_SIZE;
@@ -1608,8 +1608,8 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
         if(mv[2]<0)
           mv[2]=0;
 
-        dst->mvInfo[i][j].mv[LIST_0].mvX = (short) mv[0];
-        dst->mvInfo[i][j].mv[LIST_0].mvY = (short) mv[1];
+        dst->mvInfo[i][j].mv[LIST_0].mvX = (int16_t) mv[0];
+        dst->mvInfo[i][j].mv[LIST_0].mvY = (int16_t) mv[1];
         dst->mvInfo[i][j].refIndex[LIST_0] = (char) mv[2];
 
         x = (j) * multiplier;
@@ -1825,9 +1825,9 @@ void init_lists_for_non_reference_loss (sDpb* dpb, int currSliceType, ePicStruct
 
       decoder->sliceList[0]->listXsize[0] = decoder->sliceList[0]->listXsize[1] = (char) list0idx;
 
-      qsort ((void*)&decoder->sliceList[0]->listX[0][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], 
+      qsort ((void*)&decoder->sliceList[0]->listX[0][(int16_t) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], 
              sizeof(sPicture*), comparePicByLtPicNumAscending);
-      qsort ((void*)&decoder->sliceList[0]->listX[1][(short) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], 
+      qsort ((void*)&decoder->sliceList[0]->listX[1][(int16_t) decoder->sliceList[0]->listXsize[0]], list0idx-decoder->sliceList[0]->listXsize[0], 
              sizeof(sPicture*), comparePicByLtPicNumAscending);
       decoder->sliceList[0]->listXsize[0] = decoder->sliceList[0]->listXsize[1] = (char) list0idx;
       }
@@ -2211,7 +2211,7 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
     segments = errorVar->segments;
     for (int i = 0; i < errorVar->nOfSegments; i++) {
       segments->startMBPos = 0;
-      segments->endMBPos = (short) (nOfMBs - 1);
+      segments->endMBPos = (int16_t) (nOfMBs - 1);
       (segments++)->corrupted = 1; //! mark segments as corrupted
       }
 
@@ -2272,7 +2272,7 @@ void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables
   if ( errorVar && errorVar->conceal ) {
     errorVar->segmentCorrupted = 0;
     errorVar->segments[ segment ].corrupted = 0;
-    errorVar->segments[ segment ].startMBPos = (short) currMBNum;
+    errorVar->segments[ segment ].startMBPos = (int16_t) currMBNum;
     }
   }
 //}}}
@@ -2295,7 +2295,7 @@ void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables
 void ercStopSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables *errorVar ) {
 
   if ( errorVar && errorVar->conceal ) {
-    errorVar->segments[ segment ].endMBPos = (short) currMBNum;
+    errorVar->segments[ segment ].endMBPos = (int16_t) currMBNum;
     errorVar->segment++;
     }
   }

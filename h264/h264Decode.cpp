@@ -222,8 +222,8 @@ void initGlobalBuffers (sDecoder* decoder) {
     decoder->picPos = (sBlockPos*)calloc (decoder->coding.frameSizeMbs + 1, sizeof(sBlockPos));
     sBlockPos* blockPos = decoder->picPos;
     for (uint32_t i = 0; i < decoder->coding.frameSizeMbs+1; ++i) {
-      blockPos[i].x = (short)(i % decoder->coding.picWidthMbs);
-      blockPos[i].y = (short)(i / decoder->coding.picWidthMbs);
+      blockPos[i].x = (int16_t)(i % decoder->coding.picWidthMbs);
+      blockPos[i].y = (int16_t)(i / decoder->coding.picWidthMbs);
       }
     }
 

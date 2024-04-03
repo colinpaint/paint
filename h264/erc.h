@@ -32,8 +32,8 @@ typedef struct ObjectBuffer {
 //}}}
 //{{{  sErcSegment
 typedef struct ErcSegment {
-  short startMBPos;
-  short endMBPos;
+  int16_t startMBPos;
+  int16_t endMBPos;
   char  corrupted;
 } sErcSegment;
 //}}}

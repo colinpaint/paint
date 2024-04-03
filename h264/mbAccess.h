@@ -10,6 +10,6 @@ extern void get4x4Neighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPi
 extern void get4x4NeighbourBase (sMacroBlock* mb, int blockX, int blockY, int mbSize[2], sPixelPos *pixelPos);
 
 extern bool isMbAvailable (int mbIndex, sMacroBlock* mb);
-extern void getMbPos (sDecoder* decoder, int mbIndex, int mbSize[2], short* x, short* y);
-extern void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, short* x, short* y);
-extern void getMbBlockPosMbaff  (sBlockPos* picPos, int mbIndex, short* x, short* y);
+extern void getMbPos (sDecoder* decoder, int mbIndex, int mbSize[2], int16_t* x, int16_t* y);
+extern void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y);
+extern void getMbBlockPosMbaff  (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y);

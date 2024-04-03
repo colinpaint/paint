@@ -293,7 +293,7 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
       startCodeFound = 1;
     }
 
-  // found next startCode, long(4 bytes) or short(3bytes)
+  // found next startCode, long(4 bytes) or int16_t(3bytes)
   if (info3 == 1) {
     naluBufPtr -= 5;
     while (*(naluBufPtr--) == 0)

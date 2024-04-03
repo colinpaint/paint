@@ -83,11 +83,11 @@ void checkNeighboursNormal (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, short* x, short* y) {
+void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y) {
 
   sBlockPos* pPos = &picPos[ mbIndex ];
-  *x = (short) pPos->x;
-  *y = (short) pPos->y;
+  *x = (int16_t) pPos->x;
+  *y = (int16_t) pPos->y;
   }
 //}}}
 
@@ -116,20 +116,20 @@ void checkNeighboursMbAff (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-void getMbBlockPosMbaff (sBlockPos* picPos, int mbIndex, short* x, short* y) {
+void getMbBlockPosMbaff (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y) {
 
   sBlockPos* pPos = &picPos[ mbIndex >> 1 ];
-  *x = (short)  pPos->x;
-  *y = (short) ((pPos->y << 1) + (mbIndex & 0x01));
+  *x = (int16_t)  pPos->x;
+  *y = (int16_t) ((pPos->y << 1) + (mbIndex & 0x01));
   }
 //}}}
 
 //{{{
-void getMbPos (sDecoder* decoder, int mbIndex, int mbSize[2], short* x, short* y) {
+void getMbPos (sDecoder* decoder, int mbIndex, int mbSize[2], int16_t* x, int16_t* y) {
 
   decoder->getMbBlockPos (decoder->picPos, mbIndex, x, y);
-  (*x) = (short) ((*x) * mbSize[0]);
-  (*y) = (short) ((*y) * mbSize[1]);
+  (*x) = (int16_t) ((*x) * mbSize[0]);
+  (*y) = (int16_t) ((*y) * mbSize[1]);
   }
 //}}}
 
@@ -172,10 +172,10 @@ void getNonAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelP
 
   if (pixelPos->available || mb->DeblockCall) {
     sBlockPos* blockPos = &(mb->decoder->picPos[pixelPos->mbIndex]);
-    pixelPos->x = (short)(xN & (maxW - 1));
-    pixelPos->y = (short)(yN & (maxH - 1));
-    pixelPos->posX = (short)(pixelPos->x + blockPos->x * maxW);
-    pixelPos->posY = (short)(pixelPos->y + blockPos->y * maxH);
+    pixelPos->x = (int16_t)(xN & (maxW - 1));
+    pixelPos->y = (int16_t)(yN & (maxH - 1));
+    pixelPos->posX = (int16_t)(pixelPos->x + blockPos->x * maxW);
+    pixelPos->posY = (int16_t)(pixelPos->y + blockPos->y * maxH);
     }
   }
 //}}}
@@ -445,8 +445,8 @@ void getAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos*
     }
 
   if (pixelPos->available || mb->DeblockCall) {
-    pixelPos->x = (short) (xN & (maxW - 1));
-    pixelPos->y = (short) (yM & (maxH - 1));
+    pixelPos->x = (int16_t) (xN & (maxW - 1));
+    pixelPos->y = (int16_t) (yM & (maxH - 1));
     getMbPos (decoder, pixelPos->mbIndex, mbSize, &(pixelPos->posX), &(pixelPos->posY));
     pixelPos->posX = pixelPos->posX + pixelPos->x;
     pixelPos->posY = pixelPos->posY + pixelPos->y;

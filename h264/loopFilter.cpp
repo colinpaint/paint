@@ -454,9 +454,9 @@ static void edge_loop_chroma_hor_MBAff (sPixel** img, uint8_t *Strength, sMacroB
 //{{{
 static void get_strength_ver_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge, int mvlimit, sPicture* p) {
 
-  short  blkP, blkQ, idx;
+  int16_t  blkP, blkQ, idx;
   int    StrValue, i;
-  short  mb_x, mb_y;
+  int16_t  mb_x, mb_y;
   sPixelPos pixP;
   sDecoder* decoder = mb->decoder;
   sBlockPos *picPos = decoder->picPos;
@@ -465,8 +465,8 @@ static void get_strength_ver_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
   if ((p->sliceType==eSliceSP)||(p->sliceType==eSliceSI) ) {
     for (idx = 0; idx < MB_BLOCK_SIZE; ++idx ) {
       getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[eLuma], &pixP);
-      blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
-      blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
+      blkQ = (int16_t) ((idx & 0xFFFC) + (edge >> 2));
+      blkP = (int16_t) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
       MbP = &(decoder->mbData[pixP.mbIndex]);
       mb->mixedModeEdgeFlag = (uint8_t) (mb->mbField != MbP->mbField);
       Strength[idx] = (edge == 0) ? 4 : 3;
@@ -488,8 +488,8 @@ static void get_strength_ver_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
       else {
         getMbBlockPosMbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
         for (idx = 0; idx < MB_BLOCK_SIZE; idx += BLOCK_SIZE) {
-          blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
-          blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
+          blkQ = (int16_t) ((idx & 0xFFFC) + (edge >> 2));
+          blkP = (int16_t) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
 
           if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
             StrValue = 2;
@@ -550,8 +550,8 @@ static void get_strength_ver_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
     else {
       for (idx = 0; idx < MB_BLOCK_SIZE; ++idx ) {
         getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[eLuma], &pixP);
-        blkQ = (short) ((idx & 0xFFFC) + (edge >> 2));
-        blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
+        blkQ = (int16_t) ((idx & 0xFFFC) + (edge >> 2));
+        blkP = (int16_t) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
         MbP = &(decoder->mbData[pixP.mbIndex]);
         mb->mixedModeEdgeFlag = (uint8_t) (mb->mbField != MbP->mbField);
 
@@ -623,11 +623,11 @@ static void get_strength_ver_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
 //{{{
 static void get_strength_hor_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge, int mvlimit, sPicture* p) {
 
-  short  blkP, blkQ, idx;
-  short  blk_x, blk_x2, blk_y, blk_y2 ;
+  int16_t  blkP, blkQ, idx;
+  int16_t  blk_x, blk_x2, blk_y, blk_y2 ;
   int    StrValue, i;
   int    xQ, yQ = (edge < MB_BLOCK_SIZE ? edge : 1);
-  short  mb_x, mb_y;
+  int16_t  mb_x, mb_y;
   sMacroBlock *MbP;
   sPixelPos pixP;
   sDecoder* decoder = mb->decoder;
@@ -638,8 +638,8 @@ static void get_strength_hor_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
       xQ = idx;
       getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[eLuma], &pixP);
 
-      blkQ = (short) ((yQ & 0xFFFC) + (xQ >> 2));
-      blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
+      blkQ = (int16_t) ((yQ & 0xFFFC) + (xQ >> 2));
+      blkP = (int16_t) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
 
       MbP = &(decoder->mbData[pixP.mbIndex]);
       mb->mixedModeEdgeFlag = (uint8_t) (mb->mbField != MbP->mbField);
@@ -666,8 +666,8 @@ static void get_strength_hor_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
       for (idx = 0; idx < MB_BLOCK_SIZE; idx += BLOCK_SIZE ) {
         xQ = idx;
         getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[eLuma], &pixP);
-        blkQ = (short) ((yQ & 0xFFFC) + (xQ >> 2));
-        blkP = (short) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
+        blkQ = (int16_t) ((yQ & 0xFFFC) + (xQ >> 2));
+        blkP = (int16_t) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
         if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
           StrValue = 2;
         else {
@@ -678,10 +678,10 @@ static void get_strength_hor_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
             StrValue = 1;
           else {
             getMbBlockPosMbaff (picPos, mb->mbIndexX, &mb_x, &mb_y);
-            blk_y  = (short) ((mb_y<<2) + (blkQ >> 2));
-            blk_x  = (short) ((mb_x<<2) + (blkQ  & 3));
-            blk_y2 = (short) (pixP.posY >> 2);
-            blk_x2 = (short) (pixP.posX >> 2);
+            blk_y  = (int16_t) ((mb_y<<2) + (blkQ >> 2));
+            blk_x  = (int16_t) ((mb_x<<2) + (blkQ  & 3));
+            blk_y2 = (int16_t) (pixP.posY >> 2);
+            blk_x2 = (int16_t) (pixP.posX >> 2);
 
             {
               sPicMotion *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
@@ -795,8 +795,8 @@ static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
               // for everything else, if no coefs, but vector difference >= 1 set Strength=1
               int blk_y  = blockPos.y + (blkQ >> 2);
               int blk_x  = blockPos.x + (blkQ  & 3);
-              int blk_y2 = (short)(get_pos_y_luma(neighbour,  0) + idx) >> 2;
-              int blk_x2 = (short)(get_pos_x_luma(neighbour, xQ)      ) >> 2;
+              int blk_y2 = (int16_t)(get_pos_y_luma(neighbour,  0) + idx) >> 2;
+              int blk_x2 = (int16_t)(get_pos_x_luma(neighbour, xQ)      ) >> 2;
               sPicMotion *mv_info_p = &p->mvInfo[blk_y ][blk_x ];
               sPicMotion *mv_info_q = &p->mvInfo[blk_y2][blk_x2];
               sPicture* ref_p0 = mv_info_p->refPic[LIST_0];
@@ -904,7 +904,7 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
               int blk_y = blockPos.y + (blkQ >> 2);
               int blk_x = blockPos.x + (blkQ  & 3);
               int blk_y2 = get_pos_y_luma(neighbor,yQ) >> 2;
-              int blk_x2 = ((short)(get_pos_x_luma(neighbor,0)) >> 2) + idx;
+              int blk_x2 = ((int16_t)(get_pos_x_luma(neighbor,0)) >> 2) + idx;
 
               sPicMotion* mv_info_p = &p->mvInfo[blk_y ][blk_x ];
               sPicMotion* mv_info_q = &p->mvInfo[blk_y2][blk_x2];
@@ -1406,7 +1406,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
   else {
     int edge;
     uint8_t Strength[16];
-    short mb_x, mb_y;
+    int16_t mb_x, mb_y;
     int filterNon8x8LumaEdgesFlag[4] = {1,1,1,1};
     int filterLeftMbEdgeFlag;
     int filterTopMbEdgeFlag;
@@ -1566,7 +1566,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
 
   else {
     int edge;
-    short mb_x, mb_y;
+    int16_t mb_x, mb_y;
     int filterNon8x8LumaEdgesFlag[4] = {1,1,1,1};
     int filterLeftMbEdgeFlag;
     int filterTopMbEdgeFlag;
@@ -1662,7 +1662,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
 
   else {
     int edge;
-    short mb_x, mb_y;
+    int16_t mb_x, mb_y;
     int filterNon8x8LumaEdgesFlag[4] = {1,1,1,1};
     int filterLeftMbEdgeFlag;
     int filterTopMbEdgeFlag;

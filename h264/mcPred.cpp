@@ -236,14 +236,14 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                     mvInfo->refPic[LIST_1] = list1[0];
                     if (mv_scale == 9999 || slice->listX[LIST_0+listOffset][mapped_idx]->isLongTerm) {
                       mvInfo->mv[LIST_0].mvX = colocated->mv[refList].mvX;
-                      mvInfo->mv[LIST_0].mvY = (short) mvY;
+                      mvInfo->mv[LIST_0].mvY = (int16_t) mvY;
                       mvInfo->mv[LIST_1] = kZeroMv;
                       }
                     else {
-                      mvInfo->mv[LIST_0].mvX = (short)((mv_scale * colocated->mv[refList].mvX + 128 ) >> 8);
-                      mvInfo->mv[LIST_0].mvY = (short)((mv_scale * mvY/*colocated->mv[refList].mvY*/ + 128 ) >> 8);
-                      mvInfo->mv[LIST_1].mvX = (short)(mvInfo->mv[LIST_0].mvX - colocated->mv[refList].mvX);
-                      mvInfo->mv[LIST_1].mvY = (short)(mvInfo->mv[LIST_0].mvY - mvY/*colocated->mv[refList].mvY*/);
+                      mvInfo->mv[LIST_0].mvX = (int16_t)((mv_scale * colocated->mv[refList].mvX + 128 ) >> 8);
+                      mvInfo->mv[LIST_0].mvY = (int16_t)((mv_scale * mvY/*colocated->mv[refList].mvY*/ + 128 ) >> 8);
+                      mvInfo->mv[LIST_1].mvX = (int16_t)(mvInfo->mv[LIST_0].mvX - colocated->mv[refList].mvX);
+                      mvInfo->mv[LIST_1].mvY = (int16_t)(mvInfo->mv[LIST_0].mvY - mvY/*colocated->mv[refList].mvY*/);
                       }
                     }
                  }
@@ -407,7 +407,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             }
             else
             {
-              mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+              mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
               mvInfo->refPic[LIST_1] = NULL;
               mvInfo->mv[LIST_0] = pmvl0;
               mvInfo->mv[LIST_1] = kZeroMv;
@@ -429,7 +429,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             else
             {
               mvInfo->refPic[LIST_0] = NULL;
-              mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+              mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
               mvInfo->mv[LIST_0] = kZeroMv;
               mvInfo->mv[LIST_1] = pmvl1;
               mvInfo->refIndex[LIST_0] = -1;
@@ -446,7 +446,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             }
             else
             {
-              mvInfo->refPic[LIST_1] = list1[(short) l0_rFrame];
+              mvInfo->refPic[LIST_1] = list1[(int16_t) l0_rFrame];
               mvInfo->mv[LIST_0] = pmvl0;
               mvInfo->refIndex[LIST_0] = l0_rFrame;
             }
@@ -459,7 +459,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
             }
             else
             {
-              mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+              mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
               mvInfo->mv[LIST_1] = pmvl1;
               mvInfo->refIndex[LIST_1] = l1_rFrame;
             }
@@ -479,7 +479,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
           else if (l0_rFrame < 0)
           {
             mvInfo->refPic[LIST_0] = NULL;
-            mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+            mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
             mvInfo->mv[LIST_0] = kZeroMv;
             mvInfo->mv[LIST_1] = pmvl1;
             mvInfo->refIndex[LIST_0] = -1;
@@ -487,7 +487,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
           }
           else  if (l1_rFrame < 0)
           {
-            mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+            mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
             mvInfo->refPic[LIST_1] = NULL;
 
             mvInfo->mv[LIST_0] = pmvl0;
@@ -497,8 +497,8 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
           }
           else
           {
-            mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
-            mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+            mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
+            mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
             mvInfo->mv[LIST_0] = pmvl0;
             mvInfo->mv[LIST_1] = pmvl1;
             mvInfo->refIndex[LIST_0] = l0_rFrame;
@@ -564,7 +564,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 }
                 else
                 {
-                  mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+                  mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
                   mvInfo->refPic[LIST_1] = NULL;
                   mvInfo->mv[LIST_0] = pmvl0;
                   mvInfo->mv[LIST_1] = kZeroMv;
@@ -586,7 +586,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 else
                 {
                   mvInfo->refPic[LIST_0] = NULL;
-                  mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+                  mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                   mvInfo->mv[LIST_0] = kZeroMv;
                   mvInfo->mv[LIST_1] = pmvl1;
                   mvInfo->refIndex[LIST_0] = -1;
@@ -603,7 +603,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 }
                 else
                 {
-                  mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+                  mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
                   mvInfo->mv[LIST_0] = pmvl0;
                   mvInfo->refIndex[LIST_0] = l0_rFrame;
                 }
@@ -616,7 +616,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
                 }
                 else
                 {
-                  mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+                  mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                   mvInfo->mv[LIST_1] = pmvl1;
                   mvInfo->refIndex[LIST_1] = l1_rFrame;
                 }
@@ -637,7 +637,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
               }
               else if (l1_rFrame == -1)
               {
-                mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
+                mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
                 mvInfo->refPic[LIST_1] = NULL;
                 mvInfo->mv[LIST_0] = pmvl0;
                 mvInfo->mv[LIST_1] = kZeroMv;
@@ -647,7 +647,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
               else if (l0_rFrame == -1)
               {
                 mvInfo->refPic[LIST_0] = NULL;
-                mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+                mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                 mvInfo->mv[LIST_0] = kZeroMv;
                 mvInfo->mv[LIST_1] = pmvl1;
                 mvInfo->refIndex[LIST_0] = -1;
@@ -655,8 +655,8 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
               }
               else
               {
-                mvInfo->refPic[LIST_0] = list0[(short) l0_rFrame];
-                mvInfo->refPic[LIST_1] = list1[(short) l1_rFrame];
+                mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
+                mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                 mvInfo->mv[LIST_0] = pmvl0;
                 mvInfo->mv[LIST_1] = pmvl1;
                 mvInfo->refIndex[LIST_0] = l0_rFrame;
@@ -1561,7 +1561,7 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
                              sPixel *block1, sPixel *block2, int totalScale, sPixel no_ref_value, sDecoder* decoder)
 {
   sPixel *img1,*img2;
-  short dx,dy;
+  int16_t dx,dy;
   int span = curRef->chromaStride;
   if (curRef->noRef) {
     //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
@@ -1570,8 +1570,8 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
   }
   else
   {
-    dx = (short) (x_pos & subpelX);
-    dy = (short) (y_pos & subpelY);
+    dx = (int16_t) (x_pos & subpelX);
+    dy = (int16_t) (y_pos & subpelY);
     x_pos = x_pos >> shiftpelX;
     y_pos = y_pos >> shiftpelY;
     //clip MV;
@@ -1587,26 +1587,26 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
     }
     else
     {
-      short dxcur = (short) (subpelX + 1 - dx);
-      short dycur = (short) (subpelY + 1 - dy);
-      short w00 = dxcur * dycur;
+      int16_t dxcur = (int16_t) (subpelX + 1 - dx);
+      int16_t dycur = (int16_t) (subpelY + 1 - dy);
+      int16_t w00 = dxcur * dycur;
       if (dx == 0)
       {
-        short w01 = dxcur * dy;
+        int16_t w01 = dxcur * dy;
         get_chroma_0X(block1, img1, span, vert_block_size, blockSizeX, w00, w01, totalScale);
         get_chroma_0X(block2, img2, span, vert_block_size, blockSizeX, w00, w01, totalScale);
       }
       else if (dy == 0)
       {
-        short w10 = dx * dycur;
+        int16_t w10 = dx * dycur;
         get_chroma_X0(block1, img1, span, vert_block_size, blockSizeX, w00, w10, totalScale);
         get_chroma_X0(block2, img2, span, vert_block_size, blockSizeX, w00, w10, totalScale);
       }
       else
       {
-        short w01 = dxcur * dy;
-        short w10 = dx * dycur;
-        short w11 = dx * dy;
+        int16_t w01 = dxcur * dy;
+        int16_t w10 = dx * dycur;
+        int16_t w11 = dx * dy;
         get_chroma_XY(block1, img1, span, vert_block_size, blockSizeX, w00, w01, w10, w11, totalScale);
         get_chroma_XY(block2, img2, span, vert_block_size, blockSizeX, w00, w01, w10, w11, totalScale);
       }
@@ -1834,8 +1834,8 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
   int ioff = (i << 2);
   int joff = (j << 2);
   sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
-  short       refIndex = mvInfo->refIndex[predDir];
-  short       ref_idx_wp = refIndex;
+  int16_t       refIndex = mvInfo->refIndex[predDir];
+  int16_t       ref_idx_wp = refIndex;
   sMotionVec *mv_array = &mvInfo->mv[predDir];
   int listOffset = mb->listOffset;
   sPicture *list = slice->listX[listOffset + predDir][refIndex];
@@ -1926,7 +1926,7 @@ static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* pic
   int joff = (j << 2);
   sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
   sMotionVec *mv_array = &mvInfo->mv[predDir];
-  short          refIndex =  mvInfo->refIndex[predDir];
+  int16_t          refIndex =  mvInfo->refIndex[predDir];
   int listOffset = mb->listOffset;
   sPicture *list = slice->listX[listOffset + predDir][refIndex];
   int vec1_x, vec1_y;
@@ -2006,8 +2006,8 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
   sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
   sMotionVec *l0_mv_array = &mvInfo->mv[LIST_0];
   sMotionVec *l1_mv_array = &mvInfo->mv[LIST_1];
-  short l0_refframe = mvInfo->refIndex[LIST_0];
-  short l1_refframe = mvInfo->refIndex[LIST_1];
+  int16_t l0_refframe = mvInfo->refIndex[LIST_0];
+  int16_t l1_refframe = mvInfo->refIndex[LIST_1];
   int l0_ref_idx  = (mb->mbField && weightedBiPredIdc == 1) ? l0_refframe >> 1: l0_refframe;
   int l1_ref_idx  = (mb->mbField && weightedBiPredIdc == 1) ? l1_refframe >> 1: l1_refframe;
 
@@ -2141,8 +2141,8 @@ static void perform_mc_bi (sMacroBlock* mb, eColorPlane plane, sPicture* picture
   sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
   sMotionVec *l0_mv_array = &mvInfo->mv[LIST_0];
   sMotionVec *l1_mv_array = &mvInfo->mv[LIST_1];
-  short l0_refframe = mvInfo->refIndex[LIST_0];
-  short l1_refframe = mvInfo->refIndex[LIST_1];
+  int16_t l0_refframe = mvInfo->refIndex[LIST_0];
+  int16_t l1_refframe = mvInfo->refIndex[LIST_1];
   int listOffset = mb->listOffset;
 
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
