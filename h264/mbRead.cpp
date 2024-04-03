@@ -25,7 +25,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
 
   int bi, bj, bx, by, dec;
   sSlice* slice = mb->slice;
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
 
   int mostProbableIntraPredMode;
@@ -73,10 +73,10 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
       mostProbableIntraPredMode : se.value1 + (se.value1 >= mostProbableIntraPredMode);
 
     //set, loop 4x4s in the subblock for 8x8 prediction setting
-    slice->predMode[bj][bi] = (byte) dec;
-    slice->predMode[bj][bi+1] = (byte) dec;
-    slice->predMode[bj+1][bi] = (byte) dec;
-    slice->predMode[bj+1][bi+1] = (byte) dec;
+    slice->predMode[bj][bi] = (uint8_t) dec;
+    slice->predMode[bj][bi+1] = (uint8_t) dec;
+    slice->predMode[bj+1][bi] = (uint8_t) dec;
+    slice->predMode[bj+1][bi+1] = (uint8_t) dec;
     }
   }
 //}}}
@@ -85,7 +85,7 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
 
   int b8, bi, bj, bx, by, dec;
   sSlice* slice = mb->slice;
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
 
   int mostProbableIntraPredMode;
@@ -137,10 +137,10 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
 
     //set
     //loop 4x4s in the subblock for 8x8 prediction setting
-    slice->predMode[bj][bi] = (byte)dec;
-    slice->predMode[bj][bi+1] = (byte)dec;
-    slice->predMode[bj+1][bi] = (byte)dec;
-    slice->predMode[bj+1][bi+1] = (byte)dec;
+    slice->predMode[bj][bi] = (uint8_t)dec;
+    slice->predMode[bj][bi+1] = (uint8_t)dec;
+    slice->predMode[bj+1][bi] = (uint8_t)dec;
+    slice->predMode[bj+1][bi+1] = (uint8_t)dec;
   }
 }
 //}}}
@@ -150,7 +150,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
   int b8,i,j,bi,bj,bx,by;
   sSyntaxElement se;
   sSlice* slice = mb->slice;
-  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDecoder *decoder = mb->decoder;
   sBlockPos *picPos = decoder->picPos;
 
@@ -206,7 +206,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
         leftIntraPredMode = (left_block.available &&(ls == 0)) ? slice->predMode[left_block.posY][left_block.posX] : -1;
         mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ?
           DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
-        slice->predMode[bj][bi] = (byte) ((se.value1 == -1) ?
+        slice->predMode[bj][bi] = (uint8_t) ((se.value1 == -1) ?
           mostProbableIntraPredMode : se.value1 + (se.value1 >= mostProbableIntraPredMode));
         }
       }
@@ -217,7 +217,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 static void read_ipred_4x4_modes (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDecoder* decoder = mb->decoder;
   sBlockPos* picPos = decoder->picPos;
 
@@ -281,7 +281,7 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
         upIntraPredMode = (top_block.available  &&(ts == 0)) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
         leftIntraPredMode = (left_block.available &&(ls == 0)) ? slice->predMode[left_block.posY][left_block.posX] : -1;
         mostProbableIntraPredMode  = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
-        slice->predMode[bj][bi] = (byte)((se.value1 == -1) ?
+        slice->predMode[bj][bi] = (uint8_t)((se.value1 == -1) ?
           mostProbableIntraPredMode : se.value1 + (se.value1 >= mostProbableIntraPredMode));
         }
       }
@@ -310,7 +310,7 @@ static void readIpredModes (sMacroBlock* mb) {
   if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444)) {
     sSyntaxElement se;
     sDataPartition* dataPartition;
-    const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+    const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     sDecoder* decoder = mb->decoder;
 
     se.type = SE_INTRAPREDMODE;
@@ -423,14 +423,14 @@ static void readIPCMcoeffs (sSlice* slice, sDataPartition* dataPartition) {
 
   sDecoder* decoder = slice->decoder;
 
-  //For eCabac, we don't need to read bits to let stream byte aligned
+  //For eCabac, we don't need to read bits to let stream uint8_t aligned
   //  because we have variable for integer bytes position
   if (decoder->activePps->entropyCoding == eCabac) {
     readIPCMcabac (slice, dataPartition);
     initIPCMdecoding (slice);
     }
   else {
-    // read bits to let stream byte aligned
+    // read bits to let stream uint8_t aligned
     sSyntaxElement se;
     if (((dataPartition->stream->bitStreamOffset) & 0x07) != 0) {
       se.len = (8 - ((dataPartition->stream->bitStreamOffset) & 0x07));
@@ -490,7 +490,7 @@ static void resetCoeffs (sMacroBlock* mb) {
   sDecoder* decoder = mb->decoder;
 
   if (decoder->activePps->entropyCoding == eCavlc)
-    memset (decoder->nzCoeff[mb->mbIndexX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(byte));
+    memset (decoder->nzCoeff[mb->mbIndexX][0][0], 0, 3 * BLOCK_PIXELS * sizeof(uint8_t));
   }
 //}}}
 //{{{
@@ -664,7 +664,7 @@ static void readIntraMacroblock (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-static void readIntra4x4macroblocCavlc (sMacroBlock* mb, const byte* dpMap)
+static void readIntra4x4macroblocCavlc (sMacroBlock* mb, const uint8_t* dpMap)
 {
   sSlice* slice = mb->slice;
 
@@ -694,7 +694,7 @@ static void readIntra4x4macroblocCavlc (sMacroBlock* mb, const byte* dpMap)
   }
 //}}}
 //{{{
-static void readIntra4x4macroblockCabac (sMacroBlock* mb, const byte* dpMap) {
+static void readIntra4x4macroblockCabac (sMacroBlock* mb, const uint8_t* dpMap) {
 
 
   // transform size flag for INTRA_4x4 and INTRA_8x8 modes
@@ -747,7 +747,7 @@ static void readInterMacroblock (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-static void readIPCMmacroblock (sMacroBlock* mb, const byte* dpMap) {
+static void readIPCMmacroblock (sMacroBlock* mb, const uint8_t* dpMap) {
 
   sSlice* slice = mb->slice;
   mb->noMbPartLessThan8x8Flag = true;
@@ -804,7 +804,7 @@ static void readIcavlcMacroblock (sMacroBlock* mb) {
   sSyntaxElement se;
   int mbNum = mb->mbIndexX;
 
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sPicture* picture = slice->picture;
   sPicMotionOld* motion = &picture->motion;
 
@@ -831,7 +831,7 @@ static void readIcavlcMacroblock (sMacroBlock* mb) {
   if (!dataPartition->stream->errorFlag)
     mb->errorFlag = 0;
 
-  motion->mbField[mbNum] = (byte) mb->mbField;
+  motion->mbField[mbNum] = (uint8_t) mb->mbField;
   mb->blockYaff = ((slice->mbAffFrame) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
   slice->siBlock[mb->mb.y][mb->mb.x] = 0;
   slice->interpretMbMode (mb);
@@ -852,7 +852,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
   sSyntaxElement se;
   int mbNum = mb->mbIndexX;
 
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
@@ -891,7 +891,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
 
     // update the list offset;
     mb->listOffset = 0;
-    motion->mbField[mbNum] = (byte) false;
+    motion->mbField[mbNum] = (uint8_t) false;
     mb->blockYaff = mb->blockY;
     slice->siBlock[mb->mb.y][mb->mb.x] = 0;
     slice->interpretMbMode (mb);
@@ -969,7 +969,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
       }
     // update the list offset;
     mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4: 2): 0;
-    motion->mbField[mbNum] = (byte) mb->mbField;
+    motion->mbField[mbNum] = (uint8_t) mb->mbField;
     mb->blockYaff = (mb->mbField) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
     slice->siBlock[mb->mb.y][mb->mb.x] = 0;
     slice->interpretMbMode (mb);
@@ -1005,7 +1005,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
   sSlice* slice = mb->slice;
   int mbNum = mb->mbIndexX;
   sSyntaxElement se;
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
@@ -1118,7 +1118,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
 
     // update the list offset;
     mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4: 2): 0;
-    motion->mbField[mbNum] = (byte)mb->mbField;
+    motion->mbField[mbNum] = (uint8_t)mb->mbField;
     mb->blockYaff = (mb->mbField) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
     slice->siBlock[mb->mb.y][mb->mb.x] = 0;
     slice->interpretMbMode (mb);
@@ -1170,7 +1170,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
   sSyntaxElement se;
   int mbNum = mb->mbIndexX;
 
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sPicture* picture = slice->picture;
   sPicMotionOld* motion = &picture->motion;
 
@@ -1207,7 +1207,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
   if (!dataPartition->stream->errorFlag)
     mb->errorFlag = 0;
 
-  motion->mbField[mbNum] = (byte) mb->mbField;
+  motion->mbField[mbNum] = (uint8_t) mb->mbField;
   mb->blockYaff = ((slice->mbAffFrame) && (mb->mbField)) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
   slice->siBlock[mb->mb.y][mb->mb.x] = 0;
   slice->interpretMbMode (mb);
@@ -1256,7 +1256,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
   sDecoder* decoder = mb->decoder;
   int mbNum = mb->mbIndexX;
   sSyntaxElement se;
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
@@ -1289,7 +1289,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
         mb->errorFlag = 0;
       }
 
-    motion->mbField[mbNum] = (byte) false;
+    motion->mbField[mbNum] = (uint8_t) false;
     mb->blockYaff = mb->blockY;
     slice->siBlock[mb->mb.y][mb->mb.x] = 0;
     slice->interpretMbMode (mb);
@@ -1362,7 +1362,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
         mb->errorFlag = 0;
       }
 
-    motion->mbField[mbNum] = (byte) mb->mbField;
+    motion->mbField[mbNum] = (uint8_t) mb->mbField;
     mb->blockYaff = (mb->mbField) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
     slice->siBlock[mb->mb.y][mb->mb.x] = 0;
     slice->interpretMbMode(mb);
@@ -1404,7 +1404,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
   int mbNum = mb->mbIndexX;
   sSyntaxElement se;
 
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
   if (slice->mbAffFrame == 0) {
     sPicture* picture = slice->picture;
@@ -1441,7 +1441,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
         mb->errorFlag = 0;
       }
 
-    motion->mbField[mbNum] = (byte) false;
+    motion->mbField[mbNum] = (uint8_t) false;
     mb->blockYaff = mb->blockY;
     slice->siBlock[mb->mb.y][mb->mb.x] = 0;
     slice->interpretMbMode (mb);
@@ -1517,7 +1517,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
         mb->errorFlag = 0;
       }
 
-    motion->mbField[mbNum] = (byte) mb->mbField;
+    motion->mbField[mbNum] = (uint8_t) mb->mbField;
     mb->blockYaff = (mb->mbField) ? (mbNum & 0x01) ? (mb->blockY - 4)>>1 : mb->blockY >> 1 : mb->blockY;
     slice->siBlock[mb->mb.y][mb->mb.x] = 0;
     slice->interpretMbMode (mb);

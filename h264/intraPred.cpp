@@ -1130,7 +1130,7 @@ static int intra_pred_8x8_normal (sMacroBlock* mb, eColorPlane plane, int ioff, 
 
   int blockX = (mb->blockX) + (ioff >> 2);
   int blockY = (mb->blockY) + (joff >> 2);
-  byte predmode = mb->slice->predMode[blockY][blockX];
+  uint8_t predmode = mb->slice->predMode[blockY][blockX];
 
   mb->dpcmMode = predmode;  //For residual DPCM
 
@@ -2189,7 +2189,7 @@ static int intra_pred_8x8_mbaff (sMacroBlock* mb,
 {
   int blockX = (mb->blockX) + (ioff >> 2);
   int blockY = (mb->blockY) + (joff >> 2);
-  byte predmode = mb->slice->predMode[blockY][blockX];
+  uint8_t predmode = mb->slice->predMode[blockY][blockX];
 
   mb->dpcmMode = predmode;  //For residual DPCM
 

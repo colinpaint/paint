@@ -214,7 +214,7 @@ static int outputDpbFrame (sDpb* dpb) {
 // picMotion
 //{{{
 void allocPicMotion (sPicMotionOld* motion, int sizeY, int sizeX) {
-  motion->mbField = (byte*)calloc (sizeY * sizeX, sizeof(byte));
+  motion->mbField = (uint8_t*)calloc (sizeY * sizeX, sizeof(uint8_t));
   }
 //}}}
 //{{{

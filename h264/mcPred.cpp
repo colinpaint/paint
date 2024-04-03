@@ -769,7 +769,7 @@ static void weighted_bi_prediction (sPixel *mbPred,
 //{{{
 static void get_block_00 (sPixel *block, sPixel* pixel, int span, int blockSizeY)
 {
-  // fastest to just move an entire block, since block is a temp block is a 256 byte block (16x16)
+  // fastest to just move an entire block, since block is a temp block is a 256 uint8_t block (16x16)
   // writes 2 lines of 16 sPixel 1 to 8 times depending in blockSizeY
   int j;
 

@@ -1068,7 +1068,7 @@ int mbPredIpcm (sMacroBlock* mb) {
 
   // for cavlc: Set the nzCoeff to 16.
   // These parameters are to be used in cavlc decoding of neighbour blocks
-  memset (decoder->nzCoeff[mb->mbIndexX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(byte));
+  memset (decoder->nzCoeff[mb->mbIndexX][0][0], 16, 3 * BLOCK_PIXELS * sizeof(uint8_t));
 
   // for cabac decoding of MB skip flag
   mb->skipFlag = 0;

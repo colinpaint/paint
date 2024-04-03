@@ -14,7 +14,7 @@ static void allocDecodedPicBuffers (sDecoder* decoder, sDecodedPic* decodedPic, 
     memFree (decodedPic->yBuf);
 
     decodedPic->bufSize = frameSize;
-    decodedPic->yBuf = (byte*)memAlloc (decodedPic->bufSize);
+    decodedPic->yBuf = (uint8_t*)memAlloc (decodedPic->bufSize);
     decodedPic->uBuf = decodedPic->yBuf + lumaSize;
     decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
 

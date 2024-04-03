@@ -1,3 +1,3 @@
 #pragma once
 
-void processSei (byte* payload, int naluLen, sDecoder* decoder, sSlice* slice);
+void processSei (uint8_t* payload, int naluLen, sDecoder* decoder, sSlice* slice);

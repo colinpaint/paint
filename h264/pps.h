@@ -27,7 +27,7 @@ struct sPps{
   uint32_t sliceGroupChangeRateMius1;     // ue(v)
   // sliceGroupMapType 6
   uint32_t picSizeMapUnitsMinus1;         // ue(v)
-  byte*     sliceGroupId;                     // complete MBAmap u(v)
+  uint8_t*     sliceGroupId;                     // complete MBAmap u(v)
   //}}}
 
   int       numRefIndexL0defaultActiveMinus1; // ue(v)

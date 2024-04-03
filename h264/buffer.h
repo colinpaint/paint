@@ -4,7 +4,7 @@
 #define MAX_LIST_SIZE 33
 //{{{  
 struct sPicMotionOld {
-  byte* mbField; // field macroblock indicator
+  uint8_t* mbField; // field macroblock indicator
   };
 //}}}
 //{{{  
@@ -12,7 +12,7 @@ struct sPicMotion {
   sPicture*  refPic[2];   // referrence picture pointer
   sMotionVec mv[2];       // motion vector
   char       refIndex[2]; // reference picture   [list][subblockY][subblockX]
-  byte       slice_no;
+  uint8_t       slice_no;
   };
 //}}}
 //{{{  
@@ -30,7 +30,7 @@ struct sPicture {
   int           longTermPicNum;
   int           longTermFrameIndex;
 
-  byte          isLongTerm;
+  uint8_t          isLongTerm;
   int           usedForReference;
   int           isOutput;
   int           nonExisting;

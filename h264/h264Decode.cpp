@@ -167,7 +167,7 @@ sDataPartition* allocDataPartitions (int n) {
     if (dataPartition->stream == NULL)
       error ("allocDataPartitions: Memory allocation for sBitStream failed");
 
-    dataPartition->stream->bitStreamBuffer = (byte*)calloc(MAX_CODED_FRAME_SIZE, sizeof(byte));
+    dataPartition->stream->bitStreamBuffer = (uint8_t*)calloc(MAX_CODED_FRAME_SIZE, sizeof(uint8_t));
     if (dataPartition->stream->bitStreamBuffer == NULL)
       error ("allocDataPartitions: Memory allocation for bitStreamBuffer failed");
     }
@@ -347,7 +347,7 @@ void freeDecodedPictures (sDecodedPic* decodedPic) {
 //}}}
 
 //{{{
-sDecoder* openDecoder (sParam* param, byte* chunk, size_t chunkSize) {
+sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize) {
 
   // alloc decoder
   sDecoder* decoder = (sDecoder*)calloc (1, sizeof(sDecoder));

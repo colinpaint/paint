@@ -1389,7 +1389,7 @@ static void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
 
   oldSlice->nalRefIdc = slice->refId;
 
-  oldSlice->isIDR = (byte)slice->isIDR;
+  oldSlice->isIDR = (uint8_t)slice->isIDR;
   if (slice->isIDR)
     oldSlice->idrPicId = slice->idrPicId;
 
@@ -2423,7 +2423,7 @@ static void initPicture (sDecoder* decoder, sSlice* slice) {
 
   // cavlc init
   if (decoder->activePps->entropyCoding == eCavlc)
-    memset (decoder->nzCoeff[0][0][0], -1, decoder->picSizeInMbs * 48 *sizeof(byte)); // 3 * 4 * 4
+    memset (decoder->nzCoeff[0][0][0], -1, decoder->picSizeInMbs * 48 *sizeof(uint8_t)); // 3 * 4 * 4
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
   // TO set sMacroBlock Map (mark all MBs as 'have to be concealed')
@@ -2547,7 +2547,7 @@ static void useParameterSet (sDecoder* decoder, sSlice* slice) {
     }
     //}}}
 
-  // slice->dataPartitionMode is set by read_new_slice (NALU first byte available there)
+  // slice->dataPartitionMode is set by read_new_slice (NALU first uint8_t available there)
   if (pps->entropyCoding == eCavlc) {
     slice->nalStartCode = vlcStartCode;
     for (int i = 0; i < 3; i++)
@@ -2755,7 +2755,7 @@ static void readSliceHeader (sDecoder* decoder, sSlice* slice) {
   else {
     slice->fieldPic = readU1 ("SLC fieldPic", s);
     if (slice->fieldPic) {
-      slice->botField = (byte)readU1 ("SLC botField", s);
+      slice->botField = (uint8_t)readU1 ("SLC botField", s);
       decoder->coding.picStructure = slice->botField ? eBotField : eTopField;
       }
     else {

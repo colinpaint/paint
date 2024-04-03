@@ -14,13 +14,10 @@
 #include <string>
 
 //{{{  defines
-typedef uint8_t  byte;      // byte type definition
-
-typedef byte     sPixel;    // pixel type
-typedef uint16_t distpel;   // distortion type (for pixels)
+typedef uint8_t  sPixel;    // pixel type
+//typedef uint16_t distpel;   // distortion type (for pixels)
 typedef int32_t  distblk;   // distortion type (for sMacroBlock)
-typedef int32_t  transpel;  // transformed coefficient type
-
+//typedef int32_t  transpel;  // transformed coefficient type
 
 #define MAX_NUM_SLICES          8
 #define MAX_REFERENCE_PICTURES  32       // H.264 allows 32 fields
@@ -383,9 +380,9 @@ struct sDecoder;
 //{{{  sBitStream
 typedef struct {
   // cavlc Decoding
-  byte* bitStreamBuffer; // codebuffer for read bytes
+  uint8_t* bitStreamBuffer; // codebuffer for read bytes
   int   bitStreamOffset; // position in the codebuffer, bit-oriented
-  int   bitStreamLen;    // over codebuffer length, byte oriented
+  int   bitStreamLen;    // over codebuffer length, uint8_t oriented
   int   errorFlag;       // error, 0: no error, else unspecified error
 
   // cabac Decoding
@@ -398,7 +395,7 @@ typedef struct {
   uint32_t range;
   uint32_t value;
   int          bitsLeft;
-  byte*        codeStream;
+  uint8_t*        codeStream;
   int*         codeStreamLen;
   } sCabacDecodeEnv;
 //}}}
@@ -502,11 +499,11 @@ struct sMacroBlock {
   bool mbField;
 
   // Flag for MBAFF deblocking;
-  byte  mixedModeEdgeFlag;
+  uint8_t  mixedModeEdgeFlag;
 
   // deblocking strength indices
-  byte strengthV[4][4];
-  byte strengthH[4][16];
+  uint8_t strengthV[4][4];
+  uint8_t strengthH[4][16];
 
   bool lumaTransformSize8x8flag;
   bool noMbPartLessThan8x8Flag;
@@ -519,8 +516,8 @@ struct sMacroBlock {
   char (*readRefPictureIndex) (sMacroBlock*, struct SyntaxElement*, struct DataPartition*, char, int);
   void (*readCompCoef4x4cabac) (sMacroBlock*, struct SyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (sMacroBlock*, struct SyntaxElement*, eColorPlane);
-  void (*readCompCoef4x4cavlc) (sMacroBlock*, eColorPlane, int(*)[4], int, int, byte**);
-  void (*readCompCoef8x8cavlc) (sMacroBlock*, eColorPlane, int(*)[8], int, int, byte**);
+  void (*readCompCoef4x4cavlc) (sMacroBlock*, eColorPlane, int(*)[4], int, int, uint8_t**);
+  void (*readCompCoef8x8cavlc) (sMacroBlock*, eColorPlane, int(*)[8], int, int, uint8_t**);
   };
 //}}}
 //{{{
@@ -552,9 +549,9 @@ typedef struct DecodedPic {
   int uvStride;
 
   int bufSize;
-  byte* yBuf;
-  byte* uBuf;
-  byte* vBuf;
+  uint8_t* yBuf;
+  uint8_t* uBuf;
+  uint8_t* vBuf;
 
   int poc;
 
@@ -643,7 +640,7 @@ struct sSlice {
 
   ePicStructure picStructure;
   uint32_t  fieldPic;
-  byte          botField;
+  uint8_t          botField;
   int           startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
   int           endMbNumPlus1;
   int           maxDataPartitions;
@@ -732,7 +729,7 @@ struct sSlice {
   sPicture* picture;
 
   int**           siBlock;
-  byte**          predMode;
+  uint8_t**          predMode;
   char*           intraBlock;
   char            chromaVectorAdjust[6][32];
 
@@ -931,14 +928,14 @@ struct sDecoder {
   // sCoding
   sCoding      coding;
   sBlockPos*   picPos;
-  byte****     nzCoeff;
+  uint8_t****     nzCoeff;
   sMacroBlock* mbData;              // array containing all MBs of a whole frame
   char*        intraBlock;
-  byte**       predMode;            // prediction type [90][74]
+  uint8_t**       predMode;            // prediction type [90][74]
   int**        siBlock;
   sMacroBlock* mbDataJV[MAX_PLANE];
   char*        intraBlockJV[MAX_PLANE];
-  byte**       predModeJV[MAX_PLANE];
+  uint8_t**       predModeJV[MAX_PLANE];
   int**        siBlockJV[MAX_PLANE];
 
   // POC
@@ -996,10 +993,10 @@ struct sDecoder {
   void (*getMbBlockPos) (sBlockPos*, int, short*, short*);
   void (*getStrengthV) (sMacroBlock*, int, int, sPicture*);
   void (*getStrengthH) (sMacroBlock*, int, int, sPicture*);
-  void (*edgeLoopLumaV) (eColorPlane, sPixel**, byte*, sMacroBlock*, int);
-  void (*edgeLoopLumaH) (eColorPlane, sPixel**, byte*, sMacroBlock*, int, sPicture*);
-  void (*edgeLoopChromaV) (sPixel**, byte*, sMacroBlock*, int, int, sPicture*);
-  void (*edgeLoopChromaH) (sPixel**, byte*, sMacroBlock*, int, int, sPicture*);
+  void (*edgeLoopLumaV) (eColorPlane, sPixel**, uint8_t*, sMacroBlock*, int);
+  void (*edgeLoopLumaH) (eColorPlane, sPixel**, uint8_t*, sMacroBlock*, int, sPicture*);
+  void (*edgeLoopChromaV) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
+  void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
   };
 //}}}
 

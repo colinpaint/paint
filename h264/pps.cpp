@@ -90,12 +90,12 @@ static void scalingList (int* scalingList, int scalingListSize, bool* useDefault
 // syntax for scaling list matrix values
 
   //{{{
-  static const byte ZZ_SCAN[16] = {
+  static const uint8_t ZZ_SCAN[16] = {
     0,  1,  4,  8,  5,  2,  3,  6,  9, 12, 13, 10,  7, 11, 14, 15
     };
   //}}}
   //{{{
-  static const byte ZZ_SCAN8[64] = {
+  static const uint8_t ZZ_SCAN8[64] = {
     0,  1,  8, 16,  9,  2,  3, 10, 17, 24, 32, 25, 18, 11,  4,  5,
     12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13,  6,  7, 14, 21, 28,
     35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
@@ -168,9 +168,9 @@ static void readPpsFromStream (sDecoder* decoder, sDataPartition* dataPartition,
           NumberBitsPerSliceGroupId = 1;
 
         pps->picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
-        pps->sliceGroupId = (byte*)calloc (pps->picSizeMapUnitsMinus1+1, 1);
+        pps->sliceGroupId = (uint8_t*)calloc (pps->picSizeMapUnitsMinus1+1, 1);
         for (uint32_t i = 0; i <= pps->picSizeMapUnitsMinus1; i++)
-          pps->sliceGroupId[i] = (byte)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
+          pps->sliceGroupId[i] = (uint8_t)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
         break;
         }
 

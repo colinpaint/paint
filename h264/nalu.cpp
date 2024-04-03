@@ -53,7 +53,7 @@ static void dumpNalu (sNalu* nalu) {
 sAnnexB* allocAnnexB (sDecoder* decoder) {
 
   sAnnexB* annexB = (sAnnexB*)calloc (1, sizeof(sAnnexB));
-  annexB->naluBuffer = (byte*)malloc (decoder->nalu->maxSize);
+  annexB->naluBuffer = (uint8_t*)malloc (decoder->nalu->maxSize);
   return annexB;
   }
 //}}}
@@ -69,7 +69,7 @@ void freeAnnexB (sAnnexB** p_annexB) {
 //}}}
 
 //{{{
-void openAnnexB (sAnnexB* annexB, byte* chunk, size_t chunkSize) {
+void openAnnexB (sAnnexB* annexB, uint8_t* chunk, size_t chunkSize) {
 
   annexB->buffer = chunk;
   annexB->bufferSize = chunkSize;
@@ -93,7 +93,7 @@ sNalu* allocNALU (int buffersize) {
   if (nalu == NULL)
     noMemoryExit ("AllocNALU");
 
-  nalu->buf = (byte*)calloc (buffersize, sizeof (byte));
+  nalu->buf = (uint8_t*)calloc (buffersize, sizeof (uint8_t));
   if (nalu->buf == NULL) {
     free (nalu);
     noMemoryExit ("AllocNALU buffer");
@@ -182,7 +182,7 @@ void checkZeroByteNonVCL (sDecoder* decoder, sNalu* nalu) {
 //}}}
 
 //{{{
-static inline byte getByte (sAnnexB* annexB) {
+static inline uint8_t getByte (sAnnexB* annexB) {
 
   if (annexB->bytesInBuffer) {
     annexB->bytesInBuffer--;
@@ -209,7 +209,7 @@ static inline int findStartCode (uint8_t* buf, int zerosInStartcode) {
 static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
 
   int naluBufCount = 0;
-  byte* naluBufPtr = annexB->naluBuffer;
+  uint8_t* naluBufPtr = annexB->naluBuffer;
   if (annexB->nextStartCodeBytes != 0) {
     for (int i = 0; i < annexB->nextStartCodeBytes - 1; i++) {
       *naluBufPtr++ = 0;
@@ -250,9 +250,9 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
     leadingZero8BitsCount = naluBufCount - 4;
     nalu->startCodeLen = 4;
     }
-  //{{{  only 1st byte stream NAL unit can have leading_zero_8bits
+  //{{{  only 1st uint8_t stream NAL unit can have leading_zero_8bits
   if (!annexB->isFirstByteStreamNALU && leadingZero8BitsCount > 0) {
-    printf ("get_annexB_NALU: leading_zero_8bits syntax only present first byte stream NAL unit\n");
+    printf ("get_annexB_NALU: leading_zero_8bits syntax only present first uint8_t stream NAL unit\n");
     return -1;
     }
   //}}}
@@ -333,7 +333,7 @@ static int getNALU (sAnnexB* annexB, sDecoder* decoder, sNalu* nalu) {
 static int NALUtoRBSP (sNalu* nalu) {
 // NetworkAbstractionLayerUnit to RawByteSequencePayload
 
-  byte* bitStreamBuffer = nalu->buf;
+  uint8_t* bitStreamBuffer = nalu->buf;
   int endBytePos = nalu->len;
   if (endBytePos < 1) {
     nalu->len = endBytePos;
@@ -343,14 +343,14 @@ static int NALUtoRBSP (sNalu* nalu) {
   int count = 0;
   int j = 1;
   for (int i = 1; i < endBytePos; ++i) {
-    // in NAL unit, 0x000000, 0x000001 or 0x000002 shall not occur at any byte-aligned position
+    // in NAL unit, 0x000000, 0x000001 or 0x000002 shall not occur at any uint8_t-aligned position
     if ((count == ZEROBYTES_SHORTSTARTCODE) && (bitStreamBuffer[i] < 0x03)) {
       nalu->len = -1;
       return nalu->len;
       }
 
     if ((count == ZEROBYTES_SHORTSTARTCODE) && (bitStreamBuffer[i] == 0x03)) {
-      // check the 4th byte after 0x000003,
+      // check the 4th uint8_t after 0x000003,
       // except when cabac_zero_word is used
       // , in which case the last three bytes of this NAL unit must be 0x000003
       if ((i < endBytePos-1) && (bitStreamBuffer[i+1] > 0x03)) {
@@ -358,7 +358,7 @@ static int NALUtoRBSP (sNalu* nalu) {
         return nalu->len;
         }
 
-      // if cabac_zero_word, final byte of NALunit(0x03) is discarded
+      // if cabac_zero_word, final uint8_t of NALunit(0x03) is discarded
       // and the last two bytes of RBSP must be 0x0000
       if (i == endBytePos-1) {
         nalu->len = j;
@@ -407,7 +407,7 @@ int readNalu (sDecoder* decoder, sNalu* nalu) {
 //}}}
 
 //{{{
-int RBSPtoSODB (byte* bitStreamBuffer, int lastBytePos) {
+int RBSPtoSODB (uint8_t* bitStreamBuffer, int lastBytePos) {
 // RawByteSequencePayload to StringOfDataBits
 
   // find trailing 1

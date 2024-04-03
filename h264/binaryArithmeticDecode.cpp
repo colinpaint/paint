@@ -11,7 +11,7 @@
 #define QUARTER   0x0100  //(1 << (B_BITS-2))
 //}}}
 //{{{
-static const byte rLPS_table_64x4[64][4] = {
+static const uint8_t rLPS_table_64x4[64][4] = {
   { 128, 176, 208, 240},
   { 128, 167, 197, 227},
   { 128, 158, 187, 216},
@@ -79,7 +79,7 @@ static const byte rLPS_table_64x4[64][4] = {
   };
 //}}}
 //{{{
-static const byte AC_next_state_MPS_64[64] = {
+static const uint8_t AC_next_state_MPS_64[64] = {
   1,2,3,4,5,6,7,8,9,10,
   11,12,13,14,15,16,17,18,19,20,
   21,22,23,24,25,26,27,28,29,30,
@@ -90,7 +90,7 @@ static const byte AC_next_state_MPS_64[64] = {
   };
 //}}}
 //{{{
-static const byte AC_next_state_LPS_64[64] = {
+static const uint8_t AC_next_state_LPS_64[64] = {
   0, 0, 1, 2, 2, 4, 4, 5, 6, 7,
   8, 9, 9,11,11,12,13,13,15,15,
   16,16,18,18,19,19,21,21,22,22,
@@ -101,7 +101,7 @@ static const byte AC_next_state_LPS_64[64] = {
   };
 //}}}
 //{{{
-static const byte renorm_table_32[32] = {
+static const uint8_t renorm_table_32[32] = {
   6,
   5,
   4,4,
@@ -120,7 +120,7 @@ static uint32_t getByte (sCabacDecodeEnv* cabacDecodeEnv) {
 static uint32_t getWord (sCabacDecodeEnv* cabacDecodeEnv) {
 
   int* len = cabacDecodeEnv->codeStreamLen;
-  byte* p_code_strm = &cabacDecodeEnv->codeStream[*len];
+  uint8_t* p_code_strm = &cabacDecodeEnv->codeStream[*len];
   *len += 2;
 
   return (*p_code_strm << 8) | *(p_code_strm + 1);

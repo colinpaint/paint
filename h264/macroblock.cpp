@@ -452,7 +452,7 @@ void updateQp (sMacroBlock* mb, int qp) {
   }
 //}}}
 //{{{
-void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBlock* mb, const byte *dpMap, int type)
+void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBlock* mb, const uint8_t *dpMap, int type)
 {
   sSlice* slice = mb->slice;
   sDecoder* decoder = mb->decoder;
@@ -673,7 +673,7 @@ static void readMBMotionVectors (sSyntaxElement* se, sDataPartition* dataPartiti
   }
 //}}}
 //{{{
-void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int j, int i0, int j0, int coef_ctr, const byte (*pos_scan4x4)[2], int (*InvLevelScale4x4)[4])
+void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int j, int i0, int j0, int coef_ctr, const uint8_t (*pos_scan4x4)[2], int (*InvLevelScale4x4)[4])
 {
   if (level != 0) {
     /* leave if level == 0 */
@@ -1011,7 +1011,7 @@ static void readMotionInfoP (sMacroBlock* mb){
 
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   short partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];
@@ -1064,7 +1064,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   sPicture* picture = slice->picture;
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
-  const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
   int step_h0 = BLOCK_STEP [partmode][0];
   int step_v0 = BLOCK_STEP [partmode][1];

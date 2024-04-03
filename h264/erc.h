@@ -23,7 +23,7 @@ typedef struct frame_s {
 //}}}
 //{{{  sObjectBuffer
 typedef struct ObjectBuffer {
-  byte regionMode;  //!< region mode as above
+  uint8_t regionMode;  //!< region mode as above
   int xMin;         //!< X coordinate of the pixel position of the top-left corner of the region
   int yMin;         //!< Y coordinate of the pixel position of the top-left corner of the region
   int mv[3];        //!< motion vectors in 1/4 pixel units: mvx = mv[0], mvy = mv[1],

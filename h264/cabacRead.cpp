@@ -20,7 +20,7 @@ static void readCompCoef8x8cabacLossless (sMacroBlock* mb, sSyntaxElement* se, e
     int64_t *cur_cbp = &mb->codedBlockPatterns[plane].blk;
 
     // select scan type
-    const byte* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
+    const uint8_t* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
 
     // === set offset in current macroblock ===
     int boff_x = (b8&0x01) << 3;
@@ -31,7 +31,7 @@ static void readCompCoef8x8cabacLossless (sMacroBlock* mb, sSyntaxElement* se, e
     mb->subblockY = boff_y; // position for coeff_count ctx
 
     sDataPartition* dataPartition;
-    const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+    const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
       se->context = LUMA_8x8;
     else if (plane==PLANE_U)
@@ -80,10 +80,10 @@ static void readCompCoefx4smbCabac (sMacroBlock* mb, sSyntaxElement* se, eColorP
   int level = 1;
   sDataPartition *dataPartition;
   sSlice* slice = mb->slice;
-  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
-  const byte *pos_scan_4x4 = pos_scan4x4[0];
+  const uint8_t (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
   int** cof = slice->cof[plane];
 
   for (j = blockY; j < blockY + BLOCK_SIZE_8x8; j += 4) {
@@ -246,7 +246,7 @@ static void readCompCoef8x8cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
     int64_t* cur_cbp = &mb->codedBlockPatterns[plane].blk;
 
     // select scan type
-    const byte* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
+    const uint8_t* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
 
     int qp_per = decoder->qpPerMatrix[ mb->qpScaled[plane] ];
     int qp_rem = decoder->qpRemMatrix[ mb->qpScaled[plane] ];
@@ -262,7 +262,7 @@ static void readCompCoef8x8cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
     mb->subblockY = boff_y; // position for coeff_count ctx
 
     sDataPartition* dataPartition;
-    const byte* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+    const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
     if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
       se->context = LUMA_8x8;
@@ -335,7 +335,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
   int k;
   int level;
   int codedBlockPattern;
-  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   int i0, j0;
   int qp_per, qp_rem;
   int intra = (mb->isIntraBlock == true);
@@ -343,8 +343,8 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
 
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
-  const byte *pos_scan_4x4 = pos_scan4x4[0];
+  const uint8_t (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
 
   // read CBP if not new intra mode
   sSyntaxElement se;
@@ -487,7 +487,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
   int i, k;
   int level;
   int codedBlockPattern;
-  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   int coef_ctr, i0, j0;
   int qp_per, qp_rem;
   int uv;
@@ -498,8 +498,8 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
 
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
-  const byte *pos_scan_4x4 = pos_scan4x4[0];
+  const uint8_t (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
 
   // QPI init constants for every chroma qp offset
   for (i = 0; i < 2; ++i) {
@@ -714,7 +714,7 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
   int i,j,k;
   int level;
   int codedBlockPattern;
-  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   int coef_ctr, i0, j0, b8;
   int ll;
   int qp_per, qp_rem;
@@ -730,8 +730,8 @@ static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
 
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
-  const byte *pos_scan_4x4 = pos_scan4x4[0];
+  const uint8_t (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
 
   // QPI init constants for every chroma qp offset
   for (i = 0; i < 2; ++i) {
@@ -1037,7 +1037,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
   int level;
   int codedBlockPattern;
   sSlice* slice = mb->slice;
-  const byte *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  const uint8_t *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   int i0, j0;
 
   int qp_per, qp_rem;
@@ -1056,8 +1056,8 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
   int (*InvLevelScale4x4)[4] = NULL;
 
   // select scan type
-  const byte (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
-  const byte *pos_scan_4x4 = pos_scan4x4[0];
+  const uint8_t (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
+  const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
 
   sDataPartition* dataPartition = NULL;
   sSyntaxElement se;

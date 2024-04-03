@@ -637,20 +637,20 @@ void freeMem5DpelPad (sPixel***** array5D, int iFrames, int iPadY, int iPadX)
 /*!
 ** **********************************************************************
  * \brief
- *    Create 2D memory array -> byte array2D[dim0][dim1]
+ *    Create 2D memory array -> uint8_t array2D[dim0][dim1]
  *
  * \par Output:
- *    byte type array of size dim0 * dim1
+ *    uint8_t type array of size dim0 * dim1
 ** **********************************************************************
  */
-byte** new_mem2D (int dim0, int dim1)
+uint8_t** new_mem2D (int dim0, int dim1)
 {
   int i;
-  byte** array2D;
+  uint8_t** array2D;
 
-  if((  array2D  = (byte**)memAlloc(dim0 *      sizeof(byte*))) == NULL)
+  if((  array2D  = (uint8_t**)memAlloc(dim0 *      sizeof(uint8_t*))) == NULL)
     noMemoryExit("getMem2D: array2D");
-  if((*(array2D) = (byte* )mem_calloc(dim0 * dim1,sizeof(byte ))) == NULL)
+  if((*(array2D) = (uint8_t* )mem_calloc(dim0 * dim1,sizeof(uint8_t ))) == NULL)
     noMemoryExit("getMem2D: array2D");
 
   for(i = 1; i < dim0; i++)
@@ -694,19 +694,19 @@ int** new_mem2Dint (int dim0, int dim1)
  * \par Output:
  *    memory size in bytes
 ** **********************************************************************/
-int getMem2D (byte*** array2D, int dim0, int dim1)
+int getMem2D (uint8_t*** array2D, int dim0, int dim1)
 {
   int i;
 
-  if((  *array2D  = (byte**)memAlloc(dim0 *      sizeof(byte*))) == NULL)
+  if((  *array2D  = (uint8_t**)memAlloc(dim0 *      sizeof(uint8_t*))) == NULL)
     noMemoryExit("getMem2D: array2D");
-  if((*(*array2D) = (byte* )mem_calloc(dim0 * dim1,sizeof(byte ))) == NULL)
+  if((*(*array2D) = (uint8_t* )mem_calloc(dim0 * dim1,sizeof(uint8_t ))) == NULL)
     noMemoryExit("getMem2D: array2D");
 
   for(i = 1; i < dim0; i++)
     (*array2D)[i] = (*array2D)[i-1] + dim1;
 
-  return dim0 * (sizeof(byte*) + dim1 * sizeof(byte));
+  return dim0 * (sizeof(uint8_t*) + dim1 * sizeof(uint8_t));
 }
 //}}}
 //{{{
@@ -795,11 +795,11 @@ int getMem2Dint64 (int64_t*** array2D, int dim0, int dim1)
  *    memory size in bytes
 ** **********************************************************************
  */
-int getMem3D (byte**** array3D, int dim0, int dim1, int dim2)
+int getMem3D (uint8_t**** array3D, int dim0, int dim1, int dim2)
 {
-  int  i, mem_size = dim0 * sizeof(byte**);
+  int  i, mem_size = dim0 * sizeof(uint8_t**);
 
-  if(((*array3D) = (byte***)memAlloc(dim0 * sizeof(byte**))) == NULL)
+  if(((*array3D) = (uint8_t***)memAlloc(dim0 * sizeof(uint8_t**))) == NULL)
     noMemoryExit("getMem3D: array3D");
 
   mem_size += getMem2D(*array3D, dim0 * dim1, dim2);
@@ -820,11 +820,11 @@ int getMem3D (byte**** array3D, int dim0, int dim1, int dim2)
  *    memory size in bytes
 ** **********************************************************************
  */
-int getMem4D (byte***** array4D, int dim0, int dim1, int dim2, int dim3)
+int getMem4D (uint8_t***** array4D, int dim0, int dim1, int dim2, int dim3)
 {
-  int  i, mem_size = dim0 * sizeof(byte***);
+  int  i, mem_size = dim0 * sizeof(uint8_t***);
 
-  if(((*array4D) = (byte****)memAlloc(dim0 * sizeof(byte***))) == NULL)
+  if(((*array4D) = (uint8_t****)memAlloc(dim0 * sizeof(uint8_t***))) == NULL)
     noMemoryExit("getMem4D: array4D");
 
   mem_size += getMem3D(*array4D, dim0 * dim1, dim2, dim3);
@@ -1009,7 +1009,7 @@ int getMem5Dint (int****** array5D, int dim0, int dim1, int dim2, int dim3, int 
  *    which was allocated with getMem2D()
 ** **********************************************************************
  */
-void freeMem2D (byte** array2D)
+void freeMem2D (uint8_t** array2D)
 {
   if (array2D)
   {
@@ -1074,7 +1074,7 @@ void freeMem2Dint64 (int64_t** array2D)
  *    which was allocated with getMem3D()
 ** **********************************************************************
  */
-void freeMem3D (byte*** array3D)
+void freeMem3D (uint8_t*** array3D)
 {
   if (array3D)
   {
@@ -1091,7 +1091,7 @@ void freeMem3D (byte*** array3D)
  *    which was allocated with getMem3D()
 ** **********************************************************************
  */
-void freeMem4D (byte**** array4D)
+void freeMem4D (uint8_t**** array4D)
 {
   if (array4D)
   {

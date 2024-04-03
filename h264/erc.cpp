@@ -252,7 +252,7 @@ static void ercPixConcealIMB (sDecoder* decoder, sPixel* currFrame, int row, int
 ** **********************************************************************
  */
 static int ercCollect8PredBlocks (int predBlocks[], int currRow, int currColumn, char *condition,
-                           int maxRow, int maxColumn, int step, byte fNoCornerNeigh )
+                           int maxRow, int maxColumn, int step, uint8_t fNoCornerNeigh )
 {
   int srcCounter  = 0;
   int srcCountMin = (fNoCornerNeigh ? 2 : 4);

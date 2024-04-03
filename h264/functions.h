@@ -112,7 +112,6 @@ static inline uint32_t rshift_rnd_ul (uint32_t x, int a) {
 //}}}
 //{{{
 static inline int rshift_rnd_sign (int x, int a) {
-
   return (x > 0) ? ( ( x + (1 << (a-1)) ) >> a ) : (-( ( iabs(x) + (1 << (a-1)) ) >> a ));
   }
 //}}}

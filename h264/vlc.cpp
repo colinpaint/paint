@@ -206,11 +206,11 @@ int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitStream* s
   }
 //}}}
 //{{{
-int GetVLCSymbol_IntraMode (byte buffer[], int totalBitOffset, int* info, int bytecount) {
+int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
-  int byteoffset = (totalBitOffset >> 3);        // byte from start of buffer
-  int bitOffset   = (7 - (totalBitOffset & 0x07)); // bit from start of byte
-  byte *cur_byte  = &(buffer[byteoffset]);
+  int byteoffset = (totalBitOffset >> 3);        // uint8_t from start of buffer
+  int bitOffset   = (7 - (totalBitOffset & 0x07)); // bit from start of uint8_t
+  uint8_t *cur_byte  = &(buffer[byteoffset]);
   int controlBit     = (*cur_byte & (0x01 << bitOffset));      // control bit for current bit posision
 
   //First bit
@@ -223,9 +223,9 @@ int GetVLCSymbol_IntraMode (byte buffer[], int totalBitOffset, int* info, int by
     return -1;
   else {
     int inf = (*(cur_byte) << 8) + *(cur_byte + 1);
-    inf <<= (sizeof(byte) * 8) - bitOffset;
+    inf <<= (sizeof(uint8_t) * 8) - bitOffset;
     inf = inf & 0xFFFF;
-    inf >>= (sizeof(byte) * 8) * 2 - 3;
+    inf >>= (sizeof(uint8_t) * 8) * 2 - 3;
     *info = inf;
 
     return 4;           // return absolute offset in bit from start of frame
@@ -233,15 +233,15 @@ int GetVLCSymbol_IntraMode (byte buffer[], int totalBitOffset, int* info, int by
   }
 //}}}
 //{{{
-int moreRbspData (byte buffer[], int totalBitOffset,int bytecount) {
+int moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
 
-  // there is more until we're in the last byte
-  long byteoffset = (totalBitOffset >> 3);      // byte from start of buffer
+  // there is more until we're in the last uint8_t
+  long byteoffset = (totalBitOffset >> 3);      // uint8_t from start of buffer
   if (byteoffset < (bytecount - 1))
     return true;
   else {
-    int bitOffset   = (7 - (totalBitOffset & 0x07));      // bit from start of byte
-    byte* cur_byte  = &(buffer[byteoffset]);
+    int bitOffset   = (7 - (totalBitOffset & 0x07));      // bit from start of uint8_t
+    uint8_t* cur_byte  = &(buffer[byteoffset]);
     // read one bit
     int controlBit = ((*cur_byte)>> (bitOffset--)) & 0x01;   // control bit for current bit posision
 
@@ -260,22 +260,22 @@ int moreRbspData (byte buffer[], int totalBitOffset,int bytecount) {
 //{{{
 int vlcStartCode (sSlice* slice, int dummy) {
 
-  byte partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
+  uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
   sDataPartition* dataPartition = &slice->dataPartitions[partitionIndex];
   sBitStream* s = dataPartition->stream;
-  byte* buf = s->bitStreamBuffer;
+  uint8_t* buf = s->bitStreamBuffer;
 
   return !moreRbspData (buf, s->bitStreamOffset,s->bitStreamLen);
   }
 //}}}
 //{{{
-int GetVLCSymbol (byte buffer[], int totalBitOffset, int* info, int bytecount) {
+int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
-  long byteoffset = totalBitOffset >> 3;        // byte from start of buffer
-  int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of byte
+  long byteoffset = totalBitOffset >> 3;        // uint8_t from start of buffer
+  int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
   int bitCounter = 1;
   int len = 0;
-  byte* curByte  = &(buffer[byteoffset]);
+  uint8_t* curByte  = &(buffer[byteoffset]);
   int controlBit = ((*curByte) >> (bitOffset)) & 0x01;  // control bit for current bit posision
 
   while (controlBit == 0) {
@@ -309,17 +309,17 @@ int GetVLCSymbol (byte buffer[], int totalBitOffset, int* info, int bytecount) {
 
 //{{{
 static inline int ShowBitsThres (int inf, int numbits) {
-  return ((inf) >> ((sizeof(byte) * 24) - (numbits)));
+  return ((inf) >> ((sizeof(uint8_t) * 24) - (numbits)));
   }
 //}}}
 //{{{
-static int code_from_bitstream_2d (sSyntaxElement* se, sBitStream* s, const byte* lentab, const byte* codtab,
+static int code_from_bitstream_2d (sSyntaxElement* se, sBitStream* s, const uint8_t* lentab, const uint8_t* codtab,
                                    int tabwidth, int tabheight, int *code) {
 
-  const byte* len = &lentab[0], *cod = &codtab[0];
+  const uint8_t* len = &lentab[0], *cod = &codtab[0];
 
   int* bitStreamOffset = &s->bitStreamOffset;
-  byte* buf = &s->bitStreamBuffer[*bitStreamOffset >> 3];
+  uint8_t* buf = &s->bitStreamBuffer[*bitStreamOffset >> 3];
 
   // Apply bitOffset to three bytes (maximum that may be traversed by ShowBitsThres)
   // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
@@ -373,9 +373,9 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  byte *buf                  = s->bitStreamBuffer;
+  uint8_t *buf                  = s->bitStreamBuffer;
 
-  static const byte lentab[3][4][17] =
+  static const uint8_t lentab[3][4][17] =
   {
     {   // 0702
       { 1, 6, 8, 9,10,11,13,13,13,14,14,15,15,16,16,16,16},
@@ -397,7 +397,7 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,
     },
   };
 
-  static const byte codtab[3][4][17] =
+  static const uint8_t codtab[3][4][17] =
   {
     {
       { 1, 5, 7, 7, 7, 7,15,11, 8,15,11,15,11,15,11, 7,4},
@@ -460,7 +460,7 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,
 //{{{
 int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* decoder, sSyntaxElement* se, sBitStream* s)
 {
-  static const byte lentab[3][4][17] =
+  static const uint8_t lentab[3][4][17] =
   {
     //YUV420
     {{ 2, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -479,7 +479,7 @@ int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* decoder, sSyntaxE
     { 0, 0, 0, 5, 6, 7, 8, 9,10,11,13,14,14,15,15,16,16}}
   };
 
-  static const byte codtab[3][4][17] =
+  static const uint8_t codtab[3][4][17] =
   {
     //YUV420
     {{ 1, 7, 4, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -518,7 +518,7 @@ int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, sBitStream* s)
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  byte *buf                  = s->bitStreamBuffer;
+  uint8_t *buf                  = s->bitStreamBuffer;
   int len = 1, sign = 0, level = 0, code = 1;
 
   while (!ShowBits(buf, bitStreamOffset++, BitstreamLengthInBits, 1))
@@ -567,7 +567,7 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, sBitStream* s)
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
   int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  byte *buf                  = s->bitStreamBuffer;
+  uint8_t *buf                  = s->bitStreamBuffer;
 
   int levabs, sign;
   int len = 1;
@@ -628,7 +628,7 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, sBitStream* s)
 int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  sBitStream* s) {
 
   //{{{
-  static const byte lentab[TOTRUN_NUM][16] =
+  static const uint8_t lentab[TOTRUN_NUM][16] =
   {
 
     { 1,3,3,4,4,5,5,6,6,7,7,8,8,9,9,9},
@@ -649,7 +649,7 @@ int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  sBitStream* s) {
   };
   //}}}
   //{{{
-  static const byte codtab[TOTRUN_NUM][16] =
+  static const uint8_t codtab[TOTRUN_NUM][16] =
   {
     {1,3,2,3,2,3,2,3,2,3,2,3,2,3,2,1},
     {7,6,5,4,3,5,4,3,2,3,2,3,2,1,0},
@@ -685,7 +685,7 @@ int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  sBitStream* s) {
 int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* se, sBitStream* s) {
 
   //{{{
-  static const byte lentab[3][TOTRUN_NUM][16] =
+  static const uint8_t lentab[3][TOTRUN_NUM][16] =
   {
     //YUV420
    {{ 1,2,3,3},
@@ -718,7 +718,7 @@ int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* se
   };
   //}}}
   //{{{
-  static const byte codtab[3][TOTRUN_NUM][16] =
+  static const uint8_t codtab[3][TOTRUN_NUM][16] =
   {
     //YUV420
    {{ 1,1,1,0},
@@ -768,7 +768,7 @@ int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* se
 int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s)
 {
   //{{{
-  static const byte lentab[TOTRUN_NUM][16] =
+  static const uint8_t lentab[TOTRUN_NUM][16] =
   {
     {1,1},
     {1,2,2},
@@ -780,7 +780,7 @@ int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s)
   };
   //}}}
   //{{{
-  static const byte codtab[TOTRUN_NUM][16] =
+  static const uint8_t codtab[TOTRUN_NUM][16] =
   {
     {1,0},
     {1,1,0},
@@ -805,22 +805,22 @@ int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s)
 //}}}
 
 //{{{
-int getBits (byte buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
+int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
 
   if ((totalBitOffset + numBits) > bitCount)
     return -1;
 
-  int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of byte
-  int byteOffset = totalBitOffset >> 3;       // byte from start of buffer
+  int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
+  int byteOffset = totalBitOffset >> 3;       // uint8_t from start of buffer
   int bitCounter = numBits;
-  byte* curByte = &(buffer[byteOffset]);
+  uint8_t* curByte = &(buffer[byteOffset]);
 
   int inf = 0;
   while (numBits--) {
     inf <<=1;
     inf |= ((*curByte)>> (bitOffset--)) & 0x01;
     if (bitOffset == -1) {
-      // Move onto next byte to get all of numBits
+      // Move onto next uint8_t to get all of numBits
       curByte++;
       bitOffset = 7;
       }
@@ -835,14 +835,14 @@ int getBits (byte buffer[], int totalBitOffset, int* info, int bitCount, int num
   }
 //}}}
 //{{{
-int ShowBits (byte buffer[], int totalBitOffset, int bitCount, int numBits) {
+int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits) {
 
   if ((totalBitOffset + numBits) > bitCount)
     return -1;
 
-  int bitOffset = 7 - (totalBitOffset & 0x07); // bit from start of byte
-  int byteOffset = totalBitOffset >> 3;      // byte from start of buffer
-  byte* curByte = &(buffer[byteOffset]);
+  int bitOffset = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
+  int byteOffset = totalBitOffset >> 3;      // uint8_t from start of buffer
+  uint8_t* curByte = &(buffer[byteOffset]);
 
   int inf = 0;
   while (numBits--) {
@@ -850,7 +850,7 @@ int ShowBits (byte buffer[], int totalBitOffset, int bitCount, int numBits) {
     inf |= ((*curByte)>> (bitOffset--)) & 0x01;
 
     if (bitOffset == -1 ) {
-      // Move onto next byte to get all of numbits
+      // Move onto next uint8_t to get all of numbits
       curByte++;
       bitOffset = 7;
       }
