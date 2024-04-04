@@ -119,7 +119,7 @@ struct sFrameStore {
 //}}}
 //{{{
 struct sDpb {
-  sDecoder*    decoder;
+  cDecoder264*    decoder;
 
   sFrameStore** fs;
   sFrameStore** fsRef;
@@ -270,33 +270,33 @@ extern void freeFrameStore (sFrameStore* frameStore);
 extern void unmarkForRef( sFrameStore* frameStore);
 extern void unmarkForLongTermRef (sFrameStore* frameStore);
 
-extern sPicture* allocPicture (sDecoder* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
+extern sPicture* allocPicture (cDecoder264* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
 extern void freePicture (sPicture* picture);
-extern void fillFrameNumGap (sDecoder* decoder, sSlice *slice);
+extern void fillFrameNumGap (cDecoder264* decoder, sSlice *slice);
 
 extern void updateRefList (sDpb* dpb);
 extern void updateLongTermRefList (sDpb* dpb);
 extern void getSmallestPoc (sDpb* dpb, int* poc, int* pos);
 
-extern void initDpb (sDecoder* decoder, sDpb* dpb, int type);
-extern void reInitDpb (sDecoder* decoder, sDpb* dpb, int type);
+extern void initDpb (cDecoder264* decoder, sDpb* dpb, int type);
+extern void reInitDpb (cDecoder264* decoder, sDpb* dpb, int type);
 extern void flushDpb (sDpb* dpb);
 extern int removeUnusedDpb (sDpb* dpb);
 extern void storePictureDpb (sDpb* dpb, sPicture* picture);
 extern void removeFrameDpb (sDpb* dpb, int pos);
 extern void freeDpb (sDpb* dpb);
 
-extern void initImage (sDecoder* decoder, sImage* image, cSps *sps);
-extern void freeImage (sDecoder* decoder, sImage* image);
+extern void initImage (cDecoder264* decoder, sImage* image, cSps *sps);
+extern void freeImage (cDecoder264* decoder, sImage* image);
 
 extern void initListsSliceI (sSlice* slice);
 extern void initListsSliceP (sSlice* slice);
 extern void initListsSliceB (sSlice* slice);
 extern void updatePicNum (sSlice* slice);
 
-extern void dpbCombineField (sDecoder* decoder, sFrameStore* frameStore);
+extern void dpbCombineField (cDecoder264* decoder, sFrameStore* frameStore);
 extern void reorderRefPicList (sSlice* slice, int curList);
-extern void initMbAffLists (sDecoder* decoder, sSlice* slice);
+extern void initMbAffLists (cDecoder264* decoder, sSlice* slice);
 extern sPicture* getShortTermPic (sSlice* slice, sDpb* dpb, int picNum);
 
 extern void allocRefPicListReordeBuffer (sSlice* slice);

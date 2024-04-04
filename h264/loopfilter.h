@@ -2,5 +2,5 @@
 #include "global.h"
 #include "buffer.h"
 
-extern void deblockPicture (sDecoder* decoder, sPicture* p) ;
-extern void initDeblock (sDecoder* decoder, int mbAffFrame);
+extern void deblockPicture (cDecoder264* decoder, sPicture* p) ;
+extern void initDeblock (cDecoder264* decoder, int mbAffFrame);

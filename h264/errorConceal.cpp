@@ -4,7 +4,7 @@
 //}}}
 
 //{{{
-int setEcFlag (sDecoder* decoder, int se) {
+int setEcFlag (cDecoder264* decoder, int se) {
 
   switch (se) {
     case SE_HEADER :
@@ -86,7 +86,7 @@ int setEcFlag (sDecoder* decoder, int se) {
   }
 //}}}
 //{{{
-void reset_ecFlags (sDecoder* decoder) {
+void reset_ecFlags (cDecoder264* decoder) {
 
   for (int i = 0; i < SE_MAX_ELEMENTS; i++)
     decoder->ecFlag[i] = NO_EC;
@@ -94,7 +94,7 @@ void reset_ecFlags (sDecoder* decoder) {
 //}}}
 
 //{{{
-int get_concealed_element (sDecoder* decoder, sSyntaxElement* se) {
+int get_concealed_element (cDecoder264* decoder, sSyntaxElement* se) {
 
   if (decoder->ecFlag[se->type] == NO_EC)
     return NO_EC;

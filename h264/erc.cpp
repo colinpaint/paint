@@ -119,7 +119,7 @@ static int ercCollectColumnBlocks (int predBlocks[], int currRow, int currColumn
  *      Width of the frame in pixels
 ** **********************************************************************
  */
-static void pixMeanInterpolateBlock (sDecoder* decoder, sPixel *src[], sPixel *block, int blockSize, int frameWidth )
+static void pixMeanInterpolateBlock (cDecoder264* decoder, sPixel *src[], sPixel *block, int blockSize, int frameWidth )
 {
   int row, column, k, tmp, srcCounter = 0, weight = 0, bmax = blockSize - 1;
 
@@ -190,7 +190,7 @@ static void pixMeanInterpolateBlock (sDecoder* decoder, sPixel *src[], sPixel *b
  *      2 for Y, 1 for U/V components
 ** **********************************************************************
  */
-static void ercPixConcealIMB (sDecoder* decoder, sPixel* currFrame, int row, int column, int predBlocks[], int frameWidth, int mbWidthInBlocks)
+static void ercPixConcealIMB (cDecoder264* decoder, sPixel* currFrame, int row, int column, int predBlocks[], int frameWidth, int mbWidthInBlocks)
 {
    sPixel *src[8]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
    sPixel* currBlock = NULL;
@@ -363,7 +363,7 @@ static int ercCollect8PredBlocks (int predBlocks[], int currRow, int currColumn,
  *      The block condition (ok, lost) table
 ** **********************************************************************
  */
-static void concealBlocks (sDecoder* decoder, int lastColumn, int lastRow, int comp, frame *recfr, int picSizeX, char *condition )
+static void concealBlocks (cDecoder264* decoder, int lastColumn, int lastRow, int comp, frame *recfr, int picSizeX, char *condition )
 {
   //int row, column, srcCounter = 0,  thr = ERC_BLOCK_CORRUPTED,
   int row, column, thr = ERC_BLOCK_CORRUPTED,
@@ -541,7 +541,7 @@ static void concealBlocks (sDecoder* decoder, int lastColumn, int lastRow, int c
 //}}}
 
 //{{{
-int ercConcealIntraFrame (sDecoder* decoder, frame *recfr,
+int ercConcealIntraFrame (cDecoder264* decoder, frame *recfr,
                           int picSizeX, int picSizeY, sErcVariables *errorVar )
 {
   int lastColumn = 0, lastRow = 0;
@@ -594,7 +594,7 @@ int ercConcealIntraFrame (sDecoder* decoder, frame *recfr,
 static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
                         int picSizeX, int regionSize)
 {
-  sDecoder* decoder = recfr->decoder;
+  cDecoder264* decoder = recfr->decoder;
   sPicture* picture = decoder->picture;
   int j, k, xmin, ymin, xmax, ymax;
   int locationTmp;
@@ -752,7 +752,7 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
 *      the Y,U,V planes are concatenated y = predMB, u = predMB+256, v = predMB+320
 ************************************************************************
 */
-static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel *predMB)
+static void buildPredRegionYUV (cDecoder264* decoder, int *mv, int x, int y, sPixel *predMB)
 {
   sPixel** tmp_block;
   int i=0, j=0, ii=0, jj=0,i1=0,j1=0,j4=0,i4=0;
@@ -910,7 +910,7 @@ static void buildPredRegionYUV (sDecoder* decoder, int *mv, int x, int y, sPixel
  */
 static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, int regionSize)
 {
-  sDecoder* decoder = recfr->decoder;
+  cDecoder264* decoder = recfr->decoder;
   sPicture* picture = decoder->picture;
   int j, k, location, xmin, ymin;
   sPicture* refPic = decoder->sliceList[0]->listX[0][0];
@@ -1007,7 +1007,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
                           int currMBNum, sObjectBuffer *object_list, int predBlocks[],
                           int picSizeX, int picSizeY, char *yCondition)
 {
-  sDecoder* decoder = recfr->decoder;
+  cDecoder264* decoder = recfr->decoder;
 
   int predMBNum = 0, numMBPerLine,
       compSplit1 = 0, compSplit2 = 0, compLeft = 1, comp = 0, compPred, order = 1,
@@ -1204,7 +1204,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
 int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
                          int picSizeX, int picSizeY, sErcVariables *errorVar, int chromaFormatIdc ) {
 
-  sDecoder* decoder = recfr->decoder;
+  cDecoder264* decoder = recfr->decoder;
 
   int lastColumn = 0, lastRow = 0, predBlocks[8];
   int lastCorruptedRow = -1, firstCorruptedRow = -1;
@@ -1347,7 +1347,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
 *
 *************************************************************************
 */
-static void buildPredblockRegionYUV (sDecoder* decoder, int *mv,
+static void buildPredblockRegionYUV (cDecoder264* decoder, int *mv,
                                     int x, int y, sPixel *predMB, int list, int mbIndex)
 {
   sPixel** tmp_block;
@@ -1519,7 +1519,7 @@ static sPicture* get_last_ref_pic_from_dpb (sDpb* dpb)
 }
 //}}}
 //{{{
-static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
+static void copy_to_conceal (sPicture *src, sPicture *dst, cDecoder264* decoder)
 {
   int i = 0;
   int mv[3];
@@ -1663,7 +1663,7 @@ static void copy_to_conceal (sPicture *src, sPicture *dst, sDecoder* decoder)
 
 static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDpb* dpb)
 {
-  sDecoder* decoder = dpb->decoder;
+  cDecoder264* decoder = dpb->decoder;
   /* get the last ref pic in dpb */
   sPicture *refPic = get_last_ref_pic_from_dpb(dpb);
 
@@ -1675,7 +1675,7 @@ static void copy_prev_pic_to_concealed_pic (sPicture *picture, sDpb* dpb)
 //{{{
 static sPicture* get_pic_from_dpb (sDpb* dpb, int missingpoc, uint32_t *pos)
 {
-  sDecoder* decoder = dpb->decoder;
+  cDecoder264* decoder = dpb->decoder;
   int usedSize = dpb->usedSize - 1;
   int i, concealfrom = 0;
 
@@ -1702,7 +1702,7 @@ static int comp (const void *i, const void *j) {
   }
 //}}}
 //{{{
-static void add_node (sDecoder* decoder, struct sConcealNode *concealment_new )
+static void add_node (cDecoder264* decoder, struct sConcealNode *concealment_new )
 {
   if( decoder->concealHead == NULL ) {
     decoder->concealTail = decoder->concealHead = concealment_new;
@@ -1713,7 +1713,7 @@ static void add_node (sDecoder* decoder, struct sConcealNode *concealment_new )
 }
 //}}}
 //{{{
-static void delete_node (sDecoder* decoder, struct sConcealNode *ptr ) {
+static void delete_node (cDecoder264* decoder, struct sConcealNode *ptr ) {
 
   // We only need to delete the first node in the linked list
   if( ptr == decoder->concealHead ) {
@@ -1727,7 +1727,7 @@ static void delete_node (sDecoder* decoder, struct sConcealNode *ptr ) {
 //{{{
 static void update_ref_list_for_concealment (sDpb* dpb) {
 
-  sDecoder* decoder = dpb->decoder;
+  cDecoder264* decoder = dpb->decoder;
 
   uint32_t j = 0;
   for (uint32_t i = 0; i < dpb->usedSize; i++)
@@ -1764,7 +1764,7 @@ struct sConcealNode * init_node (sPicture* picture, int missingpoc ) {
 */
 void init_lists_for_non_reference_loss (sDpb* dpb, int currSliceType, ePicStructure currPicStructure)
 {
-  sDecoder* decoder = dpb->decoder;
+  cDecoder264* decoder = dpb->decoder;
   cSps *activeSps = decoder->activeSps;
 
   uint32_t i;
@@ -1867,7 +1867,7 @@ void init_lists_for_non_reference_loss (sDpb* dpb, int currSliceType, ePicStruct
 */
 void concealLostFrames (sDpb* dpb, sSlice *slice)
 {
-  sDecoder* decoder = dpb->decoder;
+  cDecoder264* decoder = dpb->decoder;
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
   sPicture *picture = NULL;
@@ -1961,7 +1961,7 @@ void concealLostFrames (sDpb* dpb, sSlice *slice)
 
 void conceal_non_ref_pics (sDpb* dpb, int diff)
 {
-  sDecoder* decoder = dpb->decoder;
+  cDecoder264* decoder = dpb->decoder;
   int missingpoc = 0;
   uint32_t i, pos = 0;
   sPicture *conceal_from_picture = NULL;
@@ -2025,7 +2025,7 @@ void sliding_window_poc_management (sDpb* dpb, sPicture *p)
 {
   if (dpb->usedSize == dpb->size)
   {
-    sDecoder* decoder = dpb->decoder;
+    cDecoder264* decoder = dpb->decoder;
     uint32_t i;
 
     for(i=0;i<dpb->size-1; i++)
@@ -2048,7 +2048,7 @@ void sliding_window_poc_management (sDpb* dpb, sPicture *p)
 
 void write_lost_non_ref_pic (sDpb* dpb, int poc) {
 
-  sDecoder* decoder = dpb->decoder;
+  cDecoder264* decoder = dpb->decoder;
   sFrameStore concealment_fs;
   if (poc > 0) {
     if ((poc - dpb->lastOutputPoc) > decoder->param.pocGap) {
@@ -2074,7 +2074,7 @@ void write_lost_non_ref_pic (sDpb* dpb, int poc) {
 */
 void write_lost_ref_after_idr (sDpb* dpb, int pos) {
 
-  sDecoder* decoder = dpb->decoder;
+  cDecoder264* decoder = dpb->decoder;
   int temp = 1;
   if (decoder->lastOutFramestore->frame == NULL) {
     decoder->lastOutFramestore->frame = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
@@ -2094,7 +2094,7 @@ void write_lost_ref_after_idr (sDpb* dpb, int pos) {
 
 // api
 //{{{
-void ercInit (sDecoder* decoder, int pic_sizex, int pic_sizey, int flag) {
+void ercInit (cDecoder264* decoder, int pic_sizex, int pic_sizey, int flag) {
 
   ercClose(decoder, decoder->ercErrorVar);
   decoder->ercObjectList = (sObjectBuffer*)calloc ((pic_sizex * pic_sizey) >> 6, sizeof(sObjectBuffer));
@@ -2216,7 +2216,7 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
   }
 //}}}
 //{{{
-void ercClose (sDecoder* decoder,  sErcVariables *errorVar ) {
+void ercClose (cDecoder264* decoder,  sErcVariables *errorVar ) {
 
   if (errorVar) {
     if (errorVar->yCondition) {

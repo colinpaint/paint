@@ -15,10 +15,20 @@
 #include "nalu.h"
 #include "loopfilter.h"
 #include "output.h"
-#include "h264decode.h"
-//}}}
 
-sDecoder* gDecoder;
+#include "cDecoder264.h"
+//}}}
+namespace {
+  //{{{
+  static void resetDpb (cDecoder264* decoder, sDpb* dpb) {
+
+    dpb->decoder = decoder;
+    dpb->initDone = 0;
+    }
+  //}}}
+  }
+
+cDecoder264* gDecoder;
 
 //{{{
 void error (const char* text) {
@@ -29,16 +39,9 @@ void error (const char* text) {
   exit (0);
   }
 //}}}
-//{{{
-static void resetDpb (sDecoder* decoder, sDpb* dpb) {
-
-  dpb->decoder = decoder;
-  dpb->initDone = 0;
-  }
-//}}}
 
 //{{{
-sSlice* allocSlice (sDecoder* decoder) {
+sSlice* allocSlice (cDecoder264* decoder) {
 
   sSlice* slice = (sSlice*)calloc (1, sizeof(sSlice));
   if (!slice)
@@ -120,39 +123,9 @@ static void freeSlice (sSlice *slice) {
 //}}}
 
 //{{{
-static void freeDecoder (sDecoder* decoder) {
-
-  free (decoder->annexB);
-  free (decoder->dpb);
-  free (decoder);
-
-  free (decoder->oldSlice);
-  decoder->oldSlice = NULL;
-
-  freeSlice (decoder->nextSlice);
-  decoder->nextSlice = NULL;
-
-  if (decoder->sliceList) {
-    for (int i = 0; i < decoder->numAllocatedSlices; i++)
-      if (decoder->sliceList[i])
-        freeSlice (decoder->sliceList[i]);
-    free (decoder->sliceList);
-    }
-
-  free (decoder->nalu);
-
-  freeDecodedPictures (decoder->outDecodedPics);
-  free (decoder);
-  decoder = nullptr;
-  }
-//}}}
-
-//{{{
 sDataPartition* allocDataPartitions (int n) {
 
   sDataPartition* dataPartitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
-  if (!dataPartitions)
-    error ("allocDataPartitions: Memory allocation for Data dataPartition failed");
 
   for (int i = 0; i < n; ++i) {
     // loop over all dataPartitions
@@ -182,7 +155,7 @@ void freeDataPartitions (sDataPartition* dataPartitions, int n) {
 //}}}
 
 //{{{
-void initGlobalBuffers (sDecoder* decoder) {
+void initGlobalBuffers (cDecoder264* decoder) {
 
   // alloc coding
   if (decoder->coding.isSeperateColourPlane) {
@@ -230,14 +203,14 @@ void initGlobalBuffers (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void freeGlobalBuffers (sDecoder* decoder) {
+void freeGlobalBuffers (cDecoder264* decoder) {
 
   freePicture (decoder->picture);
   decoder->picture = NULL;
   }
 //}}}
 //{{{
-void freeLayerBuffers (sDecoder* decoder) {
+void freeLayerBuffers (cDecoder264* decoder) {
 
   // free coding
   if (decoder->coding.isSeperateColourPlane) {
@@ -300,7 +273,7 @@ sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic) {
   }
 //}}}
 //{{{
-void clearDecodedPics (sDecoder* decoder) {
+void clearDecodedPics (cDecoder264* decoder) {
 
   // find the head first;
   sDecodedPic* prevDecodedPicture = NULL;
@@ -340,14 +313,15 @@ void freeDecodedPictures (sDecodedPic* decodedPic) {
   }
 //}}}
 
+// cDecoder264
 //{{{
-sDecoder* sDecoder::openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize) {
+cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize) {
 
   // alloc decoder
-  sDecoder* decoder = new (sDecoder);
+  cDecoder264* decoder = new (cDecoder264);
   gDecoder = decoder;
 
-  memset (decoder, 0, sizeof(sDecoder));
+  memset (decoder, 0, sizeof(cDecoder264));
 
   initTime();
 
@@ -385,7 +359,28 @@ sDecoder* sDecoder::openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize
   }
 //}}}
 //{{{
-int sDecoder::decodeOneFrame (sDecodedPic** decPicList) {
+cDecoder264::~cDecoder264() {
+
+  free (annexB);
+  free (dpb);
+  free (oldSlice);
+  freeSlice (nextSlice);
+
+  if (sliceList) {
+    for (int i = 0; i < numAllocatedSlices; i++)
+      if (sliceList[i])
+        freeSlice (sliceList[i]);
+    free (sliceList);
+    }
+
+  free (nalu);
+
+  freeDecodedPictures (outDecodedPics);
+  }
+//}}}
+
+//{{{
+int cDecoder264::decodeOneFrame (sDecodedPic** decPicList) {
 
   clearDecodedPics (this);
 
@@ -403,7 +398,7 @@ int sDecoder::decodeOneFrame (sDecodedPic** decPicList) {
   }
 //}}}
 //{{{
-void sDecoder::finishDecoder (sDecodedPic** decPicList) {
+void cDecoder264::finish (sDecodedPic** decPicList) {
 
   clearDecodedPics (this);
   flushDpb (dpb);
@@ -416,7 +411,7 @@ void sDecoder::finishDecoder (sDecodedPic** decPicList) {
   }
 //}}}
 //{{{
-void sDecoder::closeDecoder() {
+void cDecoder264::close() {
 
   closeFmo (this);
   freeLayerBuffers (this);
@@ -432,7 +427,6 @@ void sDecoder::closeDecoder() {
 
   freeDpb (dpb);
   freeOutput (this);
-  freeDecoder (this);
 
   gDecoder = NULL;
   }

@@ -272,6 +272,7 @@ typedef enum {
   } eMvPredType;
 //}}}
 
+typedef uint8_t sPixel;
 struct sConcealNode;
 struct sFrameStore;
 struct sPicture;
@@ -279,8 +280,7 @@ struct sDpb;
 struct sPicMotion;
 struct sMacroBlock;
 struct sSlice;
-class sDecoder;
-typedef uint8_t sPixel;
+class cDecoder264;
 //{{{
 struct sBiContext {
   uint16_t        state; // index into state-table CP
@@ -407,7 +407,7 @@ struct sMotionVec {
 //}}}
 //{{{
 struct sMacroBlock {
-  sDecoder* decoder;
+  cDecoder264* decoder;
   sSlice*   slice;
 
   int     mbIndexX;
@@ -563,7 +563,7 @@ struct sOldSlice {
 //}}}
 //{{{
 struct sSlice {
-  sDecoder* decoder;
+  cDecoder264* decoder;
 
   cPps* activePps;
   cSps* activeSps;
@@ -824,13 +824,14 @@ struct sDebug {
   };
 //}}}
 //{{{
-class sDecoder {
+class cDecoder264 {
 public:
-  static sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize);
+  static cDecoder264* open (sParam* param, uint8_t* chunk, size_t chunkSize);
+  ~cDecoder264();
 
   int decodeOneFrame (sDecodedPic** decPicList);
-  void finishDecoder (sDecodedPic** decPicList);
-  void closeDecoder();
+  void finish (sDecodedPic** decPicList);
+  void close();
 
   sParam       param;
   sDebug       debug;
@@ -981,23 +982,23 @@ public:
   };
 //}}}
 
-extern sDecoder* gDecoder;
+extern cDecoder264* gDecoder;
 
 extern void error (const char* text);
 
-extern void initGlobalBuffers (sDecoder* decoder);
-extern void freeGlobalBuffers (sDecoder* decoder);
-extern void freeLayerBuffers (sDecoder* decoder);
+extern void initGlobalBuffers (cDecoder264* decoder);
+extern void freeGlobalBuffers (cDecoder264* decoder);
+extern void freeLayerBuffers (cDecoder264* decoder);
 
 extern sDataPartition* allocDataPartitions (int n);
 extern void freeDataPartitions (sDataPartition* dataPartitions, int n);
 
-extern sSlice* allocSlice (sDecoder* decoder);
+extern sSlice* allocSlice (cDecoder264* decoder);
 
 extern sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
-extern void clearDecodedPictures (sDecoder* decoder);
+extern void clearDecodedPictures (cDecoder264* decoder);
 extern void freeDecodedPictures (sDecodedPic* decodedPic);
 
 // For 4:4:4 independent mode
-extern void changePlaneJV (sDecoder* decoder, int nplane, sSlice *slice);
-extern void makeFramePictureJV (sDecoder* decoder );
+extern void changePlaneJV (cDecoder264* decoder, int nplane, sSlice *slice);
+extern void makeFramePictureJV (cDecoder264* decoder );

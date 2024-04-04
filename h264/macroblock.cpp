@@ -29,7 +29,7 @@ static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
   int mv_a, mv_b, mv_c, pred_vec=0;
   int mvPredType, rFrameL, rFrameU, rFrameUR;
   int hv;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   mvPredType = MVPRED_MEDIAN;
 
   if (mb->mbField) {
@@ -428,7 +428,7 @@ static void prepareListforRefIndex (sMacroBlock* mb, sSyntaxElement* se,
 //{{{
 void setChromaQp (sMacroBlock* mb) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
   for (int i = 0; i < 2; ++i) {
     mb->qpc[i] = iClip3 (-decoder->coding.bitDepthChromaQpScale, 51, mb->qp + picture->chromaQpOffset[i] );
@@ -440,7 +440,7 @@ void setChromaQp (sMacroBlock* mb) {
 //{{{
 void updateQp (sMacroBlock* mb, int qp) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   mb->qp = qp;
   mb->qpScaled[0] = qp + decoder->coding.bitDepthLumaQpScale;
@@ -455,7 +455,7 @@ void updateQp (sMacroBlock* mb, int qp) {
 void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBlock* mb, const uint8_t *dpMap, int type)
 {
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   se->type = type;
 
@@ -708,7 +708,7 @@ static void setMbPosInfo (sMacroBlock* mb) {
 //{{{
 void startMacroblock (sSlice* slice, sMacroBlock** mb) {
 
-  sDecoder* decoder = slice->decoder;
+  cDecoder264* decoder = slice->decoder;
   int mbIndex = slice->mbIndex;
 
   *mb = &slice->mbData[mbIndex];
@@ -789,7 +789,7 @@ bool exitMacroblock (sSlice* slice, int eos_bit) {
   // picture by checking the tr of the next slice header!
   ++(slice->numDecodedMbs);
 
-  sDecoder* decoder = slice->decoder;
+  cDecoder264* decoder = slice->decoder;
   if (slice->mbIndex == decoder->picSizeInMbs - 1)
     return true;
   else {
@@ -967,7 +967,7 @@ static void interpretMbModeB (sMacroBlock* mb) {
 //{{{
 static void interpretMbModeSI (sMacroBlock* mb) {
 
-  //sDecoder* decoder = mb->decoder;
+  //cDecoder264* decoder = mb->decoder;
   const int ICBPTAB[6] = {0,16,32,15,31,47};
 
   int16_t mbmode = mb->mbType;
@@ -1005,7 +1005,7 @@ static void interpretMbModeSI (sMacroBlock* mb) {
 //{{{
 static void readMotionInfoP (sMacroBlock* mb){
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
   sSyntaxElement se;
@@ -1059,7 +1059,7 @@ static void readMotionInfoP (sMacroBlock* mb){
 static void readMotionInfoB (sMacroBlock* mb) {
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
@@ -1226,7 +1226,7 @@ void getNeighbours (sMacroBlock* mb, sPixelPos* block, int mb_x, int mb_y, int b
 //{{{
 void checkDpNeighbours (sMacroBlock* mb) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sPixelPos up, left;
   decoder->getNeighbour (mb, -1,  0, decoder->mbSize[1], &left);
   decoder->getNeighbour (mb,  0, -1, decoder->mbSize[1], &up);
@@ -1241,7 +1241,7 @@ void checkDpNeighbours (sMacroBlock* mb) {
 //}}}
 
 //{{{
-static void initCurImgY (sDecoder* decoder, sSlice* slice, int plane) {
+static void initCurImgY (cDecoder264* decoder, sSlice* slice, int plane) {
 // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
 // this is intended to make get_block_luma faster, but I'm still performing
 // this at the MB level, and it really should be done at the slice level
@@ -1276,7 +1276,7 @@ static void initCurImgY (sDecoder* decoder, sSlice* slice, int plane) {
   }
 //}}}
 //{{{
-void changePlaneJV (sDecoder* decoder, int nplane, sSlice* slice) {
+void changePlaneJV (cDecoder264* decoder, int nplane, sSlice* slice) {
 
   decoder->mbData = decoder->mbDataJV[nplane];
   decoder->picture  = decoder->decPictureJV[nplane];
@@ -1294,7 +1294,7 @@ void changePlaneJV (sDecoder* decoder, int nplane, sSlice* slice) {
   }
 //}}}
 //{{{
-void makeFramePictureJV (sDecoder* decoder) {
+void makeFramePictureJV (cDecoder264* decoder) {
 
   decoder->picture = decoder->decPictureJV[0];
 
@@ -1321,7 +1321,7 @@ void makeFramePictureJV (sDecoder* decoder) {
 int decodeMacroblock (sMacroBlock* mb, sPicture* picture) {
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   if (slice->chroma444notSeparate) {
     if (!mb->isIntraBlock) {

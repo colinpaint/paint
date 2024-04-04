@@ -45,7 +45,7 @@ void itrans4x4Lossless (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) 
   sPixel** mbRec = slice->mbRec[plane];
   int** mbRess = slice->mbRess [plane];
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
   for (int j = joff; j < joff + BLOCK_SIZE; ++j)
     for (int i = ioff; i < ioff + BLOCK_SIZE; ++i)
@@ -251,7 +251,7 @@ void invResidualTransChroma (sMacroBlock* mb, int uv) {
 void itrans2 (sMacroBlock* mb, eColorPlane plane) {
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   int transform_pl = (decoder->coding.isSeperateColourPlane != 0) ? PLANE_Y : plane;
   int** cof = slice->cof[transform_pl];
@@ -287,7 +287,7 @@ void itrans2 (sMacroBlock* mb, eColorPlane plane) {
 //{{{
 void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
   int qp = (slice->sliceType == eSliceSI) ? slice->qs : slice->qp;
@@ -353,7 +353,7 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 void itransSpChroma (sMacroBlock* mb, int uv) {
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   int mp1[BLOCK_SIZE];
 
@@ -512,7 +512,7 @@ void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb) {
 //{{{
 void iMBtrans8x8 (sMacroBlock* mb, eColorPlane plane) {
 
-  //sDecoder* decoder = mb->decoder;
+  //cDecoder264* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
   sPixel** curr_img = plane ? picture->imgUV[plane - 1]: picture->imgY;
 
@@ -544,7 +544,7 @@ void iMBtrans8x8 (sMacroBlock* mb, eColorPlane plane) {
 void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sPixel** curr_img;
   int uv = plane-1;
@@ -654,7 +654,7 @@ void copyImage16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 //{{{
 int CheckVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
 
   int y_pos = vec1_y>>2;

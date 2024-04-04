@@ -6,7 +6,7 @@
 //}}}
 
 //{{{
-static void allocDecodedPicBuffers (sDecoder* decoder, sDecodedPic* decodedPic, sPicture* p,
+static void allocDecodedPicBuffers (cDecoder264* decoder, sDecodedPic* decodedPic, sPicture* p,
                                     int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
                                     int chromaSizeX, int chromaSizeY) {
 
@@ -51,7 +51,7 @@ static void img2buf (sPixel** imgX, uint8_t* buf,
   }
 //}}}
 //{{{
-static void clearPicture (sDecoder* decoder, sPicture* p) {
+static void clearPicture (cDecoder264* decoder, sPicture* p) {
 
   printf ("-------- clearPicture\n");
 
@@ -69,7 +69,7 @@ static void clearPicture (sDecoder* decoder, sPicture* p) {
   }
 //}}}
 //{{{
-static void writeOutPicture (sDecoder* decoder, sPicture* p) {
+static void writeOutPicture (cDecoder264* decoder, sPicture* p) {
 
   static const int SubWidthC [4]= { 1, 2, 2, 1 };
   static const int SubHeightC [4]= { 1, 2, 1, 1 };
@@ -128,7 +128,7 @@ static void writeOutPicture (sDecoder* decoder, sPicture* p) {
   }
 //}}}
 //{{{
-static void flushPendingOut (sDecoder* decoder) {
+static void flushPendingOut (cDecoder264* decoder) {
 
   if (decoder->pendingOutState != eFrame)
     writeOutPicture (decoder, decoder->pendingOut);
@@ -148,7 +148,7 @@ static void flushPendingOut (sDecoder* decoder) {
 //}}}
 
 //{{{
-static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
+static void writePicture (cDecoder264* decoder, sPicture* p, int realStructure) {
 
   if (realStructure == eFrame) {
     flushPendingOut (decoder);
@@ -222,7 +222,7 @@ static void writePicture (sDecoder* decoder, sPicture* p, int realStructure) {
   }
 //}}}
 //{{{
-static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
+static void writeUnpairedField (cDecoder264* decoder, sFrameStore* frameStore) {
 
   if (frameStore->isUsed & 0x01) {
     // we have a top field, construct an empty bottom field
@@ -261,7 +261,7 @@ static void writeUnpairedField (sDecoder* decoder, sFrameStore* frameStore) {
   }
 //}}}
 //{{{
-static void flushDirectOutput (sDecoder* decoder) {
+static void flushDirectOutput (cDecoder264* decoder) {
 
   writeUnpairedField (decoder, decoder->outBuffer);
   freePicture (decoder->outBuffer->frame);
@@ -278,7 +278,7 @@ static void flushDirectOutput (sDecoder* decoder) {
 //}}}
 
 //{{{
-void allocOutput (sDecoder* decoder) {
+void allocOutput (cDecoder264* decoder) {
 
   decoder->outBuffer = allocFrameStore();
   decoder->pendingOut = (sPicture*)calloc (sizeof(sPicture), 1);
@@ -287,7 +287,7 @@ void allocOutput (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void freeOutput (sDecoder* decoder) {
+void freeOutput (cDecoder264* decoder) {
 
   freeFrameStore (decoder->outBuffer);
   decoder->outBuffer = NULL;
@@ -298,7 +298,7 @@ void freeOutput (sDecoder* decoder) {
 //}}}
 
 //{{{
-void directOutput (sDecoder* decoder, sPicture* picture) {
+void directOutput (cDecoder264* decoder, sPicture* picture) {
 
   if (picture->picStructure == eFrame) {
     // we have a frame (or complementary field pair), so output it directly
@@ -340,7 +340,7 @@ void directOutput (sDecoder* decoder, sPicture* picture) {
   }
 //}}}
 //{{{
-void writeStoredFrame (sDecoder* decoder, sFrameStore* frameStore) {
+void writeStoredFrame (cDecoder264* decoder, sFrameStore* frameStore) {
 
   // make sure no direct output field is pending
   flushDirectOutput (decoder);

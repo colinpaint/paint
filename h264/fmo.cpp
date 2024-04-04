@@ -6,7 +6,7 @@
 //#define PRINT_FMO_MAPS
 
 //{{{
-static void FmoGenerateType0MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMapUnits ) {
+static void FmoGenerateType0MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits ) {
 // Generate interleaved slice group map type MapUnit map (type 0)
 
   cPps* pps = decoder->activePps;
@@ -23,7 +23,7 @@ static void FmoGenerateType0MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMap
 //}}}
 //{{{
 // Generate dispersed slice group map type MapUnit map (type 1)
-static void FmoGenerateType1MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMapUnits ) {
+static void FmoGenerateType1MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits ) {
 
   cPps* pps = decoder->activePps;
   uint32_t i;
@@ -35,7 +35,7 @@ static void FmoGenerateType1MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMap
 //}}}
 //{{{
 // Generate foreground with left-over slice group map type MapUnit map (type 2)
-static void FmoGenerateType2MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMapUnits ) {
+static void FmoGenerateType2MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits ) {
 
   cPps* pps = decoder->activePps;
   int iGroup;
@@ -58,7 +58,7 @@ static void FmoGenerateType2MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMap
 //}}}
 //{{{
 // Generate box-out slice group map type MapUnit map (type 3)
-static void FmoGenerateType3MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMapUnits, sSlice* slice) {
+static void FmoGenerateType3MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits, sSlice* slice) {
 
   cPps* pps = decoder->activePps;
   uint32_t i, k;
@@ -119,7 +119,7 @@ static void FmoGenerateType3MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMap
   }
 //}}}
 //{{{
-static void FmoGenerateType4MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMapUnits, sSlice* slice) {
+static void FmoGenerateType4MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits, sSlice* slice) {
 // Generate raster scan slice group map type MapUnit map (type 4)
 
   cPps* pps = decoder->activePps;
@@ -138,7 +138,7 @@ static void FmoGenerateType4MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMap
 //}}}
 //{{{
 // Generate wipe slice group map type MapUnit map (type 5) *
-static void FmoGenerateType5MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMapUnits, sSlice* slice ) {
+static void FmoGenerateType5MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits, sSlice* slice ) {
 
   cPps* pps = decoder->activePps;
 
@@ -159,7 +159,7 @@ static void FmoGenerateType5MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMap
   }
 //}}}
 //{{{
-static void FmoGenerateType6MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMapUnits ) {
+static void FmoGenerateType6MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits ) {
 // Generate explicit slice group map type MapUnit map (type 6)
 
   cPps* pps = decoder->activePps;
@@ -169,7 +169,7 @@ static void FmoGenerateType6MapUnitMap (sDecoder* decoder, uint32_t PicSizeInMap
   }
 //}}}
 //{{{
-static int FmoGenerateMapUnitToSliceGroupMap (sDecoder* decoder, sSlice* slice) {
+static int FmoGenerateMapUnitToSliceGroupMap (cDecoder264* decoder, sSlice* slice) {
 // Generates decoder->mapUnitToSliceGroupMap
 // Has to be called every time a new Picture Parameter Set is used
 
@@ -230,7 +230,7 @@ static int FmoGenerateMapUnitToSliceGroupMap (sDecoder* decoder, sSlice* slice) 
 //}}}
 //{{{
 // Generates decoder->mbToSliceGroupMap from decoder->mapUnitToSliceGroupMap
-static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *slice) {
+static int FmoGenerateMbToSliceGroupMap (cDecoder264* decoder, sSlice *slice) {
 
   // allocate memory for decoder->mbToSliceGroupMap
   if (decoder->mbToSliceGroupMap)
@@ -265,7 +265,7 @@ static int FmoGenerateMbToSliceGroupMap (sDecoder* decoder, sSlice *slice) {
 //}}}
 
 //{{{
-int initFmo (sDecoder* decoder, sSlice* slice) {
+int initFmo (cDecoder264* decoder, sSlice* slice) {
 
   cPps* pps = decoder->activePps;
 
@@ -302,7 +302,7 @@ int initFmo (sDecoder* decoder, sSlice* slice) {
 //}}}
 
 //{{{
-int closeFmo (sDecoder* decoder) {
+int closeFmo (cDecoder264* decoder) {
 
   if (decoder->mbToSliceGroupMap) {
     free (decoder->mbToSliceGroupMap);
@@ -318,17 +318,17 @@ int closeFmo (sDecoder* decoder) {
   }
 //}}}
 //{{{
-int FmoGetNumberOfSliceGroup (sDecoder* decoder) {
+int FmoGetNumberOfSliceGroup (cDecoder264* decoder) {
   return decoder->sliceGroupsNum;
   }
 //}}}
 //{{{
-int FmoGetLastMBOfPicture (sDecoder* decoder) {
+int FmoGetLastMBOfPicture (cDecoder264* decoder) {
   return FmoGetLastMBInSliceGroup (decoder, FmoGetNumberOfSliceGroup(decoder)-1);
   }
 //}}}
 //{{{
-int FmoGetLastMBInSliceGroup (sDecoder* decoder, int SliceGroup) {
+int FmoGetLastMBInSliceGroup (cDecoder264* decoder, int SliceGroup) {
 
   int i;
   for (i = decoder->picSizeInMbs-1; i >= 0; i--)
@@ -338,13 +338,13 @@ int FmoGetLastMBInSliceGroup (sDecoder* decoder, int SliceGroup) {
   }
 //}}}
 //{{{
-int FmoGetSliceGroupId (sDecoder* decoder, int mb) {
+int FmoGetSliceGroupId (cDecoder264* decoder, int mb) {
 
   return decoder->mbToSliceGroupMap[mb];
   }
 //}}}
 //{{{
-int FmoGetNextMBNr (sDecoder* decoder, int CurrentMbNr) {
+int FmoGetNextMBNr (cDecoder264* decoder, int CurrentMbNr) {
 
   int SliceGroup = FmoGetSliceGroupId (decoder, CurrentMbNr);
 

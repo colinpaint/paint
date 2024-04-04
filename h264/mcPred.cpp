@@ -35,7 +35,7 @@ void freePred (sSlice* slice) {
 //{{{
 static void update_direct_mv_info_temporal (sMacroBlock* mb) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
   int j,k;
 
@@ -293,7 +293,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     return 1;
   else {
     sSlice* slice = mb->slice;
-    sDecoder* decoder = mb->decoder;
+    cDecoder264* decoder = mb->decoder;
     if ((slice->mbAffFrame) ||
         (!decoder->activeSps->frameMbOnly &&
         ((!slice->picStructure && list1->codingType == eFieldCoding) ||
@@ -359,7 +359,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
 
   if (has_direct)
   {
-    //sDecoder* decoder = mb->decoder;
+    //cDecoder264* decoder = mb->decoder;
     sSlice* slice = mb->slice;
     int i,j,k;
 
@@ -518,7 +518,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
 
   if (has_direct)
   {
-    sDecoder* decoder = mb->decoder;
+    cDecoder264* decoder = mb->decoder;
     sSlice* slice = mb->slice;
     int i,j,k;
 
@@ -1558,7 +1558,7 @@ static void get_chroma_XY (sPixel* block, sPixel* pixel, int span, int blockSize
 //{{{
 static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpelX, int subpelY, int maxold_x, int maxold_y,
                              int blockSizeX, int vert_block_size, int shiftpelX, int shiftpelY,
-                             sPixel *block1, sPixel *block2, int totalScale, sPixel no_ref_value, sDecoder* decoder)
+                             sPixel *block1, sPixel *block2, int totalScale, sPixel no_ref_value, cDecoder264* decoder)
 {
   sPixel *img1,*img2;
   int16_t dx,dy;
@@ -1617,7 +1617,7 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
 //{{{
 void intra_cr_decoding (sMacroBlock* mb, int yuv)
 {
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
   sPixel** curUV;
@@ -1772,7 +1772,7 @@ void prepare_direct_params (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl
     set_direct_references (&pixelPos[2], &l0_refC, &l1_refC, mvInfo);
     }
   else {
-    sDecoder* decoder = mb->decoder;
+    cDecoder264* decoder = mb->decoder;
     if (mb->mbField) {
       set_direct_references_mb_field (&pixelPos[0], &l0_refA, &l1_refA, mvInfo, decoder->mbData);
       set_direct_references_mb_field (&pixelPos[1], &l0_refB, &l1_refB, mvInfo, decoder->mbData);
@@ -1819,7 +1819,7 @@ static inline int check_vert_mv (int llimit, int vec1_y,int rlimit) {
 //{{{
 static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
 {
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
   cSps *activeSps = slice->activeSps;
   sPixel** tempBlockL0 = slice->tempBlockL0;
@@ -1912,7 +1912,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
 //{{{
 static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
 {
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
   cSps *activeSps = slice->activeSps;
   sPixel** tempBlockL0 = slice->tempBlockL0;
@@ -1992,7 +1992,7 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
 {
   static const int mv_mul = 16;
   int  vec1_x, vec1_y, vec2_x, vec2_y;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
   int weightedBiPredIdc = decoder->activePps->weightedBiPredIdc;
@@ -2129,7 +2129,7 @@ static void perform_mc_bi (sMacroBlock* mb, eColorPlane plane, sPicture* picture
 {
   static const int mv_mul = 16;
   int vec1_x=0, vec1_y=0, vec2_x=0, vec2_y=0;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
   int blockYaff = mb->blockYaff;

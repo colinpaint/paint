@@ -1,11 +1,11 @@
 #pragma once
 #include "global.h"
 
-class sDecoder;
+class cDecoder264;
 
 class cAnnexB {
 public:
-  cAnnexB (sDecoder* decoder);
+  cAnnexB (cDecoder264* decoder);
   ~cAnnexB();
 
   void open (uint8_t* chunk, size_t chunkSize);
@@ -59,14 +59,14 @@ public:
   cNalu (int bufferSize);
   ~cNalu();
 
-  int readNalu (sDecoder* decoder);
+  int readNalu (cDecoder264* decoder);
   void debug();
 
   int NALUtoRBSP();
   int RBSPtoSODB (uint8_t* bitStreamBuffer);
 
-  void checkZeroByteVCL (sDecoder* decoder);
-  void checkZeroByteNonVCL (sDecoder* decoder);
+  void checkZeroByteVCL (cDecoder264* decoder);
+  void checkZeroByteNonVCL (cDecoder264* decoder);
   //{{{  vars
   int        startCodeLen = 0; // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
   uint32_t   len = 0;          // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
@@ -79,5 +79,5 @@ public:
   //}}}
 
 private:
-  int getNALU (cAnnexB* annexB, sDecoder* decoder);
+  int getNALU (cAnnexB* annexB, cDecoder264* decoder);
   };

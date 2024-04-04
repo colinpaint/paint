@@ -458,7 +458,7 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,
 }
 //}}}
 //{{{
-int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (sDecoder* decoder, sSyntaxElement* se, sBitStream* s)
+int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s)
 {
   static const uint8_t lentab[3][4][17] =
   {
@@ -682,7 +682,7 @@ int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  sBitStream* s) {
   }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZerosChromaDC (sDecoder* decoder, sSyntaxElement* se, sBitStream* s) {
+int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s) {
 
   //{{{
   static const uint8_t lentab[3][TOTRUN_NUM][16] =

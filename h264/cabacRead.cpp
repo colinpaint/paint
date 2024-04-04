@@ -13,7 +13,7 @@ static void readCompCoef8x8cabacLossless (sMacroBlock* mb, sSyntaxElement* se, e
 
   if (mb->codedBlockPattern & (1 << b8)) {
     // are there any coefficients in the current block
-    sDecoder* decoder = mb->decoder;
+    cDecoder264* decoder = mb->decoder;
     sSlice* slice = mb->slice;
 
     int64_t cbp_mask = (int64_t) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
@@ -141,7 +141,7 @@ static void readCompCoefx4smbCabac (sMacroBlock* mb, sSyntaxElement* se, eColorP
 static void readCompCoef4x4cabacLossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
                                           int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int start_scan = IS_I16MB (mb)? 1 : 0;
 
   if( plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0) )
@@ -163,7 +163,7 @@ static void readCompCoef4x4cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
                                   int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern) {
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int start_scan = IS_I16MB (mb)? 1 : 0;
   int blockY, blockX;
   int i, j;
@@ -233,7 +233,7 @@ static void readCompCoef8x8cabac (sMacroBlock* mb, sSyntaxElement* se, eColorPla
 
   if (mb->codedBlockPattern & (1<<b8)) {
     // are there any coefficients in the current block
-    sDecoder* decoder = mb->decoder;
+    cDecoder264* decoder = mb->decoder;
     int transform_pl = (decoder->coding.isSeperateColourPlane != 0) ? mb->slice->colourPlaneId : plane;
 
     int** tcoeffs;
@@ -329,7 +329,7 @@ void setReadCompCabac (sMacroBlock* mb) {
 //{{{
 static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
   int k;
@@ -481,7 +481,7 @@ static void readCbpCoefsFromNaluCabac400 (sMacroBlock* mb) {
 //{{{
 static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
   int i, k;
@@ -708,7 +708,7 @@ static void readCbpCoefsFromNaluCabac444 (sMacroBlock* mb) {
 //{{{
 static void readCbpCoefsFromNaluCabac422 (sMacroBlock* mb) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
   int i,j,k;
@@ -1041,7 +1041,7 @@ static void readCbpCoefsFromNaluCabac420 (sMacroBlock* mb) {
   int i0, j0;
 
   int qp_per, qp_rem;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int smb = ((decoder->coding.sliceType == eSliceSP) && (mb->isIntraBlock == false)) ||
              (decoder->coding.sliceType == eSliceSI && mb->mbType == SI4MB);
 

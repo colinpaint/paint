@@ -1,10 +1,10 @@
 #pragma once
 
-extern int initFmo (sDecoder* decoder, sSlice* slice);
-extern int closeFmo (sDecoder* decoder);
+extern int initFmo (cDecoder264* decoder, sSlice* slice);
+extern int closeFmo (cDecoder264* decoder);
 
-extern int FmoGetNumberOfSliceGroup (sDecoder* decoder);
-extern int FmoGetLastMBOfPicture (sDecoder* decoder);
-extern int FmoGetLastMBInSliceGroup (sDecoder* decoder, int SliceGroup);
-extern int FmoGetSliceGroupId (sDecoder* decoder, int mb);
-extern int FmoGetNextMBNr (sDecoder* decoder, int CurrentMbNr);
+extern int FmoGetNumberOfSliceGroup (cDecoder264* decoder);
+extern int FmoGetLastMBOfPicture (cDecoder264* decoder);
+extern int FmoGetLastMBInSliceGroup (cDecoder264* decoder, int SliceGroup);
+extern int FmoGetSliceGroupId (cDecoder264* decoder, int mb);
+extern int FmoGetNextMBNr (cDecoder264* decoder, int CurrentMbNr);

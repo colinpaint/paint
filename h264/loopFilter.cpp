@@ -118,7 +118,7 @@ static void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
   int      QP;
   sPixelPos pixP, pixQ;
 
-  sDecoder* decoder = mbQ->decoder;
+  cDecoder264* decoder = mbQ->decoder;
   int bitDepthScale = plane ? decoder->coding.bitDepthScale[eChroma] : decoder->coding.bitDepthScale[eLuma];
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
@@ -218,7 +218,7 @@ static void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, uint8_t* 
 
   sPixelPos pixP, pixQ;
 
-  sDecoder* decoder = mbQ->decoder;
+  cDecoder264* decoder = mbQ->decoder;
   int      bitDepthScale = plane? decoder->coding.bitDepthScale[eChroma] : decoder->coding.bitDepthScale[eLuma];
   int      max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
@@ -322,7 +322,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, uint8_t *Strength, sMacroB
   int      Alpha = 0, Beta = 0;
   const uint8_t* ClipTab = NULL;
   int      indexA, indexB;
-  sDecoder* decoder = mbQ->decoder;
+  cDecoder264* decoder = mbQ->decoder;
   int      PelNum = pelnum_cr[0][p->chromaFormatIdc];
   int      StrengthIdx;
   int      QP;
@@ -385,7 +385,7 @@ static void edge_loop_chroma_ver_MBAff (sPixel** img, uint8_t *Strength, sMacroB
 //{{{
 static void edge_loop_chroma_hor_MBAff (sPixel** img, uint8_t *Strength, sMacroBlock* mbQ, int edge, int uv, sPicture *p)
 {
-  sDecoder* decoder = mbQ->decoder;
+  cDecoder264* decoder = mbQ->decoder;
   int PelNum = pelnum_cr[1][p->chromaFormatIdc];
   int yQ = (edge < MB_BLOCK_SIZE? edge : 1);
   sPixelPos pixP, pixQ;
@@ -458,7 +458,7 @@ static void get_strength_ver_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
   int    StrValue, i;
   int16_t  mb_x, mb_y;
   sPixelPos pixP;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sBlockPos *picPos = decoder->picPos;
 
   sMacroBlock* MbP;
@@ -630,7 +630,7 @@ static void get_strength_hor_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
   int16_t  mb_x, mb_y;
   sMacroBlock *MbP;
   sPixelPos pixP;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sBlockPos *picPos = decoder->picPos;
 
   if ((p->sliceType==eSliceSP)||(p->sliceType==eSliceSI) ) {
@@ -733,7 +733,7 @@ static void get_strength_hor_MBAff (uint8_t* Strength, sMacroBlock* mb, int edge
   }
 //}}}
 //{{{
-static void set_loop_filter_functions_mbaff (sDecoder* decoder) {
+static void set_loop_filter_functions_mbaff (cDecoder264* decoder) {
 
   decoder->edgeLoopLumaV = edge_loop_luma_ver_MBAff;
   decoder->edgeLoopLumaH = edge_loop_luma_hor_MBAff;
@@ -1074,7 +1074,7 @@ static void luma_ver_deblock_normal (sPixel** pixel, int pos_x1,
 //{{{
 static void edge_loop_luma_ver (eColorPlane plane, sPixel** img, uint8_t* Strength, sMacroBlock* mb, int edge) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   sMacroBlock* MbP = get_non_aff_neighbour_luma (mb, edge - 1, 0);
   if (MbP || (mb->deblockFilterDisableIdc == 0)) {
@@ -1213,7 +1213,7 @@ static void luma_hor_deblock_normal (sPixel* imgP, sPixel* imgQ, int width,
 static void edge_loop_luma_hor (eColorPlane plane, sPixel** img, uint8_t* Strength,
                                 sMacroBlock* mb, int edge, sPicture *p) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   int ypos = (edge < MB_BLOCK_SIZE ? edge - 1: 0);
   sMacroBlock *MbP = get_non_aff_neighbour_luma (mb, 0, ypos);
@@ -1254,7 +1254,7 @@ static void edge_loop_luma_hor (eColorPlane plane, sPixel** img, uint8_t* Streng
 static void edge_loop_chroma_ver (sPixel** img, uint8_t* Strength, sMacroBlock* mb,
                                   int edge, int uv, sPicture *p) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   int block_width  = decoder->mbCrSizeX;
   int block_height = decoder->mbCrSizeY;
@@ -1318,7 +1318,7 @@ static void edge_loop_chroma_ver (sPixel** img, uint8_t* Strength, sMacroBlock* 
 static void edge_loop_chroma_hor (sPixel** img, uint8_t* Strength, sMacroBlock* mb,
                                   int edge, int uv, sPicture *p) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int block_width = decoder->mbCrSizeX;
   int block_height = decoder->mbCrSizeY;
   int xQ = 0;
@@ -1382,7 +1382,7 @@ static void edge_loop_chroma_hor (sPixel** img, uint8_t* Strength, sMacroBlock* 
   }
 //}}}
 //{{{
-static void set_loop_filter_functions_normal (sDecoder* decoder) {
+static void set_loop_filter_functions_normal (cDecoder264* decoder) {
 
   decoder->getStrengthV = get_strength_ver;
   decoder->getStrengthH = get_strength_hor;
@@ -1395,7 +1395,7 @@ static void set_loop_filter_functions_normal (sDecoder* decoder) {
 
 // loopfilter
 //{{{
-static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
+static void deblockMb (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
   sMacroBlock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
 
@@ -1554,7 +1554,7 @@ static void deblockMb (sDecoder* decoder, sPicture* p, int mbIndex) {
   }
 //}}}
 //{{{
-static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
+static void getDeblockStrength (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
   sMacroBlock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
 
@@ -1647,7 +1647,7 @@ static void getDeblockStrength (sDecoder* decoder, sPicture* p, int mbIndex) {
   }
 //}}}
 //{{{
-static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
+static void performDeblock (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
   sMacroBlock* mb = &(decoder->mbData[mbIndex]) ; // current Mb
 
@@ -1797,7 +1797,7 @@ static void performDeblock (sDecoder* decoder, sPicture* p, int mbIndex) {
   }
 //}}}
 //{{{
-void deblockPicture (sDecoder* decoder, sPicture* p) {
+void deblockPicture (cDecoder264* decoder, sPicture* p) {
 
   if (p->mbAffFrame)
     for (uint32_t i = 0; i < p->picSizeInMbs; ++i)
@@ -1812,7 +1812,7 @@ void deblockPicture (sDecoder* decoder, sPicture* p) {
 //}}}
 
 //{{{
-static void initNeighbours (sDecoder* decoder) {
+static void initNeighbours (cDecoder264* decoder) {
 
   int size = decoder->picSizeInMbs;
   int width = decoder->coding.picWidthMbs;
@@ -1850,7 +1850,7 @@ static void initNeighbours (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void initDeblock (sDecoder* decoder, int mbAffFrame) {
+void initDeblock (cDecoder264* decoder, int mbAffFrame) {
 
   if (decoder->coding.yuvFormat == YUV444 && decoder->coding.isSeperateColourPlane) {
     changePlaneJV (decoder, PLANE_Y, NULL);

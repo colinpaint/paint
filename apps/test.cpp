@@ -49,8 +49,7 @@ extern "C" {
 #include "../decoders/cDecoder.h"
 
 // h264
-#include "../h264/win32.h"
-#include "../h264/h264decode.h"
+#include "../h264/cDecoder264.h"
 
 // app
 #include "../app/cApp.h"
@@ -876,7 +875,7 @@ public:
   string getFileName() const { return mFileName; }
   cTransportStream::cService* getService() { return mService; }
 
-  sDecoder* getDecoder() { return mDecoder; }
+  cDecoder264* getDecoder() { return mDecoder; }
   cVideoFrame* getVideoFrame() { return mVideoFrame; }
 
   bool getPlaying() const { return mPlaying; }
@@ -965,7 +964,7 @@ public:
       param.dpbPlus[0] = 1;
       param.intraProfileDeblocking = 1;
 
-      mDecoder = sDecoder::openDecoder (&param, h264Chunk, h264ChunkSize);
+      mDecoder = cDecoder264::open (&param, h264Chunk, h264ChunkSize);
 
       sDecodedPic* decodedPics;
       int ret = 0;
@@ -981,9 +980,9 @@ public:
 
         } while (ret == DEC_SUCCEED);
 
-      mDecoder->finishDecoder (&decodedPics);
+      mDecoder->finish (&decodedPics);
       outputDecodedPics (decodedPics);
-      mDecoder->closeDecoder();
+      mDecoder->close();
 
       delete[] h264Chunk;
 
@@ -1028,7 +1027,7 @@ private:
   int64_t mPlayPts = -1;
   bool mPlaying = true;
 
-  sDecoder* mDecoder = nullptr;
+  cDecoder264* mDecoder = nullptr;
   bool mDeblock = true;
 
   size_t mOutputFrame = 0;
@@ -1045,7 +1044,7 @@ public:
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
 
-  sDecoder* getDecoder() { return mFilePlayer ? mFilePlayer->getDecoder() : mDecoder; }
+  cDecoder264* getDecoder() { return mFilePlayer ? mFilePlayer->getDecoder() : mDecoder; }
   cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
 
   bool getPlaying() { return mFilePlayer ? mFilePlayer->getPlaying() : mPlaying; }
@@ -1100,7 +1099,7 @@ public:
       param.refPocGap = 2;
       param.dpbPlus[0] = 1;
       param.intraProfileDeblocking = 1;
-      mDecoder = sDecoder::openDecoder (&param, chunk, fileSize);
+      mDecoder = cDecoder264::open (&param, chunk, fileSize);
 
       int ret = 0;
       sDecodedPic* decodedPics;
@@ -1116,9 +1115,9 @@ public:
 
         } while (ret == DEC_SUCCEED);
 
-      mDecoder->finishDecoder (&decodedPics);
+      mDecoder->finish (&decodedPics);
       outputDecodedPics (decodedPics);
-      mDecoder->closeDecoder();
+      mDecoder->close();
 
       delete[] chunk;
 
@@ -1170,7 +1169,7 @@ private:
   cApp::cOptions* mOptions;
   cFilePlayer* mFilePlayer = nullptr;
 
-  sDecoder* mDecoder = nullptr;
+  cDecoder264* mDecoder = nullptr;
 
   bool mPlaying = true;
 
@@ -1216,7 +1215,7 @@ public:
     ImGui::SetCursorPos ({3.f,ImGui::GetIO().DisplaySize.y - menuHeight});
     ImGui::BeginChild ("menu", {0.f,menuHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
 
-    sDecoder* decoder = testApp.getDecoder();
+    cDecoder264* decoder = testApp.getDecoder();
     if (decoder) {
       //{{{  draw decoder info
       ImGui::PushFont (testApp.getMonoFont());

@@ -86,7 +86,7 @@ string cSps::getString() {
 
 // static
 //{{{
-int cSps::readNalu (sDecoder* decoder, cNalu* nalu) {
+int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->stream->errorFlag = 0;
@@ -108,7 +108,7 @@ int cSps::readNalu (sDecoder* decoder, cNalu* nalu) {
 //}}}
 
 //{{{
-void cSps::readFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen) {
+void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int naluLen) {
 
   naluLen = naluLen;
 

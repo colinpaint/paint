@@ -121,7 +121,7 @@ int mbPredIntra8x8 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture
 static void setChromaVector (sMacroBlock* mb)
 {
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   if (!slice->mbAffFrame) {
     if(slice->picStructure == eTopField) {
@@ -188,7 +188,7 @@ static void setChromaVector (sMacroBlock* mb)
 //{{{
 int mbPredSkip (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   sSlice* slice = mb->slice;
   setChromaVector (mb);
@@ -323,7 +323,7 @@ int mbPredBd8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
 
   int k, i, j, i4, j4, j6;
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sPicMotion* mvInfo = NULL, *colocated = NULL;
 
   int listOffset = mb->listOffset;
@@ -492,7 +492,7 @@ int mbPredBd4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
   int refList;
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   int listOffset = mb->listOffset;
   sPicture** list0 = slice->listX[LIST_0 + listOffset];
@@ -596,7 +596,7 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
   int i4, j4;
   int block8x8;
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   sPicMotion* mvInfo;
   int listOffset = mb->listOffset;
@@ -780,7 +780,7 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
   int k;
   int block8x8;
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   sPicMotion* mvInfo;
   int listOffset = mb->listOffset;
@@ -942,7 +942,7 @@ int mbPredBinter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
   int k;
   int block8x8;   // needed for ABT
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   int listOffset = mb->listOffset;
   sPicture** list0 = slice->listX[LIST_0 + listOffset];
@@ -1040,7 +1040,7 @@ int mbPredBinter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 //{{{
 int mbPredIpcm (sMacroBlock* mb) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   sSlice* slice = mb->slice;
   sPicture* picture = slice->picture;

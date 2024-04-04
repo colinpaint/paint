@@ -1310,7 +1310,7 @@ namespace {
   //{{{
   void ercWriteMbModeMv (sMacroBlock* mb) {
 
-    sDecoder* decoder = mb->decoder;
+    cDecoder264* decoder = mb->decoder;
     int curMbNum = mb->mbIndexX;
     sPicture* picture = decoder->picture;
 
@@ -1494,7 +1494,7 @@ namespace {
   //}}}
 
   //{{{
-  void setCoding (sDecoder* decoder) {
+  void setCoding (cDecoder264* decoder) {
 
     decoder->widthCr = 0;
     decoder->heightCr = 0;
@@ -1603,7 +1603,7 @@ namespace {
     }
   //}}}
   //{{{
-  void setCodingParam (sDecoder* decoder, cSps* sps) {
+  void setCodingParam (cDecoder264* decoder, cSps* sps) {
 
     // maximum vertical motion vector range in luma quarter pixel units
     decoder->coding.profileIdc = sps->profileIdc;
@@ -1722,7 +1722,7 @@ namespace {
     }
   //}}}
   //{{{
-  void setFormat (sDecoder* decoder, cSps* sps, sFrameFormat* source, sFrameFormat* output) {
+  void setFormat (cDecoder264* decoder, cSps* sps, sFrameFormat* source, sFrameFormat* output) {
 
     static const int kSubWidthC[4] = { 1, 2, 2, 1};
     static const int kSubHeightC[4] = { 1, 2, 1, 1};
@@ -1792,7 +1792,7 @@ namespace {
   //{{{
   void reorderLists (sSlice* slice) {
 
-    sDecoder* decoder = slice->decoder;
+    cDecoder264* decoder = slice->decoder;
 
     if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
       if (slice->refPicReorderFlag[LIST_0])
@@ -1818,7 +1818,7 @@ namespace {
     }
   //}}}
   //{{{
-  void initRefPicture (sSlice* slice, sDecoder* decoder) {
+  void initRefPicture (sSlice* slice, cDecoder264* decoder) {
 
     sPicture* vidRefPicture = decoder->noReferencePicture;
     int noRef = slice->framePoc < decoder->recoveryPoc;
@@ -1857,7 +1857,7 @@ namespace {
     }
   //}}}
   //{{{
-  void copyDecPictureJV (sDecoder* decoder, sPicture* dst, sPicture* src) {
+  void copyDecPictureJV (cDecoder264* decoder, sPicture* dst, sPicture* src) {
 
     dst->poc = src->poc;
     dst->topPoc = src->topPoc;
@@ -1908,7 +1908,7 @@ namespace {
     }
   //}}}
   //{{{
-  void mbAffPostProc (sDecoder* decoder) {
+  void mbAffPostProc (cDecoder264* decoder) {
 
     sPicture* picture = decoder->picture;
 
@@ -1936,7 +1936,7 @@ namespace {
   //}}}
 
   //{{{
-  void endDecodeFrame (sDecoder* decoder) {
+  void endDecodeFrame (cDecoder264* decoder) {
 
     // return if the last picture has already been finished
     if (!decoder->picture ||
@@ -2106,7 +2106,7 @@ namespace {
     }
   //}}}
   //{{{
-  void initPicture (sDecoder* decoder, sSlice* slice) {
+  void initPicture (cDecoder264* decoder, sSlice* slice) {
 
     sDpb* dpb = slice->dpb;
     cSps* activeSps = decoder->activeSps;
@@ -2279,7 +2279,7 @@ namespace {
     }
   //}}}
   //{{{
-  void useParameterSet (sDecoder* decoder, sSlice* slice) {
+  void useParameterSet (cDecoder264* decoder, sSlice* slice) {
 
     cPps* pps = &decoder->pps[slice->ppsId];
     if (!pps->ok)
@@ -2356,7 +2356,7 @@ namespace {
     }
   //}}}
   //{{{
-  void initPictureDecode (sDecoder* decoder) {
+  void initPictureDecode (cDecoder264* decoder) {
 
     int deblockMode = 1;
 
@@ -2386,7 +2386,7 @@ namespace {
     }
   //}}}
   //{{{
-  void initSlice (sDecoder* decoder, sSlice* slice) {
+  void initSlice (cDecoder264* decoder, sSlice* slice) {
 
     decoder->activeSps = slice->activeSps;
     decoder->activePps = slice->activePps;
@@ -2433,7 +2433,7 @@ namespace {
     if (slice->isIDR && oldSlice->isIDR)
       result |= (oldSlice->idrPicId != slice->idrPicId);
 
-    sDecoder* decoder = slice->decoder;
+    cDecoder264* decoder = slice->decoder;
 
     if (!decoder->activeSps->pocType) {
       result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
@@ -2453,7 +2453,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readDecRefPicMarking (sDecoder* decoder, sBitStream* s, sSlice* slice) {
+  void readDecRefPicMarking (cDecoder264* decoder, sBitStream* s, sSlice* slice) {
 
     // free old buffer content
     while (slice->decRefPicMarkBuffer) {
@@ -2501,7 +2501,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readSliceHeader (sDecoder* decoder, sSlice* slice) {
+  void readSliceHeader (cDecoder264* decoder, sSlice* slice) {
   // Some slice syntax depends on parameterSet depends on parameterSetID of the slice header
   // - read the ppsId of the slice header first
   //   - then setup the active parameter sets
@@ -2795,7 +2795,7 @@ namespace {
 
     int curHeader = 0;
 
-    sDecoder* decoder = slice->decoder;
+    cDecoder264* decoder = slice->decoder;
 
     for (;;) {
       cNalu* nalu = decoder->nalu;
@@ -3043,7 +3043,7 @@ namespace {
 
     slice->codCount = -1;
 
-    sDecoder* decoder = slice->decoder;
+    cDecoder264* decoder = slice->decoder;
     if (decoder->coding.isSeperateColourPlane)
       changePlaneJV (decoder, slice->colourPlaneId, slice);
     else {
@@ -3080,7 +3080,7 @@ namespace {
   }
 
 //{{{
-void padPicture (sDecoder* decoder, sPicture* picture) {
+void padPicture (cDecoder264* decoder, sPicture* picture) {
 
   padBuf (*picture->imgY, picture->sizeX, picture->sizeY,
            picture->lumaStride, decoder->coding.lumaPadX, decoder->coding.lumaPadY);
@@ -3094,7 +3094,7 @@ void padPicture (sDecoder* decoder, sPicture* picture) {
   }
 //}}}
 //{{{
-void decodePOC (sDecoder* decoder, sSlice* slice) {
+void decodePOC (cDecoder264* decoder, sSlice* slice) {
 
   cSps* activeSps = decoder->activeSps;
   uint32_t maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
@@ -3279,7 +3279,7 @@ void initOldSlice (sOldSlice* oldSlice) {
 //}}}
 
 //{{{
-int decodeFrame (sDecoder* decoder) {
+int decodeFrame (cDecoder264* decoder) {
 
   int ret = 0;
 

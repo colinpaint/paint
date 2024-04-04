@@ -6,7 +6,7 @@ constexpr int kMaxPps = 4;
 
 class cPps {
 public:
-  static int readNalu (sDecoder* decoder, cNalu* nalu);
+  static int readNalu (cDecoder264* decoder, cNalu* nalu);
 
   std::string getString();
   bool isEqual (cPps& pps);
@@ -67,5 +67,5 @@ public:
   int      chromaQpOffset2 = 0;              // se(v)
 
 private:
-  void readFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen);
+  void readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int naluLen);
   };

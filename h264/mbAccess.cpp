@@ -125,7 +125,7 @@ void getMbBlockPosMbaff (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y)
 //}}}
 
 //{{{
-void getMbPos (sDecoder* decoder, int mbIndex, int mbSize[2], int16_t* x, int16_t* y) {
+void getMbPos (cDecoder264* decoder, int mbIndex, int mbSize[2], int16_t* x, int16_t* y) {
 
   decoder->getMbBlockPos (decoder->picPos, mbIndex, x, y);
   (*x) = (int16_t) ((*x) * mbSize[0]);
@@ -182,7 +182,7 @@ void getNonAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelP
 //{{{
 void getAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos* pixelPos) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int maxW, maxH;
   int yM = -1;
 

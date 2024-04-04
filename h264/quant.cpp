@@ -148,7 +148,7 @@ static void CalculateQuant8x8Param (sSlice* slice) {
 //}}}
 
 //{{{
-void allocQuant (sDecoder* decoder) {
+void allocQuant (cDecoder264* decoder) {
 // alloc quant matrices
 
   int bitDepth_qp_scale = imax (decoder->coding.bitDepthLumaQpScale, decoder->coding.bitDepthChromaQpScale);
@@ -166,7 +166,7 @@ void allocQuant (sDecoder* decoder) {
   }
 //}}}
 //{{{
-void freeQuant (sDecoder* decoder) {
+void freeQuant (cDecoder264* decoder) {
 
   free (decoder->qpPerMatrix);
   decoder->qpPerMatrix = NULL;

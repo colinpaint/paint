@@ -12,7 +12,7 @@
 //{{{
 static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   // left block
   sPixelPos pixelPos;
@@ -107,7 +107,7 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
 
   sPicture* picture = mb->slice->picture;
   if (picture->chromaFormatIdc != YUV444) {
-    sDecoder* decoder = mb->decoder;
+    cDecoder264* decoder = mb->decoder;
     sSlice* slice = mb->slice;
     sPixelPos pixelPos;
 
@@ -161,7 +161,7 @@ void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
                        int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int mb_nr = mb->mbIndexX;
 
   int k, code, vlcnum;
@@ -332,7 +332,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
   static const int incVlc[] = {0, 3, 6, 12, 24, 48, 32768};    // maximum vlc = 6
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int mb_nr = mb->mbIndexX;
 
   int k, code, vlcnum;
@@ -554,7 +554,7 @@ static void readCompCoef4x4cavlc (sMacroBlock* mb, eColorPlane plane,
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   const uint8_t (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
@@ -621,7 +621,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   const uint8_t (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
@@ -683,7 +683,7 @@ static void readCompCoef8x8cavlc (sMacroBlock* mb, eColorPlane plane,
 
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   const uint8_t (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
@@ -750,7 +750,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
 
   sSlice* slice = mb->slice;
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   const uint8_t (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
   int start_scan = IS_I16MB(mb) ? 1 : 0;
@@ -825,7 +825,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int intra = (mb->isIntraBlock == true);
   int need_transform_sizeFlag;
 
@@ -940,7 +940,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
 //{{{
 static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
 
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   sSlice* slice = mb->slice;
 
   int i,j,k;
@@ -1231,7 +1231,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
   sSyntaxElement se;
   sDataPartition *dataPartition = NULL;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
 
   int intra = (mb->isIntraBlock == true);
 
@@ -1404,7 +1404,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-  sDecoder* decoder = mb->decoder;
+  cDecoder264* decoder = mb->decoder;
   int smb = ((decoder->coding.sliceType == eSliceSP) && (mb->isIntraBlock == false)) ||
             ((decoder->coding.sliceType == eSliceSI) && (mb->mbType == SI4MB));
 

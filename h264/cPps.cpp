@@ -147,7 +147,7 @@ bool cPps::isEqual (cPps& pps) {
 //}}}
 
 //{{{
-int cPps::readNalu (sDecoder* decoder, cNalu* nalu) {
+int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
   dataPartition->stream->errorFlag = 0;
@@ -178,7 +178,7 @@ int cPps::readNalu (sDecoder* decoder, cNalu* nalu) {
 
 // private
 //{{{
-void cPps::readFromStream (sDecoder* decoder, sDataPartition* dataPartition, int naluLen) {
+void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int naluLen) {
 // read PPS from NALU
 
   sBitStream* s = dataPartition->stream;

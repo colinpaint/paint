@@ -142,7 +142,7 @@ static const int A[4][4] = {
 };
 //}}}
 
-extern void allocQuant (sDecoder* decoder);
-extern void freeQuant (sDecoder* decoder);
+extern void allocQuant (cDecoder264* decoder);
+extern void freeQuant (cDecoder264* decoder);
 
 extern void useQuantParams (sSlice* currslice);

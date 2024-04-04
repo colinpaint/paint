@@ -23,7 +23,7 @@ namespace {
 
 // cAnnexB
 //{{{
-cAnnexB::cAnnexB (sDecoder* decoder) {
+cAnnexB::cAnnexB (cDecoder264* decoder) {
   naluBuffer = (uint8_t*)malloc (decoder->nalu->maxSize);
   }
 //}}}
@@ -79,7 +79,7 @@ cNalu::~cNalu() {
 //}}}
 
 //{{{
-void cNalu::checkZeroByteVCL (sDecoder* decoder) {
+void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 
   int CheckZeroByte = 0;
 
@@ -104,7 +104,7 @@ void cNalu::checkZeroByteVCL (sDecoder* decoder) {
    }
 //}}}
 //{{{
-void cNalu::checkZeroByteNonVCL (sDecoder* decoder) {
+void cNalu::checkZeroByteNonVCL (cDecoder264* decoder) {
 
   int CheckZeroByte = 0;
 
@@ -140,7 +140,7 @@ void cNalu::checkZeroByteNonVCL (sDecoder* decoder) {
 //}}}
 
 //{{{
-int cNalu::readNalu (sDecoder* decoder) {
+int cNalu::readNalu (cDecoder264* decoder) {
 
   int ret = getNALU (decoder->annexB, decoder);
   if (ret < 0)
@@ -209,7 +209,7 @@ void cNalu::debug() {
 
 // private
 //{{{
-int cNalu::getNALU (cAnnexB* annexB, sDecoder* decoder) {
+int cNalu::getNALU (cAnnexB* annexB, cDecoder264* decoder) {
 
   int naluBufCount = 0;
   uint8_t* naluBufPtr = annexB->naluBuffer;
