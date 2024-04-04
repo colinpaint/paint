@@ -1614,33 +1614,6 @@ namespace {
       }
     }
   //}}}
-  //{{{
-  void mbAffPostProc (cDecoder264* decoder) {
-
-    sPicture* picture = decoder->picture;
-
-    sPixel** imgY = picture->imgY;
-    sPixel*** imgUV = picture->imgUV;
-
-    for (uint32_t i = 0; i < picture->picSizeInMbs; i += 2) {
-      if (picture->motion.mbField[i]) {
-        int16_t x0;
-        int16_t y0;
-        getMbPos (decoder, i, decoder->mbSize[eLuma], &x0, &y0);
-
-        sPixel tempBuffer[32][16];
-        updateMbAff (imgY + y0, tempBuffer, x0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-
-        if (picture->chromaFormatIdc != YUV400) {
-          x0 = (int16_t)((x0 * decoder->mbCrSizeX) >> 4);
-          y0 = (int16_t)((y0 * decoder->mbCrSizeY) >> 4);
-          updateMbAff (imgUV[0] + y0, tempBuffer, x0, decoder->mbCrSizeX, decoder->mbCrSizeY);
-          updateMbAff (imgUV[1] + y0, tempBuffer, x0, decoder->mbCrSizeX, decoder->mbCrSizeY);
-          }
-        }
-      }
-    }
-  //}}}
 
   //{{{
   void endDecodeFrame (cDecoder264* decoder) {
@@ -1723,7 +1696,7 @@ namespace {
       makeFramePictureJV (decoder);
 
     if (decoder->picture->mbAffFrame)
-      mbAffPostProc (decoder);
+      decoder->mbAffPostProc();
     if (decoder->coding.picStructure != eFrame)
        decoder->idrFrameNum /= 2;
     if (decoder->picture->usedForReference)
@@ -3496,6 +3469,31 @@ void cDecoder264::setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* outp
 
   output->colourModel = source->colourModel;
   output->yuvFormat = source->yuvFormat = (eYuvFormat)sps->chromaFormatIdc;
+  }
+//}}}
+//{{{
+void cDecoder264::mbAffPostProc() {
+
+  sPixel** imgY = picture->imgY;
+  sPixel*** imgUV = picture->imgUV;
+
+  for (uint32_t i = 0; i < picture->picSizeInMbs; i += 2) {
+    if (picture->motion.mbField[i]) {
+      int16_t x0;
+      int16_t y0;
+      getMbPos (this, i, mbSize[eLuma], &x0, &y0);
+
+      sPixel tempBuffer[32][16];
+      updateMbAff (imgY + y0, tempBuffer, x0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+
+      if (picture->chromaFormatIdc != YUV400) {
+        x0 = (int16_t)((x0 * mbCrSizeX) >> 4);
+        y0 = (int16_t)((y0 * mbCrSizeY) >> 4);
+        updateMbAff (imgUV[0] + y0, tempBuffer, x0, mbCrSizeX, mbCrSizeY);
+        updateMbAff (imgUV[1] + y0, tempBuffer, x0, mbCrSizeX, mbCrSizeY);
+        }
+      }
+    }
   }
 //}}}
 //{{{
