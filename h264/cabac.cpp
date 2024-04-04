@@ -304,10 +304,8 @@ void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeE
 //}}}
 
 //{{{
-int checkNextMbGetFieldModeCabacSliceP (sSlice* slice, sSyntaxElement* se,
-                                                    sDataPartition* act_dp) {
+int checkNextMbGetFieldModeCabacSliceP (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp) {
 
-  cDecoder264* decoder = slice->decoder;
   sBiContext* mb_type_ctx_copy[3];
   sBiContext* mb_aff_ctx_copy;
   sCabacDecodeEnv* decodingEnv_copy;
@@ -324,7 +322,7 @@ int checkNextMbGetFieldModeCabacSliceP (sSlice* slice, sSyntaxElement* se,
   ++slice->mbIndex;
 
   mb = &slice->mbData[slice->mbIndex];
-  mb->decoder = decoder;
+  mb->decoder = slice->decoder;
   mb->slice = slice;
   mb->sliceNum = slice->curSliceIndex;
   mb->mbField = slice->mbData[slice->mbIndex-1].mbField;
@@ -342,7 +340,7 @@ int checkNextMbGetFieldModeCabacSliceP (sSlice* slice, sSyntaxElement* se,
   // copy
   memcpy (decodingEnv_copy,cabacDecodeEnv,sizeof(sCabacDecodeEnv));
   length = *(decodingEnv_copy->codeStreamLen) = *(cabacDecodeEnv->codeStreamLen);
-  for (int i=0;i<3;++i)
+  for (int i = 0; i < 3;++i)
     memcpy (mb_type_ctx_copy[i], motionInfoContexts->mbTypeContexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContext) );
   memcpy (mb_aff_ctx_copy, motionInfoContexts->mbAffContexts,NUM_MB_AFF_CTX*sizeof(sBiContext) );
 
@@ -381,7 +379,6 @@ int checkNextMbGetFieldModeCabacSliceP (sSlice* slice, sSyntaxElement* se,
 //{{{
 int checkNextMbGetFieldModeCabacSliceB (sSlice* slice, sSyntaxElement* se, sDataPartition  *act_dp) {
 
-  cDecoder264* decoder = slice->decoder;
   sBiContext* mb_type_ctx_copy[3];
   sBiContext* mb_aff_ctx_copy;
   sCabacDecodeEnv* decodingEnv_copy;
@@ -400,7 +397,7 @@ int checkNextMbGetFieldModeCabacSliceB (sSlice* slice, sSyntaxElement* se, sData
   ++slice->mbIndex;
 
   mb = &slice->mbData[slice->mbIndex];
-  mb->decoder = decoder;
+  mb->decoder = slice->decoder;
   mb->slice = slice;
   mb->sliceNum = slice->curSliceIndex;
   mb->mbField = slice->mbData[slice->mbIndex-1].mbField;
@@ -514,7 +511,7 @@ void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv*
   int k = (se->value2 >> 1); // MVD component
 
   sPixelPos block_a, block_b;
-  get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+  get4x4NeighbourBase (mb, i - 1, j, decoder->mbSize[eLuma], &block_a);
   if (block_a.available) {
     a = iabs (slice->mbData[block_a.mbIndex].mvd[list_idx][block_a.y][block_a.x][k]);
     if (slice->mbAffFrame && (k == 1)) {
@@ -525,7 +522,7 @@ void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv*
       }
     }
 
-  get4x4NeighbourBase(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+  get4x4NeighbourBase(mb, i, j - 1, decoder->mbSize[eLuma], &block_b);
   if (block_b.available) {
     b = iabs(slice->mbData[block_b.mbIndex].mvd[list_idx][block_b.y][block_b.x][k]);
     if (slice->mbAffFrame && (k==1)) {
@@ -984,8 +981,8 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
   int list = se->value2;
 
   sPixelPos block_a, block_b;
-  get4x4Neighbour (mb, mb->subblockX - 1, mb->subblockY    , decoder->mbSize[eLuma], &block_a);
-  get4x4Neighbour (mb, mb->subblockX,     mb->subblockY - 1, decoder->mbSize[eLuma], &block_b);
+  get4x4Neighbour (mb, mb->subblockX - 1, mb->subblockY, decoder->mbSize[eLuma], &block_a);
+  get4x4Neighbour (mb, mb->subblockX, mb->subblockY - 1, decoder->mbSize[eLuma], &block_b);
 
   if (block_b.available) {
     int b8b = ((block_b.x >> 1) & 0x01) + (block_b.y & 0x02);

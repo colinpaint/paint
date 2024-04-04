@@ -1231,32 +1231,6 @@ namespace {
     }
   //}}}
   //{{{
-  void copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
-
-    oldSlice->ppsId = slice->ppsId;
-    oldSlice->frameNum = slice->frameNum;
-    oldSlice->fieldPic = slice->fieldPic;
-
-    if (slice->fieldPic)
-      oldSlice->botField = slice->botField;
-
-    oldSlice->nalRefIdc = slice->refId;
-
-    oldSlice->isIDR = (uint8_t)slice->isIDR;
-    if (slice->isIDR)
-      oldSlice->idrPicId = slice->idrPicId;
-
-    if (slice->decoder->activeSps->pocType == 0) {
-      oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
-      oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
-      }
-    else if (slice->decoder->activeSps->pocType == 1) {
-      oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
-      oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
-      }
-    }
-  //}}}
-  //{{{
   void initCabacContexts (sSlice* slice) {
 
     //{{{
@@ -1336,34 +1310,6 @@ namespace {
       PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ONE_CTX,  tc->oneContexts,     INIT_ONE,       cabacInitIdc, qp);
       PBIARI_CTX_INIT2 (NUM_BLOCK_TYPES, NUM_ABS_CTX,  tc->absContexts,     INIT_ABS,       cabacInitIdc, qp);
       }
-    }
-  //}}}
-  //{{{
-  void reorderLists (sSlice* slice) {
-
-    cDecoder264* decoder = slice->decoder;
-
-    if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
-      if (slice->refPicReorderFlag[LIST_0])
-        reorderRefPicList (slice, LIST_0);
-      if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
-        cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
-                   slice->numRefIndexActive[LIST_0]-1, decoder->nonConformingStream ? "conform":"");
-      else
-        slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
-      }
-
-    if (slice->sliceType == eSliceB) {
-      if (slice->refPicReorderFlag[LIST_1])
-        reorderRefPicList (slice, LIST_1);
-      if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
-         cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
-                slice->numRefIndexActive[LIST_0] - 1, decoder->nonConformingStream ? "conform" : "");
-      else
-        slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
-      }
-
-    freeRefPicListReorderBuffer (slice);
     }
   //}}}
 
@@ -1577,48 +1523,11 @@ namespace {
       }
     }
   //}}}
-  //{{{
-  int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
-
-    int result = (NULL == picture);
-
-    result |= (oldSlice->ppsId != slice->ppsId);
-    result |= (oldSlice->frameNum != slice->frameNum);
-    result |= (oldSlice->fieldPic != slice->fieldPic);
-
-    if (slice->fieldPic && oldSlice->fieldPic)
-      result |= (oldSlice->botField != slice->botField);
-
-    result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
-    result |= (oldSlice->isIDR != slice->isIDR);
-
-    if (slice->isIDR && oldSlice->isIDR)
-      result |= (oldSlice->idrPicId != slice->idrPicId);
-
-    cDecoder264* decoder = slice->decoder;
-
-    if (!decoder->activeSps->pocType) {
-      result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
-      if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
-        result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
-      }
-
-    if (decoder->activeSps->pocType == 1) {
-      if (!decoder->activeSps->deltaPicOrderAlwaysZero) {
-        result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
-        if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
-          result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
-        }
-      }
-
-    return result;
-    }
-  //}}}
   }
 
 // sSlice
 //{{{
-sSlice* allocSlice (cDecoder264* decoder) {
+sSlice* allocSlice() {
 
   sSlice* slice = (sSlice*)calloc (1, sizeof(sSlice));
   if (!slice)
@@ -2227,7 +2136,7 @@ int cDecoder264::decodeFrame() {
   while ((curHeader != eSOP) && (curHeader != eEOS)) {
     //{{{  no pending slices
     if (!sliceList[picSliceIndex])
-      sliceList[picSliceIndex] = allocSlice (this);
+      sliceList[picSliceIndex] = allocSlice();
 
     sSlice* slice = sliceList[picSliceIndex];
     slice->decoder = this;
@@ -2707,6 +2616,41 @@ void cDecoder264::setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* outp
 //}}}
 
 //{{{
+bool cDecoder264::isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
+
+  bool result = (NULL == picture);
+
+  result |= (oldSlice->ppsId != slice->ppsId);
+  result |= (oldSlice->frameNum != slice->frameNum);
+  result |= (oldSlice->fieldPic != slice->fieldPic);
+
+  if (slice->fieldPic && oldSlice->fieldPic)
+    result |= (oldSlice->botField != slice->botField);
+
+  result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
+  result |= (oldSlice->isIDR != slice->isIDR);
+
+  if (slice->isIDR && oldSlice->isIDR)
+    result |= (oldSlice->idrPicId != slice->idrPicId);
+
+  if (!activeSps->pocType) {
+    result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
+    if ((activePps->frameBotField == 1) && !slice->fieldPic)
+      result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
+    }
+
+  if (activeSps->pocType == 1) {
+    if (!activeSps->deltaPicOrderAlwaysZero) {
+      result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
+      if ((activePps->frameBotField == 1) && !slice->fieldPic)
+        result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
+      }
+    }
+
+  return result;
+  }
+//}}}
+//{{{
 void cDecoder264::readDecRefPicMarking (sBitStream* s, sSlice* slice) {
 
   // free old buffer content
@@ -3022,6 +2966,58 @@ void cDecoder264::initSlice (sSlice* slice) {
   else {
     slice->linfoCbpIntra = linfo_cbp_intra_normal;
     slice->linfoCbpInter = linfo_cbp_inter_normal;
+    }
+  }
+//}}}
+//{{{
+void cDecoder264::reorderLists (sSlice* slice) {
+
+  if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
+    if (slice->refPicReorderFlag[LIST_0])
+      reorderRefPicList (slice, LIST_0);
+    if (noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
+      cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
+                 slice->numRefIndexActive[LIST_0]-1, nonConformingStream ? "conform":"");
+    else
+      slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
+    }
+
+  if (slice->sliceType == eSliceB) {
+    if (slice->refPicReorderFlag[LIST_1])
+      reorderRefPicList (slice, LIST_1);
+    if (noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
+       cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
+              slice->numRefIndexActive[LIST_0] - 1, nonConformingStream ? "conform" : "");
+    else
+      slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
+    }
+
+  freeRefPicListReorderBuffer (slice);
+  }
+//}}}
+//{{{
+void cDecoder264::copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
+
+  oldSlice->ppsId = slice->ppsId;
+  oldSlice->frameNum = slice->frameNum;
+  oldSlice->fieldPic = slice->fieldPic;
+
+  if (slice->fieldPic)
+    oldSlice->botField = slice->botField;
+
+  oldSlice->nalRefIdc = slice->refId;
+
+  oldSlice->isIDR = (uint8_t)slice->isIDR;
+  if (slice->isIDR)
+    oldSlice->idrPicId = slice->idrPicId;
+
+  if (activeSps->pocType == 0) {
+    oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
+    oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
+    }
+  else if (activeSps->pocType == 1) {
+    oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
+    oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
     }
   }
 //}}}

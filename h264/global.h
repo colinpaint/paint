@@ -1017,11 +1017,14 @@ private:
   void setCodingParam (cSps* sps);
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
 
+  bool isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice);
   void readDecRefPicMarking (sBitStream* s, sSlice* slice);
   void initMbAffLists (sSlice* slice);
   void initPicture (sSlice* slice);
   void initRefPicture (sSlice* slice);
   void initSlice (sSlice* slice);
+  void reorderLists (sSlice* slice);
+  void copySliceInfo (sSlice* slice, sOldSlice* oldSlice);
   void useParameterSet (sSlice* slice);
 
   void readSliceHeader (sSlice* slice);
@@ -1030,7 +1033,7 @@ private:
   void endDecodeFrame();
   };
 //}}}
-sSlice* allocSlice (cDecoder264* decoder);
+sSlice* allocSlice();
 sDataPartition* allocDataPartitions (int n);
 void freeDataPartitions (sDataPartition* dataPartitions, int n);
 void initGlobalBuffers (cDecoder264* decoder);
