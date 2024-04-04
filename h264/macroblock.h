@@ -127,8 +127,8 @@ static const uint8_t cofuv_blk_y[3][8][4] = {
 extern void readCoef4x4cavlc (sMacroBlock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 extern void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 
-extern void setReadMacroblock (sSlice* slice);
-extern void setReadCbpCoefCavlc (sSlice* slice);
+extern void setReadMacroblock (cSlice* slice);
+extern void setReadCbpCoefCavlc (cSlice* slice);
 extern void setReadCompCoefCavlc (sMacroBlock* mb);
 
 extern int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j);
@@ -137,14 +137,14 @@ extern int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int 
 extern void setReadCompCabac (sMacroBlock* mb);
 extern void setReadCompCoefCavlc (sMacroBlock* mb);
 
-extern void setSliceFunctions (sSlice* slice);
-extern void setup_slice_methods_mbaff (sSlice* slice);
+extern void setSliceFunctions (cSlice* slice);
+extern void setup_slice_methods_mbaff (cSlice* slice);
 
 extern void getNeighbours (sMacroBlock* mb, sPixelPos *block, int mb_x, int mb_y, int blockshape_x);
 
-extern void startMacroblock (sSlice* slice, sMacroBlock** mb);
+extern void startMacroblock (cSlice* slice, sMacroBlock** mb);
 extern int decodeMacroblock (sMacroBlock* mb, sPicture* picture);
-extern bool exitMacroblock (sSlice* slice, int eos_bit);
+extern bool exitMacroblock (cSlice* slice, int eos_bit);
 
 extern void updateQp (sMacroBlock* mb, int qp);
 

@@ -29,7 +29,7 @@ static void sample_reconstruct (sPixel** curImg, sPixel** mpr, int** mbRess, int
 //{{{
 void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int** mbRess = slice->mbRess[plane];
   inverse4x4 (slice->cof[plane],mbRess,joff,ioff);
 
@@ -39,7 +39,7 @@ void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 //{{{
 void itrans4x4Lossless (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPixel** mbPred = slice->mbPred[plane];
   sPixel** mbRec = slice->mbRec[plane];
   int** mbRess = slice->mbRess [plane];
@@ -55,7 +55,7 @@ void itrans4x4Lossless (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) 
 //{{{
 void invResidualTrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPixel** mbPred = slice->mbPred[plane];
   sPixel** mbRec = slice->mbRec[plane];
   int** mbRess = slice->mbRess[plane];
@@ -107,7 +107,7 @@ void invResidualTrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff
 //{{{
 void invResidualTrans8x8 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPixel** mbPred = slice->mbPred[plane];
   sPixel** mbRec  = slice->mbRec[plane];
   int** mbRess = slice->mbRess[plane];
@@ -167,7 +167,7 @@ void invResidualTrans8x8 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff
 //{{{
 void invResidualTrans16x16 (sMacroBlock* mb, eColorPlane plane) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPixel** mbPred = slice->mbPred[plane];
   sPixel** mbRec = slice->mbRec[plane];
   int** mbRess = slice->mbRess[plane];
@@ -212,7 +212,7 @@ void invResidualTrans16x16 (sMacroBlock* mb, eColorPlane plane) {
 //{{{
 void invResidualTransChroma (sMacroBlock* mb, int uv) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int** mbRess = slice->mbRess[uv+1];
   int** cof = slice->cof[uv+1];
 
@@ -249,7 +249,7 @@ void invResidualTransChroma (sMacroBlock* mb, int uv) {
 //{{{
 void itrans2 (sMacroBlock* mb, eColorPlane plane) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int transform_pl = (decoder->coding.isSeperateColourPlane != 0) ? PLANE_Y : plane;
@@ -287,7 +287,7 @@ void itrans2 (sMacroBlock* mb, eColorPlane plane) {
 void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   int qp = (slice->sliceType == eSliceSI) ? slice->qs : slice->qp;
   int qp_per = decoder->qpPerMatrix[qp];
@@ -351,7 +351,7 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 //{{{
 void itransSpChroma (sMacroBlock* mb, int uv) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int mp1[BLOCK_SIZE];
@@ -446,7 +446,7 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
 //{{{
 void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPicture* picture = mb->slice->picture;
   sPixel** curr_img = plane ? picture->imgUV[plane - 1] : picture->imgY;
 
@@ -542,7 +542,7 @@ void iMBtrans8x8 (sMacroBlock* mb, eColorPlane plane) {
 //{{{
 void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sPixel** curr_img;

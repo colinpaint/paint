@@ -2,8 +2,8 @@
 #include "global.h"
 #include "buffer.h"
 
-extern void allocPred (sSlice* slice);
-extern void freePred (sSlice* slice);
+extern void allocPred (cSlice* slice);
+extern void freePred (cSlice* slice);
 
 extern void get_block_luma (sPicture* curRef, int x_pos, int y_pos,
                             int blockSizeX, int blockSizeY, sPixel** block,
@@ -18,4 +18,4 @@ extern void prepare_direct_params (sMacroBlock* mb, sPicture* picture,
 extern void perform_mc (sMacroBlock* mb, eColorPlane plane, sPicture* picture,
                         int predDir, int i, int j, int blockSizeX, int blockSizeY);
 
-extern void update_direct_types (sSlice* slice);
+extern void update_direct_types (cSlice* slice);

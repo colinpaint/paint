@@ -24,10 +24,10 @@ using namespace std;
 //}}}
 
 //{{{
-sSlice* sSlice::allocSlice() {
+cSlice* cSlice::allocSlice() {
 
-  sSlice* slice = new sSlice();
-  memset (slice, 1, sizeof(sSlice));
+  cSlice* slice = new cSlice();
+  memset (slice, 1, sizeof(cSlice));
 
   // create all context models
   slice->motionInfoContexts = createMotionInfoContexts();
@@ -65,7 +65,7 @@ sSlice* sSlice::allocSlice() {
   }
 //}}}
 //{{{
-sSlice::~sSlice() {
+cSlice::~cSlice() {
 
   if (sliceType != eSliceI && sliceType != eSliceSI)
     freeRefPicListReorderBuffer (this);

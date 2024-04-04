@@ -35,7 +35,7 @@
 //{{{
 static int intra4x4_dc_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int j;
@@ -107,7 +107,7 @@ static int intra4x4_dc_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int j
 //{{{
 static int intra4x4_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int block_available_up;
@@ -138,7 +138,7 @@ static int intra4x4_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int
 static int intra4x4_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   cDecoder264* decoder = mb->decoder;
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
 
   sPixelPos pix_a;
 
@@ -171,7 +171,7 @@ static int intra4x4_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int 
 //{{{
 static int intra4x4_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
@@ -238,7 +238,7 @@ static int intra4x4_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, in
 //{{{
 static int intra4x4_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixelPos pix_b, pix_c;
@@ -300,7 +300,7 @@ static int intra4x4_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int
 //{{{
 static int intra4x4_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixelPos pix_a, pix_b, pix_d;
@@ -368,7 +368,7 @@ static int intra4x4_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int iof
 //{{{
 static int intra4x4_vert_left_pred (sMacroBlock *mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixelPos pix_b, pix_c;
@@ -432,7 +432,7 @@ static int intra4x4_vert_left_pred (sMacroBlock *mb, eColorPlane plane, int ioff
 //{{{
 static int intra4x4_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixelPos pix_a;
@@ -486,7 +486,7 @@ static int intra4x4_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, i
 //{{{
 static int intra4x4_hor_down_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixelPos pix_a, pix_b, pix_d;
@@ -607,7 +607,7 @@ int intra_pred_4x4_normal (sMacroBlock* mb, eColorPlane plane, int ioff, int jof
 //{{{
 static int intra4x4_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i,j;
@@ -672,7 +672,7 @@ static int intra4x4_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff,
 //{{{
 static int intra4x4_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int block_available_up;
@@ -703,7 +703,7 @@ static int intra4x4_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int iof
 static int intra4x4_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
 
@@ -737,7 +737,7 @@ static int intra4x4_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff
 //{{{
 static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
@@ -804,7 +804,7 @@ static int intra4x4_diag_down_right_pred_mbaff (sMacroBlock* mb, eColorPlane pla
 //{{{
 static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixelPos pix_b, pix_c;
@@ -866,7 +866,7 @@ static int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb, eColorPlane plan
 //{{{
 static int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
@@ -935,7 +935,7 @@ static int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, i
 //{{{
 static int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixelPos pix_b, pix_c;
@@ -999,7 +999,7 @@ static int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, in
 //{{{
 static int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;
@@ -1053,7 +1053,7 @@ static int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int i
 //{{{
 static int intra4x4_hor_down_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel** imgY = (plane) ? slice->picture->imgUV[plane - 1] : slice->picture->imgY;

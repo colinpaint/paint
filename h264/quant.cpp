@@ -97,7 +97,7 @@ static void setDequant8x8 (int (*InvLevelScale8x8)[8], const int (*dequant)[8], 
 //}}}
 
 //{{{
-static void CalculateQuant4x4Param (sSlice* slice) {
+static void CalculateQuant4x4Param (cSlice* slice) {
 
   const int (*p_dequant_coef)[4][4] = dequant_coef;
   int (*InvLevelScale4x4_Intra_0)[4][4] = slice->InvLevelScale4x4_Intra[0];
@@ -118,7 +118,7 @@ static void CalculateQuant4x4Param (sSlice* slice) {
   }
 //}}}
 //{{{
-static void CalculateQuant8x8Param (sSlice* slice) {
+static void CalculateQuant8x8Param (cSlice* slice) {
 
   const int (*p_dequant_coef)[8][8] = dequant_coef8;
   int (*InvLevelScale8x8_Intra_0)[8][8] = slice->InvLevelScale8x8_Intra[0];
@@ -176,7 +176,7 @@ void freeQuant (cDecoder264* decoder) {
 //}}}
 
 //{{{
-void useQuantParams (sSlice* slice) {
+void useQuantParams (cSlice* slice) {
 
   cSps* sps = slice->activeSps;
   cPps* pps = slice->activePps;

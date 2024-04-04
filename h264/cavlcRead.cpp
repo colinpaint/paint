@@ -19,7 +19,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
   get4x4Neighbour (mb, i - 1, j, decoder->mbSize[eLuma], &pixelPos);
 
   int cnt = 0;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   if ((mb->isIntraBlock == true) && pixelPos.available &&
       decoder->activePps->hasConstrainedIntraPred && (slice->dataPartitionMode == eDataPartition3)) {
     pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
@@ -108,7 +108,7 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
   sPicture* picture = mb->slice->picture;
   if (picture->chromaFormatIdc != YUV444) {
     cDecoder264* decoder = mb->decoder;
-    sSlice* slice = mb->slice;
+    cSlice* slice = mb->slice;
     sPixelPos pixelPos;
 
     int pred_nnz = 0;
@@ -160,7 +160,7 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
 void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
                        int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   int mb_nr = mb->mbIndexX;
 
@@ -331,7 +331,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
 
   static const int incVlc[] = {0, 3, 6, 12, 24, 48, 32768};    // maximum vlc = 6
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   int mb_nr = mb->mbIndexX;
 
@@ -553,7 +553,7 @@ static void readCompCoef4x4cavlc (sMacroBlock* mb, eColorPlane plane,
   int i0, j0;
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   const uint8_t (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
@@ -620,7 +620,7 @@ static void read_comp_coeff_4x4_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
 
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   const uint8_t (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
@@ -682,7 +682,7 @@ static void readCompCoef8x8cavlc (sMacroBlock* mb, eColorPlane plane,
                                   int (*InvLevelScale8x8)[8], int qp_per, int codedBlockPattern, uint8_t** nzcoeff) {
 
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   const uint8_t (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
@@ -749,7 +749,7 @@ static void read_comp_coeff_8x8_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
 
   int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   const uint8_t (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
@@ -816,7 +816,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
   int mb_nr = mb->mbIndexX;
   int codedBlockPattern;
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int i0, j0;
 
   int levarr[16], runarr[16], numcoeff;
@@ -941,7 +941,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
 static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
 
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   int i,j,k;
   int mb_nr = mb->mbIndexX;
@@ -1214,7 +1214,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
 //{{{
 static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   int i,k;
   int mb_nr = mb->mbIndexX;
@@ -1390,7 +1390,7 @@ static void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
 //{{{
 static void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   int i,j,k;
   int mb_nr = mb->mbIndexX;
@@ -1636,7 +1636,7 @@ void setReadCompCoefCavlc (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-void setReadCbpCoefCavlc (sSlice* slice) {
+void setReadCbpCoefCavlc (cSlice* slice) {
 
   switch (slice->decoder->activeSps->chromaFormatIdc) {
     case YUV444:

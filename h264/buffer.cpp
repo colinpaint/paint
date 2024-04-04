@@ -779,7 +779,7 @@ void freePicture (sPicture* picture) {
   }
 //}}}
 //{{{
-void fillFrameNumGap (cDecoder264* decoder, sSlice* slice) {
+void fillFrameNumGap (cDecoder264* decoder, cSlice* slice) {
 
   cSps* activeSps = decoder->activeSps;
 
@@ -1391,7 +1391,7 @@ static void idrMemoryManagement (sDpb* dpb, sPicture* p) {
   }
 //}}}
 //{{{
-static sPicture* getLongTermPic (sSlice* slice, sDpb* dpb, int LongtermPicNum) {
+static sPicture* getLongTermPic (cSlice* slice, sDpb* dpb, int LongtermPicNum) {
 
   for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
     if (slice->picStructure == eFrame) {
@@ -1930,7 +1930,7 @@ void freeImage (cDecoder264* decoder, sImage* image) {
 
 // slice
 //{{{
-static void reorderShortTerm (sSlice* slice, int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
+static void reorderShortTerm (cSlice* slice, int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
 
   sPicture** refPicListX = slice->listX[curList];
   sPicture* picLX = getShortTermPic (slice, slice->dpb, picNumLX);
@@ -1947,7 +1947,7 @@ static void reorderShortTerm (sSlice* slice, int curList, int numRefIndexIXactiv
   }
 //}}}
 //{{{
-static void reorderLongTerm (sSlice* slice, sPicture** refPicListX,
+static void reorderLongTerm (cSlice* slice, sPicture** refPicListX,
                              int numRefIndexIXactiveMinus1, int LongTermPicNum, int *refIdxLX) {
 
   sPicture* picLX = getLongTermPic (slice, slice->dpb, LongTermPicNum);
@@ -1964,7 +1964,7 @@ static void reorderLongTerm (sSlice* slice, sPicture** refPicListX,
   }
 //}}}
 //{{{
-void reorderRefPicList (sSlice* slice, int curList) {
+void reorderRefPicList (cSlice* slice, int curList) {
 
   int* modPicNumsIdc = slice->modPicNumsIdc[curList];
   int* absDiffPicNumMinus1 = slice->absDiffPicNumMinus1[curList];
@@ -2023,7 +2023,7 @@ void reorderRefPicList (sSlice* slice, int curList) {
 //}}}
 
 //{{{
-void updatePicNum (sSlice* slice) {
+void updatePicNum (cSlice* slice) {
 
   cDecoder264* decoder = slice->decoder;
   cSps* activeSps = decoder->activeSps;
@@ -2088,7 +2088,7 @@ void updatePicNum (sSlice* slice) {
   }
 //}}}
 //{{{
-sPicture* getShortTermPic (sSlice* slice, sDpb* dpb, int picNum) {
+sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum) {
 
   for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
     if (slice->picStructure == eFrame) {
@@ -2111,14 +2111,14 @@ sPicture* getShortTermPic (sSlice* slice, sDpb* dpb, int picNum) {
 //}}}
 
 //{{{
-void initListsSliceI (sSlice* slice) {
+void initListsSliceI (cSlice* slice) {
 
   slice->listXsize[0] = 0;
   slice->listXsize[1] = 0;
   }
 //}}}
 //{{{
-void initListsSliceP (sSlice* slice) {
+void initListsSliceP (cSlice* slice) {
 
   cDecoder264* decoder = slice->decoder;
   sDpb* dpb = slice->dpb;
@@ -2185,7 +2185,7 @@ void initListsSliceP (sSlice* slice) {
   }
 //}}}
 //{{{
-void initListsSliceB (sSlice* slice) {
+void initListsSliceB (cSlice* slice) {
 
   cDecoder264* decoder = slice->decoder;
   sDpb* dpb = slice->dpb;
@@ -2316,7 +2316,7 @@ void initListsSliceB (sSlice* slice) {
 //}}}
 
 //{{{
-void allocRefPicListReordeBuffer (sSlice* slice) {
+void allocRefPicListReordeBuffer (cSlice* slice) {
 
   if (slice->sliceType != eSliceI && slice->sliceType != eSliceSI) {
     int size = slice->numRefIndexActive[LIST_0] + 1;
@@ -2350,7 +2350,7 @@ void allocRefPicListReordeBuffer (sSlice* slice) {
   }
 //}}}
 //{{{
-void freeRefPicListReorderBuffer (sSlice* slice) {
+void freeRefPicListReorderBuffer (cSlice* slice) {
 
   if (slice->modPicNumsIdc[LIST_0])
     free (slice->modPicNumsIdc[LIST_0]);
@@ -2376,7 +2376,7 @@ void freeRefPicListReorderBuffer (sSlice* slice) {
   }
 //}}}
 //{{{
-void computeColocated (sSlice* slice, sPicture** listX[6]) {
+void computeColocated (cSlice* slice, sPicture** listX[6]) {
 
   cDecoder264* decoder = slice->decoder;
   if (slice->directSpatialMvPredFlag == 0) {

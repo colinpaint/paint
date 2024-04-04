@@ -272,7 +272,7 @@ extern void unmarkForLongTermRef (sFrameStore* frameStore);
 
 extern sPicture* allocPicture (cDecoder264* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
 extern void freePicture (sPicture* picture);
-extern void fillFrameNumGap (cDecoder264* decoder, sSlice *slice);
+extern void fillFrameNumGap (cDecoder264* decoder, cSlice *slice);
 
 extern void updateRefList (sDpb* dpb);
 extern void updateLongTermRefList (sDpb* dpb);
@@ -289,15 +289,15 @@ extern void freeDpb (sDpb* dpb);
 extern void initImage (cDecoder264* decoder, sImage* image, cSps *sps);
 extern void freeImage (cDecoder264* decoder, sImage* image);
 
-extern void initListsSliceI (sSlice* slice);
-extern void initListsSliceP (sSlice* slice);
-extern void initListsSliceB (sSlice* slice);
-extern void updatePicNum (sSlice* slice);
+extern void initListsSliceI (cSlice* slice);
+extern void initListsSliceP (cSlice* slice);
+extern void initListsSliceB (cSlice* slice);
+extern void updatePicNum (cSlice* slice);
 
 extern void dpbCombineField (cDecoder264* decoder, sFrameStore* frameStore);
-extern void reorderRefPicList (sSlice* slice, int curList);
-extern sPicture* getShortTermPic (sSlice* slice, sDpb* dpb, int picNum);
+extern void reorderRefPicList (cSlice* slice, int curList);
+extern sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum);
 
-extern void allocRefPicListReordeBuffer (sSlice* slice);
-extern void freeRefPicListReorderBuffer (sSlice* slice);
-extern void computeColocated (sSlice* slice, sPicture** listX[6]);
+extern void allocRefPicListReordeBuffer (cSlice* slice);
+extern void freeRefPicListReorderBuffer (cSlice* slice);
+extern void computeColocated (cSlice* slice, sPicture** listX[6]);

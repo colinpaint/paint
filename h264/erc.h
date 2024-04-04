@@ -52,7 +52,7 @@ typedef struct ErcVariables {
   /*  Array for conditions of V blocks */
   char* vCondition;
 
-  /* Array for sSlice level information */
+  /* Array for cSlice level information */
   sErcSegment* segments;
   int segment;
 
@@ -85,7 +85,7 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
 
 extern struct sConcealNode* init_node (sPicture* , int );
 extern void init_lists_for_non_reference_loss (sDpb* dpb, int , ePicStructure );
-extern void concealLostFrames (sDpb* dpb, sSlice *slice);
+extern void concealLostFrames (sDpb* dpb, cSlice *slice);
 extern void conceal_non_ref_pics (sDpb* dpb, int diff);
 extern void sliding_window_poc_management (sDpb* dpb, sPicture *p);
 extern void write_lost_non_ref_pic (sDpb* dpb, int poc);

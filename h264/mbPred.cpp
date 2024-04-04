@@ -21,7 +21,7 @@ static const sMotionVec kZeroMv = {0, 0};
 //{{{
 int mbPredIntra4x4 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int yuv = picture->chromaFormatIdc - 1;
   int i=0, j=0,k, j4=0,i4=0;
   int j_pos, i_pos;
@@ -86,7 +86,7 @@ int mbPredIntra16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture)
 //{{{
 int mbPredIntra8x8 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* picture)
 {
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int yuv = picture->chromaFormatIdc - 1;
 
   int block8x8;   // needed for ABT
@@ -119,7 +119,7 @@ int mbPredIntra8x8 (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture
 //{{{
 static void setChromaVector (sMacroBlock* mb)
 {
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   if (!slice->mbAffFrame) {
@@ -189,7 +189,7 @@ int mbPredSkip (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPicture* pi
 
   cDecoder264* decoder = mb->decoder;
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   setChromaVector (mb);
 
   perform_mc (mb, plane, picture, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -221,7 +221,7 @@ int mbPredPinter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
   int block8x8;   // needed for ABT
   int i = 0, j = 0, k;
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int smb = slice->sliceType == eSliceSP && (mb->isIntraBlock == false);
 
   setChromaVector (mb);
@@ -255,7 +255,7 @@ int mbPredPinter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 //{{{
 int mbPredPinter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int smb = (slice->sliceType == eSliceSP);
 
   setChromaVector(mb);
@@ -271,7 +271,7 @@ int mbPredPinter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 //{{{
 int mbPredPinter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int smb = (slice->sliceType == eSliceSP);
 
   setChromaVector (mb);
@@ -289,7 +289,7 @@ int mbPredPinter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
    //{{{
    int mbPredPinter8x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
-     sSlice* slice = mb->slice;
+     cSlice* slice = mb->slice;
      int smb = (slice->sliceType == eSliceSP);
 
      setChromaVector (mb);
@@ -321,7 +321,7 @@ int mbPredBd8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
   int refList;
 
   int k, i, j, i4, j4, j6;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   sPicMotion* mvInfo = NULL, *colocated = NULL;
 
@@ -490,7 +490,7 @@ int mbPredBd4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
   int16_t refIndex;
   int refList;
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int listOffset = mb->listOffset;
@@ -594,7 +594,7 @@ int mbPredBd8x8spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
   sMotionVec pmvl0 = kZeroMv, pmvl1 = kZeroMv;
   int i4, j4;
   int block8x8;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPicMotion* mvInfo;
@@ -778,7 +778,7 @@ int mbPredBd4x4spatial (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPic
   sMotionVec pmvl0 = kZeroMv, pmvl1 = kZeroMv;
   int k;
   int block8x8;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPicMotion* mvInfo;
@@ -940,7 +940,7 @@ int mbPredBinter8x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
   int blockSizeX, blockSizeY;
   int k;
   int block8x8;   // needed for ABT
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int listOffset = mb->listOffset;
@@ -1041,7 +1041,7 @@ int mbPredIpcm (sMacroBlock* mb) {
 
   cDecoder264* decoder = mb->decoder;
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
 
   // copy coefficients to decoded picture buffer

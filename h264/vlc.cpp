@@ -263,7 +263,7 @@ int moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
   }
 //}}}
 //{{{
-int vlcStartCode (sSlice* slice, int dummy) {
+int vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
   sDataPartition* dataPartition = &slice->dataPartitions[partitionIndex];

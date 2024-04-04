@@ -8,7 +8,7 @@
 //{{{
 bool isMbAvailable (int mbIndex, sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   if ((mbIndex < 0) || (mbIndex > ((int)slice->picture->picSizeInMbs - 1)))
     return false;
 
@@ -23,7 +23,7 @@ bool isMbAvailable (int mbIndex, sMacroBlock* mb) {
 //{{{
 void checkNeighbours (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPicture* picture = slice->picture; //decoder->picture;
   const int mb_nr = mb->mbIndexX;
   sBlockPos* picPos = mb->decoder->picPos;
@@ -62,7 +62,7 @@ void checkNeighbours (sMacroBlock* mb) {
 //{{{
 void checkNeighboursNormal (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPicture* picture = slice->picture; //decoder->picture;
   const int mb_nr = mb->mbIndexX;
   sBlockPos* picPos = mb->decoder->picPos;
@@ -94,7 +94,7 @@ void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y
 //{{{
 void checkNeighboursMbAff (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPicture* picture = slice->picture; 
 
   const int mb_nr = mb->mbIndexX;

@@ -58,7 +58,7 @@ static void FmoGenerateType2MapUnitMap (cDecoder264* decoder, uint32_t PicSizeIn
 //}}}
 //{{{
 // Generate box-out slice group map type MapUnit map (type 3)
-static void FmoGenerateType3MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits, sSlice* slice) {
+static void FmoGenerateType3MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits, cSlice* slice) {
 
   cPps* pps = decoder->activePps;
   uint32_t i, k;
@@ -119,7 +119,7 @@ static void FmoGenerateType3MapUnitMap (cDecoder264* decoder, uint32_t PicSizeIn
   }
 //}}}
 //{{{
-static void FmoGenerateType4MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits, sSlice* slice) {
+static void FmoGenerateType4MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits, cSlice* slice) {
 // Generate raster scan slice group map type MapUnit map (type 4)
 
   cPps* pps = decoder->activePps;
@@ -138,7 +138,7 @@ static void FmoGenerateType4MapUnitMap (cDecoder264* decoder, uint32_t PicSizeIn
 //}}}
 //{{{
 // Generate wipe slice group map type MapUnit map (type 5) *
-static void FmoGenerateType5MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits, sSlice* slice ) {
+static void FmoGenerateType5MapUnitMap (cDecoder264* decoder, uint32_t PicSizeInMapUnits, cSlice* slice ) {
 
   cPps* pps = decoder->activePps;
 
@@ -169,7 +169,7 @@ static void FmoGenerateType6MapUnitMap (cDecoder264* decoder, uint32_t PicSizeIn
   }
 //}}}
 //{{{
-static int FmoGenerateMapUnitToSliceGroupMap (cDecoder264* decoder, sSlice* slice) {
+static int FmoGenerateMapUnitToSliceGroupMap (cDecoder264* decoder, cSlice* slice) {
 // Generates decoder->mapUnitToSliceGroupMap
 // Has to be called every time a new Picture Parameter Set is used
 
@@ -230,7 +230,7 @@ static int FmoGenerateMapUnitToSliceGroupMap (cDecoder264* decoder, sSlice* slic
 //}}}
 //{{{
 // Generates decoder->mbToSliceGroupMap from decoder->mapUnitToSliceGroupMap
-static int FmoGenerateMbToSliceGroupMap (cDecoder264* decoder, sSlice *slice) {
+static int FmoGenerateMbToSliceGroupMap (cDecoder264* decoder, cSlice *slice) {
 
   // allocate memory for decoder->mbToSliceGroupMap
   if (decoder->mbToSliceGroupMap)
@@ -265,7 +265,7 @@ static int FmoGenerateMbToSliceGroupMap (cDecoder264* decoder, sSlice *slice) {
 //}}}
 
 //{{{
-int initFmo (cDecoder264* decoder, sSlice* slice) {
+int initFmo (cDecoder264* decoder, cSlice* slice) {
 
   cPps* pps = decoder->activePps;
 

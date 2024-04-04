@@ -1,6 +1,6 @@
 #pragma once
 
-extern int initFmo (cDecoder264* decoder, sSlice* slice);
+extern int initFmo (cDecoder264* decoder, cSlice* slice);
 extern int closeFmo (cDecoder264* decoder);
 
 extern int FmoGetNumberOfSliceGroup (cDecoder264* decoder);

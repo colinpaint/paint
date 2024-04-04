@@ -163,7 +163,7 @@ static int intra8x8_dc_pred (sMacroBlock * mb, eColorPlane plane, int ioff, int 
   int i,j;
   int s0 = 0;
   sPixel PredPel[25];  // array of predictor pels
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPicture* picture = slice->picture;
@@ -261,7 +261,7 @@ static int intra8x8_dc_pred (sMacroBlock * mb, eColorPlane plane, int ioff, int 
 //{{{
 static int intra8x8_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i;
@@ -334,7 +334,7 @@ static int intra8x8_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int
 static int intra8x8_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   int j;
   sPixel PredPel[25];  // array of predictor pels
@@ -406,7 +406,7 @@ static int intra8x8_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int 
 //{{{
 static int intra8x8_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel PredPel[25];    // array of predictor pels
@@ -520,7 +520,7 @@ static int intra8x8_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, in
 //{{{
 static int intra8x8_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel PredPel[25];    // array of predictor pels
@@ -636,7 +636,7 @@ static int intra8x8_diag_down_left_pred (sMacroBlock* mb, eColorPlane plane, int
 //{{{
 static int intra8x8_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel PredPel[25];  // array of predictor pels
@@ -758,7 +758,7 @@ static int intra8x8_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int iof
 //{{{
 static int intra8x8_vert_left_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel PredPel[25];  // array of predictor pels
@@ -878,7 +878,7 @@ static int intra8x8_vert_left_pred (sMacroBlock* mb, eColorPlane plane, int ioff
 //{{{
 static int intra8x8_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel PredPel[25];     // array of predictor pels
@@ -997,7 +997,7 @@ static int intra8x8_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, i
 //{{{
 static int intra8x8_hor_down_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPixel PredPel[25];  // array of predictor pels
@@ -1175,7 +1175,7 @@ static int intra8x8_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff,
   int i,j;
   int s0 = 0;
   sPixel PredPel[25];  // array of predictor pels
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   sPicture* picture = slice->picture;
@@ -1279,7 +1279,7 @@ static int intra8x8_vert_pred_mbaff (sMacroBlock* mb,
                                      int ioff,              //!< pixel offset X within MB
                                      int joff)              //!< pixel offset Y within MB
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i;
@@ -1359,7 +1359,7 @@ static int intra8x8_hor_pred_mbaff (sMacroBlock* mb,
                                     int ioff,              //!< pixel offset X within MB
                                     int joff)              //!< pixel offset Y within MB
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
 
@@ -1445,7 +1445,7 @@ static int intra8x8_diag_down_right_pred_mbaff (sMacroBlock* mb,
                                                 int ioff,              //!< pixel offset X within MB
                                                 int joff)              //!< pixel offset Y within MB
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
 
@@ -1564,7 +1564,7 @@ static int intra8x8_diag_down_left_pred_mbaff (sMacroBlock* mb,
                                                int ioff,              //!< pixel offset X within MB
                                                int joff)              //!< pixel offset Y within MB
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i;
@@ -1685,7 +1685,7 @@ static int intra8x8_vert_right_pred_mbaff (sMacroBlock* mb,
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i;
@@ -1810,7 +1810,7 @@ static int intra8x8_vert_left_pred_mbaff (sMacroBlock* mb,
                                           int ioff,              //!< pixel offset X within MB
                                           int joff)              //!< pixel offset Y within MB
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i;
@@ -1935,7 +1935,7 @@ static int intra8x8_hor_up_pred_mbaff (sMacroBlock* mb,
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i;
@@ -2061,7 +2061,7 @@ static int intra8x8_hor_down_pred_mbaff (sMacroBlock* mb,
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i;
@@ -2230,7 +2230,7 @@ static int intra_pred_8x8_mbaff (sMacroBlock* mb,
 //{{{
 static int intra16x16_dc_pred (sMacroBlock* mb, eColorPlane plane)
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int s0 = 0, s1 = 0, s2 = 0;
@@ -2294,7 +2294,7 @@ static int intra16x16_dc_pred (sMacroBlock* mb, eColorPlane plane)
 //{{{
 static int intra16x16_vert_pred (sMacroBlock* mb, eColorPlane plane)
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int j;
@@ -2333,7 +2333,7 @@ static int intra16x16_vert_pred (sMacroBlock* mb, eColorPlane plane)
 //{{{
 static int intra16x16_hor_pred (sMacroBlock* mb, eColorPlane plane)
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   int j;
 
@@ -2372,7 +2372,7 @@ static int intra16x16_hor_pred (sMacroBlock* mb, eColorPlane plane)
 //{{{
 static int intra16x16_plane_pred (sMacroBlock* mb, eColorPlane plane)
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i,j;
@@ -2470,7 +2470,7 @@ static int intra_pred_16x16_normal (sMacroBlock* mb, eColorPlane plane, int pred
 //{{{
 static int intra16x16_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int s0 = 0, s1 = 0, s2 = 0;
@@ -2526,7 +2526,7 @@ static int intra16x16_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
 //{{{
 static int intra16x16_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int j;
@@ -2560,7 +2560,7 @@ static int intra16x16_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
 //{{{
 static int intra16x16_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   int i,j;
 
@@ -2596,7 +2596,7 @@ static int intra16x16_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
 //{{{
 static int intra16x16_plane_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   int i,j;
@@ -2733,7 +2733,7 @@ static void intra_chroma_DC_all (sPixel** curr_img, int up_avail, int left_avail
 //{{{
 static void intrapred_chroma_dc (sMacroBlock* mb)
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   int        b8, b4;
@@ -2832,7 +2832,7 @@ static void intrapred_chroma_hor (sMacroBlock* mb)
     cDecoder264::cDecoder264::error ("unexpected HOR_PRED_8 chroma intra prediction mode");
   else
   {
-    sSlice *slice = mb->slice;
+    cSlice *slice = mb->slice;
     int cr_MB_x = decoder->mbCrSizeX;
     int cr_MB_y = decoder->mbCrSizeY;
 
@@ -2856,7 +2856,7 @@ static void intrapred_chroma_hor (sMacroBlock* mb)
 //{{{
 static void intrapred_chroma_ver (sMacroBlock* mb)
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   int j;
   sPicture* picture = slice->picture;
@@ -2892,7 +2892,7 @@ static void intrapred_chroma_ver (sMacroBlock* mb)
 //{{{
 static void intrapred_chroma_plane (sMacroBlock* mb)
 {
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   sPicture* picture = slice->picture;
 
@@ -3014,7 +3014,7 @@ static void intra_chroma_DC_all_mbaff (sPixel** curr_img, int up_avail, int left
 //{{{
 static void intra_pred_chroma_mbaff (sMacroBlock* mb) {
 
-  sSlice *slice = mb->slice;
+  cSlice *slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   int i,j, ii, jj;
   sPicture* picture = slice->picture;
@@ -3315,7 +3315,7 @@ static void intraPredChroma (sMacroBlock* mb) {
 //}}}
 
 //{{{
-void set_intra_prediction_modes (sSlice *slice) {
+void set_intra_prediction_modes (cSlice *slice) {
 
   if (slice->mbAffFrame) {
     slice->intraPred4x4 = intra_pred_4x4_mbaff;

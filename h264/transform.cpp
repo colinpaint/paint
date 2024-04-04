@@ -562,7 +562,7 @@ static void recon8x8_lossless (int** m7, sPixel** mbRec, sPixel** mpr, int max_i
 //{{{
 void itrans8x8 (sMacroBlock *mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int** m7 = slice->mbRess[plane];
 
   if (mb->isLossless == true)
@@ -584,7 +584,7 @@ static void copy8x8 (sPixel** mbRec, sPixel** mpr, int ioff) {
 //{{{
 void icopy8x8 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   copy8x8 (&slice->mbRec[plane][joff], &slice->mbPred[plane][joff], ioff);
   }
 //}}}

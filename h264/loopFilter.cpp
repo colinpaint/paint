@@ -746,7 +746,7 @@ static void set_loop_filter_functions_mbaff (cDecoder264* decoder) {
 static void get_strength_ver (sMacroBlock* mb, int edge, int mvLimit, sPicture* p)
 {
   uint8_t *Strength = mb->strengthV[edge];
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int     StrValue, i;
   sBlockPos *picPos = mb->decoder->picPos;
 
@@ -856,7 +856,7 @@ static void get_strength_hor (sMacroBlock* mb, int edge, int mvLimit, sPicture* 
 
   uint8_t  *Strength = mb->strengthH[edge];
   int    StrValue, i;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sBlockPos *picPos = mb->decoder->picPos;
 
   if ((slice->sliceType==eSliceSP)||(slice->sliceType==eSliceSI) ) {
@@ -1413,7 +1413,7 @@ static void deblockMb (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
     sPixel** imgY = p->imgY;
     sPixel*** imgUV = p->imgUV;
-    sSlice* slice = mb->slice;
+    cSlice* slice = mb->slice;
     int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrame && mb->mbField)) ? 2 : 4;
     cSps* activeSps = decoder->activeSps;
 
@@ -1568,7 +1568,7 @@ static void getDeblockStrength (cDecoder264* decoder, sPicture* p, int mbIndex) 
     int filterLeftMbEdgeFlag;
     int filterTopMbEdgeFlag;
 
-    sSlice* slice = mb->slice;
+    cSlice* slice = mb->slice;
     int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrame && mb->mbField)) ? 2 : 4;
     cSps* activeSps = decoder->activeSps;
 
@@ -1664,7 +1664,7 @@ static void performDeblock (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
     sPixel** imgY = p->imgY;
     sPixel** *imgUV = p->imgUV;
-    sSlice* slice = mb->slice;
+    cSlice* slice = mb->slice;
     int mvLimit = ((p->picStructure!=eFrame) || (p->mbAffFrame && mb->mbField)) ? 2 : 4;
     cSps* activeSps = decoder->activeSps;
 

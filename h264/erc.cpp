@@ -759,7 +759,7 @@ static void buildPredRegionYUV (cDecoder264* decoder, int *mv, int x, int y, sPi
   int vec1_x=0,vec1_y=0;
   int ioff,joff;
   sPixel *pMB = predMB;
-  sSlice* slice;// = decoder->currentSlice;
+  cSlice* slice;// = decoder->currentSlice;
   sPicture* picture = decoder->picture;
   int ii0,jj0,ii1,jj1,if1,jf1,if0,jf0;
   int mv_mul;
@@ -1369,7 +1369,7 @@ static void buildPredblockRegionYUV (cDecoder264* decoder, int *mv,
   int mb_nr = mbIndex;
 
   sMacroBlock* mb = &decoder->mbData[mb_nr];   // intialization code deleted, see below, StW
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   getMem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
@@ -1864,7 +1864,7 @@ void init_lists_for_non_reference_loss (sDpb* dpb, int currSliceType, ePicStruct
 * based on the sudden decrease in frame number.
 ************************************************************************
 */
-void concealLostFrames (sDpb* dpb, sSlice *slice)
+void concealLostFrames (sDpb* dpb, cSlice *slice)
 {
   cDecoder264* decoder = dpb->decoder;
   int CurrFrameNum;
@@ -2254,7 +2254,7 @@ void ercSetErrorConcealment (sErcVariables *errorVar, int value ) {
  * \param currMBNum
  *      The MB number where the new slice/segment starts
  * \param segment
- *      Segment/sSlice No. counted by the caller
+ *      Segment/cSlice No. counted by the caller
  * \param bitPos
  *      sBitStream pointer: number of bits read from the buffer.
  * \param errorVar
@@ -2278,7 +2278,7 @@ void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables
  * \param currMBNum
  *      The last MB number of the previous segment
  * \param segment
- *      Segment/sSlice No. counted by the caller
+ *      Segment/cSlice No. counted by the caller
  *      If (segment<0) the internal segment counter is used.
  * \param bitPos
  *      sBitStream pointer: number of bits read from the buffer.

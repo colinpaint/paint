@@ -366,7 +366,7 @@ static void processRecoveryPoint (uint8_t* payload, int size, cDecoder264* decod
   }
 //}}}
 //{{{
-static void processDecRefPicMarkingRepetition (uint8_t* payload, int size, cDecoder264* decoder, sSlice *slice) {
+static void processDecRefPicMarkingRepetition (uint8_t* payload, int size, cDecoder264* decoder, cSlice *slice) {
 
   sBitStream* buf = (sBitStream*)malloc (sizeof(sBitStream));
   buf->bitStreamBuffer = payload;
@@ -1156,7 +1156,7 @@ static void process_green_metadata_info (uint8_t* payload, int size, cDecoder264
 //}}}
 
 //{{{
-void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, sSlice* slice) {
+void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, cSlice* slice) {
 
   if (decoder->param.seiDebug)
     printf ("SEI:%d -> ", naluLen);

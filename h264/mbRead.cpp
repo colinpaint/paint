@@ -23,7 +23,7 @@ static const sMotionVec kZeroMv = {0, 0};
 static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
 
   int bi, bj, bx, by, dec;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   cDecoder264* decoder = mb->decoder;
 
@@ -83,7 +83,7 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
 static void read_ipred_8x8_modes (sMacroBlock* mb) {
 
   int b8, bi, bj, bx, by, dec;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   cDecoder264* decoder = mb->decoder;
 
@@ -148,7 +148,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 
   int b8,i,j,bi,bj,bx,by;
   sSyntaxElement se;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   const uint8_t *dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   cDecoder264 *decoder = mb->decoder;
   sBlockPos *picPos = decoder->picPos;
@@ -215,7 +215,7 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 //{{{
 static void read_ipred_4x4_modes (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   cDecoder264* decoder = mb->decoder;
   sBlockPos* picPos = decoder->picPos;
@@ -290,7 +290,7 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
 //{{{
 static void readIpredModes (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
 
   if (slice->mbAffFrame) {
@@ -344,7 +344,7 @@ static void resetMvInfo (sPicMotion* mvInfo, int slice_no) {
 //{{{
 static void initMacroblock (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPicMotion** mvInfo = &slice->picture->mvInfo[mb->blockY];
   int slice_no = slice->curSliceIndex;
 
@@ -383,7 +383,7 @@ static void initMacroblockDirect (sMacroBlock* mb) {
 //{{{
 static void concealIPCMcoeffs (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   for (int i = 0; i < MB_BLOCK_SIZE; ++i)
     for (int j = 0; j < MB_BLOCK_SIZE; ++j)
@@ -398,7 +398,7 @@ static void concealIPCMcoeffs (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-static void initIPCMdecoding (sSlice* slice) {
+static void initIPCMdecoding (cSlice* slice) {
 
   int dpNum;
   if (slice->dataPartitionMode == eDataPartition1)
@@ -418,7 +418,7 @@ static void initIPCMdecoding (sSlice* slice) {
   }
 //}}}
 //{{{
-static void readIPCMcoeffs (sSlice* slice, sDataPartition* dataPartition) {
+static void readIPCMcoeffs (cSlice* slice, sDataPartition* dataPartition) {
 
   cDecoder264* decoder = slice->decoder;
 
@@ -466,7 +466,7 @@ static void readIPCMcoeffs (sSlice* slice, sDataPartition* dataPartition) {
 //{{{
 static void SetB8Mode (sMacroBlock* mb, int value, int i) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   static const char p_v2b8 [ 5] = {4, 5, 6, 7, IBLOCK};
   static const char p_v2pd [ 5] = {0, 0, 0, 0, -1};
   static const char b_v2b8 [14] = {0, 4, 4, 4, 5, 6, 5, 6, 5, 6, 7, 7, 7, IBLOCK};
@@ -518,7 +518,7 @@ static void skipMacroblocks (sMacroBlock* mb) {
   int b_ref_idx = 0;
   int img_block_y   = mb->blockY;
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int   listOffset = LIST_0 + mb->listOffset;
   sPicture* picture = slice->picture;
   sMotionVec* a_mv = NULL;
@@ -665,7 +665,7 @@ static void readIntraMacroblock (sMacroBlock* mb) {
 //{{{
 static void readIntra4x4macroblocCavlc (sMacroBlock* mb, const uint8_t* dpMap)
 {
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   //transform size flag for INTRA_4x4 and INTRA_8x8 modes
   if (slice->transform8x8Mode) {
@@ -697,7 +697,7 @@ static void readIntra4x4macroblockCabac (sMacroBlock* mb, const uint8_t* dpMap) 
 
 
   // transform size flag for INTRA_4x4 and INTRA_8x8 modes
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   if (slice->transform8x8Mode) {
    sSyntaxElement se;
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
@@ -731,7 +731,7 @@ static void readIntra4x4macroblockCabac (sMacroBlock* mb, const uint8_t* dpMap) 
 //{{{
 static void readInterMacroblock (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   mb->noMbPartLessThan8x8Flag = true;
   mb->lumaTransformSize8x8flag = false;
@@ -748,7 +748,7 @@ static void readInterMacroblock (sMacroBlock* mb) {
 //{{{
 static void readIPCMmacroblock (sMacroBlock* mb, const uint8_t* dpMap) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   mb->noMbPartLessThan8x8Flag = true;
   mb->lumaTransformSize8x8flag = false;
 
@@ -768,7 +768,7 @@ static void readIPCMmacroblock (sMacroBlock* mb, const uint8_t* dpMap) {
 static void readI8x8macroblock (sMacroBlock* mb, sDataPartition* dataPartition, sSyntaxElement* se) {
 
   int i;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   // READ 8x8 SUB-dataPartition MODES (modes of 8x8 blocks) and Intra VBST block modes
   mb->noMbPartLessThan8x8Flag = true;
@@ -798,7 +798,7 @@ static void readI8x8macroblock (sMacroBlock* mb, sDataPartition* dataPartition, 
 //{{{
 static void readIcavlcMacroblock (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   sSyntaxElement se;
   int mbNum = mb->mbIndexX;
@@ -847,7 +847,7 @@ static void readIcavlcMacroblock (sMacroBlock* mb) {
 //{{{
 static void readPcavlcMacroblock (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sSyntaxElement se;
   int mbNum = mb->mbIndexX;
 
@@ -1001,7 +1001,7 @@ static void readPcavlcMacroblock (sMacroBlock* mb) {
 static void readBcavlcMacroblock (sMacroBlock* mb) {
 
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int mbNum = mb->mbIndexX;
   sSyntaxElement se;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
@@ -1164,7 +1164,7 @@ static void readBcavlcMacroblock (sMacroBlock* mb) {
 //{{{
 static void readIcabacMacroblock (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   sSyntaxElement se;
   int mbNum = mb->mbIndexX;
@@ -1251,7 +1251,7 @@ static void readIcabacMacroblock (sMacroBlock* mb) {
 //{{{
 static void readPcabacMacroblock (sMacroBlock* mb)
 {
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   int mbNum = mb->mbIndexX;
   sSyntaxElement se;
@@ -1398,7 +1398,7 @@ static void readPcabacMacroblock (sMacroBlock* mb)
 //{{{
 static void readBcabacMacroblock (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   int mbNum = mb->mbIndexX;
   sSyntaxElement se;
@@ -1565,7 +1565,7 @@ static void readBcabacMacroblock (sMacroBlock* mb) {
 //}}}
 
 //{{{
-void setReadMacroblock (sSlice* slice) {
+void setReadMacroblock (cSlice* slice) {
 
   if (slice->decoder->activePps->entropyCoding == eCabac) {
     switch (slice->sliceType) {

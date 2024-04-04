@@ -11,7 +11,7 @@
 static const sMotionVec kZeroMv = {0, 0};
 
 //{{{
-void allocPred (sSlice* slice) {
+void allocPred (cSlice* slice) {
 
 
   getMem2Dpel(&slice->tempBlockL0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -22,7 +22,7 @@ void allocPred (sSlice* slice) {
   }
 //}}}
 //{{{
-void freePred (sSlice* slice) {
+void freePred (cSlice* slice) {
 
   freeMem2Dint (slice->tempRes);
   freeMem2Dpel (slice->tempBlockL0);
@@ -36,7 +36,7 @@ void freePred (sSlice* slice) {
 static void update_direct_mv_info_temporal (sMacroBlock* mb) {
 
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   int j,k;
 
   int partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
@@ -292,7 +292,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
   if (list1->isLongTerm)
     return 1;
   else {
-    sSlice* slice = mb->slice;
+    cSlice* slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
     if ((slice->mbAffFrame) ||
         (!decoder->activeSps->frameMbOnly &&
@@ -360,7 +360,7 @@ static void update_direct_mv_info_spatial_8x8 (sMacroBlock* mb)
   if (has_direct)
   {
     //cDecoder264* decoder = mb->decoder;
-    sSlice* slice = mb->slice;
+    cSlice* slice = mb->slice;
     int i,j,k;
 
     int j4, i4;
@@ -519,7 +519,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
   if (has_direct)
   {
     cDecoder264* decoder = mb->decoder;
-    sSlice* slice = mb->slice;
+    cSlice* slice = mb->slice;
     int i,j,k;
 
     int j4, i4;
@@ -671,7 +671,7 @@ static void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
 }
 //}}}
 //{{{
-void update_direct_types (sSlice* slice)
+void update_direct_types (cSlice* slice)
 {
   if (slice->activeSps->isDirect8x8inference)
     slice->updateDirectMvInfo =
@@ -1618,7 +1618,7 @@ static void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpel
 void intra_cr_decoding (sMacroBlock* mb, int yuv)
 {
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
   sPixel** curUV;
   int uv;
@@ -1757,7 +1757,7 @@ static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame
 //{{{
 void prepare_direct_params (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl0, sMotionVec *pmvl1, char *l0_rFrame, char *l1_rFrame)
 {
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   char l0_refA, l0_refB, l0_refC;
   char l1_refA, l1_refB, l1_refC;
   sPicMotion** mvInfo = picture->mvInfo;
@@ -1797,7 +1797,7 @@ void prepare_direct_params (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl
 //}}}
 
 //{{{
-static void check_motion_vector_range (const sMotionVec *mv, sSlice *slice) {
+static void check_motion_vector_range (const sMotionVec *mv, cSlice *slice) {
 
   if (mv->mvX > 8191 || mv->mvX < -8192)
     fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroblock %d\n", mv->mvX, slice->decoder->idrFrameNum, slice->mbIndex);
@@ -1820,7 +1820,7 @@ static inline int check_vert_mv (int llimit, int vec1_y,int rlimit) {
 static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
 {
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cSps *activeSps = slice->activeSps;
   sPixel** tempBlockL0 = slice->tempBlockL0;
   sPixel** tempBlockL1 = slice->tempBlockL1;
@@ -1913,7 +1913,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
 static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* picture, int predDir, int i, int j, int blockSizeX, int blockSizeY)
 {
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cSps *activeSps = slice->activeSps;
   sPixel** tempBlockL0 = slice->tempBlockL0;
   sPixel** tempBlockL1 = slice->tempBlockL1;
@@ -1993,7 +1993,7 @@ static void perform_mc_bi_wp (sMacroBlock* mb, eColorPlane plane, sPicture* pict
   static const int mv_mul = 16;
   int  vec1_x, vec1_y, vec2_x, vec2_y;
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   int weightedBiPredIdc = decoder->activePps->weightedBiPredIdc;
   int blockYaff = mb->blockYaff;
@@ -2130,7 +2130,7 @@ static void perform_mc_bi (sMacroBlock* mb, eColorPlane plane, sPicture* picture
   static const int mv_mul = 16;
   int vec1_x=0, vec1_y=0, vec2_x=0, vec2_y=0;
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   int blockYaff = mb->blockYaff;
   int i4 = mb->blockX + i;
@@ -2241,7 +2241,7 @@ static void perform_mc_bi (sMacroBlock* mb, eColorPlane plane, sPicture* picture
 void perform_mc (sMacroBlock* mb, eColorPlane plane, sPicture* picture,
                  int predDir, int i, int j, int blockSizeX, int blockSizeY) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   if (predDir != 2) {
     if (slice->hasWeightedPred)

@@ -70,7 +70,7 @@
 enum eStartEnd {
   eEOS = 1, // End Of Sequence
   eSOP = 2, // Start Of Picture
-  eSOS = 3, // Start Of sSlice
+  eSOS = 3, // Start Of cSlice
   };
 //}}}
 //{{{
@@ -280,7 +280,7 @@ struct sPicture;
 struct sDpb;
 struct sPicMotion;
 struct sMacroBlock;
-class sSlice;
+class cSlice;
 class cDecoder264;
 //{{{
 struct sBiContext {
@@ -409,7 +409,7 @@ struct sMotionVec {
 //{{{
 struct sMacroBlock {
   cDecoder264* decoder;
-  sSlice*   slice;
+  cSlice*   slice;
 
   int     mbIndexX;
   int     mbIndexA;
@@ -564,10 +564,10 @@ public:
   };
 //}}}
 //{{{
-class sSlice {
+class cSlice {
 public:
-  static sSlice* allocSlice();
-  ~sSlice();
+  static cSlice* allocSlice();
+  ~cSlice();
 
   cDecoder264* decoder;
 
@@ -714,8 +714,8 @@ public:
   char chromaVectorAdjust[6][32];
 
   // virtual methods
-  int  (*nalStartCode) (sSlice*, int);
-  void (*initLists) (sSlice*);
+  int  (*nalStartCode) (cSlice*, int);
+  void (*initLists) (cSlice*);
   void (*readCBPcoeffs) (sMacroBlock*);
   int  (*decodeComponenet) (sMacroBlock*, eColorPlane, sPixel**, sPicture*);
   void (*nalReadMotionInfo) (sMacroBlock*);
@@ -853,7 +853,7 @@ public:
   void finish (sDecodedPic** decPicList);
   void close();
 
-  void decodePOC (sSlice* slice);
+  void decodePOC (cSlice* slice);
   void padPicture (sPicture* picture);
 
   // static var
@@ -896,8 +896,8 @@ public:
   int          numDecodedMbs = 0;
   int          numDecodedSlices = 0;
   int          numAllocatedSlices = 0;
-  sSlice**     sliceList = nullptr;
-  sSlice*      nextSlice = nullptr; // pointer to first sSlice of next picture;
+  cSlice**     sliceList = nullptr;
+  cSlice*      nextSlice = nullptr; // pointer to first cSlice of next picture;
   sOldSlice*   oldSlice = nullptr;
 
   // output
@@ -1024,19 +1024,19 @@ private:
   void setCodingParam (cSps* sps);
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
 
-  bool isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice);
-  void readDecRefPicMarking (sBitStream* s, sSlice* slice);
-  void initMbAffLists (sSlice* slice);
-  void initPicture (sSlice* slice);
-  void initRefPicture (sSlice* slice);
-  void initSlice (sSlice* slice);
-  void reorderLists (sSlice* slice);
-  void copySliceInfo (sSlice* slice, sOldSlice* oldSlice);
-  void useParameterSet (sSlice* slice);
+  bool isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice);
+  void readDecRefPicMarking (sBitStream* s, cSlice* slice);
+  void initMbAffLists (cSlice* slice);
+  void initPicture (cSlice* slice);
+  void initRefPicture (cSlice* slice);
+  void initSlice (cSlice* slice);
+  void reorderLists (cSlice* slice);
+  void copySliceInfo (cSlice* slice, sOldSlice* oldSlice);
+  void useParameterSet (cSlice* slice);
 
-  void readSliceHeader (sSlice* slice);
-  int readSlice (sSlice* slice);
-  void decodeSlice (sSlice* slice);
+  void readSliceHeader (cSlice* slice);
+  int readSlice (cSlice* slice);
+  void decodeSlice (cSlice* slice);
   int decodeFrame();
   void endDecodeFrame();
   };
@@ -1047,5 +1047,5 @@ sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
 void freeDecodedPictures (sDecodedPic* decodedPic);
 
 // For 4:4:4 independent mode
-void changePlaneJV (cDecoder264* decoder, int nplane, sSlice* slice);
+void changePlaneJV (cDecoder264* decoder, int nplane, cSlice* slice);
 void makeFramePictureJV (cDecoder264* decoder);

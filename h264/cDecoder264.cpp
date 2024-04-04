@@ -1159,7 +1159,7 @@ namespace {
   //}}}
   //}}}
   //{{{
-  void initCabacContexts (sSlice* slice) {
+  void initCabacContexts (cSlice* slice) {
 
     //{{{
     #define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
@@ -1303,7 +1303,7 @@ namespace {
     }
   //}}}
   //{{{
-  void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
+  void copyPoc (cSlice* fromSlice, cSlice* toSlice) {
 
     toSlice->topPoc = fromSlice->topPoc;
     toSlice->botPoc = fromSlice->botPoc;
@@ -1411,7 +1411,7 @@ namespace {
     }
   //}}}
   //{{{
-  void fillWeightedPredParam (sSlice* slice) {
+  void fillWeightedPredParam (cSlice* slice) {
 
     if (slice->sliceType == eSliceB) {
       int maxL0Ref = slice->numRefIndexActive[LIST_0];
@@ -1500,7 +1500,7 @@ namespace {
     }
   //}}}
   //{{{
-  void resetWeightedPredParam (sSlice* slice) {
+  void resetWeightedPredParam (cSlice* slice) {
 
     for (int i = 0; i < MAX_REFERENCE_PICTURES; i++) {
       for (int comp = 0; comp < 3; comp++) {
@@ -1513,11 +1513,11 @@ namespace {
   //}}}
   }
 
-// sSlice
+// cSlice
 //{{{
-sSlice* allocSlice() {
+cSlice* allocSlice() {
 
-  sSlice* slice = (sSlice*)calloc (1, sizeof(sSlice));
+  cSlice* slice = (cSlice*)calloc (1, sizeof(cSlice));
   if (!slice)
     cDecoder264::error ("allocSlice failed");
 
@@ -1557,7 +1557,7 @@ sSlice* allocSlice() {
   }
 //}}}
 //{{{
-static void freeSlice (sSlice *slice) {
+static void freeSlice (cSlice *slice) {
 
   if (slice->sliceType != eSliceI && slice->sliceType != eSliceSI)
     freeRefPicListReorderBuffer (slice);
@@ -1684,7 +1684,7 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->annexB->open (chunk, chunkSize);
 
   // init slice
-  decoder->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice*));
+  decoder->sliceList = (cSlice**)calloc (MAX_NUM_DECSLICES, sizeof(cSlice*));
   decoder->numAllocatedSlices = MAX_NUM_DECSLICES;
   decoder->oldSlice = (sOldSlice*)malloc(sizeof(sOldSlice));
   decoder->coding.sliceType = eSliceI;
@@ -1809,7 +1809,7 @@ void cDecoder264::padPicture (sPicture* picture) {
   }
 //}}}
 //{{{
-void cDecoder264::decodePOC (sSlice* slice) {
+void cDecoder264::decodePOC (cSlice* slice) {
 
   uint32_t maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
 
@@ -2008,7 +2008,7 @@ void cDecoder264::initPictureDecode() {
   if (picSliceIndex >= MAX_NUM_SLICES)
     cDecoder264::error ("initPictureDecode - MAX_NUM_SLICES exceeded");
 
-  sSlice* slice = sliceList[0];
+  cSlice* slice = sliceList[0];
   useParameterSet (slice);
 
   if (slice->isIDR)
@@ -2453,7 +2453,7 @@ void cDecoder264::setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* outp
 //}}}
 
 //{{{
-bool cDecoder264::isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
+bool cDecoder264::isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice) {
 
   bool result = (NULL == picture);
 
@@ -2488,7 +2488,7 @@ bool cDecoder264::isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* old
   }
 //}}}
 //{{{
-void cDecoder264::readDecRefPicMarking (sBitStream* s, sSlice* slice) {
+void cDecoder264::readDecRefPicMarking (sBitStream* s, cSlice* slice) {
 
   // free old buffer content
   while (slice->decRefPicMarkBuffer) {
@@ -2536,7 +2536,7 @@ void cDecoder264::readDecRefPicMarking (sBitStream* s, sSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::initMbAffLists (sSlice* slice) {
+void cDecoder264::initMbAffLists (cSlice* slice) {
 // Initialize listX[2..5] from lists 0 and 1
 //   listX[2]: list0 for current_field==top
 //   listX[3]: list1 for current_field==top
@@ -2567,7 +2567,7 @@ void cDecoder264::initMbAffLists (sSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::initRefPicture (sSlice* slice) {
+void cDecoder264::initRefPicture (cSlice* slice) {
 
   sPicture* vidRefPicture = noReferencePicture;
   int noRef = slice->framePoc < recoveryPoc;
@@ -2606,7 +2606,7 @@ void cDecoder264::initRefPicture (sSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::initPicture (sSlice* slice) {
+void cDecoder264::initPicture (cSlice* slice) {
 
   sDpb* dpb = slice->dpb;
 
@@ -2790,7 +2790,7 @@ void cDecoder264::initPicture (sSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::initSlice (sSlice* slice) {
+void cDecoder264::initSlice (cSlice* slice) {
 
   activeSps = slice->activeSps;
   activePps = slice->activePps;
@@ -2819,7 +2819,7 @@ void cDecoder264::initSlice (sSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::reorderLists (sSlice* slice) {
+void cDecoder264::reorderLists (cSlice* slice) {
 
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
     if (slice->refPicReorderFlag[LIST_0])
@@ -2845,7 +2845,7 @@ void cDecoder264::reorderLists (sSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
+void cDecoder264::copySliceInfo (cSlice* slice, sOldSlice* oldSlice) {
 
   oldSlice->ppsId = slice->ppsId;
   oldSlice->frameNum = slice->frameNum;
@@ -2871,7 +2871,7 @@ void cDecoder264::copySliceInfo (sSlice* slice, sOldSlice* oldSlice) {
   }
 //}}}
 //{{{
-void cDecoder264::useParameterSet (sSlice* slice) {
+void cDecoder264::useParameterSet (cSlice* slice) {
 
   if (!pps[slice->ppsId].ok)
     cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid ppsId:{}", slice->ppsId));
@@ -2945,7 +2945,7 @@ void cDecoder264::useParameterSet (sSlice* slice) {
 //}}}
 
 //{{{
-void cDecoder264::readSliceHeader (sSlice* slice) {
+void cDecoder264::readSliceHeader (cSlice* slice) {
 // Some slice syntax depends on parameterSet depends on parameterSetID of the slice header
 // - read the ppsId of the slice header first
 //   - then setup the active parameter sets
@@ -3234,7 +3234,7 @@ void cDecoder264::readSliceHeader (sSlice* slice) {
   }
 //}}}
 //{{{
-int cDecoder264::readSlice (sSlice* slice) {
+int cDecoder264::readSlice (cSlice* slice) {
 
   int curHeader = 0;
 
@@ -3477,7 +3477,7 @@ int cDecoder264::readSlice (sSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::decodeSlice (sSlice* slice) {
+void cDecoder264::decodeSlice (cSlice* slice) {
 
   bool endOfSlice = false;
 
@@ -3528,7 +3528,7 @@ int cDecoder264::decodeFrame() {
   int curHeader = 0;
   if (newFrame) {
     // get firstSlice from sliceList;
-    sSlice* slice = sliceList[picSliceIndex];
+    cSlice* slice = sliceList[picSliceIndex];
     sliceList[picSliceIndex] = nextSlice;
     nextSlice = slice;
 
@@ -3545,7 +3545,7 @@ int cDecoder264::decodeFrame() {
     if (!sliceList[picSliceIndex])
       sliceList[picSliceIndex] = allocSlice();
 
-    sSlice* slice = sliceList[picSliceIndex];
+    cSlice* slice = sliceList[picSliceIndex];
     slice->decoder = this;
     slice->dpb = dpb; //set default value;
     slice->nextHeader = -8888;
@@ -3616,7 +3616,7 @@ int cDecoder264::decodeFrame() {
   ret = curHeader;
   initPictureDecode();
   for (int sliceIndex = 0; sliceIndex < picSliceIndex; sliceIndex++) {
-    sSlice* slice = sliceList[sliceIndex];
+    cSlice* slice = sliceList[sliceIndex];
     curHeader = slice->curHeader;
     initSlice (slice);
 

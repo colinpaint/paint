@@ -349,7 +349,7 @@ static int decodeComponentB (sMacroBlock* mb, eColorPlane plane, sPixel** pixel,
   else if (mb->mbType == P8x16)
     mbPredPinter8x16 (mb, plane, picture);
   else if (mb->mbType == BSKIP_DIRECT) {
-    sSlice* slice = mb->slice;
+    cSlice* slice = mb->slice;
     if (slice->directSpatialMvPredFlag == 0) {
       if (slice->activeSps->isDirect8x8inference)
         mbPredBd8x8temporal (mb, plane, pixel, picture);
@@ -453,7 +453,7 @@ void updateQp (sMacroBlock* mb, int qp) {
 //{{{
 void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBlock* mb, const uint8_t *dpMap, int type)
 {
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   se->type = type;
@@ -705,7 +705,7 @@ static void setMbPosInfo (sMacroBlock* mb) {
 //}}}
 
 //{{{
-void startMacroblock (sSlice* slice, sMacroBlock** mb) {
+void startMacroblock (cSlice* slice, sMacroBlock** mb) {
 
   cDecoder264* decoder = slice->decoder;
   int mbIndex = slice->mbIndex;
@@ -780,7 +780,7 @@ void startMacroblock (sSlice* slice, sMacroBlock** mb) {
   }
 //}}}
 //{{{
-bool exitMacroblock (sSlice* slice, int eos_bit) {
+bool exitMacroblock (cSlice* slice, int eos_bit) {
 
   // The if() statement below resembles the original code, which tested
   // decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense
@@ -794,7 +794,7 @@ bool exitMacroblock (sSlice* slice, int eos_bit) {
   else {
     slice->mbIndex = FmoGetNextMBNr (decoder, slice->mbIndex);
     if (slice->mbIndex == -1) {
-      // End of sSlice group, MUST be end of slice
+      // End of cSlice group, MUST be end of slice
       return true;
       }
 
@@ -1005,7 +1005,7 @@ static void interpretMbModeSI (sMacroBlock* mb) {
 static void readMotionInfoP (sMacroBlock* mb){
 
   cDecoder264* decoder = mb->decoder;
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
 
   sSyntaxElement se;
   sDataPartition* dataPartition = NULL;
@@ -1057,7 +1057,7 @@ static void readMotionInfoP (sMacroBlock* mb){
 //{{{
 static void readMotionInfoB (sMacroBlock* mb) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
   sPicture* picture = slice->picture;
   sSyntaxElement se;
@@ -1115,7 +1115,7 @@ static void readMotionInfoB (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-void setSliceFunctions (sSlice* slice) {
+void setSliceFunctions (cSlice* slice) {
 
   setReadMacroblock (slice);
 
@@ -1240,7 +1240,7 @@ void checkDpNeighbours (sMacroBlock* mb) {
 //}}}
 
 //{{{
-static void initCurImgY (cDecoder264* decoder, sSlice* slice, int plane) {
+static void initCurImgY (cDecoder264* decoder, cSlice* slice, int plane) {
 // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
 // this is intended to make get_block_luma faster, but I'm still performing
 // this at the MB level, and it really should be done at the slice level
@@ -1275,7 +1275,7 @@ static void initCurImgY (cDecoder264* decoder, sSlice* slice, int plane) {
   }
 //}}}
 //{{{
-void changePlaneJV (cDecoder264* decoder, int nplane, sSlice* slice) {
+void changePlaneJV (cDecoder264* decoder, int nplane, cSlice* slice) {
 
   decoder->mbData = decoder->mbDataJV[nplane];
   decoder->picture  = decoder->decPictureJV[nplane];
@@ -1319,7 +1319,7 @@ void makeFramePictureJV (cDecoder264* decoder) {
 //{{{
 int decodeMacroblock (sMacroBlock* mb, sPicture* picture) {
 
-  sSlice* slice = mb->slice;
+  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
 
   if (slice->chroma444notSeparate) {

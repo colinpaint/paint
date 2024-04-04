@@ -9,7 +9,7 @@ extern sTextureContexts* createTextureInfoContexts();
 extern void deleteMotionInfoContexts (sMotionContexts* contexts);
 extern void deleteTextureInfoContexts (sTextureContexts* contexts);
 
-extern void cabacNewSlice (sSlice* slice);
+extern void cabacNewSlice (cSlice* slice);
 
 extern void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv);
 extern void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv);
@@ -33,15 +33,15 @@ extern void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sC
 extern void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv);
 extern void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv);
 
-extern void readIPCMcabac (sSlice* slice, sDataPartition* dataPartition);
-extern int cabacStartCode (sSlice* slice, int eos_bit);
+extern void readIPCMcabac (cSlice* slice, sDataPartition* dataPartition);
+extern int cabacStartCode (cSlice* slice, int eos_bit);
 extern int readSyntaxElementCABAC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
 
-extern int checkNextMbGetFieldModeCabacSliceP (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
-extern int checkNextMbGetFieldModeCabacSliceB (sSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
+extern int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
+extern int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
 
 extern void checkNeighbourCabac (sMacroBlock* mb);
 
 extern void setReadStoreCodedBlockPattern (sMacroBlock** mb, int chromaFormatIdc);
-extern void setReadCbpCoefsCabac (sSlice* slice);
+extern void setReadCbpCoefsCabac (cSlice* slice);
 extern void setReadCompCabac (sMacroBlock* mb);
