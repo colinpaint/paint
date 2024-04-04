@@ -10,7 +10,6 @@
 #include "fmo.h"
 #include "cabac.h"
 #include "vlc.h"
-#include "image.h"
 #include "mbAccess.h"
 #include "binaryArithmeticDecode.h"
 #include "transform.h"
