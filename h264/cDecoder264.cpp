@@ -2346,37 +2346,6 @@ void cDecoder264::readDecRefPicMarking (sBitStream* s, cSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::initMbAffLists (cSlice* slice) {
-// Initialize listX[2..5] from lists 0 and 1
-//   listX[2]: list0 for current_field==top
-//   listX[3]: list1 for current_field==top
-//   listX[4]: list0 for current_field==bottom
-//   listX[5]: list1 for current_field==bottom
-
-  for (int i = 2; i < 6; i++) {
-    for (uint32_t j = 0; j < MAX_LIST_SIZE; j++)
-      slice->listX[i][j] = noReferencePicture;
-    slice->listXsize[i] = 0;
-    }
-
-  for (int i = 0; i < slice->listXsize[0]; i++) {
-    slice->listX[2][2*i  ] = slice->listX[0][i]->topField;
-    slice->listX[2][2*i+1] = slice->listX[0][i]->botField;
-    slice->listX[4][2*i  ] = slice->listX[0][i]->botField;
-    slice->listX[4][2*i+1] = slice->listX[0][i]->topField;
-    }
-  slice->listXsize[2] = slice->listXsize[4] = slice->listXsize[0] * 2;
-
-  for (int i = 0; i < slice->listXsize[1]; i++) {
-    slice->listX[3][2*i  ] = slice->listX[1][i]->topField;
-    slice->listX[3][2*i+1] = slice->listX[1][i]->botField;
-    slice->listX[5][2*i  ] = slice->listX[1][i]->botField;
-    slice->listX[5][2*i+1] = slice->listX[1][i]->topField;
-    }
-  slice->listXsize[3] = slice->listXsize[5] = slice->listXsize[1] * 2;
-  }
-//}}}
-//{{{
 void cDecoder264::initRefPicture (cSlice* slice) {
 
   sPicture* vidRefPicture = noReferencePicture;
@@ -2609,7 +2578,7 @@ void cDecoder264::initSlice (cSlice* slice) {
   reorderLists (slice);
 
   if (slice->picStructure == eFrame)
-    initMbAffLists (slice);
+    slice->initMbAffLists (noReferencePicture);
 
   // update reference flags and set current refFlag
   if (!(slice->redundantPicCount && (prevFrameNum == slice->frameNum)))

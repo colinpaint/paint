@@ -193,3 +193,35 @@ void cSlice::resetWeightedPredParam() {
     }
   }
 //}}}
+
+//{{{
+void cSlice::initMbAffLists (sPicture* noReferencePicture) {
+// Initialize listX[2..5] from lists 0 and 1
+//   listX[2]: list0 for current_field==top
+//   listX[3]: list1 for current_field==top
+//   listX[4]: list0 for current_field==bottom
+//   listX[5]: list1 for current_field==bottom
+
+  for (int i = 2; i < 6; i++) {
+    for (uint32_t j = 0; j < MAX_LIST_SIZE; j++)
+      listX[i][j] = noReferencePicture;
+    listXsize[i] = 0;
+    }
+
+  for (int i = 0; i < listXsize[0]; i++) {
+    listX[2][2*i  ] = listX[0][i]->topField;
+    listX[2][2*i+1] = listX[0][i]->botField;
+    listX[4][2*i  ] = listX[0][i]->botField;
+    listX[4][2*i+1] = listX[0][i]->topField;
+    }
+  listXsize[2] = listXsize[4] = listXsize[0] * 2;
+
+  for (int i = 0; i < listXsize[1]; i++) {
+    listX[3][2*i  ] = listX[1][i]->topField;
+    listX[3][2*i+1] = listX[1][i]->botField;
+    listX[5][2*i  ] = listX[1][i]->botField;
+    listX[5][2*i+1] = listX[1][i]->topField;
+    }
+  listXsize[3] = listXsize[5] = listXsize[1] * 2;
+  }
+//}}}

@@ -571,7 +571,9 @@ public:
 
   void fillWeightedPredParam();
   void resetWeightedPredParam();
+  void initMbAffLists (sPicture* noReferencePicture);
 
+  // vars
   cDecoder264* decoder;
 
   cPps* activePps;
@@ -1029,7 +1031,6 @@ private:
 
   bool isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice);
   void readDecRefPicMarking (sBitStream* s, cSlice* slice);
-  void initMbAffLists (cSlice* slice);
   void initPicture (cSlice* slice);
   void initRefPicture (cSlice* slice);
   void initSlice (cSlice* slice);

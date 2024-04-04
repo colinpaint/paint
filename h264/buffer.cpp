@@ -276,11 +276,11 @@ static void dpbSplitField (cDecoder264* decoder, sFrameStore* frameStore) {
   frameStore->poc = frame->poc;
   if (!frame->frameMbOnly) {
     fsTop = frameStore->topField = allocPicture (decoder, eTopField,
-                                                   frame->sizeX, frame->sizeY, frame->sizeXcr,
-                                                   frame->sizeYcr, 1);
+                                                 frame->sizeX, frame->sizeY, frame->sizeXcr,
+                                                 frame->sizeYcr, 1);
     fsBot = frameStore->botField = allocPicture (decoder, eBotField,
-                                                      frame->sizeX, frame->sizeY,
-                                                      frame->sizeXcr, frame->sizeYcr, 1);
+                                                 frame->sizeX, frame->sizeY,
+                                                 frame->sizeXcr, frame->sizeYcr, 1);
     for (int i = 0; i < (frame->sizeY >> 1); i++)
       memcpy (fsTop->imgY[i], frame->imgY[i*2], frame->sizeX*sizeof(sPixel));
 
@@ -1858,10 +1858,10 @@ void initImage (cDecoder264* decoder, sImage* image, cSps* sps) {
       getMem2Dpel (&(image->frm_data[nplane]), decoder->coding.height, decoder->coding.width);
     }
   else {
-    getMem2Dpel (&(image->frm_data[0]), decoder->coding.height, decoder->coding.width);
+    getMem2Dpel (&image->frm_data[0], decoder->coding.height, decoder->coding.width);
     if (decoder->coding.yuvFormat != YUV400) {
-      getMem2Dpel (&(image->frm_data[1]), decoder->heightCr, decoder->widthCr);
-      getMem2Dpel (&(image->frm_data[2]), decoder->heightCr, decoder->widthCr);
+      getMem2Dpel (&image->frm_data[1], decoder->heightCr, decoder->widthCr);
+      getMem2Dpel (&image->frm_data[2], decoder->heightCr, decoder->widthCr);
       if (sizeof(sPixel) == sizeof(uint8_t)) {
         for (int k = 1; k < 3; k++)
           memset (image->frm_data[k][0], 128, decoder->heightCr * decoder->widthCr * sizeof(sPixel));
@@ -1869,7 +1869,7 @@ void initImage (cDecoder264* decoder, sImage* image, cSps* sps) {
       else {
         sPixel mean_val;
         for (int k = 1; k < 3; k++) {
-          mean_val = (sPixel) ((decoder->coding.maxPelValueComp[k] + 1) >> 1);
+          mean_val = (sPixel)((decoder->coding.maxPelValueComp[k] + 1) >> 1);
           for (int j = 0; j < decoder->heightCr; j++)
             for (int i = 0; i < decoder->widthCr; i++)
               image->frm_data[k][j][i] = mean_val;
