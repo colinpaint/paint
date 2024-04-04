@@ -1647,7 +1647,7 @@ void cDecoder264::decodePOC (cSlice* slice) {
       if (slice->fieldPic == 0) {
         // frame pixelPos
         slice->topPoc = slice->PicOrderCntMsb + slice->picOrderCountLsb;
-        slice->botPoc = slice->topPoc + slice->deletaPicOrderCountBot;
+        slice->botPoc = slice->topPoc + slice->deltaPicOrderCountBot;
         slice->thisPoc = slice->framePoc = (slice->topPoc < slice->botPoc) ? slice->topPoc : slice->botPoc;
         }
       else if (!slice->botField) // top field
@@ -2274,7 +2274,7 @@ bool cDecoder264::isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* old
   if (!activeSps->pocType) {
     result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
     if ((activePps->frameBotField == 1) && !slice->fieldPic)
-      result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
+      result |= (oldSlice->deltaPicOrderCountBot != slice->deltaPicOrderCountBot);
     }
 
   if (activeSps->pocType == 1) {
@@ -2632,7 +2632,7 @@ void cDecoder264::copySliceInfo (cSlice* slice, sOldSlice* oldSlice) {
 
   if (activeSps->pocType == 0) {
     oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
-    oldSlice->deltaPicOrderCountBot = slice->deletaPicOrderCountBot;
+    oldSlice->deltaPicOrderCountBot = slice->deltaPicOrderCountBot;
     }
   else if (activeSps->pocType == 1) {
     oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
@@ -2779,9 +2779,9 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
   if (activeSps->pocType == 0) {
     slice->picOrderCountLsb = readUv (activeSps->log2maxPocLsbMinus4 + 4, "SLC picOrderCountLsb", s);
     if ((activePps->frameBotField == 1) && !slice->fieldPic)
-      slice->deletaPicOrderCountBot = readSeV ("SLC deletaPicOrderCountBot", s);
+      slice->deltaPicOrderCountBot = readSeV ("SLC deltaPicOrderCountBot", s);
     else
-      slice->deletaPicOrderCountBot = 0;
+      slice->deltaPicOrderCountBot = 0;
     }
 
   if (activeSps->pocType == 1) {

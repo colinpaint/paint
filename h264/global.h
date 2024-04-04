@@ -574,9 +574,6 @@ public:
   void initMbAffLists (sPicture* noReferencePicture);
   void copyPoc (cSlice* toSlice);
 
-  void initListsSliceI();
-  void initListsSliceP();
-  void initListsSliceB();
   void allocRefPicListReordeBuffer();
   void freeRefPicListReorderBuffer();
 
@@ -601,7 +598,7 @@ public:
 
   // pocMode 0
   uint32_t picOrderCountLsb;
-  int deletaPicOrderCountBot;
+  int deltaPicOrderCountBot;
   signed int PicOrderCntMsb;
 
   // pocMode 1
