@@ -27,7 +27,7 @@ using namespace std;
 cSlice* cSlice::allocSlice() {
 
   cSlice* slice = new cSlice();
-  memset (slice, 1, sizeof(cSlice));
+  memset (slice, 0, sizeof(cSlice));
 
   // create all context models
   slice->motionInfoContexts = createMotionInfoContexts();

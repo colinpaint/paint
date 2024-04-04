@@ -1513,89 +1513,6 @@ namespace {
   //}}}
   }
 
-// cSlice
-//{{{
-cSlice* allocSlice() {
-
-  cSlice* slice = (cSlice*)calloc (1, sizeof(cSlice));
-  if (!slice)
-    cDecoder264::error ("allocSlice failed");
-
-  // create all context models
-  slice->motionInfoContexts = createMotionInfoContexts();
-  slice->textureInfoContexts = createTextureInfoContexts();
-
-  slice->maxDataPartitions = 3;  // assume dataPartition worst case
-  slice->dataPartitions = allocDataPartitions (slice->maxDataPartitions);
-
-  getMem3Dint (&slice->weightedPredWeight, 2, MAX_REFERENCE_PICTURES, 3);
-  getMem3Dint (&slice->weightedPredOffset, 6, MAX_REFERENCE_PICTURES, 3);
-  getMem4Dint (&slice->weightedBiPredWeight, 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
-  getMem3Dpel (&slice->mbPred, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  getMem3Dpel (&slice->mbRec, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  getMem3Dint (&slice->mbRess, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  getMem3Dint (&slice->cof, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  allocPred (slice);
-
-  // reference flag initialization
-  for (int i = 0; i < 17; ++i)
-    slice->refFlag[i] = 1;
-
-  for (int i = 0; i < 6; i++) {
-    slice->listX[i] = (sPicture**)calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
-    if (!slice->listX[i])
-      noMemoryExit ("allocSlice - slice->listX[i]");
-    }
-
-  for (int j = 0; j < 6; j++) {
-    for (int i = 0; i < MAX_LIST_SIZE; i++)
-      slice->listX[j][i] = NULL;
-    slice->listXsize[j]=0;
-    }
-
-  return slice;
-  }
-//}}}
-//{{{
-static void freeSlice (cSlice *slice) {
-
-  if (slice->sliceType != eSliceI && slice->sliceType != eSliceSI)
-    freeRefPicListReorderBuffer (slice);
-
-  freePred (slice);
-  freeMem3Dint (slice->cof);
-  freeMem3Dint (slice->mbRess);
-  freeMem3Dpel (slice->mbRec);
-  freeMem3Dpel (slice->mbPred);
-
-  freeMem3Dint (slice->weightedPredWeight);
-  freeMem3Dint (slice->weightedPredOffset);
-  freeMem4Dint (slice->weightedBiPredWeight);
-
-  freeDataPartitions (slice->dataPartitions, 3);
-
-  // delete all context models
-  deleteMotionInfoContexts (slice->motionInfoContexts);
-  deleteTextureInfoContexts (slice->textureInfoContexts);
-
-  for (int i = 0; i<6; i++) {
-    if (slice->listX[i]) {
-      free (slice->listX[i]);
-      slice->listX[i] = NULL;
-      }
-    }
-
-  while (slice->decRefPicMarkBuffer) {
-    sDecodedRefPicMark* tempDrpm = slice->decRefPicMarkBuffer;
-    slice->decRefPicMarkBuffer = tempDrpm->next;
-    free (tempDrpm);
-    }
-
-  free (slice);
-  slice = NULL;
-  }
-//}}}
-
 // sDataPartition
 //{{{
 sDataPartition* allocDataPartitions (int n) {
@@ -1725,12 +1642,12 @@ cDecoder264::~cDecoder264() {
   free (annexB);
   free (dpb);
   free (oldSlice);
-  freeSlice (nextSlice);
+  free (nextSlice);
 
   if (sliceList) {
     for (int i = 0; i < numAllocatedSlices; i++)
       if (sliceList[i])
-        freeSlice (sliceList[i]);
+        free (sliceList[i]);
     free (sliceList);
     }
 
@@ -3543,7 +3460,7 @@ int cDecoder264::decodeFrame() {
   while ((curHeader != eSOP) && (curHeader != eEOS)) {
     //{{{  no pending slices
     if (!sliceList[picSliceIndex])
-      sliceList[picSliceIndex] = allocSlice();
+      sliceList[picSliceIndex] = cSlice::allocSlice();
 
     cSlice* slice = sliceList[picSliceIndex];
     slice->decoder = this;
