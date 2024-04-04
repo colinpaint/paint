@@ -2,22 +2,6 @@
 #include "global.h"
 #include "memory.h"
 
-#include "mcPred.h"
-#include "buffer.h"
-#include "fmo.h"
-#include "output.h"
-#include "cabac.h"
-#include "erc.h"
-#include "quant.h"
-#include "block.h"
-#include "nalu.h"
-#include "loopfilter.h"
-#include "output.h"
-#include "syntaxElement.h"
-#include "mbAccess.h"
-#include "macroblock.h"
-#include "mcPred.h"
-
 #include "../common/cLog.h"
 
 using namespace std;
