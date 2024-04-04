@@ -986,7 +986,7 @@ public:
   int           idrConcealFlag;
   int           concealSliceType;
 
-  // virtual functions
+  // C style virtual functions
   void (*getNeighbour) (sMacroBlock*, int, int, int[2], sPixelPos*);
   void (*getMbBlockPos) (sBlockPos*, int, int16_t*, int16_t*);
   void (*getStrengthV) (sMacroBlock*, int, int, sPicture*);
@@ -995,6 +995,9 @@ public:
   void (*edgeLoopLumaH) (eColorPlane, sPixel**, uint8_t*, sMacroBlock*, int, sPicture*);
   void (*edgeLoopChromaV) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
   void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
+
+private:
+  void clearDecodedPics();
   };
 //}}}
 sSlice* allocSlice (cDecoder264* decoder);

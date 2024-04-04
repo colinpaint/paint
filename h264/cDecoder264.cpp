@@ -265,29 +265,6 @@ sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic) {
   }
 //}}}
 //{{{
-void clearDecodedPics (cDecoder264* decoder) {
-
-  // find the head first;
-  sDecodedPic* prevDecodedPicture = NULL;
-  sDecodedPic* decodedPic = decoder->outDecodedPics;
-  while (decodedPic && !decodedPic->ok) {
-    prevDecodedPicture = decodedPic;
-    decodedPic = decodedPic->next;
-    }
-
-  if (decodedPic && (decodedPic != decoder->outDecodedPics)) {
-    // move all nodes before decodedPic to the end;
-    sDecodedPic* decodedPictureTail = decodedPic;
-    while (decodedPictureTail->next)
-      decodedPictureTail = decodedPictureTail->next;
-
-    decodedPictureTail->next = decoder->outDecodedPics;
-    decoder->outDecodedPics = decodedPic;
-    prevDecodedPicture->next = NULL;
-    }
-  }
-//}}}
-//{{{
 void freeDecodedPictures (sDecodedPic* decodedPic) {
 
   while (decodedPic) {
@@ -311,14 +288,12 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
 
   // alloc decoder
   cDecoder264* decoder = new (cDecoder264);
-  gDecoder = decoder;
-
   memset (decoder, 0, sizeof(cDecoder264));
 
   initTime();
 
   // init param
-  memcpy (&(decoder->param), param, sizeof(sParam));
+  memcpy (&decoder->param, param, sizeof(sParam));
   decoder->concealMode = param->concealMode;
 
   // init nalu, annexB
@@ -347,6 +322,8 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);
 
+  // global only for vlc
+  gDecoder = decoder;
   return decoder;
   }
 //}}}
@@ -385,9 +362,10 @@ cDecoder264::~cDecoder264() {
 //{{{
 int cDecoder264::decodeOneFrame (sDecodedPic** decPicList) {
 
-  clearDecodedPics (this);
-
   int result = 0;
+
+  clearDecodedPics();
+
   int decodeFrameResult = decodeFrame (this);
   if (decodeFrameResult == eSOP)
     result = DEC_SUCCEED;
@@ -403,7 +381,7 @@ int cDecoder264::decodeOneFrame (sDecodedPic** decPicList) {
 //{{{
 void cDecoder264::finish (sDecodedPic** decPicList) {
 
-  clearDecodedPics (this);
+  clearDecodedPics();
   flushDpb (dpb);
 
   annexB->reset();
@@ -432,5 +410,30 @@ void cDecoder264::close() {
   freeOutput (this);
 
   gDecoder = NULL;
+  }
+//}}}
+
+// private
+//{{{
+void cDecoder264::clearDecodedPics() {
+
+  // find the head first;
+  sDecodedPic* prevDecodedPicture = NULL;
+  sDecodedPic* decodedPic = outDecodedPics;
+  while (decodedPic && !decodedPic->ok) {
+    prevDecodedPicture = decodedPic;
+    decodedPic = decodedPic->next;
+    }
+
+  if (decodedPic && (decodedPic != outDecodedPics)) {
+    // move all nodes before decodedPic to the end;
+    sDecodedPic* decodedPictureTail = decodedPic;
+    while (decodedPictureTail->next)
+      decodedPictureTail = decodedPictureTail->next;
+
+    decodedPictureTail->next = outDecodedPics;
+    outDecodedPics = decodedPic;
+    prevDecodedPicture->next = NULL;
+    }
   }
 //}}}
