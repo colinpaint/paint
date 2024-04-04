@@ -3600,36 +3600,36 @@ void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
 
   sDpb* dpb = slice->dpb;
 
-  decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (slice->fieldPic+1);
-  decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
-  decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
+  picHeightInMbs = coding.frameHeightMbs / (slice->fieldPic+1);
+  picSizeInMbs = coding.picWidthMbs * picHeightInMbs;
+  coding.frameSizeMbs = coding.picWidthMbs * coding.frameHeightMbs;
 
-  if (decoder->picture) // slice loss
-    decoder->endDecodeFrame();
+  if (picture) // slice loss
+    endDecodeFrame();
 
-  if (decoder->recoveryPoint)
-    decoder->recoveryFrameNum = (slice->frameNum + decoder->recoveryFrameCount) % decoder->coding.maxFrameNum;
+  if (recoveryPoint)
+    recoveryFrameNum = (slice->frameNum + recoveryFrameCount) % coding.maxFrameNum;
   if (slice->isIDR)
-    decoder->recoveryFrameNum = slice->frameNum;
-  if (!decoder->recoveryPoint &&
-      (slice->frameNum != decoder->preFrameNum) &&
-      (slice->frameNum != (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
-    if (!decoder->activeSps->allowGapsFrameNum) {
+    recoveryFrameNum = slice->frameNum;
+  if (!recoveryPoint &&
+      (slice->frameNum != preFrameNum) &&
+      (slice->frameNum != (preFrameNum + 1) % coding.maxFrameNum)) {
+    if (!activeSps->allowGapsFrameNum) {
       //{{{  picture error conceal
-      if (decoder->param.concealMode) {
-        if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
+      if (param.concealMode) {
+        if ((slice->frameNum) < ((preFrameNum + 1) % coding.maxFrameNum)) {
           /* Conceal lost IDR frames and any frames immediately following the IDR.
           // Use frame copy for these since lists cannot be formed correctly for motion copy*/
-          decoder->concealMode = 1;
-          decoder->idrConcealFlag = 1;
+          concealMode = 1;
+          idrConcealFlag = 1;
           concealLostFrames (dpb, slice);
           // reset to original conceal mode for future drops
-          decoder->concealMode = decoder->param.concealMode;
+          concealMode = param.concealMode;
           }
         else {
           // reset to original conceal mode for future drops
-          decoder->concealMode = decoder->param.concealMode;
-          decoder->idrConcealFlag = 0;
+          concealMode = param.concealMode;
+          idrConcealFlag = 0;
           concealLostFrames (dpb, slice);
           }
         }
@@ -3638,51 +3638,51 @@ void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
         cDecoder264::error ("initPicture - unintentional loss of picture\n");
       }
       //}}}
-    if (!decoder->concealMode)
+    if (!concealMode)
       fillFrameNumGap (decoder, slice);
     }
 
   if (slice->refId)
-    decoder->preFrameNum = slice->frameNum;
+    preFrameNum = slice->frameNum;
 
   // calculate POC
-  decoder->decodePOC (slice);
+  decodePOC (slice);
 
-  if (decoder->recoveryFrameNum == (int)slice->frameNum && decoder->recoveryPoc == 0x7fffffff)
-    decoder->recoveryPoc = slice->framePoc;
+  if (recoveryFrameNum == (int)slice->frameNum && recoveryPoc == 0x7fffffff)
+    recoveryPoc = slice->framePoc;
   if (slice->refId)
-    decoder->lastRefPicPoc = slice->framePoc;
+    lastRefPicPoc = slice->framePoc;
   if ((slice->picStructure == eFrame) || (slice->picStructure == eTopField))
-    getTime (&decoder->debug.startTime);
+    getTime (&debug.startTime);
 
-  sPicture* picture = decoder->picture = allocPicture (decoder, slice->picStructure, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
+  picture = allocPicture (decoder, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
   picture->topPoc = slice->topPoc;
   picture->botPoc = slice->botPoc;
   picture->framePoc = slice->framePoc;
   picture->qp = slice->qp;
   picture->sliceQpDelta = slice->sliceQpDelta;
-  picture->chromaQpOffset[0] = decoder->activePps->chromaQpOffset;
-  picture->chromaQpOffset[1] = decoder->activePps->chromaQpOffset2;
+  picture->chromaQpOffset[0] = activePps->chromaQpOffset;
+  picture->chromaQpOffset[1] = activePps->chromaQpOffset2;
   picture->codingType = slice->picStructure == eFrame ?
     (slice->mbAffFrame? eFrameMbPairCoding:eFrameCoding) : eFieldCoding;
 
   // reset all variables of the error conceal instance before decoding of every frame.
   // here the third parameter should, if perfectly, be equal to the number of slices per frame.
   // using little value is ok, the code will allocate more memory if the slice number is larger
-  ercReset (decoder->ercErrorVar, decoder->picSizeInMbs, decoder->picSizeInMbs, picture->sizeX);
+  ercReset (ercErrorVar, picSizeInMbs, picSizeInMbs, picture->sizeX);
 
-  decoder->ercMvPerMb = 0;
+  ercMvPerMb = 0;
   switch (slice->picStructure ) {
     //{{{
     case eTopField:
       picture->poc = slice->topPoc;
-      decoder->idrFrameNum *= 2;
+      idrFrameNum *= 2;
       break;
     //}}}
     //{{{
     case eBotField:
       picture->poc = slice->botPoc;
-      decoder->idrFrameNum = decoder->idrFrameNum * 2 + 1;
+      idrFrameNum = idrFrameNum * 2 + 1;
       break;
     //}}}
     //{{{
@@ -3692,44 +3692,44 @@ void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
     //}}}
     //{{{
     default:
-      cDecoder264::error ("decoder->picStructure not initialized");
+      cDecoder264::error ("picStructure not initialized");
     //}}}
     }
 
-  if (decoder->coding.sliceType > eSliceSI) {
+  if (coding.sliceType > eSliceSI) {
     setEcFlag (decoder, SE_PTYPE);
-    decoder->coding.sliceType = eSliceP;  // concealed element
+    coding.sliceType = eSliceP;  // concealed element
     }
 
   // cavlc init
-  if (decoder->activePps->entropyCoding == eCavlc)
-    memset (decoder->nzCoeff[0][0][0], -1, decoder->picSizeInMbs * 48 *sizeof(uint8_t)); // 3 * 4 * 4
+  if (activePps->entropyCoding == eCavlc)
+    memset (nzCoeff[0][0][0], -1, picSizeInMbs * 48 *sizeof(uint8_t)); // 3 * 4 * 4
 
   // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
   // TO set sMacroBlock Map (mark all MBs as 'have to be concealed')
-  if (decoder->coding.isSeperateColourPlane) {
+  if (coding.isSeperateColourPlane) {
     for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
-      sMacroBlock* mb = decoder->mbDataJV[nplane];
-      char* intraBlock = decoder->intraBlockJV[nplane];
-      for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
+      sMacroBlock* mb = mbDataJV[nplane];
+      char* intraBlock = intraBlockJV[nplane];
+      for (int i = 0; i < (int)picSizeInMbs; ++i)
         resetMb (mb++);
-      memset (decoder->predModeJV[nplane][0], DC_PRED, 16 * decoder->coding.frameHeightMbs * decoder->coding.picWidthMbs * sizeof(char));
-      if (decoder->activePps->hasConstrainedIntraPred)
-        for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
+      memset (predModeJV[nplane][0], DC_PRED, 16 * coding.frameHeightMbs * coding.picWidthMbs * sizeof(char));
+      if (activePps->hasConstrainedIntraPred)
+        for (int i = 0; i < (int)picSizeInMbs; ++i)
           intraBlock[i] = 1;
       }
     }
   else {
-    sMacroBlock* mb = decoder->mbData;
-    for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
+    sMacroBlock* mb = mbData;
+    for (int i = 0; i < (int)picSizeInMbs; ++i)
       resetMb (mb++);
-    if (decoder->activePps->hasConstrainedIntraPred)
-      for (int i = 0; i < (int)decoder->picSizeInMbs; ++i)
-        decoder->intraBlock[i] = 1;
-    memset (decoder->predMode[0], DC_PRED, 16 * decoder->coding.frameHeightMbs * decoder->coding.picWidthMbs * sizeof(char));
+    if (activePps->hasConstrainedIntraPred)
+      for (int i = 0; i < (int)picSizeInMbs; ++i)
+        intraBlock[i] = 1;
+    memset (predMode[0], DC_PRED, 16 * coding.frameHeightMbs * coding.picWidthMbs * sizeof(char));
     }
 
-  picture->sliceType = decoder->coding.sliceType;
+  picture->sliceType = coding.sliceType;
   picture->usedForReference = (slice->refId != 0);
   picture->isIDR = slice->isIDR;
   picture->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
@@ -3739,31 +3739,31 @@ void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
   slice->decRefPicMarkBuffer = NULL;
 
   picture->mbAffFrame = slice->mbAffFrame;
-  picture->picWidthMbs = decoder->coding.picWidthMbs;
+  picture->picWidthMbs = coding.picWidthMbs;
 
-  decoder->getMbBlockPos = picture->mbAffFrame ? getMbBlockPosMbaff : getMbBlockPosNormal;
-  decoder->getNeighbour = picture->mbAffFrame ? getAffNeighbour : getNonAffNeighbour;
+  getMbBlockPos = picture->mbAffFrame ? getMbBlockPosMbaff : getMbBlockPosNormal;
+  getNeighbour = picture->mbAffFrame ? getAffNeighbour : getNonAffNeighbour;
 
   picture->picNum = slice->frameNum;
   picture->frameNum = slice->frameNum;
-  picture->recoveryFrame = (uint32_t)((int)slice->frameNum == decoder->recoveryFrameNum);
+  picture->recoveryFrame = (uint32_t)((int)slice->frameNum == recoveryFrameNum);
   picture->codedFrame = (slice->picStructure == eFrame);
-  picture->chromaFormatIdc = (eYuvFormat)decoder->activeSps->chromaFormatIdc;
-  picture->frameMbOnly = decoder->activeSps->frameMbOnly;
-  picture->hasCrop = decoder->activeSps->hasCrop;
+  picture->chromaFormatIdc = (eYuvFormat)activeSps->chromaFormatIdc;
+  picture->frameMbOnly = activeSps->frameMbOnly;
+  picture->hasCrop = activeSps->hasCrop;
   if (picture->hasCrop) {
-    picture->cropLeft = decoder->activeSps->cropLeft;
-    picture->cropRight = decoder->activeSps->cropRight;
-    picture->cropTop = decoder->activeSps->cropTop;
-    picture->cropBot = decoder->activeSps->cropBot;
+    picture->cropLeft = activeSps->cropLeft;
+    picture->cropRight = activeSps->cropRight;
+    picture->cropTop = activeSps->cropTop;
+    picture->cropBot = activeSps->cropBot;
     }
 
-  if (decoder->coding.isSeperateColourPlane) {
-    decoder->decPictureJV[0] = decoder->picture;
-    decoder->decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
-    copyDecPictureJV (decoder->decPictureJV[1], decoder->decPictureJV[0] );
-    decoder->decPictureJV[2] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
-    copyDecPictureJV (decoder->decPictureJV[2], decoder->decPictureJV[0] );
+  if (coding.isSeperateColourPlane) {
+    decPictureJV[0] = picture;
+    decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+    copyDecPictureJV (decPictureJV[1], decPictureJV[0] );
+    decPictureJV[2] = allocPicture (decoder, (ePicStructure) slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+    copyDecPictureJV (decPictureJV[2], decPictureJV[0] );
     }
   }
 //}}}
