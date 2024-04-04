@@ -3,7 +3,6 @@
 #include "memory.h"
 
 #include "block.h"
-#include "image.h"
 #include "mbAccess.h"
 #include "transform.h"
 #include "quant.h"

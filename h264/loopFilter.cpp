@@ -1,7 +1,6 @@
 //{{{  includes
 #include "global.h"
 
-#include "image.h"
 #include "mbAccess.h"
 #include "loopfilter.h"
 //}}}

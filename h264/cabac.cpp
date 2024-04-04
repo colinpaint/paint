@@ -4,7 +4,6 @@
 
 #include "cabac.h"
 #include "syntaxElement.h"
-#include "image.h"
 #include "binaryArithmeticDecode.h"
 #include "mbAccess.h"
 #include "vlc.h"

@@ -5,7 +5,6 @@
 #include "memory.h"
 
 #include "erc.h"
-#include "image.h"
 #include "buffer.h"
 #include "output.h"
 //}}}
@@ -327,8 +326,8 @@ static void dpbSplitField (cDecoder264* decoder, sFrameStore* frameStore) {
     fsTop->chromaFormatIdc = fsBot->chromaFormatIdc = frame->chromaFormatIdc;
     fsTop->codingType = fsBot->codingType = frame->codingType;
     if (frame->usedForReference)  {
-      padPicture (decoder, fsTop);
-      padPicture (decoder, fsBot);
+      decoder->padPicture (fsTop);
+      decoder->padPicture (fsBot);
       }
     }
   else {
@@ -652,7 +651,7 @@ void dpbCombineField (cDecoder264* decoder, sFrameStore* frameStore) {
   frameStore->botField->topField = frameStore->topField;
   frameStore->botField->botField = frameStore->botField;
   if (frameStore->topField->usedForReference || frameStore->botField->usedForReference)
-    padPicture (decoder, frameStore->frame);
+    decoder->padPicture (frameStore->frame);
   }
 //}}}
 
@@ -806,7 +805,7 @@ void fillFrameNumGap (cDecoder264* decoder, sSlice* slice) {
 
     slice->frameNum = unusedShortTermFrameNum;
     if (activeSps->pocType != 0)
-      decodePOC (decoder, decoder->sliceList[0]);
+      decoder->decodePOC (decoder->sliceList[0]);
     picture->topPoc = slice->topPoc;
     picture->botPoc = slice->botPoc;
     picture->framePoc = slice->framePoc;

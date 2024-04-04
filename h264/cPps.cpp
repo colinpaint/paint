@@ -2,7 +2,6 @@
 #include "global.h"
 #include "memory.h"
 
-#include "image.h"
 #include "nalu.h"
 #include "vlc.h"
 

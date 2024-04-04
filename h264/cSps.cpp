@@ -5,7 +5,6 @@
 #include "nalu.h"
 #include "vlc.h"
 #include "erc.h"
-#include "image.h"
 
 #include "../common/cLog.h"
 

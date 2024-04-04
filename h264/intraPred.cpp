@@ -4,7 +4,6 @@
 #include "block.h"
 #include "intraPred.h"
 #include "mbAccess.h"
-#include "image.h"
 //}}}
 //{{{
 // Notation for comments regarding prediction and predictors.

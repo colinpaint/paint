@@ -842,12 +842,16 @@ public:
   //}}}
 
   static cDecoder264* open (sParam* param, uint8_t* chunk, size_t chunkSize);
-  static void error (const char* text);
+  static void error (const std::string& text);
   ~cDecoder264();
 
   int decodeOneFrame (sDecodedPic** decPicList);
   void finish (sDecodedPic** decPicList);
   void close();
+
+  void decodePOC (sSlice* slice);
+  void padPicture (sPicture* picture);
+  int decodeFrame();
 
   // static var
   static inline cDecoder264* gDecoder = nullptr;
@@ -877,17 +881,12 @@ public:
   uint32_t     prevFrameNum = 0; // number of previous slice
   int          newFrame = 0;
 
-  int          nonConformingStream = 0;
+  bool         nonConformingStream = false;
   int          deblockEnable = 0;
   int          deblockMode = 0;  // 0: deblock in picture, 1: deblock in slice;
 
-  // recovery
-  int          recoveryPoint = 0;
-  int          recoveryPointFound = 0;
-  int          recoveryFrameCount = 0;
-  int          recoveryFrameNum = 0;
-  int          recoveryPoc = 0;
-  int          recoveryFlag = 0;
+  uint32_t     picHeightInMbs = 0;
+  uint32_t     picSizeInMbs = 0;
 
   // slice
   int          picSliceIndex = 0;
@@ -895,7 +894,7 @@ public:
   int          numDecodedSlices = 0;
   int          numAllocatedSlices = 0;
   sSlice**     sliceList = nullptr;
-  sSlice*      nextSlice = nullptr;           // pointer to first sSlice of next picture;
+  sSlice*      nextSlice = nullptr; // pointer to first sSlice of next picture;
   sOldSlice*   oldSlice = nullptr;
 
   // output
@@ -904,41 +903,38 @@ public:
   int          dpbPoc[100] = {0};
   sPicture*    picture = nullptr;
   sPicture*    decPictureJV[MAX_PLANE] = {nullptr};  // picture to be used during 4:4:4 independent mode decoding
-  sPicture*    noReferencePicture = nullptr;       // dummy storable picture for recovery point
+  sPicture*    noReferencePicture = nullptr;         // dummy storable picture for recovery point
   sFrameStore* lastOutFramestore = nullptr;
   sDecodedPic* outDecodedPics = nullptr;
   sFrameStore* outBuffer = nullptr;
   sPicture*    pendingOut = nullptr;
   int          pendingOutState;
 
-  // sCoding duplicates
-  int width = 0;
-  int height = 0;
-  int widthCr = 0;
-  int heightCr = 0;
-  int mbCrSizeX = 0;
-  int mbCrSizeY = 0;
-  int mbCrSizeXblock = 0;
-  int mbCrSizeYblock = 0;
-  int mbCrSize = 0;
-  int mbSize[3][2] = {0};
-  int mbSizeBlock[3][2] = {0};
-  int mbSizeShift[3][2] = {0};
-  int16_t bitDepthLuma = 0;
-  int16_t bitDepthChroma = 0;
-
   // sCoding
   sCoding      coding = {0};
+
+  // sCoding duplicates
+  int          width = 0;
+  int          height = 0;
+  int          widthCr = 0;
+  int          heightCr = 0;
+  int          mbCrSizeX = 0;
+  int          mbCrSizeY = 0;
+  int          mbCrSizeXblock = 0;
+  int          mbCrSizeYblock = 0;
+  int          mbCrSize = 0;
+  int          mbSize[3][2] = {0};
+  int          mbSizeBlock[3][2] = {0};
+  int          mbSizeShift[3][2] = {0};
+  int16_t      bitDepthLuma = 0;
+  int16_t      bitDepthChroma = 0;
+
   sBlockPos*   picPos = nullptr;
   uint8_t****  nzCoeff = nullptr;
   sMacroBlock* mbData = nullptr;              // array containing all MBs of a whole frame
   char*        intraBlock = nullptr;
   uint8_t**    predMode = nullptr;            // prediction type [90][74]
   int**        siBlock = nullptr;
-  sMacroBlock* mbDataJV[MAX_PLANE] = {nullptr};
-  char*        intraBlockJV[MAX_PLANE] = {nullptr};
-  uint8_t**    predModeJV[MAX_PLANE] = {nullptr};
-  int**        siBlockJV[MAX_PLANE] = {nullptr};
 
   // POC
   int          lastRefPicPoc = 0;
@@ -958,28 +954,33 @@ public:
   int          thisPoc = 0;
   int          previousFrameNumOffset = 0;
 
-  uint32_t     picHeightInMbs = 0;
-  uint32_t     picSizeInMbs = 0;
-
   int          noOutputPriorPicFlag = 0;
 
   // non-zero: i-th previous frame is correct
-  int isPrimaryOk = 0;    // if primary frame is correct, 0: incorrect
-  int isRedundantOk = 0;  // if redundant frame is correct, 0:incorrect
+  int           isPrimaryOk = 0;    // if primary frame is correct, 0: incorrect
+  int           isRedundantOk = 0;  // if redundant frame is correct, 0:incorrect
 
-  int* qpPerMatrix = nullptr;
-  int* qpRemMatrix = nullptr;
+  int*          qpPerMatrix = nullptr;
+  int*          qpRemMatrix = nullptr;
 
   // Error parameters
   struct ObjectBuffer* ercObjectList = nullptr;
   struct ErcVariables* ercErrorVar = nullptr;
-  int ercMvPerMb = 0;
-  int ecFlag[SE_MAX_ELEMENTS] = {0};  // array to set errorconcealment
+  int           ercMvPerMb = 0;
+  int           ecFlag[SE_MAX_ELEMENTS] = {0};  // array to set errorconcealment
 
   // fmo
-  int* mbToSliceGroupMap = nullptr;
-  int* mapUnitToSliceGroupMap = nullptr;
-  int sliceGroupsNum = 0;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  int*          mbToSliceGroupMap = nullptr;
+  int*          mapUnitToSliceGroupMap = nullptr;
+  int           sliceGroupsNum = 0;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
+
+  // recovery
+  int           recoveryPoint = 0;
+  int           recoveryPointFound = 0;
+  int           recoveryFrameCount = 0;
+  int           recoveryFrameNum = 0;
+  int           recoveryPoc = 0;
+  int           recoveryFlag = 0;
 
   // picture error conceal
   // concealHead points to first node in list, concealTail points to last node in list
@@ -991,6 +992,11 @@ public:
   uint32_t      concealFrame = 0;
   int           idrConcealFlag = 0;
   int           concealSliceType = 0;
+
+  sMacroBlock*  mbDataJV[MAX_PLANE] = {nullptr};
+  char*         intraBlockJV[MAX_PLANE] = {nullptr};
+  uint8_t**     predModeJV[MAX_PLANE] = {nullptr};
+  int**         siBlockJV[MAX_PLANE] = {nullptr};
 
   // C style virtual functions
   void (*getNeighbour) (sMacroBlock*, int, int, int[2], sPixelPos*);
@@ -1014,6 +1020,8 @@ void freeGlobalBuffers (cDecoder264* decoder);
 void freeLayerBuffers (cDecoder264* decoder);
 sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
 void freeDecodedPictures (sDecodedPic* decodedPic);
+
+void initOldSlice (sOldSlice* oldSlice);
 
 // For 4:4:4 independent mode
 void changePlaneJV (cDecoder264* decoder, int nplane, sSlice* slice);
