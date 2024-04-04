@@ -1525,45 +1525,6 @@ namespace {
     }
   //}}}
   //{{{
-  void initRefPicture (sSlice* slice, cDecoder264* decoder) {
-
-    sPicture* vidRefPicture = decoder->noReferencePicture;
-    int noRef = slice->framePoc < decoder->recoveryPoc;
-
-    if (decoder->coding.isSeperateColourPlane) {
-      switch (slice->colourPlaneId) {
-        case 0:
-          for (int j = 0; j < 6; j++) {
-            for (int i = 0; i < MAX_LIST_SIZE; i++) {
-              sPicture* refPicture = slice->listX[j][i];
-              if (refPicture) {
-                refPicture->noRef = noRef && (refPicture == vidRefPicture);
-                refPicture->curPixelY = refPicture->imgY;
-                }
-              }
-            }
-          break;
-        }
-      }
-
-    else {
-      int totalLists = slice->mbAffFrame ? 6 : (slice->sliceType == eSliceB ? 2 : 1);
-      for (int j = 0; j < totalLists; j++) {
-        // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid refIndex being set
-        // since currently this is done at the slice level, it seems safe to do so.
-        // Note for some reason I get now a mismatch between version 12 and this one in cabac. I wonder why.
-        for (int i = 0; i < MAX_LIST_SIZE; i++) {
-          sPicture* refPicture = slice->listX[j][i];
-          if (refPicture) {
-            refPicture->noRef = noRef && (refPicture == vidRefPicture);
-            refPicture->curPixelY = refPicture->imgY;
-            }
-          }
-        }
-      }
-    }
-  //}}}
-  //{{{
   void copyDecPictureJV (cDecoder264* decoder, sPicture* dst, sPicture* src) {
 
     dst->poc = src->poc;
@@ -2172,7 +2133,7 @@ namespace {
       computeColocated (slice, slice->listX);
 
     if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI))
-      initRefPicture (slice, decoder);
+      decoder->initRefPicture (slice);
 
     // loop over macroblocks
     while (!endOfSlice) {
@@ -3005,6 +2966,45 @@ void cDecoder264::initPictureDecode() {
       deblockMode = 0;
 
   deblockMode = deblockMode;
+  }
+//}}}
+//{{{
+void cDecoder264::initRefPicture (sSlice* slice) {
+
+  sPicture* vidRefPicture = noReferencePicture;
+  int noRef = slice->framePoc < recoveryPoc;
+
+  if (coding.isSeperateColourPlane) {
+    switch (slice->colourPlaneId) {
+      case 0:
+        for (int j = 0; j < 6; j++) {
+          for (int i = 0; i < MAX_LIST_SIZE; i++) {
+            sPicture* refPicture = slice->listX[j][i];
+            if (refPicture) {
+              refPicture->noRef = noRef && (refPicture == vidRefPicture);
+              refPicture->curPixelY = refPicture->imgY;
+              }
+            }
+          }
+        break;
+      }
+    }
+
+  else {
+    int totalLists = slice->mbAffFrame ? 6 : (slice->sliceType == eSliceB ? 2 : 1);
+    for (int j = 0; j < totalLists; j++) {
+      // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid refIndex being set
+      // since currently this is done at the slice level, it seems safe to do so.
+      // Note for some reason I get now a mismatch between version 12 and this one in cabac. I wonder why.
+      for (int i = 0; i < MAX_LIST_SIZE; i++) {
+        sPicture* refPicture = slice->listX[j][i];
+        if (refPicture) {
+          refPicture->noRef = noRef && (refPicture == vidRefPicture);
+          refPicture->curPixelY = refPicture->imgY;
+          }
+        }
+      }
+    }
   }
 //}}}
 //{{{

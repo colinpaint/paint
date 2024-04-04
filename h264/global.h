@@ -1011,6 +1011,8 @@ public:
   void setCoding();
   void setCodingParam (cSps* sps);
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
+
+  void initRefPicture (sSlice* slice);
   void readSliceHeader (sSlice* slice);
   void mbAffPostProc();
   void endDecodeFrame();
