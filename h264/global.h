@@ -1013,6 +1013,8 @@ public:
   void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
 
 private:
+  int readSlice (sSlice* slice);
+
   void clearDecodedPics();
   void initPictureDecode();
   void endDecodeFrame();

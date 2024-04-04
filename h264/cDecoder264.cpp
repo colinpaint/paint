@@ -1615,252 +1615,6 @@ namespace {
     }
   //}}}
   //{{{
-  int readSlice (sSlice* slice) {
-
-    int curHeader = 0;
-
-    cDecoder264* decoder = slice->decoder;
-
-    for (;;) {
-      cNalu* nalu = decoder->nalu;
-      if (decoder->pendingNalu) {
-        nalu = decoder->pendingNalu;
-        decoder->pendingNalu = NULL;
-        }
-      else if (!nalu->readNalu (decoder))
-        return eEOS;
-
-    processNalu:
-      switch (nalu->unitType) {
-        case cNalu::NALU_TYPE_SLICE:
-        //{{{
-        case cNalu::NALU_TYPE_IDR: {
-          // recovery
-          if (decoder->recoveryPoint || nalu->unitType == cNalu::NALU_TYPE_IDR) {
-            if (!decoder->recoveryPointFound) {
-              if (nalu->unitType != cNalu::NALU_TYPE_IDR) {
-                cLog::log (LOGINFO,  "-> decoding without IDR");
-                decoder->nonConformingStream = true;
-                }
-              else
-                decoder->nonConformingStream = false;
-              }
-            decoder->recoveryPointFound = 1;
-            }
-          if (!decoder->recoveryPointFound)
-            break;
-
-          // read sliceHeader
-          slice->isIDR = (nalu->unitType == cNalu::NALU_TYPE_IDR);
-          slice->refId = nalu->refId;
-          slice->dataPartitionMode = eDataPartition1;
-          slice->maxDataPartitions = 1;
-          sBitStream* s = slice->dataPartitions[0].stream;
-          s->readLen = 0;
-          s->errorFlag = 0;
-          s->bitStreamOffset = 0;
-          memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
-          s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
-          s->codeLen = s->bitStreamLen;
-
-          decoder->readSliceHeader (slice);
-
-          // if primary slice replaced by redundant slice, set correct image type
-          if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isRedundantOk)
-            decoder->picture->sliceType = decoder->coding.sliceType;
-          if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
-            if (!decoder->picSliceIndex)
-              decoder->initPicture (slice);
-            curHeader = eSOP;
-            nalu->checkZeroByteVCL (decoder);
-            }
-          else
-            curHeader = eSOS;
-
-          useQuantParams (slice);
-          setSliceFunctions (slice);
-
-          if (slice->mbAffFrame)
-            slice->mbIndex = slice->startMbNum << 1;
-          else
-            slice->mbIndex = slice->startMbNum;
-
-          if (decoder->activePps->entropyCoding) {
-            int byteStartPosition = s->bitStreamOffset / 8;
-            if (s->bitStreamOffset % 8)
-              ++byteStartPosition;
-            arithmeticDecodeStartDecoding (&slice->dataPartitions[0].cabacDecodeEnv, s->bitStreamBuffer,
-                                           byteStartPosition, &s->readLen);
-            }
-
-          decoder->recoveryPoint = 0;
-
-          // debug
-          decoder->debug.sliceType = slice->sliceType;
-          decoder->debug.sliceString = fmt::format ("{}:{}:{:6d} -> pps:{} frame:{:2d} {} {}{}",
-                   (nalu->unitType == cNalu::NALU_TYPE_IDR) ? "IDR":"SLC", slice->refId, nalu->len,
-                   slice->ppsId, slice->frameNum,
-                   slice->sliceType ? (slice->sliceType == 1) ? 'B':((slice->sliceType == 2) ? 'I':'?'):'P',
-                   slice->fieldPic ? " field":"", slice->mbAffFrame ? " mbAff":"");
-          if (decoder->param.sliceDebug)
-            cLog::log (LOGINFO, decoder->debug.sliceString);
-
-          return curHeader;
-          }
-        //}}}
-
-        //{{{
-        case cNalu::NALU_TYPE_SPS: {
-          int spsId = cSps::readNalu (decoder, nalu);
-          if (decoder->param.spsDebug)
-            cLog::log (LOGINFO, decoder->sps[spsId].getString());
-          break;
-          }
-        //}}}
-        //{{{
-        case cNalu::NALU_TYPE_PPS: {
-          int ppsId = cPps::readNalu (decoder, nalu);
-          if (decoder->param.ppsDebug)
-            cLog::log (LOGINFO, decoder->pps[ppsId].getString());
-          break;
-          }
-        //}}}
-
-        case cNalu::NALU_TYPE_SEI:
-          processSei (nalu->buf, nalu->len, decoder, slice);
-          break;
-
-        //{{{
-        case cNalu::NALU_TYPE_DPA: {
-          cLog::log (LOGINFO, "DPA id:%d:%d len:%d", slice->refId, slice->sliceType, nalu->len);
-
-          if (!decoder->recoveryPointFound)
-            break;
-
-          // read dataPartition A
-          slice->isIDR = false;
-          slice->refId = nalu->refId;
-          slice->noDataPartitionB = 1;
-          slice->noDataPartitionC = 1;
-          slice->dataPartitionMode = eDataPartition3;
-          slice->maxDataPartitions = 3;
-          sBitStream* s = slice->dataPartitions[0].stream;
-          s->errorFlag = 0;
-          s->bitStreamOffset = s->readLen = 0;
-          memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
-          s->codeLen = s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
-          decoder->readSliceHeader (slice);
-
-          if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
-            if (!decoder->picSliceIndex)
-              decoder->initPicture (slice);
-            curHeader = eSOP;
-            nalu->checkZeroByteVCL (decoder);
-            }
-          else
-            curHeader = eSOS;
-
-          useQuantParams (slice);
-          setSliceFunctions (slice);
-          if (slice->mbAffFrame)
-            slice->mbIndex = slice->startMbNum << 1;
-          else
-            slice->mbIndex = slice->startMbNum;
-
-          // need to read the slice ID, which depends on the value of redundantPicCountPresent
-          int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
-          if (decoder->activePps->entropyCoding)
-            cDecoder264::error ("dataPartition with eCabac not allowed");
-
-          if (!nalu->readNalu (decoder))
-            return curHeader;
-
-          if (cNalu::NALU_TYPE_DPB == nalu->unitType) {
-            //{{{  got nalu dataPartitionB
-            s = slice->dataPartitions[1].stream;
-            s->errorFlag = 0;
-            s->bitStreamOffset = s->readLen = 0;
-            memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
-            s->codeLen = s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
-            int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
-            slice->noDataPartitionB = 0;
-
-            if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
-              cLog::log (LOGINFO, "NALU dataPartitionB does not match dataPartitionA");
-              slice->noDataPartitionB = 1;
-              slice->noDataPartitionC = 1;
-              }
-            else {
-              if (decoder->activePps->redundantPicCountPresent)
-                readUeV ("NALU dataPartitionB redundantPicCount", s);
-
-              // we're finished with dataPartitionB, so let's continue with next dataPartition
-              if (!nalu->readNalu (decoder))
-                return curHeader;
-              }
-            }
-            //}}}
-          else
-            slice->noDataPartitionB = 1;
-
-          if (cNalu::NALU_TYPE_DPC == nalu->unitType) {
-            //{{{  got nalu dataPartitionC
-            s = slice->dataPartitions[2].stream;
-            s->errorFlag = 0;
-            s->bitStreamOffset = s->readLen = 0;
-            memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
-            s->codeLen = s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
-
-            slice->noDataPartitionC = 0;
-            int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
-            if ((slice_id_c != slice_id_a) || (nalu->lostPackets)) {
-              cLog::log (LOGINFO, "dataPartitionC does not match dataPartitionA");
-              slice->noDataPartitionC = 1;
-              }
-
-            if (decoder->activePps->redundantPicCountPresent)
-              readUeV ("NALU:SLICE_C redudand_pic_cnt", s);
-            }
-            //}}}
-          else {
-            slice->noDataPartitionC = 1;
-            decoder->pendingNalu = nalu;
-            }
-
-          // check if we read anything else than the expected dataPartitions
-          if ((nalu->unitType != cNalu::NALU_TYPE_DPB) &&
-              (nalu->unitType != cNalu::NALU_TYPE_DPC) && (!slice->noDataPartitionC))
-            goto processNalu;
-
-          return curHeader;
-          }
-        //}}}
-        //{{{
-        case cNalu::NALU_TYPE_DPB:
-          cLog::log (LOGINFO, "dataPartitionB without dataPartitonA");
-          break;
-        //}}}
-        //{{{
-        case cNalu::NALU_TYPE_DPC:
-          cLog::log (LOGINFO, "dataPartitionC without dataPartitonA");
-          break;
-        //}}}
-
-        case cNalu::NALU_TYPE_AUD: break;
-        case cNalu::NALU_TYPE_FILL: break;
-        case cNalu::NALU_TYPE_EOSEQ: break;
-        case cNalu::NALU_TYPE_EOSTREAM: break;
-
-        default:
-          cLog::log (LOGINFO, "NALU:%d unknown:%d\n", nalu->len, nalu->unitType);
-          break;
-        }
-      }
-
-    return curHeader;
-    }
-  //}}}
-  //{{{
   void decodeSlice (sSlice* slice) {
 
     bool endOfSlice = false;
@@ -2616,6 +2370,253 @@ int cDecoder264::decodeFrame() {
 //}}}
 
 // private
+//{{{
+int cDecoder264::readSlice (sSlice* slice) {
+
+  int curHeader = 0;
+
+  cDecoder264* decoder = slice->decoder;
+
+  for (;;) {
+    cNalu* nalu = decoder->nalu;
+    if (decoder->pendingNalu) {
+      nalu = decoder->pendingNalu;
+      decoder->pendingNalu = NULL;
+      }
+    else if (!nalu->readNalu (decoder))
+      return eEOS;
+
+  processNalu:
+    switch (nalu->unitType) {
+      case cNalu::NALU_TYPE_SLICE:
+      //{{{
+      case cNalu::NALU_TYPE_IDR: {
+        // recovery
+        if (decoder->recoveryPoint || nalu->unitType == cNalu::NALU_TYPE_IDR) {
+          if (!decoder->recoveryPointFound) {
+            if (nalu->unitType != cNalu::NALU_TYPE_IDR) {
+              cLog::log (LOGINFO,  "-> decoding without IDR");
+              decoder->nonConformingStream = true;
+              }
+            else
+              decoder->nonConformingStream = false;
+            }
+          decoder->recoveryPointFound = 1;
+          }
+        if (!decoder->recoveryPointFound)
+          break;
+
+        // read sliceHeader
+        slice->isIDR = (nalu->unitType == cNalu::NALU_TYPE_IDR);
+        slice->refId = nalu->refId;
+        slice->dataPartitionMode = eDataPartition1;
+        slice->maxDataPartitions = 1;
+        sBitStream* s = slice->dataPartitions[0].stream;
+        s->readLen = 0;
+        s->errorFlag = 0;
+        s->bitStreamOffset = 0;
+        memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+        s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
+        s->codeLen = s->bitStreamLen;
+
+        decoder->readSliceHeader (slice);
+
+        // if primary slice replaced by redundant slice, set correct image type
+        if (slice->redundantPicCount && !decoder->isPrimaryOk && decoder->isRedundantOk)
+          decoder->picture->sliceType = decoder->coding.sliceType;
+        if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
+          if (!decoder->picSliceIndex)
+            decoder->initPicture (slice);
+          curHeader = eSOP;
+          nalu->checkZeroByteVCL (decoder);
+          }
+        else
+          curHeader = eSOS;
+
+        useQuantParams (slice);
+        setSliceFunctions (slice);
+
+        if (slice->mbAffFrame)
+          slice->mbIndex = slice->startMbNum << 1;
+        else
+          slice->mbIndex = slice->startMbNum;
+
+        if (decoder->activePps->entropyCoding) {
+          int byteStartPosition = s->bitStreamOffset / 8;
+          if (s->bitStreamOffset % 8)
+            ++byteStartPosition;
+          arithmeticDecodeStartDecoding (&slice->dataPartitions[0].cabacDecodeEnv, s->bitStreamBuffer,
+                                         byteStartPosition, &s->readLen);
+          }
+
+        decoder->recoveryPoint = 0;
+
+        // debug
+        decoder->debug.sliceType = slice->sliceType;
+        decoder->debug.sliceString = fmt::format ("{}:{}:{:6d} -> pps:{} frame:{:2d} {} {}{}",
+                 (nalu->unitType == cNalu::NALU_TYPE_IDR) ? "IDR":"SLC", slice->refId, nalu->len,
+                 slice->ppsId, slice->frameNum,
+                 slice->sliceType ? (slice->sliceType == 1) ? 'B':((slice->sliceType == 2) ? 'I':'?'):'P',
+                 slice->fieldPic ? " field":"", slice->mbAffFrame ? " mbAff":"");
+        if (decoder->param.sliceDebug)
+          cLog::log (LOGINFO, decoder->debug.sliceString);
+
+        return curHeader;
+        }
+      //}}}
+
+      //{{{
+      case cNalu::NALU_TYPE_SPS: {
+        int spsId = cSps::readNalu (decoder, nalu);
+        if (decoder->param.spsDebug)
+          cLog::log (LOGINFO, decoder->sps[spsId].getString());
+        break;
+        }
+      //}}}
+      //{{{
+      case cNalu::NALU_TYPE_PPS: {
+        int ppsId = cPps::readNalu (decoder, nalu);
+        if (decoder->param.ppsDebug)
+          cLog::log (LOGINFO, decoder->pps[ppsId].getString());
+        break;
+        }
+      //}}}
+
+      case cNalu::NALU_TYPE_SEI:
+        processSei (nalu->buf, nalu->len, decoder, slice);
+        break;
+
+      //{{{
+      case cNalu::NALU_TYPE_DPA: {
+        cLog::log (LOGINFO, "DPA id:%d:%d len:%d", slice->refId, slice->sliceType, nalu->len);
+
+        if (!decoder->recoveryPointFound)
+          break;
+
+        // read dataPartition A
+        slice->isIDR = false;
+        slice->refId = nalu->refId;
+        slice->noDataPartitionB = 1;
+        slice->noDataPartitionC = 1;
+        slice->dataPartitionMode = eDataPartition3;
+        slice->maxDataPartitions = 3;
+        sBitStream* s = slice->dataPartitions[0].stream;
+        s->errorFlag = 0;
+        s->bitStreamOffset = s->readLen = 0;
+        memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
+        s->codeLen = s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
+        decoder->readSliceHeader (slice);
+
+        if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
+          if (!decoder->picSliceIndex)
+            decoder->initPicture (slice);
+          curHeader = eSOP;
+          nalu->checkZeroByteVCL (decoder);
+          }
+        else
+          curHeader = eSOS;
+
+        useQuantParams (slice);
+        setSliceFunctions (slice);
+        if (slice->mbAffFrame)
+          slice->mbIndex = slice->startMbNum << 1;
+        else
+          slice->mbIndex = slice->startMbNum;
+
+        // need to read the slice ID, which depends on the value of redundantPicCountPresent
+        int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
+        if (decoder->activePps->entropyCoding)
+          cDecoder264::error ("dataPartition with eCabac not allowed");
+
+        if (!nalu->readNalu (decoder))
+          return curHeader;
+
+        if (cNalu::NALU_TYPE_DPB == nalu->unitType) {
+          //{{{  got nalu dataPartitionB
+          s = slice->dataPartitions[1].stream;
+          s->errorFlag = 0;
+          s->bitStreamOffset = s->readLen = 0;
+          memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+          s->codeLen = s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
+          int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
+          slice->noDataPartitionB = 0;
+
+          if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
+            cLog::log (LOGINFO, "NALU dataPartitionB does not match dataPartitionA");
+            slice->noDataPartitionB = 1;
+            slice->noDataPartitionC = 1;
+            }
+          else {
+            if (decoder->activePps->redundantPicCountPresent)
+              readUeV ("NALU dataPartitionB redundantPicCount", s);
+
+            // we're finished with dataPartitionB, so let's continue with next dataPartition
+            if (!nalu->readNalu (decoder))
+              return curHeader;
+            }
+          }
+          //}}}
+        else
+          slice->noDataPartitionB = 1;
+
+        if (cNalu::NALU_TYPE_DPC == nalu->unitType) {
+          //{{{  got nalu dataPartitionC
+          s = slice->dataPartitions[2].stream;
+          s->errorFlag = 0;
+          s->bitStreamOffset = s->readLen = 0;
+          memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+          s->codeLen = s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
+
+          slice->noDataPartitionC = 0;
+          int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
+          if ((slice_id_c != slice_id_a) || (nalu->lostPackets)) {
+            cLog::log (LOGINFO, "dataPartitionC does not match dataPartitionA");
+            slice->noDataPartitionC = 1;
+            }
+
+          if (decoder->activePps->redundantPicCountPresent)
+            readUeV ("NALU:SLICE_C redudand_pic_cnt", s);
+          }
+          //}}}
+        else {
+          slice->noDataPartitionC = 1;
+          decoder->pendingNalu = nalu;
+          }
+
+        // check if we read anything else than the expected dataPartitions
+        if ((nalu->unitType != cNalu::NALU_TYPE_DPB) &&
+            (nalu->unitType != cNalu::NALU_TYPE_DPC) && (!slice->noDataPartitionC))
+          goto processNalu;
+
+        return curHeader;
+        }
+      //}}}
+      //{{{
+      case cNalu::NALU_TYPE_DPB:
+        cLog::log (LOGINFO, "dataPartitionB without dataPartitonA");
+        break;
+      //}}}
+      //{{{
+      case cNalu::NALU_TYPE_DPC:
+        cLog::log (LOGINFO, "dataPartitionC without dataPartitonA");
+        break;
+      //}}}
+
+      case cNalu::NALU_TYPE_AUD: break;
+      case cNalu::NALU_TYPE_FILL: break;
+      case cNalu::NALU_TYPE_EOSEQ: break;
+      case cNalu::NALU_TYPE_EOSTREAM: break;
+
+      default:
+        cLog::log (LOGINFO, "NALU:%d unknown:%d\n", nalu->len, nalu->unitType);
+        break;
+      }
+    }
+
+  return curHeader;
+  }
+//}}}
+
 //{{{
 void cDecoder264::clearDecodedPics() {
 
