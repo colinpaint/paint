@@ -20,7 +20,7 @@
 //}}}
 namespace {
   //{{{
-  static void resetDpb (cDecoder264* decoder, sDpb* dpb) {
+  void resetDpb (cDecoder264* decoder, sDpb* dpb) {
 
     dpb->decoder = decoder;
     dpb->initDone = 0;
@@ -40,6 +40,7 @@ void error (const char* text) {
   }
 //}}}
 
+// sSlice
 //{{{
 sSlice* allocSlice (cDecoder264* decoder) {
 
@@ -122,6 +123,7 @@ static void freeSlice (sSlice *slice) {
   }
 //}}}
 
+// sDataPartition
 //{{{
 sDataPartition* allocDataPartitions (int n) {
 
@@ -154,6 +156,7 @@ void freeDataPartitions (sDataPartition* dataPartitions, int n) {
   }
 //}}}
 
+// globalBuffers
 //{{{
 void initGlobalBuffers (cDecoder264* decoder) {
 
@@ -255,6 +258,7 @@ void freeLayerBuffers (cDecoder264* decoder) {
   }
 //}}}
 
+// sDecodedPic
 //{{{
 sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic) {
 
