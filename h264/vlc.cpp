@@ -6,10 +6,12 @@
 
 // utils
 #include "../common/cLog.h"
+
+using namespace std;
 //}}}
 
 //{{{
-int readUeV (const char* label, sBitStream* s) {
+int readUeV (const string& label, sBitStream* s) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -24,7 +26,7 @@ int readUeV (const char* label, sBitStream* s) {
   }
 //}}}
 //{{{
-int readSeV (const char* label, sBitStream* s) {
+int readSeV (const string& label, sBitStream* s) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -39,7 +41,7 @@ int readSeV (const char* label, sBitStream* s) {
   }
 //}}}
 //{{{
-int readUv (int LenInBits, const char* label, sBitStream* s) {
+int readUv (int LenInBits, const string& label, sBitStream* s) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -56,7 +58,7 @@ int readUv (int LenInBits, const char* label, sBitStream* s) {
   }
 //}}}
 //{{{
-int readIv (int LenInBits, const char* label, sBitStream* s) {
+int readIv (int LenInBits, const string& label, sBitStream* s) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -76,7 +78,7 @@ int readIv (int LenInBits, const char* label, sBitStream* s) {
   }
 //}}}
 //{{{
-bool readU1 (const char* label, sBitStream* s) {
+bool readU1 (const string& label, sBitStream* s) {
   return (bool)readUv (1, label, s);
   }
 //}}}
@@ -98,7 +100,7 @@ void linfo_se (int len, int info, int* value1, int* dummy) {
   }
 //}}}
 //{{{
-void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy) {
+void linfo_cbp_intra_normal (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
