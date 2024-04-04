@@ -3778,54 +3778,54 @@ void cDecoder264::useParameterSet (cDecoder264* decoder, sSlice* slice) {
   if (!sps->ok)
     cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid spsId:{} ppsId:{}", slice->ppsId, pps->spsId));
 
-  if (sps != decoder->activeSps) {
+  if (sps != activeSps) {
     //{{{  new sps
-    if (decoder->picture)
-      decoder->endDecodeFrame();
+    if (picture)
+      endDecodeFrame();
 
-    decoder->activeSps = sps;
+    activeSps = sps;
 
-    if (sps->isBLprofile() && !decoder->dpb->initDone)
-      decoder->setCodingParam (sps);
-    decoder->setCoding();
+    if (sps->isBLprofile() && !dpb->initDone)
+      setCodingParam (sps);
+    setCoding();
     initGlobalBuffers (decoder);
 
-    if (!decoder->noOutputPriorPicFlag)
-      flushDpb (decoder->dpb);
-    initDpb (decoder, decoder->dpb, 0);
+    if (!noOutputPriorPicFlag)
+      flushDpb (dpb);
+    initDpb (decoder, dpb, 0);
 
     // enable error conceal
-    ercInit (decoder, decoder->coding.width, decoder->coding.height, 1);
+    ercInit (decoder, coding.width, coding.height, 1);
     if (decoder->picture) {
-      ercReset (decoder->ercErrorVar, decoder->picSizeInMbs, decoder->picSizeInMbs, decoder->picture->sizeX);
-      decoder->ercMvPerMb = 0;
+      ercReset (ercErrorVar, picSizeInMbs, picSizeInMbs, picture->sizeX);
+      ercMvPerMb = 0;
       }
 
-    decoder->setFormat (sps, &decoder->param.source, &decoder->param.output);
+    decoder->setFormat (sps, &param.source, &param.output);
 
     // debug spsStr
-    decoder->debug.profileString = fmt::format ("profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
-             decoder->coding.profileIdc,
-             decoder->param.source.width[0], decoder->param.source.height[0],
-             decoder->coding.width, decoder->coding.height,
-             decoder->coding.yuvFormat == YUV400 ? " 400 ":
-               decoder->coding.yuvFormat == YUV420 ? " 420":
-                 decoder->coding.yuvFormat == YUV422 ? " 422":" 4:4:4",
-             decoder->param.source.bitDepth[0],
-             decoder->param.source.bitDepth[1],
-             decoder->param.source.bitDepth[2]);
+    debug.profileString = fmt::format ("profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
+             coding.profileIdc,
+             param.source.width[0], param.source.height[0],
+             coding.width, coding.height,
+             coding.yuvFormat == YUV400 ? " 400 ":
+               coding.yuvFormat == YUV420 ? " 420":
+                 coding.yuvFormat == YUV422 ? " 422":" 4:4:4",
+             param.source.bitDepth[0],
+             param.source.bitDepth[1],
+             param.source.bitDepth[2]);
 
     // print profile debug
-    cLog::log (LOGINFO, decoder->debug.profileString);
+    cLog::log (LOGINFO, debug.profileString);
     }
     //}}}
 
-  if (pps != decoder->activePps) {
+  if (pps != activePps) {
     //{{{  new pps
-    if (decoder->picture) // only on slice loss
+    if (picture) // only on slice loss
       decoder->endDecodeFrame();
 
-    decoder->activePps = pps;
+    activePps = pps;
     }
     //}}}
 
