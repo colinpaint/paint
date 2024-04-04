@@ -1185,6 +1185,7 @@ namespace {
       }
     }
   //}}}
+
   //{{{
   void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
 
@@ -1302,6 +1303,35 @@ namespace {
       }
     }
   //}}}
+  //{{{
+  void reorderLists (sSlice* slice) {
+
+    cDecoder264* decoder = slice->decoder;
+
+    if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
+      if (slice->refPicReorderFlag[LIST_0])
+        reorderRefPicList (slice, LIST_0);
+      if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
+        cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
+                   slice->numRefIndexActive[LIST_0]-1, decoder->nonConformingStream ? "conform":"");
+      else
+        slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
+      }
+
+    if (slice->sliceType == eSliceB) {
+      if (slice->refPicReorderFlag[LIST_1])
+        reorderRefPicList (slice, LIST_1);
+      if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
+         cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
+                slice->numRefIndexActive[LIST_0] - 1, decoder->nonConformingStream ? "conform" : "");
+      else
+        slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
+      }
+
+    freeRefPicListReorderBuffer (slice);
+    }
+  //}}}
+
   //{{{
   void resetMb (sMacroBlock* mb) {
 
@@ -1497,69 +1527,6 @@ namespace {
   //}}}
 
   //{{{
-  void reorderLists (sSlice* slice) {
-
-    cDecoder264* decoder = slice->decoder;
-
-    if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
-      if (slice->refPicReorderFlag[LIST_0])
-        reorderRefPicList (slice, LIST_0);
-      if (decoder->noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
-        cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
-                   slice->numRefIndexActive[LIST_0]-1, decoder->nonConformingStream ? "conform":"");
-      else
-        slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
-      }
-
-    if (slice->sliceType == eSliceB) {
-      if (slice->refPicReorderFlag[LIST_1])
-        reorderRefPicList (slice, LIST_1);
-      if (decoder->noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
-         cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
-                slice->numRefIndexActive[LIST_0] - 1, decoder->nonConformingStream ? "conform" : "");
-      else
-        slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
-      }
-
-    freeRefPicListReorderBuffer (slice);
-    }
-  //}}}
-  //{{{
-  void copyDecPictureJV (cDecoder264* decoder, sPicture* dst, sPicture* src) {
-
-    dst->poc = src->poc;
-    dst->topPoc = src->topPoc;
-    dst->botPoc = src->botPoc;
-    dst->framePoc = src->framePoc;
-
-    dst->qp = src->qp;
-    dst->sliceQpDelta = src->sliceQpDelta;
-    dst->chromaQpOffset[0] = src->chromaQpOffset[0];
-    dst->chromaQpOffset[1] = src->chromaQpOffset[1];
-
-    dst->sliceType = src->sliceType;
-    dst->usedForReference = src->usedForReference;
-    dst->isIDR = src->isIDR;
-    dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
-    dst->longTermRefFlag = src->longTermRefFlag;
-    dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
-    dst->decRefPicMarkBuffer = src->decRefPicMarkBuffer;
-    dst->mbAffFrame = src->mbAffFrame;
-    dst->picWidthMbs = src->picWidthMbs;
-    dst->picNum  = src->picNum;
-    dst->frameNum = src->frameNum;
-    dst->recoveryFrame = src->recoveryFrame;
-    dst->codedFrame = src->codedFrame;
-    dst->chromaFormatIdc = src->chromaFormatIdc;
-    dst->frameMbOnly = src->frameMbOnly;
-    dst->hasCrop = src->hasCrop;
-    dst->cropLeft = src->cropLeft;
-    dst->cropRight = src->cropRight;
-    dst->cropTop = src->cropTop;
-    dst->cropBot = src->cropBot;
-    }
-  //}}}
-  //{{{
   void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
 
     sPixel (*temp_evn)[16] = temp;
@@ -1613,12 +1580,46 @@ namespace {
     return result;
     }
   //}}}
+  //{{{
+  void copyDecPictureJV (sPicture* dst, sPicture* src) {
+
+    dst->poc = src->poc;
+    dst->topPoc = src->topPoc;
+    dst->botPoc = src->botPoc;
+    dst->framePoc = src->framePoc;
+
+    dst->qp = src->qp;
+    dst->sliceQpDelta = src->sliceQpDelta;
+    dst->chromaQpOffset[0] = src->chromaQpOffset[0];
+    dst->chromaQpOffset[1] = src->chromaQpOffset[1];
+
+    dst->sliceType = src->sliceType;
+    dst->usedForReference = src->usedForReference;
+    dst->isIDR = src->isIDR;
+    dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
+    dst->longTermRefFlag = src->longTermRefFlag;
+    dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
+    dst->decRefPicMarkBuffer = src->decRefPicMarkBuffer;
+    dst->mbAffFrame = src->mbAffFrame;
+    dst->picWidthMbs = src->picWidthMbs;
+    dst->picNum  = src->picNum;
+    dst->frameNum = src->frameNum;
+    dst->recoveryFrame = src->recoveryFrame;
+    dst->codedFrame = src->codedFrame;
+    dst->chromaFormatIdc = src->chromaFormatIdc;
+    dst->frameMbOnly = src->frameMbOnly;
+    dst->hasCrop = src->hasCrop;
+    dst->cropLeft = src->cropLeft;
+    dst->cropRight = src->cropRight;
+    dst->cropTop = src->cropTop;
+    dst->cropBot = src->cropBot;
+    }
+  //}}}
 
   //{{{
   void initPicture (cDecoder264* decoder, sSlice* slice) {
 
     sDpb* dpb = slice->dpb;
-    cSps* activeSps = decoder->activeSps;
 
     decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (slice->fieldPic+1);
     decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
@@ -1634,7 +1635,7 @@ namespace {
     if (!decoder->recoveryPoint &&
         (slice->frameNum != decoder->preFrameNum) &&
         (slice->frameNum != (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
-      if (!activeSps->allowGapsFrameNum) {
+      if (!decoder->activeSps->allowGapsFrameNum) {
         //{{{  picture error conceal
         if (decoder->param.concealMode) {
           if ((slice->frameNum) < ((decoder->preFrameNum + 1) % decoder->coding.maxFrameNum)) {
@@ -1768,22 +1769,22 @@ namespace {
     picture->frameNum = slice->frameNum;
     picture->recoveryFrame = (uint32_t)((int)slice->frameNum == decoder->recoveryFrameNum);
     picture->codedFrame = (slice->picStructure == eFrame);
-    picture->chromaFormatIdc = (eYuvFormat)activeSps->chromaFormatIdc;
-    picture->frameMbOnly = activeSps->frameMbOnly;
-    picture->hasCrop = activeSps->hasCrop;
+    picture->chromaFormatIdc = (eYuvFormat)decoder->activeSps->chromaFormatIdc;
+    picture->frameMbOnly = decoder->activeSps->frameMbOnly;
+    picture->hasCrop = decoder->activeSps->hasCrop;
     if (picture->hasCrop) {
-      picture->cropLeft = activeSps->cropLeft;
-      picture->cropRight = activeSps->cropRight;
-      picture->cropTop = activeSps->cropTop;
-      picture->cropBot = activeSps->cropBot;
+      picture->cropLeft = decoder->activeSps->cropLeft;
+      picture->cropRight = decoder->activeSps->cropRight;
+      picture->cropTop = decoder->activeSps->cropTop;
+      picture->cropBot = decoder->activeSps->cropBot;
       }
 
     if (decoder->coding.isSeperateColourPlane) {
       decoder->decPictureJV[0] = decoder->picture;
       decoder->decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
-      copyDecPictureJV (decoder, decoder->decPictureJV[1], decoder->decPictureJV[0] );
+      copyDecPictureJV (decoder->decPictureJV[1], decoder->decPictureJV[0] );
       decoder->decPictureJV[2] = allocPicture (decoder, (ePicStructure) slice->picStructure, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
-      copyDecPictureJV (decoder, decoder->decPictureJV[2], decoder->decPictureJV[0] );
+      copyDecPictureJV (decoder->decPictureJV[2], decoder->decPictureJV[0] );
       }
     }
   //}}}
