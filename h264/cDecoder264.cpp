@@ -288,7 +288,6 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
 
   // alloc decoder
   cDecoder264* decoder = new (cDecoder264);
-  memset (decoder, 0, sizeof(cDecoder264));
 
   initTime();
 

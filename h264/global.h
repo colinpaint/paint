@@ -840,151 +840,155 @@ enum eDecErrCode {
 class cDecoder264 {
 public:
   static cDecoder264* open (sParam* param, uint8_t* chunk, size_t chunkSize);
-  static void cDecoder264::error (const char* text);
+  static void error (const char* text);
   ~cDecoder264();
 
   int decodeOneFrame (sDecodedPic** decPicList);
   void finish (sDecodedPic** decPicList);
   void close();
 
+  // static var
   static inline cDecoder264* gDecoder = nullptr;
 
-  sParam       param;
-  sDebug       debug;
+  // vars
+  sParam       param = {0};
+  sDebug       debug = {0};
 
   // nalu
-  int          gotLastNalu;
-  int          naluCount;
-  cNalu*       nalu;
-  cNalu*       pendingNalu;
-  cAnnexB*     annexB;
+  int          gotLastNalu = 0;
+  int          naluCount = 0;
+  cNalu*       nalu = nullptr;
+  cNalu*       pendingNalu = nullptr;
+  cAnnexB*     annexB = nullptr;
 
   // sps
   cSps         sps[kMaxSps];
-  cSps*        activeSps;
+  cSps*        activeSps = nullptr;
 
   // pps
   cPps         pps[kMaxPps];
-  cPps*        activePps;
+  cPps*        activePps = nullptr;
 
-  int          decodeFrameNum;
-  int          idrFrameNum;
-  uint32_t     preFrameNum;  // last decoded slice. For detecting gap in frameNum.
-  uint32_t     prevFrameNum; // number of previous slice
-  int          newFrame;
+  int          decodeFrameNum = 0;
+  int          idrFrameNum = 0;
+  uint32_t     preFrameNum = 0;  // last decoded slice. For detecting gap in frameNum.
+  uint32_t     prevFrameNum = 0; // number of previous slice
+  int          newFrame = 0;
 
-  int          nonConformingStream;
-  int          deblockEnable;
-  int          deblockMode;  // 0: deblock in picture, 1: deblock in slice;
+  int          nonConformingStream = 0;
+  int          deblockEnable = 0;
+  int          deblockMode = 0;  // 0: deblock in picture, 1: deblock in slice;
 
   // recovery
-  int          recoveryPoint;
-  int          recoveryPointFound;
-  int          recoveryFrameCount;
-  int          recoveryFrameNum;
-  int          recoveryPoc;
-  int          recoveryFlag;
+  int          recoveryPoint = 0;
+  int          recoveryPointFound = 0;
+  int          recoveryFrameCount = 0;
+  int          recoveryFrameNum = 0;
+  int          recoveryPoc = 0;
+  int          recoveryFlag = 0;
 
   // slice
-  int          picSliceIndex;
-  int          numDecodedMbs;
-  int          numDecodedSlices;
-  int          numAllocatedSlices;
-  sSlice**     sliceList;
-  sSlice*      nextSlice;           // pointer to first sSlice of next picture;
-  sOldSlice*   oldSlice;
+  int          picSliceIndex = 0;
+  int          numDecodedMbs = 0;
+  int          numDecodedSlices = 0;
+  int          numAllocatedSlices = 0;
+  sSlice**     sliceList = nullptr;
+  sSlice*      nextSlice = nullptr;           // pointer to first sSlice of next picture;
+  sOldSlice*   oldSlice = nullptr;
 
   // output
-  sDpb*        dpb;
-  int          lastHasMmco5;
-  int          dpbPoc[100];
-  sPicture*    picture;
-  sPicture*    decPictureJV[MAX_PLANE];  // picture to be used during 4:4:4 independent mode decoding
-  sPicture*    noReferencePicture;       // dummy storable picture for recovery point
-  sFrameStore* lastOutFramestore;
-  sDecodedPic* outDecodedPics;
-  sFrameStore* outBuffer;
-  sPicture*    pendingOut;
+  sDpb*        dpb = nullptr;
+  int          lastHasMmco5 = 0;
+  int          dpbPoc[100] = {0};
+  sPicture*    picture = nullptr;
+  sPicture*    decPictureJV[MAX_PLANE] = {nullptr};  // picture to be used during 4:4:4 independent mode decoding
+  sPicture*    noReferencePicture = nullptr;       // dummy storable picture for recovery point
+  sFrameStore* lastOutFramestore = nullptr;
+  sDecodedPic* outDecodedPics = nullptr;
+  sFrameStore* outBuffer = nullptr;
+  sPicture*    pendingOut = nullptr;
   int          pendingOutState;
 
   // sCoding duplicates
-  int width;
-  int height;
-  int widthCr;
-  int heightCr;
-  int mbCrSizeX;
-  int mbCrSizeY;
-  int mbCrSizeXblock;
-  int mbCrSizeYblock;
-  int mbCrSize;
-  int mbSize[3][2];
-  int mbSizeBlock[3][2];
-  int mbSizeShift[3][2];
-  int16_t bitDepthLuma;
-  int16_t bitDepthChroma;
+  int width = 0;
+  int height = 0;
+  int widthCr = 0;
+  int heightCr = 0;
+  int mbCrSizeX = 0;
+  int mbCrSizeY = 0;
+  int mbCrSizeXblock = 0;
+  int mbCrSizeYblock = 0;
+  int mbCrSize = 0;
+  int mbSize[3][2] = {0};
+  int mbSizeBlock[3][2] = {0};
+  int mbSizeShift[3][2] = {0};
+  int16_t bitDepthLuma = 0;
+  int16_t bitDepthChroma = 0;
 
   // sCoding
-  sCoding      coding;
-  sBlockPos*   picPos;
-  uint8_t****  nzCoeff;
-  sMacroBlock* mbData;              // array containing all MBs of a whole frame
-  char*        intraBlock;
-  uint8_t**    predMode;            // prediction type [90][74]
-  int**        siBlock;
-  sMacroBlock* mbDataJV[MAX_PLANE];
-  char*        intraBlockJV[MAX_PLANE];
-  uint8_t**    predModeJV[MAX_PLANE];
-  int**        siBlockJV[MAX_PLANE];
+  sCoding      coding = {0};
+  sBlockPos*   picPos = nullptr;
+  uint8_t****  nzCoeff = nullptr;
+  sMacroBlock* mbData = nullptr;              // array containing all MBs of a whole frame
+  char*        intraBlock = nullptr;
+  uint8_t**    predMode = nullptr;            // prediction type [90][74]
+  int**        siBlock = nullptr;
+  sMacroBlock* mbDataJV[MAX_PLANE] = {nullptr};
+  char*        intraBlockJV[MAX_PLANE] = {nullptr};
+  uint8_t**    predModeJV[MAX_PLANE] = {nullptr};
+  int**        siBlockJV[MAX_PLANE] = {nullptr};
 
   // POC
-  int          lastRefPicPoc;
+  int          lastRefPicPoc = 0;
 
   // - mode 0:
-  signed int   prevPocMsb;
-  uint32_t     prevPocLsb;
-  int          lastPicBotField;
+  signed int   prevPocMsb = 0;
+  uint32_t     prevPocLsb = 0;
+  int          lastPicBotField = 0;
 
   // - mode 1:
-  signed int   expectedPOC, pocCycleCount, frameNumPocCycle;
-  uint32_t     previousFrameNum;
-  uint32_t     frameNumOffset;
-  int          expectedDeltaPerPocCycle;
-  int          thisPoc;
-  int          previousFrameNumOffset;
+  signed int   expectedPOC = 0;
+  signed int   pocCycleCount = 0;
+  signed int   frameNumPocCycle = 0;
+  uint32_t     previousFrameNum = 0;
+  uint32_t     frameNumOffset = 0;
+  int          expectedDeltaPerPocCycle = 0;
+  int          thisPoc = 0;
+  int          previousFrameNumOffset = 0;
 
-  uint32_t     picHeightInMbs;
-  uint32_t     picSizeInMbs;
+  uint32_t     picHeightInMbs = 0;
+  uint32_t     picSizeInMbs = 0;
 
-  int          noOutputPriorPicFlag;
+  int          noOutputPriorPicFlag = 0;
 
   // non-zero: i-th previous frame is correct
-  int isPrimaryOk;    // if primary frame is correct, 0: incorrect
-  int isRedundantOk;  // if redundant frame is correct, 0:incorrect
+  int isPrimaryOk = 0;    // if primary frame is correct, 0: incorrect
+  int isRedundantOk = 0;  // if redundant frame is correct, 0:incorrect
 
-  int* qpPerMatrix;
-  int* qpRemMatrix;
+  int* qpPerMatrix = nullptr;
+  int* qpRemMatrix = nullptr;
 
   // Error parameters
-  struct ObjectBuffer* ercObjectList;
-  struct ErcVariables* ercErrorVar;
-  int ercMvPerMb;
-  int ecFlag[SE_MAX_ELEMENTS];  // array to set errorconcealment
+  struct ObjectBuffer* ercObjectList = nullptr;
+  struct ErcVariables* ercErrorVar = nullptr;
+  int ercMvPerMb = 0;
+  int ecFlag[SE_MAX_ELEMENTS] = {0};  // array to set errorconcealment
 
   // fmo
-  int* mbToSliceGroupMap;
-  int* mapUnitToSliceGroupMap;
-  int sliceGroupsNum;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
+  int* mbToSliceGroupMap = nullptr;
+  int* mapUnitToSliceGroupMap = nullptr;
+  int sliceGroupsNum = 0;  // the number of slice groups -1 (0 == scan order, 7 == maximum)
 
   // picture error conceal
   // concealHead points to first node in list, concealTail points to last node in list
   // Initialize both to NULL, meaning no nodes in list yet
-  sConcealNode* concealHead;
-  sConcealNode* concealTail;
-  int           concealMode;
-  int           earlierMissingPoc;
-  uint32_t      concealFrame;
-  int           idrConcealFlag;
-  int           concealSliceType;
+  sConcealNode* concealHead = nullptr;
+  sConcealNode* concealTail = nullptr;
+  int           concealMode = 0;
+  int           earlierMissingPoc = 0;
+  uint32_t      concealFrame = 0;
+  int           idrConcealFlag = 0;
+  int           concealSliceType = 0;
 
   // C style virtual functions
   void (*getNeighbour) (sMacroBlock*, int, int, int[2], sPixelPos*);
@@ -1007,9 +1011,8 @@ void initGlobalBuffers (cDecoder264* decoder);
 void freeGlobalBuffers (cDecoder264* decoder);
 void freeLayerBuffers (cDecoder264* decoder);
 sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
-void clearDecodedPictures (cDecoder264* decoder);
 void freeDecodedPictures (sDecodedPic* decodedPic);
 
 // For 4:4:4 independent mode
-void changePlaneJV (cDecoder264* decoder, int nplane, sSlice *slice);
-void makeFramePictureJV (cDecoder264* decoder );
+void changePlaneJV (cDecoder264* decoder, int nplane, sSlice* slice);
+void makeFramePictureJV (cDecoder264* decoder);
