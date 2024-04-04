@@ -596,33 +596,33 @@ struct sSlice {
   uint32_t  mbIndex;
   uint32_t  numDecodedMbs;
 
-  int16_t         curSliceIndex;
-  int           codCount;    // Current count of number of skipped macroblocks in a row
-  int           allrefzero;
+  int16_t  curSliceIndex;
+  int codCount;    // Current count of number of skipped macroblocks in a row
+  int allrefzero;
 
-  int           mbAffFrame;
-  int           directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
-  int           numRefIndexActive[2];    // number of available list references
+  int mbAffFrame;
+  int directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
+  int numRefIndexActive[2];    // number of available list references
 
-  int           errorFlag;   // 0 if the dataPartitons[0] contains valid information
-  int           qp;
-  int           sliceQpDelta;
-  int           qs;
-  int           sliceQsDelta;
+  int errorFlag;   // 0 if the dataPartitons[0] contains valid information
+  int qp;
+  int sliceQpDelta;
+  int qs;
+  int sliceQsDelta;
 
-  int           cabacInitIdc;     // cabac model number
-  uint32_t  frameNum;
+  int cabacInitIdc;     // cabac model number
+  uint32_t frameNum;
 
   ePicStructure picStructure;
-  uint32_t  fieldPic;
-  uint8_t          botField;
-  int           startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
-  int           endMbNumPlus1;
-  int           maxDataPartitions;
-  int           dataPartitionMode;
-  int           curHeader;
-  int           nextHeader;
-  int           lastDquant;
+  uint32_t fieldPic;
+  uint8_t botField;
+  int startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
+  int endMbNumPlus1;
+  int maxDataPartitions;
+  int dataPartitionMode;
+  int curHeader;
+  int nextHeader;
+  int lastDquant;
 
   // slice header information;
   int colourPlaneId;             // colourPlaneId of the current coded slice
@@ -642,34 +642,34 @@ struct sSlice {
   sMotionContexts*  motionInfoContexts;  // pointer to struct of context models for use in eCabac
   sTextureContexts* textureInfoContexts; // pointer to struct of context models for use in eCabac
 
-  int   mvscale[6][MAX_REFERENCE_PICTURES];
-  int   refPicReorderFlag[2];
-  int*  modPicNumsIdc[2];
-  int*  absDiffPicNumMinus1[2];
-  int*  longTermPicIndex[2];
+  int mvscale[6][MAX_REFERENCE_PICTURES];
+  int refPicReorderFlag[2];
+  int* modPicNumsIdc[2];
+  int* absDiffPicNumMinus1[2];
+  int* longTermPicIndex[2];
 
   int16_t deblockFilterDisableIdc; // Disable deblocking filter on slice
   int16_t deblockFilterC0Offset;   // Alpha and C0 offset for filtering slice
   int16_t deblockFilterBetaOffset; // Beta offset for filtering slice
 
-  int   ppsId;             // ID of picture parameter set the slice is referring to
-  int   noDataPartitionB;  // non-zero, if data dataPartition B is lost
-  int   noDataPartitionC;  // non-zero, if data dataPartition C is lost
+  int ppsId;             // ID of picture parameter set the slice is referring to
+  int noDataPartitionB;  // non-zero, if data dataPartition B is lost
+  int noDataPartitionC;  // non-zero, if data dataPartition C is lost
 
-  bool   isResetCoef;
-  bool   isResetCoefCr;
+  bool isResetCoef;
+  bool isResetCoefCr;
   sPixel*** mbPred;
   sPixel*** mbRec;
-  int***    mbRess;
-  int***    cof;
-  int***    fcf;
-  int       cofu[16];
+  int*** mbRess;
+  int*** cof;
+  int*** fcf;
+  int cofu[16];
 
-  int**     tempRes;
-  sPixel**  tempBlockL0;
-  sPixel**  tempBlockL1;
-  sPixel**  tempBlockL2;
-  sPixel**  tempBlockL3;
+  int** tempRes;
+  sPixel** tempBlockL0;
+  sPixel** tempBlockL1;
+  sPixel** tempBlockL2;
+  sPixel** tempBlockL3;
 
   // Scaling matrix info
   int InvLevelScale4x4_Intra[3][6][4][4];
@@ -689,24 +689,24 @@ struct sSlice {
   uint16_t weightedBiPredIdc;
   uint16_t lumaLog2weightDenom;
   uint16_t chromaLog2weightDenom;
-  int***         weightedPredWeight;   // weight in [list][index][component] order
-  int***         weightedPredOffset;   // offset in [list][index][component] order
-  int****        weightedBiPredWeight;  // weight in [list][fw_index][bw_index][component] order
-  int16_t          wpRoundLuma;
-  int16_t          wpRoundChroma;
+  int***  weightedPredWeight;   // weight in [list][index][component] order
+  int***  weightedPredOffset;   // offset in [list][index][component] order
+  int**** weightedBiPredWeight;  // weight in [list][fw_index][bw_index][component] order
+  int16_t wpRoundLuma;
+  int16_t wpRoundChroma;
 
   // for signalling to the neighbour logic that this is a deblocker call
-  int            maxMbVmvR;   // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc
-  int            refFlag[17]; // 0: i-th previous frame is incorrect
+  int maxMbVmvR;   // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc
+  int refFlag[17]; // 0: i-th previous frame is incorrect
 
-  int             ercMvPerMb;
-  sMacroBlock*    mbData;
+  int ercMvPerMb;
+  sMacroBlock* mbData;
   sPicture* picture;
 
-  int**           siBlock;
-  uint8_t**          predMode;
-  char*           intraBlock;
-  char            chromaVectorAdjust[6][32];
+  int** siBlock;
+  uint8_t** predMode;
+  char*  intraBlock;
+  char chromaVectorAdjust[6][32];
 
   // virtual methods
   int  (*nalStartCode) (sSlice*, int);
@@ -851,7 +851,7 @@ public:
 
   void initRefPicture (sSlice* slice);
   void readSliceHeader (sSlice* slice);
-  void initPicture (cDecoder264* decoder, sSlice* slice);
+  void initPicture (sSlice* slice);
 
   void decodePOC (sSlice* slice);
   void padPicture (sPicture* picture);

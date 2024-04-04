@@ -1670,7 +1670,7 @@ namespace {
             decoder->picture->sliceType = decoder->coding.sliceType;
           if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
             if (!decoder->picSliceIndex)
-              decoder->initPicture (decoder, slice);
+              decoder->initPicture (slice);
             curHeader = eSOP;
             nalu->checkZeroByteVCL (decoder);
             }
@@ -1753,7 +1753,7 @@ namespace {
 
           if (isNewPicture (decoder->picture, slice, decoder->oldSlice)) {
             if (!decoder->picSliceIndex)
-              decoder->initPicture (decoder, slice);
+              decoder->initPicture (slice);
             curHeader = eSOP;
             nalu->checkZeroByteVCL (decoder);
             }
@@ -2503,7 +2503,7 @@ int cDecoder264::decodeFrame() {
 
     slice = sliceList[picSliceIndex];
     useParameterSet (slice);
-    initPicture (this, slice);
+    initPicture (slice);
 
     picSliceIndex++;
     curHeader = eSOS;
@@ -3596,7 +3596,7 @@ void cDecoder264::endDecodeFrame() {
 //}}}
 
 //{{{
-void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
+void cDecoder264::initPicture (sSlice* slice) {
 
   sDpb* dpb = slice->dpb;
 
@@ -3639,7 +3639,7 @@ void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
       }
       //}}}
     if (!concealMode)
-      fillFrameNumGap (decoder, slice);
+      fillFrameNumGap (this, slice);
     }
 
   if (slice->refId)
@@ -3655,7 +3655,7 @@ void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
   if ((slice->picStructure == eFrame) || (slice->picStructure == eTopField))
     getTime (&debug.startTime);
 
-  picture = allocPicture (decoder, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+  picture = allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
   picture->topPoc = slice->topPoc;
   picture->botPoc = slice->botPoc;
   picture->framePoc = slice->framePoc;
@@ -3697,7 +3697,7 @@ void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
     }
 
   if (coding.sliceType > eSliceSI) {
-    setEcFlag (decoder, SE_PTYPE);
+    setEcFlag (this, SE_PTYPE);
     coding.sliceType = eSliceP;  // concealed element
     }
 
@@ -3760,9 +3760,9 @@ void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
 
   if (coding.isSeperateColourPlane) {
     decPictureJV[0] = picture;
-    decPictureJV[1] = allocPicture (decoder, (ePicStructure) slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+    decPictureJV[1] = allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
     copyDecPictureJV (decPictureJV[1], decPictureJV[0] );
-    decPictureJV[2] = allocPicture (decoder, (ePicStructure) slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+    decPictureJV[2] = allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
     copyDecPictureJV (decPictureJV[2], decPictureJV[0] );
     }
   }
