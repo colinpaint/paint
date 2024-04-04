@@ -1,7 +1,7 @@
 #pragma once
 #include "global.h"
 
-struct sDecoder;
+class sDecoder;
 
 class cAnnexB {
 public:

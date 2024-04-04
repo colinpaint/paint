@@ -341,11 +341,13 @@ void freeDecodedPictures (sDecodedPic* decodedPic) {
 //}}}
 
 //{{{
-sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize) {
+sDecoder* sDecoder::openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize) {
 
   // alloc decoder
-  sDecoder* decoder = (sDecoder*)calloc (1, sizeof(sDecoder));
+  sDecoder* decoder = new (sDecoder);
   gDecoder = decoder;
+
+  memset (decoder, 0, sizeof(sDecoder));
 
   initTime();
 
@@ -383,12 +385,12 @@ sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize) {
   }
 //}}}
 //{{{
-int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList) {
+int sDecoder::decodeOneFrame (sDecodedPic** decPicList) {
 
-  clearDecodedPics (decoder);
+  clearDecodedPics (this);
 
   int result = 0;
-  int decodeFrameResult = decodeFrame (decoder);
+  int decodeFrameResult = decodeFrame (this);
   if (decodeFrameResult == eSOP)
     result = DEC_SUCCEED;
   else if (decodeFrameResult == eEOS)
@@ -396,41 +398,41 @@ int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList) {
   else
     result |= DEC_ERRMASK;
 
-  *decPicList = decoder->outDecodedPics;
+  *decPicList = outDecodedPics;
   return result;
   }
 //}}}
 //{{{
-void finishDecoder (sDecoder* decoder, sDecodedPic** decPicList) {
+void sDecoder::finishDecoder (sDecodedPic** decPicList) {
 
-  clearDecodedPics (decoder);
-  flushDpb (decoder->dpb);
+  clearDecodedPics (this);
+  flushDpb (dpb);
 
-  decoder->annexB->reset();
+  annexB->reset();
 
-  decoder->newFrame = 0;
-  decoder->prevFrameNum = 0;
-  *decPicList = decoder->outDecodedPics;
+  newFrame = 0;
+  prevFrameNum = 0;
+  *decPicList = outDecodedPics;
   }
 //}}}
 //{{{
-void closeDecoder (sDecoder* decoder) {
+void sDecoder::closeDecoder() {
 
-  closeFmo (decoder);
-  freeLayerBuffers (decoder);
-  freeGlobalBuffers (decoder);
+  closeFmo (this);
+  freeLayerBuffers (this);
+  freeGlobalBuffers (this);
 
-  ercClose (decoder, decoder->ercErrorVar);
+  ercClose (this, ercErrorVar);
 
   for (uint32_t i = 0; i < kMaxPps; i++) {
-    if (decoder->pps[i].ok && decoder->pps[i].sliceGroupId)
-      free (decoder->pps[i].sliceGroupId);
-    decoder->pps[i].ok = false;
+    if (pps[i].ok && pps[i].sliceGroupId)
+      free (pps[i].sliceGroupId);
+    pps[i].ok = false;
     }
 
-  freeDpb (decoder->dpb);
-  freeOutput (decoder);
-  freeDecoder (decoder);
+  freeDpb (dpb);
+  freeOutput (this);
+  freeDecoder (this);
 
   gDecoder = NULL;
   }

@@ -12,7 +12,3 @@ typedef enum {
   DEC_ERRMASK = 0x8000
   } eDecErrCode;
 
-sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize);
-int decodeOneFrame (sDecoder* decoder, sDecodedPic** decPicList);
-void finishDecoder (sDecoder* decoder, sDecodedPic** decPicList);
-void closeDecoder (sDecoder* decoder);

@@ -279,7 +279,7 @@ struct sDpb;
 struct sPicMotion;
 struct sMacroBlock;
 struct sSlice;
-struct sDecoder;
+class sDecoder;
 typedef uint8_t sPixel;
 //{{{
 struct sBiContext {
@@ -824,7 +824,14 @@ struct sDebug {
   };
 //}}}
 //{{{
-struct sDecoder {
+class sDecoder {
+public:
+  static sDecoder* openDecoder (sParam* param, uint8_t* chunk, size_t chunkSize);
+
+  int decodeOneFrame (sDecodedPic** decPicList);
+  void finishDecoder (sDecodedPic** decPicList);
+  void closeDecoder();
+
   sParam       param;
   sDebug       debug;
 
