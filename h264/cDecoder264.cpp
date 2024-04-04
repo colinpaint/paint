@@ -1404,107 +1404,6 @@ namespace {
       //}}}
     }
   //}}}
-  //{{{
-  void fillWeightedPredParam (cSlice* slice) {
-
-    if (slice->sliceType == eSliceB) {
-      int maxL0Ref = slice->numRefIndexActive[LIST_0];
-      int maxL1Ref = slice->numRefIndexActive[LIST_1];
-      if (slice->activePps->weightedBiPredIdc == 2) {
-        slice->lumaLog2weightDenom = 5;
-        slice->chromaLog2weightDenom = 5;
-        slice->wpRoundLuma = 16;
-        slice->wpRoundChroma = 16;
-        for (int i = 0; i < MAX_REFERENCE_PICTURES; ++i)
-          for (int comp = 0; comp < 3; ++comp) {
-            int logWeightDenom = !comp ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
-            slice->weightedPredWeight[0][i][comp] = 1 << logWeightDenom;
-            slice->weightedPredWeight[1][i][comp] = 1 << logWeightDenom;
-            slice->weightedPredOffset[0][i][comp] = 0;
-            slice->weightedPredOffset[1][i][comp] = 0;
-            }
-        }
-
-      for (int i = 0; i < maxL0Ref; ++i)
-        for (int j = 0; j < maxL1Ref; ++j)
-          for (int comp = 0; comp < 3; ++comp) {
-            int logWeightDenom = !comp ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
-            if (slice->activePps->weightedBiPredIdc == 1) {
-              slice->weightedBiPredWeight[0][i][j][comp] = slice->weightedPredWeight[0][i][comp];
-              slice->weightedBiPredWeight[1][i][j][comp] = slice->weightedPredWeight[1][j][comp];
-              }
-            else if (slice->activePps->weightedBiPredIdc == 2) {
-              int td = iClip3(-128,127,slice->listX[LIST_1][j]->poc - slice->listX[LIST_0][i]->poc);
-              if (!td || slice->listX[LIST_1][j]->isLongTerm || slice->listX[LIST_0][i]->isLongTerm) {
-                slice->weightedBiPredWeight[0][i][j][comp] = 32;
-                slice->weightedBiPredWeight[1][i][j][comp] = 32;
-                }
-              else {
-                int tb = iClip3(-128, 127, slice->thisPoc - slice->listX[LIST_0][i]->poc);
-                int tx = (16384 + iabs (td / 2)) / td;
-                int distScaleFactor = iClip3 (-1024, 1023, (tx*tb + 32 )>>6);
-                slice->weightedBiPredWeight[1][i][j][comp] = distScaleFactor >> 2;
-                slice->weightedBiPredWeight[0][i][j][comp] = 64 - slice->weightedBiPredWeight[1][i][j][comp];
-                if (slice->weightedBiPredWeight[1][i][j][comp] < -64 || slice->weightedBiPredWeight[1][i][j][comp] > 128) {
-                  slice->weightedBiPredWeight[0][i][j][comp] = 32;
-                  slice->weightedBiPredWeight[1][i][j][comp] = 32;
-                  slice->weightedPredOffset[0][i][comp] = 0;
-                  slice->weightedPredOffset[1][j][comp] = 0;
-                  }
-                }
-              }
-            }
-
-      if (slice->mbAffFrame)
-        for (int i = 0; i < 2 * maxL0Ref; ++i)
-          for (int j = 0; j < 2 * maxL1Ref; ++j)
-            for (int comp = 0; comp<3; ++comp)
-              for (int k = 2; k < 6; k += 2) {
-                slice->weightedPredOffset[k+0][i][comp] = slice->weightedPredOffset[0][i>>1][comp];
-                slice->weightedPredOffset[k+1][j][comp] = slice->weightedPredOffset[1][j>>1][comp];
-                int logWeightDenom = !comp ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
-                if (slice->activePps->weightedBiPredIdc == 1) {
-                  slice->weightedBiPredWeight[k+0][i][j][comp] = slice->weightedPredWeight[0][i>>1][comp];
-                  slice->weightedBiPredWeight[k+1][i][j][comp] = slice->weightedPredWeight[1][j>>1][comp];
-                  }
-                else if (slice->activePps->weightedBiPredIdc == 2) {
-                  int td = iClip3 (-128, 127, slice->listX[k+LIST_1][j]->poc - slice->listX[k+LIST_0][i]->poc);
-                  if (!td || slice->listX[k+LIST_1][j]->isLongTerm || slice->listX[k+LIST_0][i]->isLongTerm) {
-                    slice->weightedBiPredWeight[k+0][i][j][comp] = 32;
-                    slice->weightedBiPredWeight[k+1][i][j][comp] = 32;
-                    }
-                  else {
-                    int tb = iClip3 (-128,127,
-                                 ((k == 2) ? slice->topPoc : slice->botPoc) - slice->listX[k+LIST_0][i]->poc);
-                    int tx = (16384 + iabs(td/2)) / td;
-                    int distScaleFactor = iClip3 (-1024, 1023, (tx*tb + 32 )>>6);
-                    slice->weightedBiPredWeight[k+1][i][j][comp] = distScaleFactor >> 2;
-                    slice->weightedBiPredWeight[k+0][i][j][comp] = 64 - slice->weightedBiPredWeight[k+1][i][j][comp];
-                    if (slice->weightedBiPredWeight[k+1][i][j][comp] < -64 ||
-                        slice->weightedBiPredWeight[k+1][i][j][comp] > 128) {
-                      slice->weightedBiPredWeight[k+1][i][j][comp] = 32;
-                      slice->weightedBiPredWeight[k+0][i][j][comp] = 32;
-                      slice->weightedPredOffset[k+0][i][comp] = 0;
-                      slice->weightedPredOffset[k+1][j][comp] = 0;
-                      }
-                    }
-                  }
-                }
-      }
-    }
-  //}}}
-  //{{{
-  void resetWeightedPredParam (cSlice* slice) {
-
-    for (int i = 0; i < MAX_REFERENCE_PICTURES; i++) {
-      for (int comp = 0; comp < 3; comp++) {
-        int logWeightDenom = (comp == 0) ? slice->lumaLog2weightDenom : slice->chromaLog2weightDenom;
-        slice->weightedPredWeight[0][i][comp] = 1 << logWeightDenom;
-        slice->weightedPredWeight[1][i][comp] = 1 << logWeightDenom;
-        }
-      }
-    }
-  //}}}
   }
 
 // sDataPartition
@@ -3014,7 +2913,7 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
       slice->wpRoundChroma = slice->chromaLog2weightDenom ? 1 << (slice->chromaLog2weightDenom - 1) : 0;
       }
 
-    resetWeightedPredParam (slice);
+    slice->resetWeightedPredParam();
     for (int i = 0; i < slice->numRefIndexActive[LIST_0]; i++) {
       //{{{  read l0 weights
       if (readU1 ("SLC hasLumaWeightL0", s)) {
@@ -3540,7 +3439,7 @@ int cDecoder264::decodeFrame() {
 
     if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == eSliceB)) ||
         (slice->activePps->hasWeightedPred && (slice->sliceType != eSliceI)))
-      fillWeightedPredParam (slice);
+      slice->fillWeightedPredParam();
 
     if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->errorFlag)
       decodeSlice (slice);

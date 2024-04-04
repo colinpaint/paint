@@ -556,7 +556,7 @@ public:
 
   int      deltaPicOrderCountBot = INT_MAX;
   int      deltaPicOrderCount[2] = {INT_MAX};
-     
+
   int      botField = 0;
   int      isIDR = false;
   int      idrPicId = 0;
@@ -568,6 +568,9 @@ class cSlice {
 public:
   static cSlice* allocSlice();
   ~cSlice();
+
+  void fillWeightedPredParam();
+  void resetWeightedPredParam();
 
   cDecoder264* decoder;
 
