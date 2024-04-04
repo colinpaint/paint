@@ -1016,6 +1016,8 @@ public:
   void readSliceHeader (sSlice* slice);
   void mbAffPostProc();
   void endDecodeFrame();
+  void useParameterSet (cDecoder264* decoder, sSlice* slice);
+  void initPicture (cDecoder264* decoder, sSlice* slice);
 
 private:
   void clearDecodedPics();
