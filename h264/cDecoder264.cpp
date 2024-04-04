@@ -1694,8 +1694,7 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   // init slice
   decoder->sliceList = (sSlice**)calloc (MAX_NUM_DECSLICES, sizeof(sSlice*));
   decoder->numAllocatedSlices = MAX_NUM_DECSLICES;
-  decoder->oldSlice = (sOldSlice*)calloc(1, sizeof(sOldSlice));
-  initOldSlice (decoder->oldSlice);
+  decoder->oldSlice = (sOldSlice*)malloc(sizeof(sOldSlice));
   decoder->coding.sliceType = eSliceI;
   decoder->recoveryPoc = 0x7fffffff;
   decoder->deblockEnable = 0x3;
@@ -1804,23 +1803,6 @@ void cDecoder264::close() {
   }
 //}}}
 
-// !!! move !!!
-//{{{
-void initOldSlice (sOldSlice* oldSlice) {
-
-  oldSlice->fieldPic = 0;
-  oldSlice->ppsId = INT_MAX;
-  oldSlice->frameNum = INT_MAX;
-
-  oldSlice->nalRefIdc = INT_MAX;
-  oldSlice->isIDR = false;
-
-  oldSlice->picOrderCountLsb = UINT_MAX;
-  oldSlice->deltaPicOrderCountBot = INT_MAX;
-  oldSlice->deltaPicOrderCount[0] = INT_MAX;
-  oldSlice->deltaPicOrderCount[1] = INT_MAX;
-  }
-//}}}
 //{{{
 void cDecoder264::initGlobalBuffers() {
 
@@ -2101,135 +2083,6 @@ void cDecoder264::decodePOC (sSlice* slice) {
       break;
     //}}}
     }
-  }
-//}}}
-//{{{
-int cDecoder264::decodeFrame() {
-
-  int ret = 0;
-
-  numDecodedMbs = 0;
-  picSliceIndex = 0;
-  numDecodedSlices = 0;
-
-  int curHeader = 0;
-  if (newFrame) {
-    // get firstSlice from sliceList;
-    sSlice* slice = sliceList[picSliceIndex];
-    sliceList[picSliceIndex] = nextSlice;
-    nextSlice = slice;
-
-    slice = sliceList[picSliceIndex];
-    useParameterSet (slice);
-    initPicture (slice);
-
-    picSliceIndex++;
-    curHeader = eSOS;
-    }
-
-  while ((curHeader != eSOP) && (curHeader != eEOS)) {
-    //{{{  no pending slices
-    if (!sliceList[picSliceIndex])
-      sliceList[picSliceIndex] = allocSlice();
-
-    sSlice* slice = sliceList[picSliceIndex];
-    slice->decoder = this;
-    slice->dpb = dpb; //set default value;
-    slice->nextHeader = -8888;
-    slice->numDecodedMbs = 0;
-    slice->coefCount = -1;
-    slice->pos = 0;
-    slice->isResetCoef = false;
-    slice->isResetCoefCr = false;
-
-    curHeader = readSlice (slice);
-    slice->curHeader = curHeader;
-    //{{{  manage primary, redundant slices
-    if (!slice->redundantPicCount)
-      isPrimaryOk = isRedundantOk = 1;
-
-    if (!slice->redundantPicCount && (coding.sliceType != eSliceI)) {
-      for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
-        if (!slice->refFlag[i]) // reference primary slice incorrect, primary slice incorrect
-          isPrimaryOk = 0;
-      }
-    else if (slice->redundantPicCount && (coding.sliceType != eSliceI)) // reference redundant slice incorrect
-      if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
-        isRedundantOk = 0;
-
-    // If primary and redundant received, primary is correct
-    //   discard redundant
-    // else
-    //   primary slice replaced with redundant slice.
-    if ((slice->frameNum == prevFrameNum) &&
-        slice->redundantPicCount && isPrimaryOk && (curHeader != eEOS))
-      continue;
-
-    if (((curHeader != eSOP) && (curHeader != eEOS)) ||
-        ((curHeader == eSOP) && !picSliceIndex)) {
-       slice->curSliceIndex = (int16_t)picSliceIndex;
-       picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
-       if (picSliceIndex > 0) {
-         copyPoc (*(sliceList), slice);
-         sliceList[picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
-         }
-
-       picSliceIndex++;
-       if (picSliceIndex >= numAllocatedSlices)
-         cDecoder264::error ("decodeFrame - sliceList numAllocationSlices too small");
-      curHeader = eSOS;
-      }
-
-    else {
-      if (sliceList[picSliceIndex-1]->mbAffFrame)
-        sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs / 2;
-      else
-        sliceList[picSliceIndex-1]->endMbNumPlus1 =
-          coding.frameSizeMbs / (sliceList[picSliceIndex-1]->fieldPic + 1);
-
-      newFrame = 1;
-
-      slice->curSliceIndex = 0;
-      sliceList[picSliceIndex] = nextSlice;
-      nextSlice = slice;
-      }
-    //}}}
-
-    copySliceInfo (slice, oldSlice);
-    }
-    //}}}
-
-  // decode slices
-  ret = curHeader;
-  initPictureDecode();
-  for (int sliceIndex = 0; sliceIndex < picSliceIndex; sliceIndex++) {
-    sSlice* slice = sliceList[sliceIndex];
-    curHeader = slice->curHeader;
-    initSlice (slice);
-
-    if (slice->activePps->entropyCoding) {
-      //{{{  init cabac
-      initCabacContexts (slice);
-      cabacNewSlice (slice);
-      }
-      //}}}
-
-    if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == eSliceB)) ||
-        (slice->activePps->hasWeightedPred && (slice->sliceType != eSliceI)))
-      fillWeightedPredParam (slice);
-
-    if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->errorFlag)
-      decodeSlice (slice);
-
-    ercMvPerMb += slice->ercMvPerMb;
-    numDecodedMbs += slice->numDecodedMbs;
-    numDecodedSlices++;
-    }
-
-  endDecodeFrame();
-  prevFrameNum = sliceList[0]->frameNum;
-
-  return ret;
   }
 //}}}
 
@@ -3659,6 +3512,135 @@ void cDecoder264::decodeSlice (sSlice* slice) {
     ercWriteMbModeMv (mb);
     endOfSlice = exitMacroblock (slice, !slice->mbAffFrame || (slice->mbIndex % 2));
     }
+  }
+//}}}
+//{{{
+int cDecoder264::decodeFrame() {
+
+  int ret = 0;
+
+  numDecodedMbs = 0;
+  picSliceIndex = 0;
+  numDecodedSlices = 0;
+
+  int curHeader = 0;
+  if (newFrame) {
+    // get firstSlice from sliceList;
+    sSlice* slice = sliceList[picSliceIndex];
+    sliceList[picSliceIndex] = nextSlice;
+    nextSlice = slice;
+
+    slice = sliceList[picSliceIndex];
+    useParameterSet (slice);
+    initPicture (slice);
+
+    picSliceIndex++;
+    curHeader = eSOS;
+    }
+
+  while ((curHeader != eSOP) && (curHeader != eEOS)) {
+    //{{{  no pending slices
+    if (!sliceList[picSliceIndex])
+      sliceList[picSliceIndex] = allocSlice();
+
+    sSlice* slice = sliceList[picSliceIndex];
+    slice->decoder = this;
+    slice->dpb = dpb; //set default value;
+    slice->nextHeader = -8888;
+    slice->numDecodedMbs = 0;
+    slice->coefCount = -1;
+    slice->pos = 0;
+    slice->isResetCoef = false;
+    slice->isResetCoefCr = false;
+
+    curHeader = readSlice (slice);
+    slice->curHeader = curHeader;
+    //{{{  manage primary, redundant slices
+    if (!slice->redundantPicCount)
+      isPrimaryOk = isRedundantOk = 1;
+
+    if (!slice->redundantPicCount && (coding.sliceType != eSliceI)) {
+      for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
+        if (!slice->refFlag[i]) // reference primary slice incorrect, primary slice incorrect
+          isPrimaryOk = 0;
+      }
+    else if (slice->redundantPicCount && (coding.sliceType != eSliceI)) // reference redundant slice incorrect
+      if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
+        isRedundantOk = 0;
+
+    // If primary and redundant received, primary is correct
+    //   discard redundant
+    // else
+    //   primary slice replaced with redundant slice.
+    if ((slice->frameNum == prevFrameNum) &&
+        slice->redundantPicCount && isPrimaryOk && (curHeader != eEOS))
+      continue;
+
+    if (((curHeader != eSOP) && (curHeader != eEOS)) ||
+        ((curHeader == eSOP) && !picSliceIndex)) {
+       slice->curSliceIndex = (int16_t)picSliceIndex;
+       picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
+       if (picSliceIndex > 0) {
+         copyPoc (*(sliceList), slice);
+         sliceList[picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
+         }
+
+       picSliceIndex++;
+       if (picSliceIndex >= numAllocatedSlices)
+         cDecoder264::error ("decodeFrame - sliceList numAllocationSlices too small");
+      curHeader = eSOS;
+      }
+
+    else {
+      if (sliceList[picSliceIndex-1]->mbAffFrame)
+        sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs / 2;
+      else
+        sliceList[picSliceIndex-1]->endMbNumPlus1 =
+          coding.frameSizeMbs / (sliceList[picSliceIndex-1]->fieldPic + 1);
+
+      newFrame = 1;
+
+      slice->curSliceIndex = 0;
+      sliceList[picSliceIndex] = nextSlice;
+      nextSlice = slice;
+      }
+    //}}}
+
+    copySliceInfo (slice, oldSlice);
+    }
+    //}}}
+
+  // decode slices
+  ret = curHeader;
+  initPictureDecode();
+  for (int sliceIndex = 0; sliceIndex < picSliceIndex; sliceIndex++) {
+    sSlice* slice = sliceList[sliceIndex];
+    curHeader = slice->curHeader;
+    initSlice (slice);
+
+    if (slice->activePps->entropyCoding) {
+      //{{{  init cabac
+      initCabacContexts (slice);
+      cabacNewSlice (slice);
+      }
+      //}}}
+
+    if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == eSliceB)) ||
+        (slice->activePps->hasWeightedPred && (slice->sliceType != eSliceI)))
+      fillWeightedPredParam (slice);
+
+    if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->errorFlag)
+      decodeSlice (slice);
+
+    ercMvPerMb += slice->ercMvPerMb;
+    numDecodedMbs += slice->numDecodedMbs;
+    numDecodedSlices++;
+    }
+
+  endDecodeFrame();
+  prevFrameNum = sliceList[0]->frameNum;
+
+  return ret;
   }
 //}}}
 //{{{

@@ -546,22 +546,24 @@ struct sDecodedRefPicMark {
   };
 //}}}
 //{{{
-struct sOldSlice {
-  uint32_t fieldPic;
-  uint32_t frameNum;
+class sOldSlice {
+public:
+  uint32_t fieldPic = 0;
+  uint32_t frameNum = INT_MAX;
 
-  int      nalRefIdc;
-  uint32_t picOrderCountLsb;
+  int      nalRefIdc = INT_MAX;
+  uint32_t picOrderCountLsb = UINT_MAX;
 
-  int      deltaPicOrderCountBot;
-  int      deltaPicOrderCount[2];
+  int      deltaPicOrderCountBot = INT_MAX;
+  int      deltaPicOrderCount[2] = {INT_MAX};
 
-  int      botField;
-  int      isIDR;
-  int      idrPicId;
-  int      ppsId;
+  int      botField = 0;
+  int      isIDR = false;
+  int      idrPicId = 0;
+  int      ppsId = INT_MAX;
   };
 //}}}
+
 //{{{
 struct sSlice {
   cDecoder264* decoder;
@@ -855,7 +857,6 @@ public:
 
   void decodePOC (sSlice* slice);
   void padPicture (sPicture* picture);
-  int decodeFrame();
 
   // static var
   static inline cDecoder264* gDecoder = nullptr;
@@ -1034,6 +1035,7 @@ private:
   void readSliceHeader (sSlice* slice);
   int readSlice (sSlice* slice);
   void decodeSlice (sSlice* slice);
+  int decodeFrame();
   void endDecodeFrame();
   };
 //}}}
@@ -1042,8 +1044,6 @@ sDataPartition* allocDataPartitions (int n);
 void freeDataPartitions (sDataPartition* dataPartitions, int n);
 sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
 void freeDecodedPictures (sDecodedPic* decodedPic);
-
-void initOldSlice (sOldSlice* oldSlice);
 
 // For 4:4:4 independent mode
 void changePlaneJV (cDecoder264* decoder, int nplane, sSlice* slice);
