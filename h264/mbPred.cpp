@@ -455,7 +455,7 @@ int mbPredBd8x8temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
           mvInfo->refIndex[LIST_1] = 0;
           }
         else if (INVALIDINDEX == mapped_idx)
-          error ("temporal direct error: colocated block has ref that is unavailable");
+          cDecoder264::error ("temporal direct error: colocated block has ref that is unavailable");
         }
 
       // store reference picture ID determined by direct mode
@@ -539,7 +539,7 @@ int mbPredBd4x4temporal (sMacroBlock* mb, eColorPlane plane, sPixel** pixel, sPi
             mapped_idx = INVALIDINDEX;
           }
         if (INVALIDINDEX == mapped_idx)
-          error ("temporal direct error: colocated block has ref that is unavailable");
+          cDecoder264::error ("temporal direct error: colocated block has ref that is unavailable");
         else {
           int mv_scale = slice->mvscale[LIST_0 + listOffset][mapped_idx];
 

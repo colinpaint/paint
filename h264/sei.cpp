@@ -238,7 +238,7 @@ static void processPictureTiming (uint8_t* payload, int size, cDecoder264* decod
         //}}}
         //{{{
         default:
-          error ("reserved pic_struct used, can't determine numClockTs");
+          cDecoder264::error ("reserved pic_struct used, can't determine numClockTs");
         //}}}
         }
 

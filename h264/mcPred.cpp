@@ -250,7 +250,7 @@ static void update_direct_mv_info_temporal (sMacroBlock* mb) {
                 }
                 //}}}
               else if (INVALIDINDEX == mapped_idx)
-                error ("temporal direct error: colocated block has ref that is unavailable");
+                cDecoder264::error ("temporal direct error: colocated block has ref that is unavailable");
               }
             }
             //}}}

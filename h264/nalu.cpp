@@ -144,7 +144,7 @@ int cNalu::readNalu (cDecoder264* decoder) {
 
   int ret = getNALU (decoder->annexB, decoder);
   if (ret < 0)
-    error ("error getting NALU");
+    cDecoder264::error ("error getting NALU");
   if (ret == 0)
     return 0;
 
@@ -154,11 +154,11 @@ int cNalu::readNalu (cDecoder264* decoder) {
   checkZeroByteNonVCL (decoder);
   ret = NALUtoRBSP();
   if (ret < 0)
-    error ("NALU invalid startcode");
+    cDecoder264::error ("NALU invalid startcode");
 
   // Got a NALU
   if (forbiddenBit)
-    error ("NALU with forbiddenBit set");
+    cDecoder264::error ("NALU with forbiddenBit set");
 
   return len;
   }

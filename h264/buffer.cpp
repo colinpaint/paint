@@ -174,7 +174,7 @@ static int outputDpbFrame (sDpb* dpb) {
 
   // diagnostics
   if (dpb->usedSize < 1)
-    error ("Cannot output frame, DPB empty");
+    cDecoder264::error ("Cannot output frame, DPB empty");
 
   // find smallest POC
   int poc, pos;
@@ -198,7 +198,7 @@ static int outputDpbFrame (sDpb* dpb) {
   // picture error conceal
   if(decoder->concealMode == 0)
     if (dpb->lastOutputPoc >= poc)
-      error ("output POC must be in ascending order");
+      cDecoder264::error ("output POC must be in ascending order");
 
   dpb->lastOutputPoc = poc;
 
@@ -868,7 +868,7 @@ static void dumpDpb (sDpb* dpb) {
 static void checkNumDpbFrames (sDpb* dpb) {
 
   if ((int)(dpb->longTermRefFramesInBuffer + dpb->refFramesInBuffer) > imax (1, dpb->numRefFrames))
-    error ("Max. number of reference frames exceeded. Invalid stream");
+    cDecoder264::error ("Max. number of reference frames exceeded. Invalid stream");
   }
 //}}}
 //{{{
@@ -980,7 +980,7 @@ static int getDpbSize (cDecoder264* decoder, cSps *activeSps) {
     //}}}
     //{{{
     default:
-      error ("undefined level");
+      cDecoder264::error ("undefined level");
       break;
     //}}}
     }
@@ -991,7 +991,7 @@ static int getDpbSize (cDecoder264* decoder, cSps *activeSps) {
   if (activeSps->hasVui && activeSps->vuiSeqParams.bitstream_restrictionFlag) {
     int size_vui;
     if ((int)activeSps->vuiSeqParams.max_dec_frame_buffering > size)
-      error ("max_dec_frame_buffering larger than MaxDpbSize");
+      cDecoder264::error ("max_dec_frame_buffering larger than MaxDpbSize");
 
     size_vui = imax (1, activeSps->vuiSeqParams.max_dec_frame_buffering);
 #ifdef _DEBUG
@@ -1203,7 +1203,7 @@ static void assignLongTermFrameIndex (sDpb* dpb, sPicture* p, int diffPicNumMinu
       }
 
     if (picStructure == eFrame)
-      error ("field for long term marking not found");
+      cDecoder264::error ("field for long term marking not found");
 
     unmarkLongTermFieldRefFrameIndex (dpb, picStructure, longTermFrameIndex, 0, 0, picNumX);
     }
@@ -1262,7 +1262,7 @@ static void adaptiveMemoryManagement (sDpb* dpb, sPicture* p) {
       //{{{
       case 0:
         if (tmp_drpm->next != NULL)
-          error ("memManagement = 0 not last operation in buffer");
+          cDecoder264::error ("memManagement = 0 not last operation in buffer");
         break;
       //}}}
       //{{{
@@ -1305,7 +1305,7 @@ static void adaptiveMemoryManagement (sDpb* dpb, sPicture* p) {
       //}}}
       //{{{
       default:
-        error ("invalid memManagement in buffer");
+        cDecoder264::error ("invalid memManagement in buffer");
       //}}}
       }
     p->decRefPicMarkBuffer = tmp_drpm->next;
@@ -1512,7 +1512,7 @@ void updateLongTermRefList (sDpb* dpb) {
 void getSmallestPoc (sDpb* dpb, int* poc, int* pos) {
 
   if (dpb->usedSize<1)
-    error ("Cannot determine smallest POC, DPB empty");
+    cDecoder264::error ("Cannot determine smallest POC, DPB empty");
 
   *pos = -1;
   *poc = INT_MAX;
@@ -1538,7 +1538,7 @@ void initDpb (cDecoder264* decoder, sDpb* dpb, int type) {
   dpb->numRefFrames = activeSps->numRefFrames;
 
   if (dpb->size < activeSps->numRefFrames)
-    error ("DPB size at specified level is smaller than the specified number of reference frames\n");
+    cDecoder264::error ("DPB size at specified level is smaller than the specified number of reference frames\n");
 
   dpb->usedSize = 0;
   dpb->lastPicture = NULL;
@@ -1589,7 +1589,7 @@ void reInitDpb (cDecoder264* decoder, sDpb* dpb, int type) {
 
   if (dpbSize > (int)dpb->size) {
     if (dpb->size < activeSps->numRefFrames)
-      error ("DPB size at specified level is smaller than the specified number of reference frames\n");
+      cDecoder264::error ("DPB size at specified level is smaller than the specified number of reference frames\n");
 
     dpb->fs = (sFrameStore**)realloc (dpb->fs, dpbSize * sizeof (sFrameStore*));
     if (!dpb->fs)
@@ -1734,7 +1734,7 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
   if ((picture->usedForReference) && (!picture->isLongTerm))
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->frameNum == picture->frameNum)
-        error ("duplicate frameNum in int16_t-term reference picture buffer");
+        cDecoder264::error ("duplicate frameNum in int16_t-term reference picture buffer");
 
   // store at end of buffer
   insertPictureDpb (decoder, dpb->fs[dpb->usedSize], picture);
@@ -1788,7 +1788,7 @@ void removeFrameDpb (sDpb* dpb, int pos) {
       break;
 
     default:
-      error ("invalid frame store type");
+      cDecoder264::error ("invalid frame store type");
     }
   fs->isUsed = 0;
   fs->isLongTerm = 0;
@@ -1990,7 +1990,7 @@ void reorderRefPicList (sSlice* slice, int curList) {
 
   for (int i = 0; modPicNumsIdc[i] != 3; i++) {
     if (modPicNumsIdc[i]>3)
-      error ("Invalid modPicNumsIdc command");
+      cDecoder264::error ("Invalid modPicNumsIdc command");
 
     if (modPicNumsIdc[i] < 2) {
       if (modPicNumsIdc[i] == 0) {

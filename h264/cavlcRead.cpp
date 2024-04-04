@@ -50,7 +50,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
       //}}}
       //{{{
       default:
-        error("writeCoeff4x4_CAVLC: Invalid block type");
+        cDecoder264::cDecoder264::error ("writeCoeff4x4_CAVLC: Invalid block type");
         break;
       //}}}
       }
@@ -88,7 +88,7 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
       //}}}
       //{{{
       default:
-        error("writeCoeff4x4_CAVLC: Invalid block type");
+        cDecoder264::cDecoder264::error ("writeCoeff4x4_CAVLC: Invalid block type");
         break;
         }
       //}}}
@@ -213,7 +213,7 @@ void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
     //}}}
     //{{{
     default:
-      error ("readCoef4x4cavlc: invalid block type");
+      cDecoder264::error ("readCoef4x4cavlc: invalid block type");
       decoder->nzCoeff[mb_nr][0][j][i] = 0;
       break;
     //}}}
@@ -425,7 +425,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
     //}}}
     //{{{
     default:
-      error ("readCoef4x4cavlc: invalid block type");
+      cDecoder264::error ("readCoef4x4cavlc: invalid block type");
       decoder->nzCoeff[mb_nr][0][j][i] = 0;
       break;
     //}}}

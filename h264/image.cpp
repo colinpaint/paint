@@ -2145,7 +2145,7 @@ namespace {
           }
         else
           // Advanced Error Concealment would be called here to combat unintentional loss of pictures
-          error ("initPicture - unintentional loss of picture\n");
+          cDecoder264::error ("initPicture - unintentional loss of picture\n");
         }
         //}}}
       if (!decoder->concealMode)
@@ -2202,7 +2202,7 @@ namespace {
       //}}}
       //{{{
       default:
-        error ("decoder->picStructure not initialized");
+        cDecoder264::error ("decoder->picStructure not initialized");
       //}}}
       }
 
@@ -2360,7 +2360,7 @@ namespace {
     int deblockMode = 1;
 
     if (decoder->picSliceIndex >= MAX_NUM_SLICES)
-      error ("initPictureDecode - MAX_NUM_SLICES exceeded");
+      cDecoder264::error ("initPictureDecode - MAX_NUM_SLICES exceeded");
 
     sSlice* slice = decoder->sliceList[0];
     useParameterSet (decoder, slice);
@@ -2945,7 +2945,7 @@ namespace {
           // need to read the slice ID, which depends on the value of redundantPicCountPresent
           int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
           if (decoder->activePps->entropyCoding)
-            error ("dataPartition with eCabac not allowed");
+            cDecoder264::error ("dataPartition with eCabac not allowed");
 
           if (!nalu->readNalu (decoder))
             return curHeader;
@@ -3157,7 +3157,7 @@ void decodePOC (cDecoder264* decoder, sSlice* slice) {
         // first pixelPos of IDRGOP,
         decoder->frameNumOffset = 0;
         if (slice->frameNum)
-          error ("frameNum nonZero IDR picture");
+          cDecoder264::error ("frameNum nonZero IDR picture");
         }
       else {
         if (decoder->lastHasMmco5) {
@@ -3221,7 +3221,7 @@ void decodePOC (cDecoder264* decoder, sSlice* slice) {
         decoder->frameNumOffset = 0;
         slice->thisPoc = slice->framePoc = slice->topPoc = slice->botPoc = 0;
         if (slice->frameNum)
-          error ("frameNum not equal to zero in IDR picture");
+          cDecoder264::error ("frameNum not equal to zero in IDR picture");
         }
       else {
         if (decoder->lastHasMmco5) {
@@ -3254,7 +3254,7 @@ void decodePOC (cDecoder264* decoder, sSlice* slice) {
     //}}}
     //{{{
     default:
-      error ("unknown POC type");
+      cDecoder264::error ("unknown POC type");
       break;
     //}}}
     }
@@ -3350,7 +3350,7 @@ int decodeFrame (cDecoder264* decoder) {
 
        decoder->picSliceIndex++;
        if (decoder->picSliceIndex >= decoder->numAllocatedSlices)
-         error ("decodeFrame - sliceList numAllocationSlices too small");
+         cDecoder264::error ("decodeFrame - sliceList numAllocationSlices too small");
       curHeader = eSOS;
       }
 

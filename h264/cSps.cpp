@@ -151,7 +151,7 @@ void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, 
     bit_depth_chroma_minus8 = readUeV ("SPS bit_depth_chroma_minus8", s);
     if ((bit_depth_luma_minus8+8 > sizeof(sPixel)*8) ||
         (bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
-      error ("Source picture has higher bit depth than sPixel data type");
+      cDecoder264::error ("Source picture has higher bit depth than sPixel data type");
 
     useLosslessQpPrime = readU1 ("SPS losslessQpPrimeYzero", s);
 

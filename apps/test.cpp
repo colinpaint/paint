@@ -49,7 +49,7 @@ extern "C" {
 #include "../decoders/cDecoder.h"
 
 // h264
-#include "../h264/cDecoder264.h"
+#include "../h264/global.h"
 
 // app
 #include "../app/cApp.h"

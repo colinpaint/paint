@@ -16,8 +16,6 @@
 #include "loopfilter.h"
 #include "output.h"
 
-#include "cDecoder264.h"
-
 #include "../common/cLog.h"
 //}}}
 namespace {
@@ -30,23 +28,13 @@ namespace {
   //}}}
   }
 
-//{{{
-void error (const char* text) {
-
-  cLog::log (LOGERROR, text);
-  if (cDecoder264::gDecoder)
-    flushDpb (cDecoder264::gDecoder->dpb);
-  exit (0);
-  }
-//}}}
-
 // sSlice
 //{{{
 sSlice* allocSlice (cDecoder264* decoder) {
 
   sSlice* slice = (sSlice*)calloc (1, sizeof(sSlice));
   if (!slice)
-    error ("allocSlice failed");
+    cDecoder264::error ("allocSlice failed");
 
   // create all context models
   slice->motionInfoContexts = createMotionInfoContexts();
@@ -134,11 +122,11 @@ sDataPartition* allocDataPartitions (int n) {
     sDataPartition* dataPartition = &(dataPartitions[i]);
     dataPartition->stream = (sBitStream*)calloc(1, sizeof(sBitStream));
     if (dataPartition->stream == NULL)
-      error ("allocDataPartitions: Memory allocation for sBitStream failed");
+      cDecoder264::error ("allocDataPartitions: Memory allocation for sBitStream failed");
 
     dataPartition->stream->bitStreamBuffer = (uint8_t*)calloc(MAX_CODED_FRAME_SIZE, sizeof(uint8_t));
     if (dataPartition->stream->bitStreamBuffer == NULL)
-      error ("allocDataPartitions: Memory allocation for bitStreamBuffer failed");
+      cDecoder264::error ("allocDataPartitions: Memory allocation for bitStreamBuffer failed");
     }
 
   return dataPartitions;
@@ -362,6 +350,17 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   return decoder;
   }
 //}}}
+//{{{
+void cDecoder264::error (const char* text) {
+
+  cLog::log (LOGERROR, text);
+  if (cDecoder264::gDecoder)
+    flushDpb (cDecoder264::gDecoder->dpb);
+
+  exit (0);
+  }
+//}}}
+
 //{{{
 cDecoder264::~cDecoder264() {
 

@@ -65,57 +65,57 @@
 #define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
 //}}}
 
-//{{{  enum eStartEnd
-typedef enum {
+//{{{
+enum eStartEnd {
   eEOS = 1, // End Of Sequence
   eSOP = 2, // Start Of Picture
   eSOS = 3, // Start Of sSlice
-  } eStartEnd;
+  };
 //}}}
-//{{{  enum eDecodeResult
-typedef enum {
+//{{{
+enum eDecodeResult {
   eDecodingOk     = 0,
   eSearchSync     = 1,
   ePictureDecoded = 2
-  } eDecodeResult;
+  };
 //}}}
-//{{{  enum eColorPlane
-typedef enum {
+//{{{
+enum eColorPlane {
   // YUV
   PLANE_Y = 0,  // PLANE_Y
   PLANE_U = 1,  // PLANE_Cb
   PLANE_V = 2,  // PLANE_Cr
-  } eColorPlane;
+  };
 //}}}
-//{{{  enum eComponentType
-typedef enum {
+//{{{
+enum eComponentType {
   eLuma =   0,
   eChroma = 1
-  } eComponentType;
+  };
 //}}}
-//{{{  enum eColorComponent
-typedef enum {
+//{{{
+enum eColorComponent {
   eLumaComp = 0,
   eCrComp   = 1,
   eCbComp   = 2
-  } eColorComponent;
+  };
 //}}}
-//{{{  enum ePicStructure
-typedef enum {
+//{{{
+enum ePicStructure {
   eFrame    = 0,
   eTopField = 1,
   eBotField = 2
-  } ePicStructure;
+  };
 //}}}
-//{{{  enum eDataPartitionType
-typedef enum {
+//{{{
+enum eDataPartitionType {
   eDataPartition1, // no dataPartiton
   eDataPartition3  // 3 dataPartitions
-  } eDataPartitionType;
+  };
 //}}}
 //{{{  enum eSyntaxElementType
 // almost the same as syntaxElements.h but not quite
-typedef enum {
+enum eSyntaxElementType {
   SE_HEADER,
   SE_PTYPE,
   SE_MBTYPE,
@@ -135,68 +135,68 @@ typedef enum {
   SE_BFRAME,
   SE_EOS,
   SE_MAX_ELEMENTS = 20
-  } eSyntaxElementType;
+  };
 //}}}
-//{{{  enum eEntropyCodingType
-typedef enum {
+//{{{
+enum eEntropyCodingType {
   eCavlc = 0,
   eCabac = 1
-  } eEntropyCodingType;
+  };
 //}}}
-//{{{  enum eCodingType
-typedef enum {
+//{{{
+enum eCodingType {
   eFrameCoding       = 0,
   eFieldCoding       = 1,
   eAdaptiveCoding    = 2,
   eFrameMbPairCoding = 3
- } eCodingType;
+  };
 //}}}
-//{{{  enum ePredListType
-typedef enum {
+//{{{
+enum ePredListType {
   LIST_0 = 0,
   LIST_1 = 1,
   BI_PRED = 2,
   BI_PRED_L0 = 3,
   BI_PRED_L1 = 4
-  } ePredListType;
+  };
 //}}}
-//{{{  enum eSliceType
-typedef enum {
+//{{{
+enum eSliceType {
   eSliceP        = 0,
   eSliceB        = 1,
   eSliceI        = 2,
   eSliceSP       = 3,
   eSliceSI       = 4,
   eSliceNumTypes = 5
-  } eSliceType;
+  };
 //}}}
-//{{{  enum eMotionEstimationType
-typedef enum {
+//{{{
+enum eMotionEstimationType {
   eFullPel,
   eHalfPel,
   eQuarterPel
-  } eMotionEstimationType;
+  };
 //}}}
-//{{{  enum eRcModelType
-typedef enum {
+//{{{
+enum eRcModelType {
   RC_MODE_0 = 0,
   RC_MODE_1 = 1,
   RC_MODE_2 = 2,
   RC_MODE_3 = 3
-  } eRcModelType;
+  };
 //}}}
-//{{{  enum eWeightedPredictionType;
-typedef enum {
+//{{{
+enum eWeightedPredictionType {
   WP_MCPREC_PLUS0 =       4,
   WP_MCPREC_PLUS1 =       5,
   WP_MCPREC_MINUS0 =      6,
   WP_MCPREC_MINUS1 =      7,
   WP_MCPREC_MINUS_PLUS0 = 8,
   WP_REGULAR =            9
-  } eWeightedPredictionType;
+  };
 //}}}
-//{{{  enum eCavlcBlockType
-typedef enum {
+//{{{
+enum eCavlcBlockType {
   LUMA              =  0,
   LUMA_INTRA16x16DC =  1,
   LUMA_INTRA16x16AC =  2,
@@ -206,10 +206,10 @@ typedef enum {
   CR                =  8,
   CR_INTRA16x16DC   =  9,
   CR_INTRA16x16AC   = 10
-  } eCavlcBlockType;
+  };
 //}}}
-//{{{  enum eCabacBlockType
-typedef enum {
+//{{{
+enum eCabacBlockType {
   LUMA_16DC     =   0,
   LUMA_16AC     =   1,
   LUMA_8x8      =   2,
@@ -232,10 +232,10 @@ typedef enum {
   CR_8x4        =  19,
   CR_4x8        =  20,
   CR_4x4        =  21
-  } eCabacBlockType;
+  };
 //}}}
-//{{{  enum eI4x4PredMode
-typedef enum {
+//{{{
+enum eI4x4PredMode {
   VERT_PRED            = 0,
   HOR_PRED             = 1,
   DC_PRED              = 2,
@@ -245,31 +245,31 @@ typedef enum {
   HOR_DOWN_PRED        = 6,
   VERT_LEFT_PRED       = 7,
   HOR_UP_PRED          = 8
-  } eI4x4PredMode;
+  };
 //}}}
-//{{{  enum eI8x8PredMode
-typedef enum {
+//{{{
+enum eI8x8PredMode {
   DC_PRED_8     =  0,
   HOR_PRED_8    =  1,
   VERT_PRED_8   =  2,
   PLANE_8       =  3
-  } eI8x8PredMode;
+  };
 //}}}
-//{{{  enum eI16x16PredMode
-typedef enum {
+//{{{
+enum eI16x16PredMode {
   VERT_PRED_16   = 0,
   HOR_PRED_16    = 1,
   DC_PRED_16     = 2,
   PLANE_16       = 3
-  } eI16x16PredMode;
+  };
 //}}}
-//{{{  enum eMvPredType
-typedef enum {
+//{{{
+enum eMvPredType {
   MVPRED_MEDIAN   = 0,
   MVPRED_L        = 1,
   MVPRED_U        = 2,
   MVPRED_UR       = 3
-  } eMvPredType;
+  };
 //}}}
 
 typedef uint8_t sPixel;
@@ -825,9 +825,22 @@ struct sDebug {
 //}}}
 
 //{{{
+enum eDecErrCode {
+  DEC_GEN_NOERR = 0,
+  DEC_OPEN_NOERR = 0,
+  DEC_CLOSE_NOERR = 0,
+  DEC_SUCCEED = 0,
+  DEC_EOS = 1,
+  DEC_NEED_DATA = 2,
+  DEC_INVALID_PARAM = 3,
+  DEC_ERRMASK = 0x8000
+  };
+//}}}
+//{{{
 class cDecoder264 {
 public:
   static cDecoder264* open (sParam* param, uint8_t* chunk, size_t chunkSize);
+  static void cDecoder264::error (const char* text);
   ~cDecoder264();
 
   int decodeOneFrame (sDecodedPic** decPicList);
@@ -984,7 +997,6 @@ public:
   void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
   };
 //}}}
-void error (const char* text);
 sSlice* allocSlice (cDecoder264* decoder);
 sDataPartition* allocDataPartitions (int n);
 void freeDataPartitions (sDataPartition* dataPartitions, int n);

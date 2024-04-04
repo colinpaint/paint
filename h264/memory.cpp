@@ -7,13 +7,13 @@
 /*!
 ** **********************************************************************
  * \brief
- *    Exit program if memory allocation failed (using error())
+ *    Exit program if memory allocation failed (using cDecoder264::error ())
  * \param where
  *    string indicating which memory allocation failed
 ** **********************************************************************
  */
 void noMemoryExit (const char* where) {
-   error ("Could not allocate memory");
+  cDecoder264::error ("Could not allocate memory");
   }
 //}}}
 

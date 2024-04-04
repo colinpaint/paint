@@ -472,7 +472,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBl
       (mb->deltaQuant > (25 + decoder->coding.bitDepthLumaQpScale/2))) {
     printf("mb_qp_delta is out of range (%d)\n", mb->deltaQuant);
     mb->deltaQuant = iClip3(-(26 + decoder->coding.bitDepthLumaQpScale/2), (25 + decoder->coding.bitDepthLumaQpScale/2), mb->deltaQuant);
-    //error ("mb_qp_delta is out of range", 500);
+    //cDecoder264::error ("mb_qp_delta is out of range", 500);
     }
 
   slice->qp = ((slice->qp + mb->deltaQuant + 52 + 2*decoder->coding.bitDepthLumaQpScale) % (52+decoder->coding.bitDepthLumaQpScale)) - decoder->coding.bitDepthLumaQpScale;

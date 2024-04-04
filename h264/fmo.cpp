@@ -182,7 +182,7 @@ static int FmoGenerateMapUnitToSliceGroupMap (cDecoder264* decoder, sSlice* slic
 
   if (pps->sliceGroupMapType == 6)
     if ((pps->picSizeMapUnitsMinus1 + 1) != NumSliceGroupMapUnits)
-      error ("wrong pps->picSizeMapUnitsMinus1 for used SPS and FMO type 6");
+      cDecoder264::error ("wrong pps->picSizeMapUnitsMinus1 for used SPS and FMO type 6");
 
   // allocate memory for decoder->mapUnitToSliceGroupMap
   if (decoder->mapUnitToSliceGroupMap)
