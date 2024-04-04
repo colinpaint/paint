@@ -2502,7 +2502,7 @@ int cDecoder264::decodeFrame() {
     nextSlice = slice;
 
     slice = sliceList[picSliceIndex];
-    useParameterSet (this, slice);
+    useParameterSet (slice);
     initPicture (this, slice);
 
     picSliceIndex++;
@@ -2696,7 +2696,7 @@ void cDecoder264::initPictureDecode() {
     cDecoder264::error ("initPictureDecode - MAX_NUM_SLICES exceeded");
 
   sSlice* slice = sliceList[0];
-  useParameterSet (this, slice);
+  useParameterSet (slice);
 
   if (slice->isIDR)
     idrFrameNum = 0;
@@ -3162,7 +3162,7 @@ void cDecoder264::readSliceHeader (sSlice* slice) {
     slice->colourPlaneId = PLANE_Y;
 
   // setup parameterSet
-  useParameterSet (this, slice);
+  useParameterSet (slice);
   slice->activeSps = activeSps;
   slice->activePps = activePps;
   slice->transform8x8Mode = activePps->hasTransform8x8mode;
@@ -3768,24 +3768,22 @@ void cDecoder264::initPicture (cDecoder264* decoder, sSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::useParameterSet (cDecoder264* decoder, sSlice* slice) {
+void cDecoder264::useParameterSet (sSlice* slice) {
 
-  cPps* pps = &decoder->pps[slice->ppsId];
-  if (!pps->ok)
+  if (!pps[slice->ppsId].ok)
     cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid ppsId:{}", slice->ppsId));
 
-  cSps* sps = &decoder->sps[pps->spsId];
-  if (!sps->ok)
+  if (!sps[pps->spsId].ok)
     cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid spsId:{} ppsId:{}", slice->ppsId, pps->spsId));
 
-  if (sps != activeSps) {
+  if (&sps[pps->spsId] != activeSps) {
     //{{{  new sps
     if (picture)
       endDecodeFrame();
 
-    activeSps = sps;
+    activeSps = &sps[pps->spsId];
 
-    if (sps->isBLprofile() && !dpb->initDone)
+    if (activeSps->isBLprofile() && !dpb->initDone)
       setCodingParam (sps);
     setCoding();
     initGlobalBuffers (this);
@@ -3801,7 +3799,7 @@ void cDecoder264::useParameterSet (cDecoder264* decoder, sSlice* slice) {
       ercMvPerMb = 0;
       }
 
-    setFormat (sps, &param.source, &param.output);
+    setFormat (activeSps, &param.source, &param.output);
 
     // debug spsStr
     debug.profileString = fmt::format ("profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
@@ -3818,17 +3816,17 @@ void cDecoder264::useParameterSet (cDecoder264* decoder, sSlice* slice) {
     }
     //}}}
 
-  if (pps != activePps) {
+  if (&pps[slice->ppsId] != activePps) {
     //{{{  new pps
     if (picture) // only on slice loss
-      decoder->endDecodeFrame();
+      endDecodeFrame();
 
-    activePps = pps;
+    activePps = &pps[slice->ppsId];
     }
     //}}}
 
   // slice->dataPartitionMode is set by read_new_slice (NALU first uint8_t available there)
-  if (pps->entropyCoding == eCavlc) {
+  if (activePps->entropyCoding == eCavlc) {
     slice->nalStartCode = vlcStartCode;
     for (int i = 0; i < 3; i++)
       slice->dataPartitions[i].readSyntaxElement = readSyntaxElementVLC;
@@ -3839,6 +3837,6 @@ void cDecoder264::useParameterSet (cDecoder264* decoder, sSlice* slice) {
       slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCABAC;
     }
 
-  decoder->coding.sliceType = slice->sliceType;
+  coding.sliceType = slice->sliceType;
   }
 //}}}
