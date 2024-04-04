@@ -849,10 +849,6 @@ public:
   void finish (sDecodedPic** decPicList);
   void close();
 
-  void initRefPicture (sSlice* slice);
-  void readSliceHeader (sSlice* slice);
-  void initPicture (sSlice* slice);
-
   void decodePOC (sSlice* slice);
   void padPicture (sPicture* picture);
   int decodeFrame();
@@ -1013,21 +1009,25 @@ public:
   void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
 
 private:
-  int readSlice (sSlice* slice);
-
   void clearDecodedPics();
   void initPictureDecode();
-  void endDecodeFrame();
+  void mbAffPostProc();
 
   void setCoding();
   void setCodingParam (cSps* sps);
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
-  void mbAffPostProc();
 
   void readDecRefPicMarking (sBitStream* s, sSlice* slice);
   void initMbAffLists (sSlice* slice);
+  void initPicture (sSlice* slice);
+  void initRefPicture (sSlice* slice);
   void initSlice (sSlice* slice);
   void useParameterSet (sSlice* slice);
+
+  void readSliceHeader (sSlice* slice);
+  int readSlice (sSlice* slice);
+  void decodeSlice (sSlice* slice);
+  void endDecodeFrame();
   };
 //}}}
 sSlice* allocSlice (cDecoder264* decoder);
