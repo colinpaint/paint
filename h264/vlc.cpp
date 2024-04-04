@@ -14,7 +14,7 @@ int readUeV (const char* label, sBitStream* s) {
   symbol.mapping = linfo_ue;
   readsSyntaxElement_VLC (&symbol, s);
 
-  if (gDecoder->param.vlcDebug)
+  if (cDecoder264::gDecoder->param.vlcDebug)
     printf ("read %s %d\n", label, symbol.value1);
 
   return symbol.value1;
@@ -29,7 +29,7 @@ int readSeV (const char* label, sBitStream* s) {
   symbol.mapping = linfo_se;
   readsSyntaxElement_VLC (&symbol, s);
 
-  if (gDecoder->param.vlcDebug)
+  if (cDecoder264::gDecoder->param.vlcDebug)
     printf ("read %s %d\n", label, symbol.value1);
 
   return symbol.value1;
@@ -46,7 +46,7 @@ int readUv (int LenInBits, const char* label, sBitStream* s) {
   symbol.len = LenInBits;
   readsSyntaxElement_FLC (&symbol, s);
 
-  if (gDecoder->param.vlcDebug)
+  if (cDecoder264::gDecoder->param.vlcDebug)
     printf ("read %s %d\n", label, symbol.inf);
 
   return symbol.inf;
@@ -66,7 +66,7 @@ int readIv (int LenInBits, const char* label, sBitStream* s) {
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
 
-  if (gDecoder->param.vlcDebug)
+  if (cDecoder264::gDecoder->param.vlcDebug)
     printf ("read %s %d\n", label, symbol.inf);
 
   return symbol.inf;

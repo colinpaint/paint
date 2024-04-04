@@ -17,6 +17,8 @@
 #include "output.h"
 
 #include "cDecoder264.h"
+
+#include "../common/cLog.h"
 //}}}
 namespace {
   //{{{
@@ -28,14 +30,12 @@ namespace {
   //}}}
   }
 
-cDecoder264* gDecoder;
-
 //{{{
 void error (const char* text) {
 
-  fprintf (stderr, "--- Error -> %s\n", text);
-  if (gDecoder)
-    flushDpb (gDecoder->dpb);
+  cLog::log (LOGERROR, text);
+  if (cDecoder264::gDecoder)
+    flushDpb (cDecoder264::gDecoder->dpb);
   exit (0);
   }
 //}}}

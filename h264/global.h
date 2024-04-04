@@ -823,6 +823,7 @@ struct sDebug {
   std::string outString;
   };
 //}}}
+
 //{{{
 class cDecoder264 {
 public:
@@ -832,6 +833,8 @@ public:
   int decodeOneFrame (sDecodedPic** decPicList);
   void finish (sDecodedPic** decPicList);
   void close();
+
+  static inline cDecoder264* gDecoder = nullptr;
 
   sParam       param;
   sDebug       debug;
@@ -981,24 +984,17 @@ public:
   void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
   };
 //}}}
-
-extern cDecoder264* gDecoder;
-
-extern void error (const char* text);
-
-extern void initGlobalBuffers (cDecoder264* decoder);
-extern void freeGlobalBuffers (cDecoder264* decoder);
-extern void freeLayerBuffers (cDecoder264* decoder);
-
-extern sDataPartition* allocDataPartitions (int n);
-extern void freeDataPartitions (sDataPartition* dataPartitions, int n);
-
-extern sSlice* allocSlice (cDecoder264* decoder);
-
-extern sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
-extern void clearDecodedPictures (cDecoder264* decoder);
-extern void freeDecodedPictures (sDecodedPic* decodedPic);
+void error (const char* text);
+sSlice* allocSlice (cDecoder264* decoder);
+sDataPartition* allocDataPartitions (int n);
+void freeDataPartitions (sDataPartition* dataPartitions, int n);
+void initGlobalBuffers (cDecoder264* decoder);
+void freeGlobalBuffers (cDecoder264* decoder);
+void freeLayerBuffers (cDecoder264* decoder);
+sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
+void clearDecodedPictures (cDecoder264* decoder);
+void freeDecodedPictures (sDecodedPic* decodedPic);
 
 // For 4:4:4 independent mode
-extern void changePlaneJV (cDecoder264* decoder, int nplane, sSlice *slice);
-extern void makeFramePictureJV (cDecoder264* decoder );
+void changePlaneJV (cDecoder264* decoder, int nplane, sSlice *slice);
+void makeFramePictureJV (cDecoder264* decoder );
