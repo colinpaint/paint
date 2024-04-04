@@ -563,7 +563,6 @@ public:
   int      ppsId = INT_MAX;
   };
 //}}}
-
 //{{{
 struct sSlice {
   cDecoder264* decoder;
@@ -826,7 +825,6 @@ struct sDebug {
   std::string outString;
   };
 //}}}
-
 //{{{
 class cDecoder264 {
 public:
@@ -850,10 +848,6 @@ public:
   int decodeOneFrame (sDecodedPic** decPicList);
   void finish (sDecodedPic** decPicList);
   void close();
-
-  void initGlobalBuffers();
-  void freeGlobalBuffers();
-  void freeLayerBuffers();
 
   void decodePOC (sSlice* slice);
   void padPicture (sPicture* picture);
@@ -1016,6 +1010,10 @@ public:
 private:
   void clearDecodedPics();
   void initPictureDecode();
+  void initGlobalBuffers();
+  void freeGlobalBuffers();
+  void freeLayerBuffers();
+
   void mbAffPostProc();
 
   void setCoding();

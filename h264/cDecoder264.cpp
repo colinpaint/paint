@@ -1159,77 +1159,6 @@ namespace {
   //}}}
   //}}}
   //{{{
-  void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
-
-    int pad_width = padx + width;
-    memset (pixel - padx, *pixel, padx * sizeof(sPixel));
-    memset (pixel + width, *(pixel + width - 1), padx * sizeof(sPixel));
-
-    sPixel* line0 = pixel - padx;
-    sPixel* line = line0 - pady * stride;
-    for (int j = -pady; j < 0; j++) {
-      memcpy (line, line0, stride * sizeof(sPixel));
-      line += stride;
-      }
-
-    for (int j = 1; j < height; j++) {
-      line += stride;
-      memset (line, *(line + padx), padx * sizeof(sPixel));
-      memset (line + pad_width, *(line + pad_width - 1), padx * sizeof(sPixel));
-      }
-
-    line0 = line + stride;
-    for (int j = height; j < height + pady; j++) {
-      memcpy (line0,  line, stride * sizeof(sPixel));
-      line0 += stride;
-      }
-    }
-  //}}}
-  //{{{
-  void copyDecPictureJV (sPicture* dst, sPicture* src) {
-
-    dst->poc = src->poc;
-    dst->topPoc = src->topPoc;
-    dst->botPoc = src->botPoc;
-    dst->framePoc = src->framePoc;
-
-    dst->qp = src->qp;
-    dst->sliceQpDelta = src->sliceQpDelta;
-    dst->chromaQpOffset[0] = src->chromaQpOffset[0];
-    dst->chromaQpOffset[1] = src->chromaQpOffset[1];
-
-    dst->sliceType = src->sliceType;
-    dst->usedForReference = src->usedForReference;
-    dst->isIDR = src->isIDR;
-    dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
-    dst->longTermRefFlag = src->longTermRefFlag;
-    dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
-    dst->decRefPicMarkBuffer = src->decRefPicMarkBuffer;
-    dst->mbAffFrame = src->mbAffFrame;
-    dst->picWidthMbs = src->picWidthMbs;
-    dst->picNum  = src->picNum;
-    dst->frameNum = src->frameNum;
-    dst->recoveryFrame = src->recoveryFrame;
-    dst->codedFrame = src->codedFrame;
-    dst->chromaFormatIdc = src->chromaFormatIdc;
-    dst->frameMbOnly = src->frameMbOnly;
-    dst->hasCrop = src->hasCrop;
-    dst->cropLeft = src->cropLeft;
-    dst->cropRight = src->cropRight;
-    dst->cropTop = src->cropTop;
-    dst->cropBot = src->cropBot;
-    }
-  //}}}
-  //{{{
-  void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
-
-    toSlice->topPoc = fromSlice->topPoc;
-    toSlice->botPoc = fromSlice->botPoc;
-    toSlice->thisPoc = fromSlice->thisPoc;
-    toSlice->framePoc = fromSlice->framePoc;
-    }
-  //}}}
-  //{{{
   void initCabacContexts (sSlice* slice) {
 
     //{{{
@@ -1312,6 +1241,77 @@ namespace {
     }
   //}}}
   //{{{
+  void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
+
+    int pad_width = padx + width;
+    memset (pixel - padx, *pixel, padx * sizeof(sPixel));
+    memset (pixel + width, *(pixel + width - 1), padx * sizeof(sPixel));
+
+    sPixel* line0 = pixel - padx;
+    sPixel* line = line0 - pady * stride;
+    for (int j = -pady; j < 0; j++) {
+      memcpy (line, line0, stride * sizeof(sPixel));
+      line += stride;
+      }
+
+    for (int j = 1; j < height; j++) {
+      line += stride;
+      memset (line, *(line + padx), padx * sizeof(sPixel));
+      memset (line + pad_width, *(line + pad_width - 1), padx * sizeof(sPixel));
+      }
+
+    line0 = line + stride;
+    for (int j = height; j < height + pady; j++) {
+      memcpy (line0,  line, stride * sizeof(sPixel));
+      line0 += stride;
+      }
+    }
+  //}}}
+  //{{{
+  void copyDecPictureJV (sPicture* dst, sPicture* src) {
+
+    dst->poc = src->poc;
+    dst->topPoc = src->topPoc;
+    dst->botPoc = src->botPoc;
+    dst->framePoc = src->framePoc;
+
+    dst->qp = src->qp;
+    dst->sliceQpDelta = src->sliceQpDelta;
+    dst->chromaQpOffset[0] = src->chromaQpOffset[0];
+    dst->chromaQpOffset[1] = src->chromaQpOffset[1];
+
+    dst->sliceType = src->sliceType;
+    dst->usedForReference = src->usedForReference;
+    dst->isIDR = src->isIDR;
+    dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
+    dst->longTermRefFlag = src->longTermRefFlag;
+    dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
+    dst->decRefPicMarkBuffer = src->decRefPicMarkBuffer;
+    dst->mbAffFrame = src->mbAffFrame;
+    dst->picWidthMbs = src->picWidthMbs;
+    dst->picNum  = src->picNum;
+    dst->frameNum = src->frameNum;
+    dst->recoveryFrame = src->recoveryFrame;
+    dst->codedFrame = src->codedFrame;
+    dst->chromaFormatIdc = src->chromaFormatIdc;
+    dst->frameMbOnly = src->frameMbOnly;
+    dst->hasCrop = src->hasCrop;
+    dst->cropLeft = src->cropLeft;
+    dst->cropRight = src->cropRight;
+    dst->cropTop = src->cropTop;
+    dst->cropBot = src->cropBot;
+    }
+  //}}}
+  //{{{
+  void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
+
+    toSlice->topPoc = fromSlice->topPoc;
+    toSlice->botPoc = fromSlice->botPoc;
+    toSlice->thisPoc = fromSlice->thisPoc;
+    toSlice->framePoc = fromSlice->framePoc;
+    }
+  //}}}
+  //{{{
   void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
 
     sPixel (*temp_evn)[16] = temp;
@@ -1325,14 +1325,6 @@ namespace {
       memcpy ((*pixel++ + x0), *temp_evn++, width * sizeof(sPixel));
       memcpy ((*pixel++ + x0), *temp_odd++, width * sizeof(sPixel));
       }
-    }
-  //}}}
-  //{{{
-  void resetMb (sMacroBlock* mb) {
-
-    mb->errorFlag = 1;
-    mb->dplFlag = 0;
-    mb->sliceNum = -1;
     }
   //}}}
   //{{{
@@ -1727,7 +1719,6 @@ void cDecoder264::error (const string& text) {
   exit (0);
   }
 //}}}
-
 //{{{
 cDecoder264::~cDecoder264() {
 
@@ -1800,107 +1791,6 @@ void cDecoder264::close() {
   freeOutput (this);
 
   gDecoder = NULL;
-  }
-//}}}
-
-//{{{
-void cDecoder264::initGlobalBuffers() {
-
-  // alloc coding
-  if (coding.isSeperateColourPlane) {
-    for (uint32_t i = 0; i < MAX_PLANE; ++i)
-      if (!mbDataJV[i])
-        mbDataJV[i] = (sMacroBlock*)calloc (coding.frameSizeMbs, sizeof(sMacroBlock));
-    for (uint32_t i = 0; i < MAX_PLANE; ++i)
-      if (!intraBlockJV[i])
-        intraBlockJV[i] = (char*)calloc (coding.frameSizeMbs, sizeof(char));
-    for (uint32_t i = 0; i < MAX_PLANE; ++i)
-      if (!predModeJV[i])
-       getMem2D (&predModeJV[i], 4*coding.frameHeightMbs, 4*coding.picWidthMbs);
-    for (uint32_t i = 0; i < MAX_PLANE; ++i)
-      if (!siBlockJV[i])
-        getMem2Dint (&siBlockJV[i], coding.frameHeightMbs, coding.picWidthMbs);
-    }
-  else {
-    if (!mbData)
-      mbData = (sMacroBlock*)calloc (coding.frameSizeMbs, sizeof(sMacroBlock));
-    if (!intraBlock)
-      intraBlock = (char*)calloc (coding.frameSizeMbs, sizeof(char));
-
-    if (!predMode)
-      getMem2D (&predMode, 4*coding.frameHeightMbs, 4*coding.picWidthMbs);
-    if (!siBlock)
-      getMem2Dint (&siBlock, coding.frameHeightMbs, coding.picWidthMbs);
-    }
-
-  // alloc picPos
-  if (!picPos) {
-    picPos = (sBlockPos*)calloc (coding.frameSizeMbs + 1, sizeof(sBlockPos));
-    sBlockPos* blockPos = picPos;
-    for (uint32_t i = 0; i < coding.frameSizeMbs+1; ++i) {
-      blockPos[i].x = (int16_t)(i % coding.picWidthMbs);
-      blockPos[i].y = (int16_t)(i / coding.picWidthMbs);
-      }
-    }
-
-  // alloc cavlc
-  if (!nzCoeff)
-    getMem4D (&nzCoeff, coding.frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
-
-  // alloc quant
-  allocQuant (this);
-  }
-//}}}
-//{{{
-void cDecoder264::freeGlobalBuffers() {
-
-  freePicture (picture);
-  picture = NULL;
-  }
-//}}}
-//{{{
-void cDecoder264::freeLayerBuffers() {
-
-  // free coding
-  if (coding.isSeperateColourPlane) {
-    for (int i = 0; i < MAX_PLANE; i++) {
-      free (mbDataJV[i]);
-      mbDataJV[i] = NULL;
-
-      freeMem2Dint (siBlockJV[i]);
-      siBlockJV[i] = NULL;
-
-      freeMem2D (predModeJV[i]);
-      predModeJV[i] = NULL;
-
-      free (intraBlockJV[i]);
-      intraBlockJV[i] = NULL;
-      }
-    }
-  else {
-    free (mbData);
-    mbData = NULL;
-
-    freeMem2Dint (siBlock);
-    siBlock = NULL;
-
-    freeMem2D (predMode);
-    predMode = NULL;
-
-    free (intraBlock);
-    intraBlock = NULL;
-    }
-
-  // free picPos
-  free (picPos);
-  picPos = NULL;
-
-  // free cavlc
-  freeMem4D (nzCoeff);
-  nzCoeff = NULL;
-
-  // free quant
-  freeQuant (this);
   }
 //}}}
 
@@ -2138,6 +2028,106 @@ void cDecoder264::initPictureDecode() {
       deblockMode = 0;
 
   deblockMode = deblockMode;
+  }
+//}}}
+//{{{
+void cDecoder264::initGlobalBuffers() {
+
+  // alloc coding
+  if (coding.isSeperateColourPlane) {
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
+      if (!mbDataJV[i])
+        mbDataJV[i] = (sMacroBlock*)calloc (coding.frameSizeMbs, sizeof(sMacroBlock));
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
+      if (!intraBlockJV[i])
+        intraBlockJV[i] = (char*)calloc (coding.frameSizeMbs, sizeof(char));
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
+      if (!predModeJV[i])
+       getMem2D (&predModeJV[i], 4*coding.frameHeightMbs, 4*coding.picWidthMbs);
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
+      if (!siBlockJV[i])
+        getMem2Dint (&siBlockJV[i], coding.frameHeightMbs, coding.picWidthMbs);
+    }
+  else {
+    if (!mbData)
+      mbData = (sMacroBlock*)calloc (coding.frameSizeMbs, sizeof(sMacroBlock));
+    if (!intraBlock)
+      intraBlock = (char*)calloc (coding.frameSizeMbs, sizeof(char));
+
+    if (!predMode)
+      getMem2D (&predMode, 4*coding.frameHeightMbs, 4*coding.picWidthMbs);
+    if (!siBlock)
+      getMem2Dint (&siBlock, coding.frameHeightMbs, coding.picWidthMbs);
+    }
+
+  // alloc picPos
+  if (!picPos) {
+    picPos = (sBlockPos*)calloc (coding.frameSizeMbs + 1, sizeof(sBlockPos));
+    sBlockPos* blockPos = picPos;
+    for (uint32_t i = 0; i < coding.frameSizeMbs+1; ++i) {
+      blockPos[i].x = (int16_t)(i % coding.picWidthMbs);
+      blockPos[i].y = (int16_t)(i / coding.picWidthMbs);
+      }
+    }
+
+  // alloc cavlc
+  if (!nzCoeff)
+    getMem4D (&nzCoeff, coding.frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
+
+  // alloc quant
+  allocQuant (this);
+  }
+//}}}
+//{{{
+void cDecoder264::freeGlobalBuffers() {
+
+  freePicture (picture);
+  picture = NULL;
+  }
+//}}}
+//{{{
+void cDecoder264::freeLayerBuffers() {
+
+  // free coding
+  if (coding.isSeperateColourPlane) {
+    for (int i = 0; i < MAX_PLANE; i++) {
+      free (mbDataJV[i]);
+      mbDataJV[i] = NULL;
+
+      freeMem2Dint (siBlockJV[i]);
+      siBlockJV[i] = NULL;
+
+      freeMem2D (predModeJV[i]);
+      predModeJV[i] = NULL;
+
+      free (intraBlockJV[i]);
+      intraBlockJV[i] = NULL;
+      }
+    }
+  else {
+    free (mbData);
+    mbData = NULL;
+
+    freeMem2Dint (siBlock);
+    siBlock = NULL;
+
+    freeMem2D (predMode);
+    predMode = NULL;
+
+    free (intraBlock);
+    intraBlock = NULL;
+    }
+
+  // free picPos
+  free (picPos);
+  picPos = NULL;
+
+  // free cavlc
+  freeMem4D (nzCoeff);
+  nzCoeff = NULL;
+
+  // free quant
+  freeQuant (this);
   }
 //}}}
 //{{{
@@ -2731,8 +2721,14 @@ void cDecoder264::initPicture (sSlice* slice) {
     for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
       sMacroBlock* mb = mbDataJV[nplane];
       char* intraBlock = intraBlockJV[nplane];
-      for (int i = 0; i < (int)picSizeInMbs; ++i)
-        resetMb (mb++);
+      for (int i = 0; i < (int)picSizeInMbs; ++i) {
+        //{{{  resetMb
+        mb->errorFlag = 1;
+        mb->dplFlag = 0;
+        mb->sliceNum = -1;
+        mb++;
+        }
+        //}}}
       memset (predModeJV[nplane][0], DC_PRED, 16 * coding.frameHeightMbs * coding.picWidthMbs * sizeof(char));
       if (activePps->hasConstrainedIntraPred)
         for (int i = 0; i < (int)picSizeInMbs; ++i)
@@ -2741,8 +2737,14 @@ void cDecoder264::initPicture (sSlice* slice) {
     }
   else {
     sMacroBlock* mb = mbData;
-    for (int i = 0; i < (int)picSizeInMbs; ++i)
-      resetMb (mb++);
+    for (int i = 0; i < (int)picSizeInMbs; ++i) {
+      //{{{  resetMb
+      mb->errorFlag = 1;
+      mb->dplFlag = 0;
+      mb->sliceNum = -1;
+      mb++;
+      }
+      //}}}
     if (activePps->hasConstrainedIntraPred)
       for (int i = 0; i < (int)picSizeInMbs; ++i)
         intraBlock[i] = 1;
