@@ -1497,234 +1497,6 @@ namespace {
   //}}}
 
   //{{{
-  void setCoding (cDecoder264* decoder) {
-
-    decoder->widthCr = 0;
-    decoder->heightCr = 0;
-    decoder->bitDepthLuma = decoder->coding.bitDepthLuma;
-    decoder->bitDepthChroma = decoder->coding.bitDepthChroma;
-
-    decoder->coding.lumaPadX = MCBUF_LUMA_PAD_X;
-    decoder->coding.lumaPadY = MCBUF_LUMA_PAD_Y;
-    decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
-    decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
-
-    if (decoder->coding.yuvFormat == YUV420) {
-      //{{{  yuv420
-      decoder->widthCr = decoder->coding.width >> 1;
-      decoder->heightCr = decoder->coding.height >> 1;
-      }
-      //}}}
-    else if (decoder->coding.yuvFormat == YUV422) {
-      //{{{  yuv422
-      decoder->widthCr = decoder->coding.width >> 1;
-      decoder->heightCr = decoder->coding.height;
-      decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y*2;
-      }
-      //}}}
-    else if (decoder->coding.yuvFormat == YUV444) {
-      //{{{  yuv444
-      decoder->widthCr = decoder->coding.width;
-      decoder->heightCr = decoder->coding.height;
-      decoder->coding.chromaPadX = decoder->coding.lumaPadX;
-      decoder->coding.chromaPadY = decoder->coding.lumaPadY;
-      }
-      //}}}
-
-    // pel bitDepth init
-    decoder->coding.bitDepthLumaQpScale = 6 * (decoder->bitDepthLuma - 8);
-
-    if ((decoder->bitDepthLuma > decoder->bitDepthChroma) ||
-        (decoder->activeSps->chromaFormatIdc == YUV400))
-      decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthLuma > 8)? 16:8;
-    else
-      decoder->coding.picUnitBitSizeDisk = (decoder->bitDepthChroma > 8)? 16:8;
-
-    decoder->coding.dcPredValueComp[0] = 1<<(decoder->bitDepthLuma - 1);
-    decoder->coding.maxPelValueComp[0] = (1<<decoder->bitDepthLuma) - 1;
-    decoder->mbSize[0][0] = decoder->mbSize[0][1] = MB_BLOCK_SIZE;
-
-    if (decoder->activeSps->chromaFormatIdc == YUV400) {
-      //{{{  yuv400
-      decoder->coding.bitDepthChromaQpScale = 0;
-
-      decoder->coding.maxPelValueComp[1] = 0;
-      decoder->coding.maxPelValueComp[2] = 0;
-
-      decoder->coding.numBlock8x8uv = 0;
-      decoder->coding.numUvBlocks = 0;
-      decoder->coding.numCdcCoeff = 0;
-
-      decoder->mbSize[1][0] = decoder->mbSize[2][0] = decoder->mbCrSizeX  = 0;
-      decoder->mbSize[1][1] = decoder->mbSize[2][1] = decoder->mbCrSizeY  = 0;
-
-      decoder->coding.subpelX = 0;
-      decoder->coding.subpelY = 0;
-      decoder->coding.shiftpelX = 0;
-      decoder->coding.shiftpelY = 0;
-
-      decoder->coding.totalScale = 0;
-      }
-      //}}}
-    else {
-      //{{{  not yuv400
-      decoder->coding.bitDepthChromaQpScale = 6 * (decoder->bitDepthChroma - 8);
-
-      decoder->coding.dcPredValueComp[1] = 1 << (decoder->bitDepthChroma - 1);
-      decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
-      decoder->coding.maxPelValueComp[1] = (1 << decoder->bitDepthChroma) - 1;
-      decoder->coding.maxPelValueComp[2] = (1 << decoder->bitDepthChroma) - 1;
-
-      decoder->coding.numBlock8x8uv = (1 << decoder->activeSps->chromaFormatIdc) & (~(0x1));
-      decoder->coding.numUvBlocks = decoder->coding.numBlock8x8uv >> 1;
-      decoder->coding.numCdcCoeff = decoder->coding.numBlock8x8uv << 1;
-
-      decoder->mbSize[1][0] = decoder->mbSize[2][0] =
-        decoder->mbCrSizeX = (decoder->activeSps->chromaFormatIdc == YUV420 ||
-                              decoder->activeSps->chromaFormatIdc == YUV422) ? 8 : 16;
-      decoder->mbSize[1][1] = decoder->mbSize[2][1] =
-        decoder->mbCrSizeY = (decoder->activeSps->chromaFormatIdc == YUV444 ||
-                              decoder->activeSps->chromaFormatIdc == YUV422) ? 16 : 8;
-
-      decoder->coding.subpelX = decoder->mbCrSizeX == 8 ? 7 : 3;
-      decoder->coding.subpelY = decoder->mbCrSizeY == 8 ? 7 : 3;
-      decoder->coding.shiftpelX = decoder->mbCrSizeX == 8 ? 3 : 2;
-      decoder->coding.shiftpelY = decoder->mbCrSizeY == 8 ? 3 : 2;
-
-      decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
-      }
-      //}}}
-
-    decoder->mbCrSize = decoder->mbCrSizeX * decoder->mbCrSizeY;
-    decoder->mbSizeBlock[0][0] = decoder->mbSizeBlock[0][1] = decoder->mbSize[0][0] >> 2;
-    decoder->mbSizeBlock[1][0] = decoder->mbSizeBlock[2][0] = decoder->mbSize[1][0] >> 2;
-    decoder->mbSizeBlock[1][1] = decoder->mbSizeBlock[2][1] = decoder->mbSize[1][1] >> 2;
-
-    decoder->mbSizeShift[0][0] = decoder->mbSizeShift[0][1] = ceilLog2sf (decoder->mbSize[0][0]);
-    decoder->mbSizeShift[1][0] = decoder->mbSizeShift[2][0] = ceilLog2sf (decoder->mbSize[1][0]);
-    decoder->mbSizeShift[1][1] = decoder->mbSizeShift[2][1] = ceilLog2sf (decoder->mbSize[1][1]);
-    }
-  //}}}
-  //{{{
-  void setCodingParam (cDecoder264* decoder, cSps* sps) {
-
-    // maximum vertical motion vector range in luma quarter pixel units
-    decoder->coding.profileIdc = sps->profileIdc;
-    decoder->coding.useLosslessQpPrime = sps->useLosslessQpPrime;
-
-    if (sps->levelIdc <= 10)
-      decoder->coding.maxVmvR = 64 * 4;
-    else if (sps->levelIdc <= 20)
-      decoder->coding.maxVmvR = 128 * 4;
-    else if (sps->levelIdc <= 30)
-      decoder->coding.maxVmvR = 256 * 4;
-    else
-      decoder->coding.maxVmvR = 512 * 4; // 512 pixels in quarter pixels
-
-    // Fidelity Range Extensions stuff (part 1)
-    decoder->coding.widthCr = 0;
-    decoder->coding.heightCr = 0;
-    decoder->coding.bitDepthLuma = (int16_t)(sps->bit_depth_luma_minus8 + 8);
-    decoder->coding.bitDepthScale[0] = 1 << sps->bit_depth_luma_minus8;
-    decoder->coding.bitDepthChroma = 0;
-    if (sps->chromaFormatIdc != YUV400) {
-      decoder->coding.bitDepthChroma = (int16_t)(sps->bit_depth_chroma_minus8 + 8);
-      decoder->coding.bitDepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
-      }
-
-    decoder->coding.maxFrameNum = 1 << (sps->log2maxFrameNumMinus4+4);
-    decoder->coding.picWidthMbs = sps->picWidthMbsMinus1 + 1;
-    decoder->coding.picHeightMapUnits = sps->picHeightMapUnitsMinus1 + 1;
-    decoder->coding.frameHeightMbs = (2 - sps->frameMbOnly) * decoder->coding.picHeightMapUnits;
-    decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
-
-    decoder->coding.yuvFormat = sps->chromaFormatIdc;
-    decoder->coding.isSeperateColourPlane = sps->isSeperateColourPlane;
-
-    decoder->coding.width = decoder->coding.picWidthMbs * MB_BLOCK_SIZE;
-    decoder->coding.height = decoder->coding.frameHeightMbs * MB_BLOCK_SIZE;
-
-    decoder->coding.lumaPadX = MCBUF_LUMA_PAD_X;
-    decoder->coding.lumaPadY = MCBUF_LUMA_PAD_Y;
-    decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
-    decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
-
-    if (sps->chromaFormatIdc == YUV420) {
-      decoder->coding.widthCr  = (decoder->coding.width  >> 1);
-      decoder->coding.heightCr = (decoder->coding.height >> 1);
-      }
-    else if (sps->chromaFormatIdc == YUV422) {
-      decoder->coding.widthCr  = (decoder->coding.width >> 1);
-      decoder->coding.heightCr = decoder->coding.height;
-      decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y*2;
-      }
-    else if (sps->chromaFormatIdc == YUV444) {
-      decoder->coding.widthCr = decoder->coding.width;
-      decoder->coding.heightCr = decoder->coding.height;
-      decoder->coding.chromaPadX = decoder->coding.lumaPadX;
-      decoder->coding.chromaPadY = decoder->coding.lumaPadY;
-      }
-
-    // pel bitDepth init
-    decoder->coding.bitDepthLumaQpScale = 6 * (decoder->coding.bitDepthLuma - 8);
-
-    if (decoder->coding.bitDepthLuma > decoder->coding.bitDepthChroma || sps->chromaFormatIdc == YUV400)
-      decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitDepthLuma > 8)? 16:8;
-    else
-      decoder->coding.picUnitBitSizeDisk = (decoder->coding.bitDepthChroma > 8)? 16:8;
-    decoder->coding.dcPredValueComp[0] = 1 << (decoder->coding.bitDepthLuma - 1);
-    decoder->coding.maxPelValueComp[0] = (1 << decoder->coding.bitDepthLuma) - 1;
-    decoder->coding.mbSize[0][0] = decoder->coding.mbSize[0][1] = MB_BLOCK_SIZE;
-
-    if (sps->chromaFormatIdc == YUV400) {
-      //{{{  YUV400
-      decoder->coding.bitDepthChromaQpScale = 0;
-      decoder->coding.maxPelValueComp[1] = 0;
-      decoder->coding.maxPelValueComp[2] = 0;
-      decoder->coding.numBlock8x8uv = 0;
-      decoder->coding.numUvBlocks = 0;
-      decoder->coding.numCdcCoeff = 0;
-      decoder->coding.mbSize[1][0] = decoder->coding.mbSize[2][0] = decoder->coding.mbCrSizeX  = 0;
-      decoder->coding.mbSize[1][1] = decoder->coding.mbSize[2][1] = decoder->coding.mbCrSizeY  = 0;
-      decoder->coding.subpelX = 0;
-      decoder->coding.subpelY = 0;
-      decoder->coding.shiftpelX = 0;
-      decoder->coding.shiftpelY = 0;
-      decoder->coding.totalScale = 0;
-      }
-      //}}}
-    else {
-      //{{{  not YUV400
-      decoder->coding.bitDepthChromaQpScale = 6 * (decoder->coding.bitDepthChroma - 8);
-      decoder->coding.dcPredValueComp[1] = (1 << (decoder->coding.bitDepthChroma - 1));
-      decoder->coding.dcPredValueComp[2] = decoder->coding.dcPredValueComp[1];
-      decoder->coding.maxPelValueComp[1] = (1 << decoder->coding.bitDepthChroma) - 1;
-      decoder->coding.maxPelValueComp[2] = (1 << decoder->coding.bitDepthChroma) - 1;
-      decoder->coding.numBlock8x8uv = (1 << sps->chromaFormatIdc) & (~(0x1));
-      decoder->coding.numUvBlocks = (decoder->coding.numBlock8x8uv >> 1);
-      decoder->coding.numCdcCoeff = (decoder->coding.numBlock8x8uv << 1);
-      decoder->coding.mbSize[1][0] = decoder->coding.mbSize[2][0] = decoder->coding.mbCrSizeX  = (sps->chromaFormatIdc==YUV420 || sps->chromaFormatIdc==YUV422)?  8 : 16;
-      decoder->coding.mbSize[1][1] = decoder->coding.mbSize[2][1] = decoder->coding.mbCrSizeY  = (sps->chromaFormatIdc==YUV444 || sps->chromaFormatIdc==YUV422)? 16 :  8;
-
-      decoder->coding.subpelX = decoder->coding.mbCrSizeX == 8 ? 7 : 3;
-      decoder->coding.subpelY = decoder->coding.mbCrSizeY == 8 ? 7 : 3;
-      decoder->coding.shiftpelX = decoder->coding.mbCrSizeX == 8 ? 3 : 2;
-      decoder->coding.shiftpelY = decoder->coding.mbCrSizeY == 8 ? 3 : 2;
-      decoder->coding.totalScale = decoder->coding.shiftpelX + decoder->coding.shiftpelY;
-      }
-      //}}}
-
-    decoder->coding.mbCrSize = decoder->coding.mbCrSizeX * decoder->coding.mbCrSizeY;
-    decoder->coding.mbSizeBlock[0][0] = decoder->coding.mbSizeBlock[0][1] = decoder->coding.mbSize[0][0] >> 2;
-    decoder->coding.mbSizeBlock[1][0] = decoder->coding.mbSizeBlock[2][0] = decoder->coding.mbSize[1][0] >> 2;
-    decoder->coding.mbSizeBlock[1][1] = decoder->coding.mbSizeBlock[2][1] = decoder->coding.mbSize[1][1] >> 2;
-
-    decoder->coding.mbSizeShift[0][0] = decoder->coding.mbSizeShift[0][1] = ceilLog2sf (decoder->coding.mbSize[0][0]);
-    decoder->coding.mbSizeShift[1][0] = decoder->coding.mbSizeShift[2][0] = ceilLog2sf (decoder->coding.mbSize[1][0]);
-    decoder->coding.mbSizeShift[1][1] = decoder->coding.mbSizeShift[2][1] = ceilLog2sf (decoder->coding.mbSize[1][1]);
-    }
-  //}}}
-  //{{{
   void setFormat (cDecoder264* decoder, cSps* sps, sFrameFormat* source, sFrameFormat* output) {
 
     static const int kSubWidthC[4] = { 1, 2, 2, 1};
@@ -2300,8 +2072,8 @@ namespace {
       decoder->activeSps = sps;
 
       if (sps->isBLprofile() && !decoder->dpb->initDone)
-        setCodingParam (decoder, sps);
-      setCoding (decoder);
+        decoder->setCodingParam (sps);
+      decoder->setCoding();
       initGlobalBuffers (decoder);
 
       if (!decoder->noOutputPriorPicFlag)
@@ -3499,6 +3271,235 @@ void cDecoder264::initPictureDecode() {
   deblockMode = deblockMode;
   }
 //}}}
+//{{{
+void cDecoder264::setCoding() {
+
+  widthCr = 0;
+  heightCr = 0;
+  bitDepthLuma = coding.bitDepthLuma;
+  bitDepthChroma = coding.bitDepthChroma;
+
+  coding.lumaPadX = MCBUF_LUMA_PAD_X;
+  coding.lumaPadY = MCBUF_LUMA_PAD_Y;
+  coding.chromaPadX = MCBUF_CHROMA_PAD_X;
+  coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
+
+  if (coding.yuvFormat == YUV420) {
+    //{{{  yuv420
+    widthCr = coding.width >> 1;
+    heightCr = coding.height >> 1;
+    }
+    //}}}
+  else if (coding.yuvFormat == YUV422) {
+    //{{{  yuv422
+    widthCr = coding.width >> 1;
+    heightCr = coding.height;
+    coding.chromaPadY = MCBUF_CHROMA_PAD_Y*2;
+    }
+    //}}}
+  else if (coding.yuvFormat == YUV444) {
+    //{{{  yuv444
+    widthCr = coding.width;
+    heightCr = coding.height;
+    coding.chromaPadX = coding.lumaPadX;
+    coding.chromaPadY = coding.lumaPadY;
+    }
+    //}}}
+
+  // pel bitDepth init
+  coding.bitDepthLumaQpScale = 6 * (bitDepthLuma - 8);
+
+  if ((bitDepthLuma > bitDepthChroma) ||
+      (activeSps->chromaFormatIdc == YUV400))
+    coding.picUnitBitSizeDisk = (bitDepthLuma > 8)? 16:8;
+  else
+    coding.picUnitBitSizeDisk = (bitDepthChroma > 8)? 16:8;
+
+  coding.dcPredValueComp[0] = 1<<(bitDepthLuma - 1);
+  coding.maxPelValueComp[0] = (1<<bitDepthLuma) - 1;
+  mbSize[0][0] = mbSize[0][1] = MB_BLOCK_SIZE;
+
+  if (activeSps->chromaFormatIdc == YUV400) {
+    //{{{  yuv400
+    coding.bitDepthChromaQpScale = 0;
+
+    coding.maxPelValueComp[1] = 0;
+    coding.maxPelValueComp[2] = 0;
+
+    coding.numBlock8x8uv = 0;
+    coding.numUvBlocks = 0;
+    coding.numCdcCoeff = 0;
+
+    mbSize[1][0] = mbSize[2][0] = mbCrSizeX  = 0;
+    mbSize[1][1] = mbSize[2][1] = mbCrSizeY  = 0;
+
+    coding.subpelX = 0;
+    coding.subpelY = 0;
+    coding.shiftpelX = 0;
+    coding.shiftpelY = 0;
+
+    coding.totalScale = 0;
+    }
+    //}}}
+  else {
+    //{{{  not yuv400
+    coding.bitDepthChromaQpScale = 6 * (bitDepthChroma - 8);
+
+    coding.dcPredValueComp[1] = 1 << (bitDepthChroma - 1);
+    coding.dcPredValueComp[2] = coding.dcPredValueComp[1];
+    coding.maxPelValueComp[1] = (1 << bitDepthChroma) - 1;
+    coding.maxPelValueComp[2] = (1 << bitDepthChroma) - 1;
+
+    coding.numBlock8x8uv = (1 << activeSps->chromaFormatIdc) & (~(0x1));
+    coding.numUvBlocks = coding.numBlock8x8uv >> 1;
+    coding.numCdcCoeff = coding.numBlock8x8uv << 1;
+
+    mbSize[1][0] = mbSize[2][0] =
+      mbCrSizeX = (activeSps->chromaFormatIdc == YUV420 ||
+                            activeSps->chromaFormatIdc == YUV422) ? 8 : 16;
+    mbSize[1][1] = mbSize[2][1] =
+      mbCrSizeY = (activeSps->chromaFormatIdc == YUV444 ||
+                            activeSps->chromaFormatIdc == YUV422) ? 16 : 8;
+
+    coding.subpelX = mbCrSizeX == 8 ? 7 : 3;
+    coding.subpelY = mbCrSizeY == 8 ? 7 : 3;
+    coding.shiftpelX = mbCrSizeX == 8 ? 3 : 2;
+    coding.shiftpelY = mbCrSizeY == 8 ? 3 : 2;
+
+    coding.totalScale = coding.shiftpelX + coding.shiftpelY;
+    }
+    //}}}
+
+  mbCrSize = mbCrSizeX * mbCrSizeY;
+  mbSizeBlock[0][0] = mbSizeBlock[0][1] = mbSize[0][0] >> 2;
+  mbSizeBlock[1][0] = mbSizeBlock[2][0] = mbSize[1][0] >> 2;
+  mbSizeBlock[1][1] = mbSizeBlock[2][1] = mbSize[1][1] >> 2;
+
+  mbSizeShift[0][0] = mbSizeShift[0][1] = ceilLog2sf (mbSize[0][0]);
+  mbSizeShift[1][0] = mbSizeShift[2][0] = ceilLog2sf (mbSize[1][0]);
+  mbSizeShift[1][1] = mbSizeShift[2][1] = ceilLog2sf (mbSize[1][1]);
+  }
+//}}}
+//{{{
+void cDecoder264::setCodingParam (cSps* sps) {
+
+  // maximum vertical motion vector range in luma quarter pixel units
+  coding.profileIdc = sps->profileIdc;
+  coding.useLosslessQpPrime = sps->useLosslessQpPrime;
+
+  if (sps->levelIdc <= 10)
+    coding.maxVmvR = 64 * 4;
+  else if (sps->levelIdc <= 20)
+    coding.maxVmvR = 128 * 4;
+  else if (sps->levelIdc <= 30)
+    coding.maxVmvR = 256 * 4;
+  else
+    coding.maxVmvR = 512 * 4; // 512 pixels in quarter pixels
+
+  // Fidelity Range Extensions stuff (part 1)
+  coding.widthCr = 0;
+  coding.heightCr = 0;
+  coding.bitDepthLuma = (int16_t)(sps->bit_depth_luma_minus8 + 8);
+  coding.bitDepthScale[0] = 1 << sps->bit_depth_luma_minus8;
+  coding.bitDepthChroma = 0;
+  if (sps->chromaFormatIdc != YUV400) {
+    coding.bitDepthChroma = (int16_t)(sps->bit_depth_chroma_minus8 + 8);
+    coding.bitDepthScale[1] = 1 << sps->bit_depth_chroma_minus8;
+    }
+
+  coding.maxFrameNum = 1 << (sps->log2maxFrameNumMinus4+4);
+  coding.picWidthMbs = sps->picWidthMbsMinus1 + 1;
+  coding.picHeightMapUnits = sps->picHeightMapUnitsMinus1 + 1;
+  coding.frameHeightMbs = (2 - sps->frameMbOnly) * coding.picHeightMapUnits;
+  coding.frameSizeMbs = coding.picWidthMbs * coding.frameHeightMbs;
+
+  coding.yuvFormat = sps->chromaFormatIdc;
+  coding.isSeperateColourPlane = sps->isSeperateColourPlane;
+
+  coding.width = coding.picWidthMbs * MB_BLOCK_SIZE;
+  coding.height = coding.frameHeightMbs * MB_BLOCK_SIZE;
+
+  coding.lumaPadX = MCBUF_LUMA_PAD_X;
+  coding.lumaPadY = MCBUF_LUMA_PAD_Y;
+  coding.chromaPadX = MCBUF_CHROMA_PAD_X;
+  coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
+
+  if (sps->chromaFormatIdc == YUV420) {
+    coding.widthCr  = (coding.width  >> 1);
+    coding.heightCr = (coding.height >> 1);
+    }
+  else if (sps->chromaFormatIdc == YUV422) {
+    coding.widthCr  = (coding.width >> 1);
+    coding.heightCr = coding.height;
+    coding.chromaPadY = MCBUF_CHROMA_PAD_Y*2;
+    }
+  else if (sps->chromaFormatIdc == YUV444) {
+    coding.widthCr = coding.width;
+    coding.heightCr = coding.height;
+    coding.chromaPadX = coding.lumaPadX;
+    coding.chromaPadY = coding.lumaPadY;
+    }
+
+  // pel bitDepth init
+  coding.bitDepthLumaQpScale = 6 * (coding.bitDepthLuma - 8);
+
+  if (coding.bitDepthLuma > coding.bitDepthChroma || sps->chromaFormatIdc == YUV400)
+    coding.picUnitBitSizeDisk = (coding.bitDepthLuma > 8)? 16:8;
+  else
+    coding.picUnitBitSizeDisk = (coding.bitDepthChroma > 8)? 16:8;
+  coding.dcPredValueComp[0] = 1 << (coding.bitDepthLuma - 1);
+  coding.maxPelValueComp[0] = (1 << coding.bitDepthLuma) - 1;
+  coding.mbSize[0][0] = coding.mbSize[0][1] = MB_BLOCK_SIZE;
+
+  if (sps->chromaFormatIdc == YUV400) {
+    //{{{  YUV400
+    coding.bitDepthChromaQpScale = 0;
+    coding.maxPelValueComp[1] = 0;
+    coding.maxPelValueComp[2] = 0;
+    coding.numBlock8x8uv = 0;
+    coding.numUvBlocks = 0;
+    coding.numCdcCoeff = 0;
+    coding.mbSize[1][0] = coding.mbSize[2][0] = coding.mbCrSizeX  = 0;
+    coding.mbSize[1][1] = coding.mbSize[2][1] = coding.mbCrSizeY  = 0;
+    coding.subpelX = 0;
+    coding.subpelY = 0;
+    coding.shiftpelX = 0;
+    coding.shiftpelY = 0;
+    coding.totalScale = 0;
+    }
+    //}}}
+  else {
+    //{{{  not YUV400
+    coding.bitDepthChromaQpScale = 6 * (coding.bitDepthChroma - 8);
+    coding.dcPredValueComp[1] = (1 << (coding.bitDepthChroma - 1));
+    coding.dcPredValueComp[2] = coding.dcPredValueComp[1];
+    coding.maxPelValueComp[1] = (1 << coding.bitDepthChroma) - 1;
+    coding.maxPelValueComp[2] = (1 << coding.bitDepthChroma) - 1;
+    coding.numBlock8x8uv = (1 << sps->chromaFormatIdc) & (~(0x1));
+    coding.numUvBlocks = (coding.numBlock8x8uv >> 1);
+    coding.numCdcCoeff = (coding.numBlock8x8uv << 1);
+    coding.mbSize[1][0] = coding.mbSize[2][0] = coding.mbCrSizeX  = (sps->chromaFormatIdc==YUV420 || sps->chromaFormatIdc==YUV422)?  8 : 16;
+    coding.mbSize[1][1] = coding.mbSize[2][1] = coding.mbCrSizeY  = (sps->chromaFormatIdc==YUV444 || sps->chromaFormatIdc==YUV422)? 16 :  8;
+
+    coding.subpelX = coding.mbCrSizeX == 8 ? 7 : 3;
+    coding.subpelY = coding.mbCrSizeY == 8 ? 7 : 3;
+    coding.shiftpelX = coding.mbCrSizeX == 8 ? 3 : 2;
+    coding.shiftpelY = coding.mbCrSizeY == 8 ? 3 : 2;
+    coding.totalScale = coding.shiftpelX + coding.shiftpelY;
+    }
+    //}}}
+
+  coding.mbCrSize = coding.mbCrSizeX * coding.mbCrSizeY;
+  coding.mbSizeBlock[0][0] = coding.mbSizeBlock[0][1] = coding.mbSize[0][0] >> 2;
+  coding.mbSizeBlock[1][0] = coding.mbSizeBlock[2][0] = coding.mbSize[1][0] >> 2;
+  coding.mbSizeBlock[1][1] = coding.mbSizeBlock[2][1] = coding.mbSize[1][1] >> 2;
+
+  coding.mbSizeShift[0][0] = coding.mbSizeShift[0][1] = ceilLog2sf (coding.mbSize[0][0]);
+  coding.mbSizeShift[1][0] = coding.mbSizeShift[2][0] = ceilLog2sf (coding.mbSize[1][0]);
+  coding.mbSizeShift[1][1] = coding.mbSizeShift[2][1] = ceilLog2sf (coding.mbSize[1][1]);
+  }
+//}}}
+
 //{{{
 void cDecoder264::initMbAffLists (sSlice* slice) {
 // Initialize listX[2..5] from lists 0 and 1

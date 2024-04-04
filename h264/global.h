@@ -1008,6 +1008,8 @@ public:
   void (*edgeLoopChromaV) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
   void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
 
+  void setCoding();
+  void setCodingParam (cSps* sps);
   void readSliceHeader (sSlice* slice);
 
 private:
