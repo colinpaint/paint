@@ -1497,74 +1497,6 @@ namespace {
   //}}}
 
   //{{{
-  void setFormat (cDecoder264* decoder, cSps* sps, sFrameFormat* source, sFrameFormat* output) {
-
-    static const int kSubWidthC[4] = { 1, 2, 2, 1};
-    static const int kSubHeightC[4] = { 1, 2, 1, 1};
-
-    // source
-    //{{{  crop
-    int cropLeft, cropRight, cropTop, cropBot;
-    if (sps->hasCrop) {
-      cropLeft = kSubWidthC [sps->chromaFormatIdc] * sps->cropLeft;
-      cropRight = kSubWidthC [sps->chromaFormatIdc] * sps->cropRight;
-      cropTop = kSubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropTop;
-      cropBot = kSubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropBot;
-      }
-    else
-      cropLeft = cropRight = cropTop = cropBot = 0;
-
-    source->width[0] = decoder->coding.width - cropLeft - cropRight;
-    source->height[0] = decoder->coding.height - cropTop - cropBot;
-
-    // cropping for chroma
-    if (sps->hasCrop) {
-      cropLeft = sps->cropLeft;
-      cropRight = sps->cropRight;
-      cropTop = (2 - sps->frameMbOnly) * sps->cropTop;
-      cropBot = (2 - sps->frameMbOnly) * sps->cropBot;
-      }
-    else
-      cropLeft = cropRight = cropTop = cropBot = 0;
-    //}}}
-    source->width[1] = decoder->widthCr - cropLeft - cropRight;
-    source->width[2] = source->width[1];
-    source->height[1] = decoder->heightCr - cropTop - cropBot;
-    source->height[2] = source->height[1];
-
-    // ????
-    source->width[1] = decoder->widthCr;
-    source->width[2] = decoder->widthCr;
-
-    source->sizeCmp[0] = source->width[0] * source->height[0];
-    source->sizeCmp[1] = source->width[1] * source->height[1];
-    source->sizeCmp[2] = source->sizeCmp[1];
-    source->mbWidth = source->width[0]  / MB_BLOCK_SIZE;
-    source->mbHeight = source->height[0] / MB_BLOCK_SIZE;
-
-    // output
-    output->width[0] = decoder->coding.width;
-    output->height[0] = decoder->coding.height;
-    output->height[1] = decoder->heightCr;
-    output->height[2] = decoder->heightCr;
-
-    // output size (excluding padding)
-    output->sizeCmp[0] = output->width[0] * output->height[0];
-    output->sizeCmp[1] = output->width[1] * output->height[1];
-    output->sizeCmp[2] = output->sizeCmp[1];
-    output->mbWidth = output->width[0]  / MB_BLOCK_SIZE;
-    output->mbHeight = output->height[0] / MB_BLOCK_SIZE;
-
-    output->bitDepth[0] = source->bitDepth[0] = decoder->bitDepthLuma;
-    output->bitDepth[1] = source->bitDepth[1] = decoder->bitDepthChroma;
-    output->bitDepth[2] = source->bitDepth[2] = decoder->bitDepthChroma;
-
-    output->colourModel = source->colourModel;
-    output->yuvFormat = source->yuvFormat = (eYuvFormat)sps->chromaFormatIdc;
-    }
-  //}}}
-
-  //{{{
   void reorderLists (sSlice* slice) {
 
     cDecoder264* decoder = slice->decoder;
@@ -2087,7 +2019,7 @@ namespace {
         decoder->ercMvPerMb = 0;
         }
 
-      setFormat (decoder, sps, &decoder->param.source, &decoder->param.output);
+      decoder->setFormat (sps, &decoder->param.source, &decoder->param.output);
 
       // debug spsStr
       decoder->debug.profileString = fmt::format ("profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
@@ -3499,7 +3431,73 @@ void cDecoder264::setCodingParam (cSps* sps) {
   coding.mbSizeShift[1][1] = coding.mbSizeShift[2][1] = ceilLog2sf (coding.mbSize[1][1]);
   }
 //}}}
+//{{{
+void cDecoder264::setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output) {
 
+  static const int kSubWidthC[4] = { 1, 2, 2, 1};
+  static const int kSubHeightC[4] = { 1, 2, 1, 1};
+
+  // source
+  //{{{  crop
+  int cropLeft, cropRight, cropTop, cropBot;
+  if (sps->hasCrop) {
+    cropLeft = kSubWidthC [sps->chromaFormatIdc] * sps->cropLeft;
+    cropRight = kSubWidthC [sps->chromaFormatIdc] * sps->cropRight;
+    cropTop = kSubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropTop;
+    cropBot = kSubHeightC[sps->chromaFormatIdc] * ( 2 - sps->frameMbOnly ) *  sps->cropBot;
+    }
+  else
+    cropLeft = cropRight = cropTop = cropBot = 0;
+
+  source->width[0] = coding.width - cropLeft - cropRight;
+  source->height[0] = coding.height - cropTop - cropBot;
+
+  // cropping for chroma
+  if (sps->hasCrop) {
+    cropLeft = sps->cropLeft;
+    cropRight = sps->cropRight;
+    cropTop = (2 - sps->frameMbOnly) * sps->cropTop;
+    cropBot = (2 - sps->frameMbOnly) * sps->cropBot;
+    }
+  else
+    cropLeft = cropRight = cropTop = cropBot = 0;
+  //}}}
+  source->width[1] = widthCr - cropLeft - cropRight;
+  source->width[2] = source->width[1];
+  source->height[1] = heightCr - cropTop - cropBot;
+  source->height[2] = source->height[1];
+
+  // ????
+  source->width[1] = widthCr;
+  source->width[2] = widthCr;
+
+  source->sizeCmp[0] = source->width[0] * source->height[0];
+  source->sizeCmp[1] = source->width[1] * source->height[1];
+  source->sizeCmp[2] = source->sizeCmp[1];
+  source->mbWidth = source->width[0]  / MB_BLOCK_SIZE;
+  source->mbHeight = source->height[0] / MB_BLOCK_SIZE;
+
+  // output
+  output->width[0] = coding.width;
+  output->height[0] = coding.height;
+  output->height[1] = heightCr;
+  output->height[2] = heightCr;
+
+  // output size (excluding padding)
+  output->sizeCmp[0] = output->width[0] * output->height[0];
+  output->sizeCmp[1] = output->width[1] * output->height[1];
+  output->sizeCmp[2] = output->sizeCmp[1];
+  output->mbWidth = output->width[0]  / MB_BLOCK_SIZE;
+  output->mbHeight = output->height[0] / MB_BLOCK_SIZE;
+
+  output->bitDepth[0] = source->bitDepth[0] = bitDepthLuma;
+  output->bitDepth[1] = source->bitDepth[1] = bitDepthChroma;
+  output->bitDepth[2] = source->bitDepth[2] = bitDepthChroma;
+
+  output->colourModel = source->colourModel;
+  output->yuvFormat = source->yuvFormat = (eYuvFormat)sps->chromaFormatIdc;
+  }
+//}}}
 //{{{
 void cDecoder264::initMbAffLists (sSlice* slice) {
 // Initialize listX[2..5] from lists 0 and 1

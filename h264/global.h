@@ -1010,6 +1010,7 @@ public:
 
   void setCoding();
   void setCodingParam (cSps* sps);
+  void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
   void readSliceHeader (sSlice* slice);
 
 private:
