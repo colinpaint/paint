@@ -2,6 +2,12 @@
 #include "global.h"
 #include "memory.h"
 
+#include "block.h"
+#include "cabac.h"
+#include "fmo.h"
+#include "macroblock.h"
+#include "mcPred.h"
+
 #include "../common/cLog.h"
 
 using namespace std;

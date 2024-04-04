@@ -556,7 +556,7 @@ public:
 
   int      deltaPicOrderCountBot = INT_MAX;
   int      deltaPicOrderCount[2] = {INT_MAX};
-
+     
   int      botField = 0;
   int      isIDR = false;
   int      idrPicId = 0;
@@ -1041,11 +1041,12 @@ private:
   void endDecodeFrame();
   };
 //}}}
-sDataPartition* allocDataPartitions (int n);
-void freeDataPartitions (sDataPartition* dataPartitions, int n);
-sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
-void freeDecodedPictures (sDecodedPic* decodedPic);
-
 // For 4:4:4 independent mode
 void changePlaneJV (cDecoder264* decoder, int nplane, cSlice* slice);
 void makeFramePictureJV (cDecoder264* decoder);
+
+sDataPartition* allocDataPartitions (int numPartitions);
+void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions);
+
+sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
+void freeDecodedPictures (sDecodedPic* decodedPic);

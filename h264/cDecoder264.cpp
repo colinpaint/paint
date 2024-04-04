@@ -2,29 +2,23 @@
 #include "global.h"
 #include "memory.h"
 
-#include "mcPred.h"
-#include "buffer.h"
-#include "fmo.h"
-#include "output.h"
-#include "cabac.h"
-#include "sei.h"
-#include "erc.h"
-#include "quant.h"
-#include "block.h"
-#include "nalu.h"
-#include "loopfilter.h"
-#include "output.h"
-
-#include "syntaxElement.h"
-#include "nalu.h"
-#include "sei.h"
-#include "mbAccess.h"
-#include "macroblock.h"
 #include "binaryArithmeticDecode.h"
-#include "vlc.h"
-#include "errorConceal.h"
+#include "block.h"
+#include "buffer.h"
+#include "cabac.h"
 #include "erc.h"
+#include "errorConceal.h"
+#include "fmo.h"
+#include "loopfilter.h"
+#include "macroblock.h"
+#include "mbAccess.h"
 #include "mcPred.h"
+#include "nalu.h"
+#include "output.h"
+#include "sei.h"
+#include "syntaxElement.h"
+#include "quant.h"
+#include "vlc.h"
 
 #include "../common/cLog.h"
 
@@ -1515,11 +1509,11 @@ namespace {
 
 // sDataPartition
 //{{{
-sDataPartition* allocDataPartitions (int n) {
+sDataPartition* allocDataPartitions (int numPartitions) {
 
-  sDataPartition* dataPartitions = (sDataPartition*)calloc (n, sizeof(sDataPartition));
+  sDataPartition* dataPartitions = (sDataPartition*)calloc (numPartitions, sizeof(sDataPartition));
 
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < numPartitions; ++i) {
     // loop over all dataPartitions
     sDataPartition* dataPartition = &dataPartitions[i];
     dataPartition->stream = (sBitStream*)calloc(1, sizeof(sBitStream));
@@ -1535,9 +1529,9 @@ sDataPartition* allocDataPartitions (int n) {
   }
 //}}}
 //{{{
-void freeDataPartitions (sDataPartition* dataPartitions, int n) {
+void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions) {
 
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < numPartitions; ++i) {
     free (dataPartitions[i].stream->bitStreamBuffer);
     free (dataPartitions[i].stream);
     }
