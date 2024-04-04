@@ -1013,6 +1013,7 @@ public:
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
   void readSliceHeader (sSlice* slice);
   void mbAffPostProc();
+  void endDecodeFrame();
 
 private:
   void clearDecodedPics();

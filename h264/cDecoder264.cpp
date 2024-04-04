@@ -1654,176 +1654,6 @@ namespace {
   //}}}
 
   //{{{
-  void endDecodeFrame (cDecoder264* decoder) {
-
-    // return if the last picture has already been finished
-    if (!decoder->picture ||
-        ((decoder->numDecodedMbs != decoder->picSizeInMbs) &&
-         ((decoder->coding.yuvFormat != YUV444) || !decoder->coding.isSeperateColourPlane)))
-      return;
-
-    //{{{  error conceal
-    frame recfr;
-    recfr.decoder = decoder;
-    recfr.yptr = &decoder->picture->imgY[0][0];
-    if (decoder->picture->chromaFormatIdc != YUV400) {
-      recfr.uptr = &decoder->picture->imgUV[0][0][0];
-      recfr.vptr = &decoder->picture->imgUV[1][0][0];
-      }
-
-    // this is always true at the beginning of a picture
-    int ercSegment = 0;
-
-    // mark the start of the first segment
-    if (!decoder->picture->mbAffFrame) {
-      int i;
-      ercStartSegment (0, ercSegment, 0 , decoder->ercErrorVar);
-      // generate the segments according to the macroblock map
-      for (i = 1; i < (int)(decoder->picture->picSizeInMbs); ++i) {
-        if (decoder->mbData[i].errorFlag != decoder->mbData[i-1].errorFlag) {
-          ercStopSegment (i-1, ercSegment, 0, decoder->ercErrorVar); //! stop current segment
-
-          // mark current segment as lost or OK
-          if(decoder->mbData[i-1].errorFlag)
-            ercMarksegmentLost (decoder->picture->sizeX, decoder->ercErrorVar);
-          else
-            ercMarksegmentOK (decoder->picture->sizeX, decoder->ercErrorVar);
-
-          ++ercSegment;  //! next segment
-          ercStartSegment (i, ercSegment, 0 , decoder->ercErrorVar); //! start new segment
-          }
-        }
-
-      // mark end of the last segment
-      ercStopSegment (decoder->picture->picSizeInMbs-1, ercSegment, 0, decoder->ercErrorVar);
-      if (decoder->mbData[i-1].errorFlag)
-        ercMarksegmentLost (decoder->picture->sizeX, decoder->ercErrorVar);
-      else
-        ercMarksegmentOK (decoder->picture->sizeX, decoder->ercErrorVar);
-
-      // call the right error conceal function depending on the frame type.
-      decoder->ercMvPerMb /= decoder->picture->picSizeInMbs;
-      if (decoder->picture->sliceType == eSliceI || decoder->picture->sliceType == eSliceSI) // I-frame
-        ercConcealIntraFrame (decoder, &recfr,
-                              decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar);
-      else
-        ercConcealInterFrame (&recfr, decoder->ercObjectList,
-                              decoder->picture->sizeX, decoder->picture->sizeY, decoder->ercErrorVar,
-                              decoder->picture->chromaFormatIdc);
-      }
-    //}}}
-    if (!decoder->deblockMode &&
-        decoder->param.deblock &&
-        (decoder->deblockEnable & (1 << decoder->picture->usedForReference))) {
-      if (decoder->coding.isSeperateColourPlane) {
-        //{{{  deblockJV
-        int colourPlaneId = decoder->sliceList[0]->colourPlaneId;
-        for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
-          decoder->sliceList[0]->colourPlaneId = nplane;
-          changePlaneJV (decoder, nplane, NULL );
-          deblockPicture (decoder, decoder->picture);
-          }
-        decoder->sliceList[0]->colourPlaneId = colourPlaneId;
-        makeFramePictureJV (decoder);
-        }
-        //}}}
-      else
-        deblockPicture (decoder, decoder->picture);
-      }
-    else if (decoder->coding.isSeperateColourPlane)
-      makeFramePictureJV (decoder);
-
-    if (decoder->picture->mbAffFrame)
-      decoder->mbAffPostProc();
-    if (decoder->coding.picStructure != eFrame)
-       decoder->idrFrameNum /= 2;
-    if (decoder->picture->usedForReference)
-      decoder->padPicture (decoder->picture);
-
-    int picStructure = decoder->picture->picStructure;
-    int sliceType = decoder->picture->sliceType;
-    int pocNum = decoder->picture->framePoc;
-    int refpic = decoder->picture->usedForReference;
-    int qp = decoder->picture->qp;
-    int picNum = decoder->picture->picNum;
-    int isIdr = decoder->picture->isIDR;
-    int chromaFormatIdc = decoder->picture->chromaFormatIdc;
-    storePictureDpb (decoder->dpb, decoder->picture);
-    decoder->picture = NULL;
-
-    if (decoder->lastHasMmco5)
-      decoder->preFrameNum = 0;
-
-    if (picStructure == eTopField || picStructure == eFrame) {
-      //{{{
-      if (sliceType == eSliceI && isIdr)
-        decoder->debug.sliceTypeString = "IDR";
-      else if (sliceType == eSliceI)
-        decoder->debug.sliceTypeString = " I ";
-      else if (sliceType == eSliceP)
-        decoder->debug.sliceTypeString = " P ";
-      else if (sliceType == eSliceSP)
-        decoder->debug.sliceTypeString = "SP ";
-      else if  (sliceType == eSliceSI)
-        decoder->debug.sliceTypeString = "SI ";
-      else if (refpic)
-        decoder->debug.sliceTypeString = " B ";
-      else
-        decoder->debug.sliceTypeString = " b ";
-      }
-      //}}}
-    else if (picStructure == eBotField) {
-      //{{{
-      if (sliceType == eSliceI && isIdr)
-        decoder->debug.sliceTypeString += "|IDR";
-      else if (sliceType == eSliceI)
-        decoder->debug.sliceTypeString += "| I ";
-      else if (sliceType == eSliceP)
-        decoder->debug.sliceTypeString += "| P ";
-      else if (sliceType == eSliceSP)
-        decoder->debug.sliceTypeString += "|SP ";
-      else if  (sliceType == eSliceSI)
-        decoder->debug.sliceTypeString += "|SI ";
-      else if (refpic)
-        decoder->debug.sliceTypeString += "| B ";
-      else
-        decoder->debug.sliceTypeString += "| b ";
-      }
-      //}}}
-    if ((picStructure == eFrame) || picStructure == eBotField) {
-      //{{{  debug
-      getTime (&decoder->debug.endTime);
-
-      // count numOutputFrames
-      int numOutputFrames = 0;
-      sDecodedPic* decodedPic = decoder->outDecodedPics;
-      while (decodedPic) {
-        if (decodedPic->ok)
-          numOutputFrames++;
-        decodedPic = decodedPic->next;
-        }
-
-      decoder->debug.outSliceType = (eSliceType)sliceType;
-
-      decoder->debug.outString = fmt::format ("{} {}:{}:{:2d} {:3d}ms ->{}-> poc:{} pic:{} -> {}",
-               decoder->decodeFrameNum,
-               decoder->numDecodedSlices, decoder->numDecodedMbs, qp,
-               (int)timeNorm (timeDiff (&decoder->debug.startTime, &decoder->debug.endTime)),
-               decoder->debug.sliceTypeString,
-               pocNum, picNum, numOutputFrames);
-
-      if (decoder->param.outDebug)
-        cLog::log (LOGINFO, "-> " + decoder->debug.outString);
-      //}}}
-
-      // I or P pictures ?
-      if ((sliceType == eSliceI) || (sliceType == eSliceSI) || (sliceType == eSliceP) || refpic)
-        ++(decoder->idrFrameNum);
-      (decoder->decodeFrameNum)++;
-      }
-    }
-  //}}}
-  //{{{
   void initPicture (cDecoder264* decoder, sSlice* slice) {
 
     sDpb* dpb = slice->dpb;
@@ -1834,7 +1664,7 @@ namespace {
     decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
 
     if (decoder->picture) // slice loss
-      endDecodeFrame (decoder);
+      decoder->endDecodeFrame();
 
     if (decoder->recoveryPoint)
       decoder->recoveryFrameNum = (slice->frameNum + decoder->recoveryFrameCount) % decoder->coding.maxFrameNum;
@@ -2010,7 +1840,7 @@ namespace {
     if (sps != decoder->activeSps) {
       //{{{  new sps
       if (decoder->picture)
-        endDecodeFrame (decoder);
+        decoder->endDecodeFrame();
 
       decoder->activeSps = sps;
 
@@ -2052,7 +1882,7 @@ namespace {
     if (pps != decoder->activePps) {
       //{{{  new pps
       if (decoder->picture) // only on slice loss
-        endDecodeFrame (decoder);
+        decoder->endDecodeFrame();
 
       decoder->activePps = pps;
       }
@@ -3068,7 +2898,7 @@ int cDecoder264::decodeFrame() {
     numDecodedSlices++;
     }
 
-  endDecodeFrame (this);
+  endDecodeFrame();
   prevFrameNum = sliceList[0]->frameNum;
 
   return ret;
@@ -3844,5 +3674,174 @@ void cDecoder264::readSliceHeader (sSlice* slice) {
   picHeightInMbs = coding.frameHeightMbs / ( 1 + slice->fieldPic );
   picSizeInMbs = coding.picWidthMbs * picHeightInMbs;
   coding.frameSizeMbs = coding.picWidthMbs * coding.frameHeightMbs;
+  }
+//}}}
+//{{{
+void cDecoder264::endDecodeFrame() {
+
+  // return if the last picture has already been finished
+  if (!picture ||
+      ((numDecodedMbs != picSizeInMbs) &&
+       ((coding.yuvFormat != YUV444) || !coding.isSeperateColourPlane)))
+    return;
+
+  //{{{  error conceal
+  frame recfr;
+  recfr.decoder = this;
+  recfr.yptr = &picture->imgY[0][0];
+  if (picture->chromaFormatIdc != YUV400) {
+    recfr.uptr = &picture->imgUV[0][0][0];
+    recfr.vptr = &picture->imgUV[1][0][0];
+    }
+
+  // this is always true at the beginning of a picture
+  int ercSegment = 0;
+
+  // mark the start of the first segment
+  if (!picture->mbAffFrame) {
+    int i;
+    ercStartSegment (0, ercSegment, 0 , ercErrorVar);
+    // generate the segments according to the macroblock map
+    for (i = 1; i < (int)(picture->picSizeInMbs); ++i) {
+      if (mbData[i].errorFlag != mbData[i-1].errorFlag) {
+        ercStopSegment (i-1, ercSegment, 0, ercErrorVar); //! stop current segment
+
+        // mark current segment as lost or OK
+        if(mbData[i-1].errorFlag)
+          ercMarksegmentLost (picture->sizeX, ercErrorVar);
+        else
+          ercMarksegmentOK (picture->sizeX, ercErrorVar);
+
+        ++ercSegment;  //! next segment
+        ercStartSegment (i, ercSegment, 0 , ercErrorVar); //! start new segment
+        }
+      }
+
+    // mark end of the last segment
+    ercStopSegment (picture->picSizeInMbs-1, ercSegment, 0, ercErrorVar);
+    if (mbData[i-1].errorFlag)
+      ercMarksegmentLost (picture->sizeX, ercErrorVar);
+    else
+      ercMarksegmentOK (picture->sizeX, ercErrorVar);
+
+    // call the right error conceal function depending on the frame type.
+    ercMvPerMb /= picture->picSizeInMbs;
+    if (picture->sliceType == eSliceI || picture->sliceType == eSliceSI) // I-frame
+      ercConcealIntraFrame (this, &recfr, picture->sizeX, picture->sizeY, ercErrorVar);
+    else
+      ercConcealInterFrame (&recfr, ercObjectList,
+                            picture->sizeX, picture->sizeY, ercErrorVar,
+                            picture->chromaFormatIdc);
+    }
+  //}}}
+  if (!deblockMode &&
+      param.deblock &&
+      (deblockEnable & (1 << picture->usedForReference))) {
+    if (coding.isSeperateColourPlane) {
+      //{{{  deblockJV
+      int colourPlaneId = sliceList[0]->colourPlaneId;
+      for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
+        sliceList[0]->colourPlaneId = nplane;
+        changePlaneJV (this, nplane, NULL );
+        deblockPicture (this, picture);
+        }
+      sliceList[0]->colourPlaneId = colourPlaneId;
+      makeFramePictureJV (this);
+      }
+      //}}}
+    else
+      deblockPicture (this, picture);
+    }
+  else if (coding.isSeperateColourPlane)
+    makeFramePictureJV (this);
+
+  if (picture->mbAffFrame)
+    mbAffPostProc();
+  if (coding.picStructure != eFrame)
+     idrFrameNum /= 2;
+  if (picture->usedForReference)
+    padPicture (picture);
+
+  int picStructure = picture->picStructure;
+  int sliceType = picture->sliceType;
+  int pocNum = picture->framePoc;
+  int refpic = picture->usedForReference;
+  int qp = picture->qp;
+  int picNum = picture->picNum;
+  int isIdr = picture->isIDR;
+  int chromaFormatIdc = picture->chromaFormatIdc;
+  storePictureDpb (dpb, picture);
+  picture = NULL;
+
+  if (lastHasMmco5)
+    preFrameNum = 0;
+
+  if (picStructure == eTopField || picStructure == eFrame) {
+    //{{{
+    if (sliceType == eSliceI && isIdr)
+      debug.sliceTypeString = "IDR";
+    else if (sliceType == eSliceI)
+      debug.sliceTypeString = " I ";
+    else if (sliceType == eSliceP)
+      debug.sliceTypeString = " P ";
+    else if (sliceType == eSliceSP)
+      debug.sliceTypeString = "SP ";
+    else if  (sliceType == eSliceSI)
+      debug.sliceTypeString = "SI ";
+    else if (refpic)
+      debug.sliceTypeString = " B ";
+    else
+      debug.sliceTypeString = " b ";
+    }
+    //}}}
+  else if (picStructure == eBotField) {
+    //{{{
+    if (sliceType == eSliceI && isIdr)
+      debug.sliceTypeString += "|IDR";
+    else if (sliceType == eSliceI)
+      debug.sliceTypeString += "| I ";
+    else if (sliceType == eSliceP)
+      debug.sliceTypeString += "| P ";
+    else if (sliceType == eSliceSP)
+      debug.sliceTypeString += "|SP ";
+    else if  (sliceType == eSliceSI)
+      debug.sliceTypeString += "|SI ";
+    else if (refpic)
+      debug.sliceTypeString += "| B ";
+    else
+      debug.sliceTypeString += "| b ";
+    }
+    //}}}
+  if ((picStructure == eFrame) || picStructure == eBotField) {
+    //{{{  debug
+    getTime (&debug.endTime);
+
+    // count numOutputFrames
+    int numOutputFrames = 0;
+    sDecodedPic* decodedPic = outDecodedPics;
+    while (decodedPic) {
+      if (decodedPic->ok)
+        numOutputFrames++;
+      decodedPic = decodedPic->next;
+      }
+
+    debug.outSliceType = (eSliceType)sliceType;
+
+    debug.outString = fmt::format ("{} {}:{}:{:2d} {:3d}ms ->{}-> poc:{} pic:{} -> {}",
+             decodeFrameNum,
+             numDecodedSlices, numDecodedMbs, qp,
+             (int)timeNorm (timeDiff (&debug.startTime, &debug.endTime)),
+             debug.sliceTypeString,
+             pocNum, picNum, numOutputFrames);
+
+    if (param.outDebug)
+      cLog::log (LOGINFO, "-> " + debug.outString);
+    //}}}
+
+    // I or P pictures ?
+    if ((sliceType == eSliceI) || (sliceType == eSliceSI) || (sliceType == eSliceP) || refpic)
+      ++(idrFrameNum);
+    (decodeFrameNum)++;
+    }
   }
 //}}}
