@@ -1008,11 +1008,13 @@ public:
   void (*edgeLoopChromaV) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
   void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
 
+  void readSliceHeader (sSlice* slice);
+
 private:
   void clearDecodedPics();
+  void initPictureDecode();
   void initMbAffLists (sSlice* slice);
   void initSlice (sSlice* slice);
-  void initPictureDecode();
   };
 //}}}
 sSlice* allocSlice (cDecoder264* decoder);
