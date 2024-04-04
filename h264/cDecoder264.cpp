@@ -1616,6 +1616,44 @@ namespace {
   //}}}
 
   //{{{
+  int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
+
+    int result = (NULL == picture);
+
+    result |= (oldSlice->ppsId != slice->ppsId);
+    result |= (oldSlice->frameNum != slice->frameNum);
+    result |= (oldSlice->fieldPic != slice->fieldPic);
+
+    if (slice->fieldPic && oldSlice->fieldPic)
+      result |= (oldSlice->botField != slice->botField);
+
+    result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
+    result |= (oldSlice->isIDR != slice->isIDR);
+
+    if (slice->isIDR && oldSlice->isIDR)
+      result |= (oldSlice->idrPicId != slice->idrPicId);
+
+    cDecoder264* decoder = slice->decoder;
+
+    if (!decoder->activeSps->pocType) {
+      result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
+      if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
+        result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
+      }
+
+    if (decoder->activeSps->pocType == 1) {
+      if (!decoder->activeSps->deltaPicOrderAlwaysZero) {
+        result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
+        if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
+          result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
+        }
+      }
+
+    return result;
+    }
+  //}}}
+
+  //{{{
   void endDecodeFrame (cDecoder264* decoder) {
 
     // return if the last picture has already been finished
@@ -2036,91 +2074,6 @@ namespace {
     }
   //}}}
 
-  //{{{
-  int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
-
-    int result = (NULL == picture);
-
-    result |= (oldSlice->ppsId != slice->ppsId);
-    result |= (oldSlice->frameNum != slice->frameNum);
-    result |= (oldSlice->fieldPic != slice->fieldPic);
-
-    if (slice->fieldPic && oldSlice->fieldPic)
-      result |= (oldSlice->botField != slice->botField);
-
-    result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
-    result |= (oldSlice->isIDR != slice->isIDR);
-
-    if (slice->isIDR && oldSlice->isIDR)
-      result |= (oldSlice->idrPicId != slice->idrPicId);
-
-    cDecoder264* decoder = slice->decoder;
-
-    if (!decoder->activeSps->pocType) {
-      result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
-      if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
-        result |= (oldSlice->deltaPicOrderCountBot != slice->deletaPicOrderCountBot);
-      }
-
-    if (decoder->activeSps->pocType == 1) {
-      if (!decoder->activeSps->deltaPicOrderAlwaysZero) {
-        result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
-        if ((decoder->activePps->frameBotField == 1) && !slice->fieldPic)
-          result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
-        }
-      }
-
-    return result;
-    }
-  //}}}
-  //{{{
-  void readDecRefPicMarking (cDecoder264* decoder, sBitStream* s, sSlice* slice) {
-
-    // free old buffer content
-    while (slice->decRefPicMarkBuffer) {
-      sDecodedRefPicMark* tmp_drpm = slice->decRefPicMarkBuffer;
-      slice->decRefPicMarkBuffer = tmp_drpm->next;
-      free (tmp_drpm);
-      }
-
-    if (slice->isIDR) {
-      slice->noOutputPriorPicFlag = readU1 ("SLC noOutputPriorPicFlag", s);
-      decoder->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
-      slice->longTermRefFlag = readU1 ("SLC longTermRefFlag", s);
-      }
-    else {
-      slice->adaptRefPicBufFlag = readU1 ("SLC adaptRefPicBufFlag", s);
-      if (slice->adaptRefPicBufFlag) {
-        // read Memory Management Control Operation
-        int val;
-        do {
-          sDecodedRefPicMark* tempDrpm = (sDecodedRefPicMark*)calloc (1,sizeof (sDecodedRefPicMark));
-          tempDrpm->next = NULL;
-          val = tempDrpm->memManagement = readUeV ("SLC memManagement", s);
-          if ((val == 1) || (val == 3))
-            tempDrpm->diffPicNumMinus1 = readUeV ("SLC diffPicNumMinus1", s);
-          if (val == 2)
-            tempDrpm->longTermPicNum = readUeV ("SLC longTermPicNum", s);
-
-          if ((val == 3 ) || (val == 6))
-            tempDrpm->longTermFrameIndex = readUeV ("SLC longTermFrameIndex", s);
-          if (val == 4)
-            tempDrpm->maxLongTermFrameIndexPlus1 = readUeV ("SLC max_long_term_pic_idx_plus1", s);
-
-          // add command
-          if (!slice->decRefPicMarkBuffer)
-            slice->decRefPicMarkBuffer = tempDrpm;
-          else {
-            sDecodedRefPicMark* tempDrpm2 = slice->decRefPicMarkBuffer;
-            while (tempDrpm2->next)
-              tempDrpm2 = tempDrpm2->next;
-            tempDrpm2->next = tempDrpm;
-            }
-          } while (val != 0);
-        }
-      }
-    }
-  //}}}
   //{{{
   int readSlice (sSlice* slice) {
 
@@ -3147,6 +3100,54 @@ void cDecoder264::clearDecodedPics() {
   }
 //}}}
 //{{{
+void cDecoder264::readDecRefPicMarking (sBitStream* s, sSlice* slice) {
+
+  // free old buffer content
+  while (slice->decRefPicMarkBuffer) {
+    sDecodedRefPicMark* tmp_drpm = slice->decRefPicMarkBuffer;
+    slice->decRefPicMarkBuffer = tmp_drpm->next;
+    free (tmp_drpm);
+    }
+
+  if (slice->isIDR) {
+    slice->noOutputPriorPicFlag = readU1 ("SLC noOutputPriorPicFlag", s);
+    noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
+    slice->longTermRefFlag = readU1 ("SLC longTermRefFlag", s);
+    }
+  else {
+    slice->adaptRefPicBufFlag = readU1 ("SLC adaptRefPicBufFlag", s);
+    if (slice->adaptRefPicBufFlag) {
+      // read Memory Management Control Operation
+      int val;
+      do {
+        sDecodedRefPicMark* tempDrpm = (sDecodedRefPicMark*)calloc (1,sizeof (sDecodedRefPicMark));
+        tempDrpm->next = NULL;
+        val = tempDrpm->memManagement = readUeV ("SLC memManagement", s);
+        if ((val == 1) || (val == 3))
+          tempDrpm->diffPicNumMinus1 = readUeV ("SLC diffPicNumMinus1", s);
+        if (val == 2)
+          tempDrpm->longTermPicNum = readUeV ("SLC longTermPicNum", s);
+
+        if ((val == 3 ) || (val == 6))
+          tempDrpm->longTermFrameIndex = readUeV ("SLC longTermFrameIndex", s);
+        if (val == 4)
+          tempDrpm->maxLongTermFrameIndexPlus1 = readUeV ("SLC max_long_term_pic_idx_plus1", s);
+
+        // add command
+        if (!slice->decRefPicMarkBuffer)
+          slice->decRefPicMarkBuffer = tempDrpm;
+        else {
+          sDecodedRefPicMark* tempDrpm2 = slice->decRefPicMarkBuffer;
+          while (tempDrpm2->next)
+            tempDrpm2 = tempDrpm2->next;
+          tempDrpm2->next = tempDrpm;
+          }
+        } while (val != 0);
+      }
+    }
+  }
+//}}}
+//{{{
 void cDecoder264::initPictureDecode() {
 
   int deblockMode = 1;
@@ -3781,7 +3782,7 @@ void cDecoder264::readSliceHeader (sSlice* slice) {
   //}}}
 
   if (slice->refId)
-    readDecRefPicMarking (this, s, slice);
+    readDecRefPicMarking (s, slice);
 
   if (activePps->entropyCoding &&
       (slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI))

@@ -1017,6 +1017,7 @@ public:
 private:
   void clearDecodedPics();
   void initPictureDecode();
+  void readDecRefPicMarking (sBitStream* s, sSlice* slice);
   void initMbAffLists (sSlice* slice);
   void initSlice (sSlice* slice);
   };
