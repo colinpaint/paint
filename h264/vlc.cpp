@@ -3,6 +3,9 @@
 #include "syntaxElement.h"
 
 #include "vlc.h"
+
+// utils
+#include "../common/cLog.h"
 //}}}
 
 //{{{
@@ -15,7 +18,7 @@ int readUeV (const char* label, sBitStream* s) {
   readsSyntaxElement_VLC (&symbol, s);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", label, symbol.value1);
+    cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.value1));
 
   return symbol.value1;
   }
@@ -30,7 +33,7 @@ int readSeV (const char* label, sBitStream* s) {
   readsSyntaxElement_VLC (&symbol, s);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", label, symbol.value1);
+   cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.value1));
 
   return symbol.value1;
   }
@@ -47,7 +50,7 @@ int readUv (int LenInBits, const char* label, sBitStream* s) {
   readsSyntaxElement_FLC (&symbol, s);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", label, symbol.inf);
+    cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.inf));
 
   return symbol.inf;
   }
@@ -67,7 +70,7 @@ int readIv (int LenInBits, const char* label, sBitStream* s) {
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
 
   if (cDecoder264::gDecoder->param.vlcDebug)
-    printf ("read %s %d\n", label, symbol.inf);
+    cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.inf));
 
   return symbol.inf;
   }

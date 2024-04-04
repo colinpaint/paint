@@ -825,20 +825,21 @@ struct sDebug {
 //}}}
 
 //{{{
-enum eDecErrCode {
-  DEC_GEN_NOERR = 0,
-  DEC_OPEN_NOERR = 0,
-  DEC_CLOSE_NOERR = 0,
-  DEC_SUCCEED = 0,
-  DEC_EOS = 1,
-  DEC_NEED_DATA = 2,
-  DEC_INVALID_PARAM = 3,
-  DEC_ERRMASK = 0x8000
-  };
-//}}}
-//{{{
 class cDecoder264 {
 public:
+  //{{{
+  enum eDecErrCode {
+    DEC_GEN_NOERR = 0,
+    DEC_OPEN_NOERR = 0,
+    DEC_CLOSE_NOERR = 0,
+    DEC_SUCCEED = 0,
+    DEC_EOS = 1,
+    DEC_NEED_DATA = 2,
+    DEC_INVALID_PARAM = 3,
+    DEC_ERRMASK = 0x8000
+    };
+  //}}}
+
   static cDecoder264* open (sParam* param, uint8_t* chunk, size_t chunkSize);
   static void error (const char* text);
   ~cDecoder264();

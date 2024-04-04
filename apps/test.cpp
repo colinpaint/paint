@@ -970,7 +970,7 @@ public:
       int ret = 0;
       do {
         ret = mDecoder->decodeOneFrame (&decodedPics);
-        if (ret == DEC_EOS || ret == DEC_SUCCEED)
+        if (ret == cDecoder264::DEC_EOS || ret == cDecoder264::DEC_SUCCEED)
           outputDecodedPics (decodedPics);
         else
           cLog::log (LOGERROR, "decoding  failed");
@@ -978,7 +978,7 @@ public:
         while (!mPlaying)
           this_thread::sleep_for (1ms);
 
-        } while (ret == DEC_SUCCEED);
+        } while (ret == cDecoder264::DEC_SUCCEED);
 
       mDecoder->finish (&decodedPics);
       outputDecodedPics (decodedPics);
@@ -1105,7 +1105,7 @@ public:
       sDecodedPic* decodedPics;
       do {
         ret = mDecoder->decodeOneFrame (&decodedPics);
-        if (ret == DEC_EOS || ret == DEC_SUCCEED)
+        if (ret == cDecoder264::DEC_EOS || ret == cDecoder264::DEC_SUCCEED)
           outputDecodedPics (decodedPics);
         else
           cLog::log (LOGERROR, "decoding  failed");
@@ -1113,7 +1113,7 @@ public:
         while (!mPlaying)
           this_thread::sleep_for (1ms);
 
-        } while (ret == DEC_SUCCEED);
+        } while (ret == cDecoder264::DEC_SUCCEED);
 
       mDecoder->finish (&decodedPics);
       outputDecodedPics (decodedPics);
