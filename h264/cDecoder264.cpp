@@ -3788,20 +3788,20 @@ void cDecoder264::useParameterSet (cDecoder264* decoder, sSlice* slice) {
     if (sps->isBLprofile() && !dpb->initDone)
       setCodingParam (sps);
     setCoding();
-    initGlobalBuffers (decoder);
+    initGlobalBuffers (this);
 
     if (!noOutputPriorPicFlag)
       flushDpb (dpb);
-    initDpb (decoder, dpb, 0);
+    initDpb (this, dpb, 0);
 
     // enable error conceal
-    ercInit (decoder, coding.width, coding.height, 1);
-    if (decoder->picture) {
+    ercInit (this, coding.width, coding.height, 1);
+    if (picture) {
       ercReset (ercErrorVar, picSizeInMbs, picSizeInMbs, picture->sizeX);
       ercMvPerMb = 0;
       }
 
-    decoder->setFormat (sps, &param.source, &param.output);
+    setFormat (sps, &param.source, &param.output);
 
     // debug spsStr
     debug.profileString = fmt::format ("profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
@@ -3811,9 +3811,7 @@ void cDecoder264::useParameterSet (cDecoder264* decoder, sSlice* slice) {
              coding.yuvFormat == YUV400 ? " 400 ":
                coding.yuvFormat == YUV420 ? " 420":
                  coding.yuvFormat == YUV422 ? " 422":" 4:4:4",
-             param.source.bitDepth[0],
-             param.source.bitDepth[1],
-             param.source.bitDepth[2]);
+             param.source.bitDepth[0], param.source.bitDepth[1], param.source.bitDepth[2]);
 
     // print profile debug
     cLog::log (LOGINFO, debug.profileString);
