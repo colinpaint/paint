@@ -298,6 +298,4 @@ extern void dpbCombineField (cDecoder264* decoder, sFrameStore* frameStore);
 extern void reorderRefPicList (cSlice* slice, int curList);
 extern sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum);
 
-extern void allocRefPicListReordeBuffer (cSlice* slice);
-extern void freeRefPicListReorderBuffer (cSlice* slice);
 extern void computeColocated (cSlice* slice, sPicture** listX[6]);

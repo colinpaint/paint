@@ -2316,66 +2316,6 @@ void initListsSliceB (cSlice* slice) {
 //}}}
 
 //{{{
-void allocRefPicListReordeBuffer (cSlice* slice) {
-
-  if (slice->sliceType != eSliceI && slice->sliceType != eSliceSI) {
-    int size = slice->numRefIndexActive[LIST_0] + 1;
-    if ((slice->modPicNumsIdc[LIST_0] = (int*)calloc (size ,sizeof(int))) == NULL)
-       noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l0");
-    if ((slice->absDiffPicNumMinus1[LIST_0] = (int*)calloc (size,sizeof(int))) == NULL)
-       noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l0");
-    if ((slice->longTermPicIndex[LIST_0] = (int*)calloc (size,sizeof(int))) == NULL)
-       noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l0");
-    }
-  else {
-    slice->modPicNumsIdc[LIST_0] = NULL;
-    slice->absDiffPicNumMinus1[LIST_0] = NULL;
-    slice->longTermPicIndex[LIST_0] = NULL;
-    }
-
-  if (slice->sliceType == eSliceB) {
-    int size = slice->numRefIndexActive[LIST_1] + 1;
-    if ((slice->modPicNumsIdc[LIST_1] = (int*)calloc (size,sizeof(int))) == NULL)
-      noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l1");
-    if ((slice->absDiffPicNumMinus1[LIST_1] = (int*)calloc (size,sizeof(int))) == NULL)
-      noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l1");
-    if ((slice->longTermPicIndex[LIST_1] = (int*)calloc (size,sizeof(int))) == NULL)
-      noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l1");
-    }
-  else {
-    slice->modPicNumsIdc[LIST_1] = NULL;
-    slice->absDiffPicNumMinus1[LIST_1] = NULL;
-    slice->longTermPicIndex[LIST_1] = NULL;
-    }
-  }
-//}}}
-//{{{
-void freeRefPicListReorderBuffer (cSlice* slice) {
-
-  if (slice->modPicNumsIdc[LIST_0])
-    free (slice->modPicNumsIdc[LIST_0]);
-  if (slice->absDiffPicNumMinus1[LIST_0])
-    free (slice->absDiffPicNumMinus1[LIST_0]);
-  if (slice->longTermPicIndex[LIST_0])
-    free (slice->longTermPicIndex[LIST_0]);
-
-  slice->modPicNumsIdc[LIST_0] = NULL;
-  slice->absDiffPicNumMinus1[LIST_0] = NULL;
-  slice->longTermPicIndex[LIST_0] = NULL;
-
-  if (slice->modPicNumsIdc[LIST_1])
-    free (slice->modPicNumsIdc[LIST_1]);
-  if (slice->absDiffPicNumMinus1[LIST_1])
-    free (slice->absDiffPicNumMinus1[LIST_1]);
-  if (slice->longTermPicIndex[LIST_1])
-    free (slice->longTermPicIndex[LIST_1]);
-
-  slice->modPicNumsIdc[LIST_1] = NULL;
-  slice->absDiffPicNumMinus1[LIST_1] = NULL;
-  slice->longTermPicIndex[LIST_1] = NULL;
-  }
-//}}}
-//{{{
 void computeColocated (cSlice* slice, sPicture** listX[6]) {
 
   cDecoder264* decoder = slice->decoder;

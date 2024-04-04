@@ -574,6 +574,12 @@ public:
   void initMbAffLists (sPicture* noReferencePicture);
   void copyPoc (cSlice* toSlice);
 
+  void initListsSliceI();
+  void initListsSliceP();
+  void initListsSliceB();
+  void allocRefPicListReordeBuffer();
+  void freeRefPicListReorderBuffer();
+
   // vars
   cDecoder264* decoder;
 

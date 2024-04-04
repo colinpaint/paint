@@ -59,7 +59,7 @@ cSlice* cSlice::allocSlice() {
 cSlice::~cSlice() {
 
   if (sliceType != eSliceI && sliceType != eSliceSI)
-    freeRefPicListReorderBuffer (this);
+    freeRefPicListReorderBuffer();
 
   freePred (this);
   freeMem3Dint (cof);
@@ -233,5 +233,66 @@ void cSlice::copyPoc (cSlice* toSlice) {
   toSlice->botPoc = botPoc;
   toSlice->thisPoc = thisPoc;
   toSlice->framePoc = framePoc;
+  }
+//}}}
+
+//{{{
+void cSlice::allocRefPicListReordeBuffer() {
+
+  if (sliceType != eSliceI && sliceType != eSliceSI) {
+    int size = numRefIndexActive[LIST_0] + 1;
+    if ((modPicNumsIdc[LIST_0] = (int*)calloc (size ,sizeof(int))) == NULL)
+       noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l0");
+    if ((absDiffPicNumMinus1[LIST_0] = (int*)calloc (size,sizeof(int))) == NULL)
+       noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l0");
+    if ((longTermPicIndex[LIST_0] = (int*)calloc (size,sizeof(int))) == NULL)
+       noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l0");
+    }
+  else {
+    modPicNumsIdc[LIST_0] = NULL;
+    absDiffPicNumMinus1[LIST_0] = NULL;
+    longTermPicIndex[LIST_0] = NULL;
+    }
+
+  if (sliceType == eSliceB) {
+    int size = numRefIndexActive[LIST_1] + 1;
+    if ((modPicNumsIdc[LIST_1] = (int*)calloc (size,sizeof(int))) == NULL)
+      noMemoryExit ("allocRefPicListReordeBuffer: modification_of_pic_nums_idc_l1");
+    if ((absDiffPicNumMinus1[LIST_1] = (int*)calloc (size,sizeof(int))) == NULL)
+      noMemoryExit ("allocRefPicListReordeBuffer: abs_diff_pic_num_minus1_l1");
+    if ((longTermPicIndex[LIST_1] = (int*)calloc (size,sizeof(int))) == NULL)
+      noMemoryExit ("allocRefPicListReordeBuffer: long_term_pic_idx_l1");
+    }
+  else {
+    modPicNumsIdc[LIST_1] = NULL;
+    absDiffPicNumMinus1[LIST_1] = NULL;
+    longTermPicIndex[LIST_1] = NULL;
+    }
+  }
+//}}}
+//{{{
+void cSlice::freeRefPicListReorderBuffer() {
+
+  if (modPicNumsIdc[LIST_0])
+    free (modPicNumsIdc[LIST_0]);
+  if (absDiffPicNumMinus1[LIST_0])
+    free (absDiffPicNumMinus1[LIST_0]);
+  if (longTermPicIndex[LIST_0])
+    free (longTermPicIndex[LIST_0]);
+
+  modPicNumsIdc[LIST_0] = NULL;
+  absDiffPicNumMinus1[LIST_0] = NULL;
+  longTermPicIndex[LIST_0] = NULL;
+
+  if (modPicNumsIdc[LIST_1])
+    free (modPicNumsIdc[LIST_1]);
+  if (absDiffPicNumMinus1[LIST_1])
+    free (absDiffPicNumMinus1[LIST_1]);
+  if (longTermPicIndex[LIST_1])
+    free (longTermPicIndex[LIST_1]);
+
+  modPicNumsIdc[LIST_1] = NULL;
+  absDiffPicNumMinus1[LIST_1] = NULL;
+  longTermPicIndex[LIST_1] = NULL;
   }
 //}}}

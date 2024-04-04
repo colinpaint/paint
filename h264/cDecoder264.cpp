@@ -2611,7 +2611,7 @@ void cDecoder264::reorderLists (cSlice* slice) {
       slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
     }
 
-  freeRefPicListReorderBuffer (slice);
+  slice->freeRefPicListReorderBuffer();
   }
 //}}}
 //{{{
@@ -2818,7 +2818,7 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
   if (slice->sliceType != eSliceB)
     slice->numRefIndexActive[LIST_1] = 0;
   //{{{  read refPicList reorder
-  allocRefPicListReordeBuffer (slice);
+  slice->allocRefPicListReordeBuffer();
 
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
     int value = slice->refPicReorderFlag[LIST_0] = readU1 ("SLC refPicReorderL0", s);
