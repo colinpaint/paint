@@ -2358,65 +2358,6 @@ namespace {
     decoder->coding.sliceType = slice->sliceType;
     }
   //}}}
-  //{{{
-  void initPictureDecode (cDecoder264* decoder) {
-
-    int deblockMode = 1;
-
-    if (decoder->picSliceIndex >= MAX_NUM_SLICES)
-      cDecoder264::error ("initPictureDecode - MAX_NUM_SLICES exceeded");
-
-    sSlice* slice = decoder->sliceList[0];
-    useParameterSet (decoder, slice);
-
-    if (slice->isIDR)
-      decoder->idrFrameNum = 0;
-
-    decoder->picHeightInMbs = decoder->coding.frameHeightMbs / (1 + slice->fieldPic);
-    decoder->picSizeInMbs = decoder->coding.picWidthMbs * decoder->picHeightInMbs;
-    decoder->coding.frameSizeMbs = decoder->coding.picWidthMbs * decoder->coding.frameHeightMbs;
-    decoder->coding.picStructure = slice->picStructure;
-    initFmo (decoder, slice);
-
-    updatePicNum (slice);
-
-    initDeblock (decoder, slice->mbAffFrame);
-    for (int j = 0; j < decoder->picSliceIndex; j++)
-      if (decoder->sliceList[j]->deblockFilterDisableIdc != 1)
-        deblockMode = 0;
-
-    decoder->deblockMode = deblockMode;
-    }
-  //}}}
-  //{{{
-  void initSlice (cDecoder264* decoder, sSlice* slice) {
-
-    decoder->activeSps = slice->activeSps;
-    decoder->activePps = slice->activePps;
-
-    slice->initLists (slice);
-    reorderLists (slice);
-
-    if (slice->picStructure == eFrame)
-      initMbAffLists (decoder, slice);
-
-    // update reference flags and set current decoder->refFlag
-    if (!(slice->redundantPicCount && (decoder->prevFrameNum == slice->frameNum)))
-      for (int i = 16; i > 0; i--)
-        slice->refFlag[i] = slice->refFlag[i-1];
-    slice->refFlag[0] = (slice->redundantPicCount == 0) ? decoder->isPrimaryOk : decoder->isRedundantOk;
-
-    if (!slice->activeSps->chromaFormatIdc ||
-        (slice->activeSps->chromaFormatIdc == 3)) {
-      slice->linfoCbpIntra = linfo_cbp_intra_other;
-      slice->linfoCbpInter = linfo_cbp_inter_other;
-      }
-    else {
-      slice->linfoCbpIntra = linfo_cbp_intra_normal;
-      slice->linfoCbpInter = linfo_cbp_inter_normal;
-      }
-    }
-  //}}}
 
   //{{{
   int isNewPicture (sPicture* picture, sSlice* slice, sOldSlice* oldSlice) {
@@ -3080,14 +3021,6 @@ namespace {
       }
     }
   //}}}
-
-  //{{{
-  void resetDpb (cDecoder264* decoder, sDpb* dpb) {
-
-    dpb->decoder = decoder;
-    dpb->initDone = 0;
-    }
-  //}}}
   }
 
 // sSlice
@@ -3378,7 +3311,8 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
 
   decoder->dpb = (sDpb*)calloc (1, sizeof(sDpb));
-  resetDpb (decoder, decoder->dpb);
+  decoder->dpb->decoder = decoder;
+  decoder->dpb->initDone = 0;
 
   decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
   allocOutput (decoder);
@@ -3769,11 +3703,11 @@ int cDecoder264::decodeFrame() {
 
   // decode slices
   ret = curHeader;
-  initPictureDecode (this);
+  initPictureDecode();
   for (int sliceIndex = 0; sliceIndex < picSliceIndex; sliceIndex++) {
     sSlice* slice = sliceList[sliceIndex];
     curHeader = slice->curHeader;
-    initSlice (this, slice);
+    initSlice (slice);
 
     if (slice->activePps->entropyCoding) {
       //{{{  init cabac
@@ -3823,5 +3757,95 @@ void cDecoder264::clearDecodedPics() {
     outDecodedPics = decodedPic;
     prevDecodedPicture->next = NULL;
     }
+  }
+//}}}
+//{{{
+void cDecoder264::initMbAffLists (sSlice* slice) {
+// Initialize listX[2..5] from lists 0 and 1
+//   listX[2]: list0 for current_field==top
+//   listX[3]: list1 for current_field==top
+//   listX[4]: list0 for current_field==bottom
+//   listX[5]: list1 for current_field==bottom
+
+  for (int i = 2; i < 6; i++) {
+    for (uint32_t j = 0; j < MAX_LIST_SIZE; j++)
+      slice->listX[i][j] = noReferencePicture;
+    slice->listXsize[i] = 0;
+    }
+
+  for (int i = 0; i < slice->listXsize[0]; i++) {
+    slice->listX[2][2*i  ] = slice->listX[0][i]->topField;
+    slice->listX[2][2*i+1] = slice->listX[0][i]->botField;
+    slice->listX[4][2*i  ] = slice->listX[0][i]->botField;
+    slice->listX[4][2*i+1] = slice->listX[0][i]->topField;
+    }
+  slice->listXsize[2] = slice->listXsize[4] = slice->listXsize[0] * 2;
+
+  for (int i = 0; i < slice->listXsize[1]; i++) {
+    slice->listX[3][2*i  ] = slice->listX[1][i]->topField;
+    slice->listX[3][2*i+1] = slice->listX[1][i]->botField;
+    slice->listX[5][2*i  ] = slice->listX[1][i]->botField;
+    slice->listX[5][2*i+1] = slice->listX[1][i]->topField;
+    }
+  slice->listXsize[3] = slice->listXsize[5] = slice->listXsize[1] * 2;
+  }
+//}}}
+//{{{
+void cDecoder264::initSlice (sSlice* slice) {
+
+  activeSps = slice->activeSps;
+  activePps = slice->activePps;
+
+  slice->initLists (slice);
+  reorderLists (slice);
+
+  if (slice->picStructure == eFrame)
+    initMbAffLists (slice);
+
+  // update reference flags and set current refFlag
+  if (!(slice->redundantPicCount && (prevFrameNum == slice->frameNum)))
+    for (int i = 16; i > 0; i--)
+      slice->refFlag[i] = slice->refFlag[i-1];
+  slice->refFlag[0] = (slice->redundantPicCount == 0) ? isPrimaryOk : isRedundantOk;
+
+  if (!slice->activeSps->chromaFormatIdc ||
+      (slice->activeSps->chromaFormatIdc == 3)) {
+    slice->linfoCbpIntra = linfo_cbp_intra_other;
+    slice->linfoCbpInter = linfo_cbp_inter_other;
+    }
+  else {
+    slice->linfoCbpIntra = linfo_cbp_intra_normal;
+    slice->linfoCbpInter = linfo_cbp_inter_normal;
+    }
+  }
+//}}}
+//{{{
+void cDecoder264::initPictureDecode() {
+
+  int deblockMode = 1;
+
+  if (picSliceIndex >= MAX_NUM_SLICES)
+    cDecoder264::error ("initPictureDecode - MAX_NUM_SLICES exceeded");
+
+  sSlice* slice = sliceList[0];
+  useParameterSet (this, slice);
+
+  if (slice->isIDR)
+    idrFrameNum = 0;
+
+  picHeightInMbs = coding.frameHeightMbs / (1 + slice->fieldPic);
+  picSizeInMbs = coding.picWidthMbs * picHeightInMbs;
+  coding.frameSizeMbs = coding.picWidthMbs * coding.frameHeightMbs;
+  coding.picStructure = slice->picStructure;
+  initFmo (this, slice);
+
+  updatePicNum (slice);
+
+  initDeblock (this, slice->mbAffFrame);
+  for (int j = 0; j < picSliceIndex; j++)
+    if (sliceList[j]->deblockFilterDisableIdc != 1)
+      deblockMode = 0;
+
+  deblockMode = deblockMode;
   }
 //}}}

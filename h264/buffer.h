@@ -2,12 +2,12 @@
 #include "global.h"
 
 #define MAX_LIST_SIZE 33
-//{{{  
+//{{{
 struct sPicMotionOld {
   uint8_t* mbField; // field macroblock indicator
   };
 //}}}
-//{{{  
+//{{{
 struct sPicMotion {
   sPicture*  refPic[2];   // referrence picture pointer
   sMotionVec mv[2];       // motion vector
@@ -15,7 +15,7 @@ struct sPicMotion {
   uint8_t       slice_no;
   };
 //}}}
-//{{{  
+//{{{
 struct sPicture {
   ePicStructure picStructure;
 
@@ -94,7 +94,7 @@ struct sPicture {
   sPicMotionOld motionJV[MAX_PLANE];
   };
 //}}}
-//{{{  
+//{{{
 struct sFrameStore {
   int       isUsed;          // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
   int       isReference;     // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
@@ -296,7 +296,6 @@ extern void updatePicNum (sSlice* slice);
 
 extern void dpbCombineField (cDecoder264* decoder, sFrameStore* frameStore);
 extern void reorderRefPicList (sSlice* slice, int curList);
-extern void initMbAffLists (cDecoder264* decoder, sSlice* slice);
 extern sPicture* getShortTermPic (sSlice* slice, sDpb* dpb, int picNum);
 
 extern void allocRefPicListReordeBuffer (sSlice* slice);

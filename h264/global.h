@@ -931,9 +931,9 @@ public:
 
   sBlockPos*   picPos = nullptr;
   uint8_t****  nzCoeff = nullptr;
-  sMacroBlock* mbData = nullptr;              // array containing all MBs of a whole frame
+  sMacroBlock* mbData = nullptr;     // array containing all MBs of a whole frame
   char*        intraBlock = nullptr;
-  uint8_t**    predMode = nullptr;            // prediction type [90][74]
+  uint8_t**    predMode = nullptr;   // prediction type [90][74]
   int**        siBlock = nullptr;
 
   // POC
@@ -1010,6 +1010,9 @@ public:
 
 private:
   void clearDecodedPics();
+  void initMbAffLists (sSlice* slice);
+  void initSlice (sSlice* slice);
+  void initPictureDecode();
   };
 //}}}
 sSlice* allocSlice (cDecoder264* decoder);
