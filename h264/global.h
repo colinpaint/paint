@@ -280,7 +280,7 @@ struct sPicture;
 struct sDpb;
 struct sPicMotion;
 struct sMacroBlock;
-struct sSlice;
+class sSlice;
 class cDecoder264;
 //{{{
 struct sBiContext {
@@ -564,7 +564,11 @@ public:
   };
 //}}}
 //{{{
-struct sSlice {
+class sSlice {
+public:
+  static sSlice* allocSlice();
+  ~sSlice();
+
   cDecoder264* decoder;
 
   cPps* activePps;
@@ -1037,7 +1041,6 @@ private:
   void endDecodeFrame();
   };
 //}}}
-sSlice* allocSlice();
 sDataPartition* allocDataPartitions (int n);
 void freeDataPartitions (sDataPartition* dataPartitions, int n);
 sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
