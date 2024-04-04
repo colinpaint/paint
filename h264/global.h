@@ -849,6 +849,10 @@ public:
   void finish (sDecodedPic** decPicList);
   void close();
 
+  void initGlobalBuffers();
+  void freeGlobalBuffers();
+  void freeLayerBuffers();
+
   void decodePOC (sSlice* slice);
   void padPicture (sPicture* picture);
   int decodeFrame();

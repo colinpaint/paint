@@ -1220,7 +1220,6 @@ namespace {
     dst->cropBot = src->cropBot;
     }
   //}}}
-
   //{{{
   void copyPoc (sSlice* fromSlice, sSlice* toSlice) {
 
@@ -1237,26 +1236,26 @@ namespace {
     #define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
       for (i = 0; i < ii; ++i) \
         for (j = 0; j < jj; ++j) \
-          binaryArithmeticInitContext (qp, &(ctx[i][j]), tab ## _I[num][i][j]); \
+          binaryArithmeticInitContext (qp, &ctx[i][j], tab ## _I[num][i][j]); \
       }
     //}}}
     //{{{
     #define PBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
       for (i = 0; i < ii; ++i) \
         for (j = 0; j < jj; ++j) \
-          binaryArithmeticInitContext (qp, &(ctx[i][j]), tab ## _P[num][i][j]); \
+          binaryArithmeticInitContext (qp, &ctx[i][j], tab ## _P[num][i][j]); \
       }
     //}}}
     //{{{
     #define IBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
       for (j = 0; j < jj; ++j) \
-        binaryArithmeticInitContext (qp, &(ctx[j]), tab ## _I[num][0][j]); \
+        binaryArithmeticInitContext (qp, &ctx[j], tab ## _I[num][0][j]); \
       }
     //}}}
     //{{{
     #define PBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
       for (j = 0; j < jj; ++j) \
-        binaryArithmeticInitContext (qp, &(ctx[j]), tab ## _P[num][0][j]); \
+        binaryArithmeticInitContext (qp, &ctx[j], tab ## _P[num][0][j]); \
       }
     //}}}
 
@@ -1312,7 +1311,6 @@ namespace {
       }
     }
   //}}}
-
   //{{{
   void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
 
@@ -1329,7 +1327,6 @@ namespace {
       }
     }
   //}}}
-
   //{{{
   void resetMb (sMacroBlock* mb) {
 
@@ -1421,7 +1418,6 @@ namespace {
       //}}}
     }
   //}}}
-
   //{{{
   void fillWeightedPredParam (sSlice* slice) {
 
@@ -1540,13 +1536,13 @@ sSlice* allocSlice() {
   slice->maxDataPartitions = 3;  // assume dataPartition worst case
   slice->dataPartitions = allocDataPartitions (slice->maxDataPartitions);
 
-  getMem3Dint (&(slice->weightedPredWeight), 2, MAX_REFERENCE_PICTURES, 3);
-  getMem3Dint (&(slice->weightedPredOffset), 6, MAX_REFERENCE_PICTURES, 3);
-  getMem4Dint (&(slice->weightedBiPredWeight), 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
-  getMem3Dpel (&(slice->mbPred), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  getMem3Dpel (&(slice->mbRec), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  getMem3Dint (&(slice->mbRess), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  getMem3Dint (&(slice->cof), MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dint (&slice->weightedPredWeight, 2, MAX_REFERENCE_PICTURES, 3);
+  getMem3Dint (&slice->weightedPredOffset, 6, MAX_REFERENCE_PICTURES, 3);
+  getMem4Dint (&slice->weightedBiPredWeight, 6, MAX_REFERENCE_PICTURES, MAX_REFERENCE_PICTURES, 3);
+  getMem3Dpel (&slice->mbPred, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dpel (&slice->mbRec, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dint (&slice->mbRess, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem3Dint (&slice->cof, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   allocPred (slice);
 
   // reference flag initialization
@@ -1616,7 +1612,7 @@ sDataPartition* allocDataPartitions (int n) {
 
   for (int i = 0; i < n; ++i) {
     // loop over all dataPartitions
-    sDataPartition* dataPartition = &(dataPartitions[i]);
+    sDataPartition* dataPartition = &dataPartitions[i];
     dataPartition->stream = (sBitStream*)calloc(1, sizeof(sBitStream));
     if (dataPartition->stream == NULL)
       cDecoder264::error ("allocDataPartitions: Memory allocation for sBitStream failed");
@@ -1638,108 +1634,6 @@ void freeDataPartitions (sDataPartition* dataPartitions, int n) {
     }
 
   free (dataPartitions);
-  }
-//}}}
-
-// globalBuffers
-//{{{
-void initGlobalBuffers (cDecoder264* decoder) {
-
-  // alloc coding
-  if (decoder->coding.isSeperateColourPlane) {
-    for (uint32_t i = 0; i < MAX_PLANE; ++i)
-      if (!decoder->mbDataJV[i])
-        decoder->mbDataJV[i] = (sMacroBlock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroBlock));
-    for (uint32_t i = 0; i < MAX_PLANE; ++i)
-      if (!decoder->intraBlockJV[i])
-        decoder->intraBlockJV[i] = (char*)calloc (decoder->coding.frameSizeMbs, sizeof(char));
-    for (uint32_t i = 0; i < MAX_PLANE; ++i)
-      if (!decoder->predModeJV[i])
-       getMem2D (&(decoder->predModeJV[i]), 4*decoder->coding.frameHeightMbs, 4*decoder->coding.picWidthMbs);
-    for (uint32_t i = 0; i < MAX_PLANE; ++i)
-      if (!decoder->siBlockJV[i])
-        getMem2Dint (&(decoder->siBlockJV[i]), decoder->coding.frameHeightMbs, decoder->coding.picWidthMbs);
-    }
-  else {
-    if (!decoder->mbData)
-      decoder->mbData = (sMacroBlock*)calloc (decoder->coding.frameSizeMbs, sizeof(sMacroBlock));
-    if (!decoder->intraBlock)
-      decoder->intraBlock = (char*)calloc (decoder->coding.frameSizeMbs, sizeof(char));
-
-    if (!decoder->predMode)
-      getMem2D (&(decoder->predMode), 4*decoder->coding.frameHeightMbs, 4*decoder->coding.picWidthMbs);
-    if (!decoder->siBlock)
-      getMem2Dint (&(decoder->siBlock), decoder->coding.frameHeightMbs, decoder->coding.picWidthMbs);
-    }
-
-  // alloc picPos
-  if (!decoder->picPos) {
-    decoder->picPos = (sBlockPos*)calloc (decoder->coding.frameSizeMbs + 1, sizeof(sBlockPos));
-    sBlockPos* blockPos = decoder->picPos;
-    for (uint32_t i = 0; i < decoder->coding.frameSizeMbs+1; ++i) {
-      blockPos[i].x = (int16_t)(i % decoder->coding.picWidthMbs);
-      blockPos[i].y = (int16_t)(i / decoder->coding.picWidthMbs);
-      }
-    }
-
-  // alloc cavlc
-  if (!decoder->nzCoeff)
-    getMem4D (&(decoder->nzCoeff), decoder->coding.frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
-
-  // alloc quant
-  allocQuant (decoder);
-  }
-//}}}
-//{{{
-void freeGlobalBuffers (cDecoder264* decoder) {
-
-  freePicture (decoder->picture);
-  decoder->picture = NULL;
-  }
-//}}}
-//{{{
-void freeLayerBuffers (cDecoder264* decoder) {
-
-  // free coding
-  if (decoder->coding.isSeperateColourPlane) {
-    for (int i = 0; i < MAX_PLANE; i++) {
-      free (decoder->mbDataJV[i]);
-      decoder->mbDataJV[i] = NULL;
-
-      freeMem2Dint (decoder->siBlockJV[i]);
-      decoder->siBlockJV[i] = NULL;
-
-      freeMem2D (decoder->predModeJV[i]);
-      decoder->predModeJV[i] = NULL;
-
-      free (decoder->intraBlockJV[i]);
-      decoder->intraBlockJV[i] = NULL;
-      }
-    }
-  else {
-    free (decoder->mbData);
-    decoder->mbData = NULL;
-
-    freeMem2Dint (decoder->siBlock);
-    decoder->siBlock = NULL;
-
-    freeMem2D (decoder->predMode);
-    decoder->predMode = NULL;
-
-    free (decoder->intraBlock);
-    decoder->intraBlock = NULL;
-    }
-
-  // free picPos
-  free (decoder->picPos);
-  decoder->picPos = NULL;
-
-  // free cavlc
-  freeMem4D (decoder->nzCoeff);
-  decoder->nzCoeff = NULL;
-
-  // free quant
-  freeQuant (decoder);
   }
 //}}}
 
@@ -1892,8 +1786,8 @@ void cDecoder264::finish (sDecodedPic** decPicList) {
 void cDecoder264::close() {
 
   closeFmo (this);
-  freeLayerBuffers (this);
-  freeGlobalBuffers (this);
+  freeLayerBuffers();
+  freeGlobalBuffers();
 
   ercClose (this, ercErrorVar);
 
@@ -1925,6 +1819,106 @@ void initOldSlice (sOldSlice* oldSlice) {
   oldSlice->deltaPicOrderCountBot = INT_MAX;
   oldSlice->deltaPicOrderCount[0] = INT_MAX;
   oldSlice->deltaPicOrderCount[1] = INT_MAX;
+  }
+//}}}
+//{{{
+void cDecoder264::initGlobalBuffers() {
+
+  // alloc coding
+  if (coding.isSeperateColourPlane) {
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
+      if (!mbDataJV[i])
+        mbDataJV[i] = (sMacroBlock*)calloc (coding.frameSizeMbs, sizeof(sMacroBlock));
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
+      if (!intraBlockJV[i])
+        intraBlockJV[i] = (char*)calloc (coding.frameSizeMbs, sizeof(char));
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
+      if (!predModeJV[i])
+       getMem2D (&predModeJV[i], 4*coding.frameHeightMbs, 4*coding.picWidthMbs);
+    for (uint32_t i = 0; i < MAX_PLANE; ++i)
+      if (!siBlockJV[i])
+        getMem2Dint (&siBlockJV[i], coding.frameHeightMbs, coding.picWidthMbs);
+    }
+  else {
+    if (!mbData)
+      mbData = (sMacroBlock*)calloc (coding.frameSizeMbs, sizeof(sMacroBlock));
+    if (!intraBlock)
+      intraBlock = (char*)calloc (coding.frameSizeMbs, sizeof(char));
+
+    if (!predMode)
+      getMem2D (&predMode, 4*coding.frameHeightMbs, 4*coding.picWidthMbs);
+    if (!siBlock)
+      getMem2Dint (&siBlock, coding.frameHeightMbs, coding.picWidthMbs);
+    }
+
+  // alloc picPos
+  if (!picPos) {
+    picPos = (sBlockPos*)calloc (coding.frameSizeMbs + 1, sizeof(sBlockPos));
+    sBlockPos* blockPos = picPos;
+    for (uint32_t i = 0; i < coding.frameSizeMbs+1; ++i) {
+      blockPos[i].x = (int16_t)(i % coding.picWidthMbs);
+      blockPos[i].y = (int16_t)(i / coding.picWidthMbs);
+      }
+    }
+
+  // alloc cavlc
+  if (!nzCoeff)
+    getMem4D (&nzCoeff, coding.frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
+
+  // alloc quant
+  allocQuant (this);
+  }
+//}}}
+//{{{
+void cDecoder264::freeGlobalBuffers() {
+
+  freePicture (picture);
+  picture = NULL;
+  }
+//}}}
+//{{{
+void cDecoder264::freeLayerBuffers() {
+
+  // free coding
+  if (coding.isSeperateColourPlane) {
+    for (int i = 0; i < MAX_PLANE; i++) {
+      free (mbDataJV[i]);
+      mbDataJV[i] = NULL;
+
+      freeMem2Dint (siBlockJV[i]);
+      siBlockJV[i] = NULL;
+
+      freeMem2D (predModeJV[i]);
+      predModeJV[i] = NULL;
+
+      free (intraBlockJV[i]);
+      intraBlockJV[i] = NULL;
+      }
+    }
+  else {
+    free (mbData);
+    mbData = NULL;
+
+    freeMem2Dint (siBlock);
+    siBlock = NULL;
+
+    freeMem2D (predMode);
+    predMode = NULL;
+
+    free (intraBlock);
+    intraBlock = NULL;
+    }
+
+  // free picPos
+  free (picPos);
+  picPos = NULL;
+
+  // free cavlc
+  freeMem4D (nzCoeff);
+  nzCoeff = NULL;
+
+  // free quant
+  freeQuant (this);
   }
 //}}}
 
@@ -3040,7 +3034,7 @@ void cDecoder264::useParameterSet (sSlice* slice) {
     if (activeSps->isBLprofile() && !dpb->initDone)
       setCodingParam (sps);
     setCoding();
-    initGlobalBuffers (this);
+    initGlobalBuffers();
 
     if (!noOutputPriorPicFlag)
       flushDpb (dpb);
