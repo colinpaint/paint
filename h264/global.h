@@ -572,6 +572,7 @@ public:
   void fillWeightedPredParam();
   void resetWeightedPredParam();
   void initMbAffLists (sPicture* noReferencePicture);
+  void copyPoc (cSlice* toSlice);
 
   // vars
   cDecoder264* decoder;

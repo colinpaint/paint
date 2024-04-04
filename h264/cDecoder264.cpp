@@ -1297,15 +1297,6 @@ namespace {
     }
   //}}}
   //{{{
-  void copyPoc (cSlice* fromSlice, cSlice* toSlice) {
-
-    toSlice->topPoc = fromSlice->topPoc;
-    toSlice->botPoc = fromSlice->botPoc;
-    toSlice->thisPoc = fromSlice->thisPoc;
-    toSlice->framePoc = fromSlice->framePoc;
-    }
-  //}}}
-  //{{{
   void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
 
     sPixel (*temp_evn)[16] = temp;
@@ -3362,7 +3353,7 @@ int cDecoder264::decodeFrame() {
        slice->curSliceIndex = (int16_t)picSliceIndex;
        picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
        if (picSliceIndex > 0) {
-         copyPoc (*(sliceList), slice);
+         (*sliceList)->copyPoc (slice);
          sliceList[picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
          }
 

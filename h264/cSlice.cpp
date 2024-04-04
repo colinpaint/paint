@@ -225,3 +225,13 @@ void cSlice::initMbAffLists (sPicture* noReferencePicture) {
   listXsize[3] = listXsize[5] = listXsize[1] * 2;
   }
 //}}}
+
+//{{{
+void cSlice::copyPoc (cSlice* toSlice) {
+
+  toSlice->topPoc = topPoc;
+  toSlice->botPoc = botPoc;
+  toSlice->thisPoc = thisPoc;
+  toSlice->framePoc = framePoc;
+  }
+//}}}
