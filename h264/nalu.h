@@ -10,8 +10,7 @@ public:
 
   void open (uint8_t* chunk, size_t chunkSize);
   void reset();
-
-  // vars
+  //{{{  vars
   uint8_t getByte();
 
   uint8_t*  buffer = nullptr;
@@ -22,6 +21,7 @@ public:
   bool      isFirstByteStreamNALU = false;
   int       nextStartCodeBytes = 0;
   uint8_t*  naluBuffer = nullptr;
+  //}}}
   };
 
 class cNalu {
@@ -56,7 +56,6 @@ public:
     NALU_PRIORITY_HIGHEST     = 3
     } eNalRefIdc;
   //}}}
-
   cNalu (int bufferSize);
   ~cNalu();
 
@@ -68,8 +67,7 @@ public:
 
   void checkZeroByteVCL (sDecoder* decoder);
   void checkZeroByteNonVCL (sDecoder* decoder);
-
-  // vars
+  //{{{  vars
   int        startCodeLen = 0; // 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
   uint32_t   len = 0;          // Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
   uint32_t   maxSize = 0;      // NAL Unit Buffer size
@@ -78,6 +76,7 @@ public:
   eNalRefIdc refId = NALU_PRIORITY_DISPOSABLE; // NALU_PRIORITY_xxxx
   uint8_t*   buf = nullptr;    // contains the first uint8_t followed by the EBSP
   uint16_t   lostPackets = 0 ; // true, if packet loss is detected
+  //}}}
 
 private:
   int getNALU (cAnnexB* annexB, sDecoder* decoder);

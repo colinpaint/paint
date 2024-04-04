@@ -47,7 +47,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readHrdFromStream (sDataPartition* dataPartition, sHrd* hrd) {
+  void readHrdFromStream (sDataPartition* dataPartition, cHrd* hrd) {
 
     sBitStream *s = dataPartition->stream;
     hrd->cpb_cnt_minus1 = readUeV ("VUI cpb_cnt_minus1", s);
