@@ -1040,9 +1040,6 @@ private:
 sSlice* allocSlice();
 sDataPartition* allocDataPartitions (int n);
 void freeDataPartitions (sDataPartition* dataPartitions, int n);
-void initGlobalBuffers (cDecoder264* decoder);
-void freeGlobalBuffers (cDecoder264* decoder);
-void freeLayerBuffers (cDecoder264* decoder);
 sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
 void freeDecodedPictures (sDecodedPic* decodedPic);
 
