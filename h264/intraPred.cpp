@@ -1,8 +1,8 @@
 //{{{  includes
 #include "global.h"
 
-#include "block.h"
 #include "intraPred.h"
+#include "macroblock.h"
 #include "mbAccess.h"
 //}}}
 //{{{

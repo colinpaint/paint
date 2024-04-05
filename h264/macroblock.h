@@ -1,7 +1,6 @@
 #pragma once
 #include "global.h"
 #include "buffer.h"
-#include "block.h"
 
 //{{{
 static const uint8_t SNGL_SCAN[16][2] = {
@@ -124,30 +123,136 @@ static const uint8_t cofuv_blk_y[3][8][4] = {
 };
 //}}}
 
-extern void readCoef4x4cavlc (sMacroBlock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
-extern void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+//{{{
+//! look up tables for FRExt_chroma support
+static const uint8_t subblk_offset_x[3][8][4] = {
+  {
+    {0, 4, 0, 4},
+    {0, 4, 0, 4},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+  },
+  {
+    {0, 4, 0, 4},
+    {0, 4, 0, 4},
+    {0, 4, 0, 4},
+    {0, 4, 0, 4},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+  },
+  {
+    {0, 4, 0, 4},
+    {8,12, 8,12},
+    {0, 4, 0, 4},
+    {8,12, 8,12},
+    {0, 4, 0, 4},
+    {8,12, 8,12},
+    {0, 4, 0, 4},
+    {8,12, 8,12}
+  }
+};
+//}}}
+//{{{
+static const uint8_t subblk_offset_y[3][8][4] = {
+  {
+    {0, 0, 4, 4},
+    {0, 0, 4, 4},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0}
+  },
+  {
+    {0, 0, 4, 4},
+    {8, 8,12,12},
+    {0, 0, 4, 4},
+    {8, 8,12,12},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0}
+  },
+  {
+    {0, 0, 4, 4},
+    {0, 0, 4, 4},
+    {8, 8,12,12},
+    {8, 8,12,12},
+    {0, 0, 4, 4},
+    {0, 0, 4, 4},
+    {8, 8,12,12},
+    {8, 8,12,12}
+  }
+};
+//}}}
+//{{{
+static const uint8_t QP_SCALE_CR[52] = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,
+   12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,
+   28,29,29,30,31,32,32,33,34,34,35,35,36,36,37,37,
+   37,38,38,38,39,39,39,39
 
-extern void setReadMacroblock (cSlice* slice);
-extern void setReadCbpCoefCavlc (cSlice* slice);
-extern void setReadCompCoefCavlc (sMacroBlock* mb);
+};
+//}}}
+//{{{
+static const uint8_t decode_block_scan[16] = {
+  0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15
+  };
+//}}}
 
-extern int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j);
-extern int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j);
+void iMBtrans4x4 (sMacroBlock* mb, eColorPlane plane, int smb);
+void iMBtrans8x8 (sMacroBlock* mb, eColorPlane plane);
 
-extern void setReadCompCabac (sMacroBlock* mb);
-extern void setReadCompCoefCavlc (sMacroBlock* mb);
+void itransSpChroma (sMacroBlock* mb, int uv);
 
-extern void setSliceFunctions (cSlice* slice);
-extern void setup_slice_methods_mbaff (cSlice* slice);
+void invResidualTrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
+void invResidualTrans8x8 (sMacroBlock* mb, eColorPlane plane, int ioff,int joff);
+void invResidualTrans16x16 (sMacroBlock* mb, eColorPlane plane);
+void invResidualTransChroma (sMacroBlock* mb, int uv);
 
-extern void getNeighbours (sMacroBlock* mb, sPixelPos *block, int mb_x, int mb_y, int blockshape_x);
+void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
+void itrans4x4Lossless(sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
+void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff);
+void itrans2 (sMacroBlock* mb, eColorPlane plane);
+void iTransform (sMacroBlock* mb, eColorPlane plane, int smb);
 
-extern void startMacroblock (cSlice* slice, sMacroBlock** mb);
-extern int decodeMacroblock (sMacroBlock* mb, sPicture* picture);
-extern bool exitMacroblock (cSlice* slice, int eos_bit);
+void copyImage (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2, int width, int height);
+void copyImage16x16 (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2);
+void copyImage8x8 (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2);
+void copyImage4x4 (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2);
+int CheckVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY);
 
-extern void updateQp (sMacroBlock* mb, int qp);
+void readCoef4x4cavlc (sMacroBlock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
+void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j, int levarr[16], int runarr[16], int *number_coefficients);
 
-extern void checkDpNeighbours (sMacroBlock* mb);
-extern void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBlock* mb,
+void setReadMacroblock (cSlice* slice);
+void setReadCbpCoefCavlc (cSlice* slice);
+void setReadCompCoefCavlc (sMacroBlock* mb);
+
+int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j);
+int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j);
+
+void setReadCompCabac (sMacroBlock* mb);
+void setReadCompCoefCavlc (sMacroBlock* mb);
+
+void setSliceFunctions (cSlice* slice);
+void setup_slice_methods_mbaff (cSlice* slice);
+
+void getNeighbours (sMacroBlock* mb, sPixelPos *block, int mb_x, int mb_y, int blockshape_x);
+
+void startMacroblock (cSlice* slice, sMacroBlock** mb);
+int decodeMacroblock (sMacroBlock* mb, sPicture* picture);
+bool exitMacroblock (cSlice* slice, int eos_bit);
+
+void updateQp (sMacroBlock* mb, int qp);
+
+void checkDpNeighbours (sMacroBlock* mb);
+void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBlock* mb,
                             const uint8_t* dpMap, int type);

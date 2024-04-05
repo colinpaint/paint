@@ -2,7 +2,6 @@
 #include "global.h"
 #include "memory.h"
 
-#include "block.h"
 #include "mcPred.h"
 #include "buffer.h"
 #include "mbAccess.h"
