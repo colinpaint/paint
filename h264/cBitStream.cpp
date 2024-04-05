@@ -150,75 +150,22 @@ void cBitStream::linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //}}}
 
 //{{{
-int cBitStream::readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
-  return dataPartition->stream->readSyntaxElement_VLC (se);
-  }
-//}}}
-//{{{
-int cBitStream::GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
-
-  int byteoffset = (totalBitOffset >> 3);        // uint8_t from start of buffer
-  int bitOffset   = (7 - (totalBitOffset & 0x07)); // bit from start of uint8_t
-  uint8_t *cur_byte  = &(buffer[byteoffset]);
-  int controlBit     = (*cur_byte & (0x01 << bitOffset));      // control bit for current bit posision
-
-  //First bit
-  if (controlBit) {
-    *info = 0;
-    return 1;
-    }
-
-  if (byteoffset >= bytecount)
-    return -1;
-  else {
-    int inf = (*(cur_byte) << 8) + *(cur_byte + 1);
-    inf <<= (sizeof(uint8_t) * 8) - bitOffset;
-    inf = inf & 0xFFFF;
-    inf >>= (sizeof(uint8_t) * 8) * 2 - 3;
-    *info = inf;
-
-    return 4;           // return absolute offset in bit from start of frame
-    }
-  }
-//}}}
-//{{{
-int cBitStream::moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
-
-  // there is more until we're in the last uint8_t
-  long byteoffset = (totalBitOffset >> 3);      // uint8_t from start of buffer
-  if (byteoffset < (bytecount - 1))
-    return true;
-  else {
-    int bitOffset   = (7 - (totalBitOffset & 0x07));      // bit from start of uint8_t
-    uint8_t* cur_byte  = &(buffer[byteoffset]);
-    // read one bit
-    int controlBit = ((*cur_byte)>> (bitOffset--)) & 0x01;   // control bit for current bit posision
-
-    // a stop bit has to be one
-    if (controlBit == 0)
-      return true;
-    else {
-      int cnt = 0;
-      while (bitOffset>=0 && !cnt)
-        cnt |= ((*cur_byte)>> (bitOffset--)) & 0x01;   // set up control bit
-      return (cnt);
-      }
-    }
-  }
-//}}}
-//{{{
 int cBitStream::vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
   sDataPartition* dataPartition = &slice->dataPartitions[partitionIndex];
   cBitStream* s = dataPartition->stream;
-  uint8_t* buf = s->bitStreamBuffer;
-
-  return !moreRbspData (buf, s->bitStreamOffset,s->bitStreamLen);
+  return !moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
   }
 //}}}
 //{{{
-int cBitStream::GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
+int cBitStream::readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
+  return dataPartition->stream->readSyntaxElement_VLC (se);
+  }
+//}}}
+
+//{{{
+int cBitStream::getVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
   long byteoffset = totalBitOffset >> 3;        // uint8_t from start of buffer
   int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
@@ -255,7 +202,32 @@ int cBitStream::GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, i
   return bitCounter;           // return absolute offset in bit from start of frame
   }
 //}}}
+//{{{
+int cBitStream::getVLCSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
+  int byteoffset = (totalBitOffset >> 3);        // uint8_t from start of buffer
+  int bitOffset = (7 - (totalBitOffset & 0x07)); // bit from start of uint8_t
+  uint8_t* cur_byte = &(buffer[byteoffset]);
+  int controlBit = (*cur_byte & (0x01 << bitOffset));      // control bit for current bit posision
+
+  // first bit
+  if (controlBit) {
+    *info = 0;
+    return 1;
+    }
+
+  if (byteoffset >= bytecount)
+    return -1;
+  else {
+    int inf = (*(cur_byte) << 8) + *(cur_byte + 1);
+    inf <<= (sizeof(uint8_t) * 8) - bitOffset;
+    inf = inf & 0xFFFF;
+    inf >>= (sizeof(uint8_t) * 8) * 2 - 3;
+    *info = inf;
+    return 4;           // return absolute offset in bit from start of frame
+    }
+  }
+//}}}
 //{{{
 int cBitStream::getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
 
@@ -265,7 +237,7 @@ int cBitStream::getBits (uint8_t buffer[], int totalBitOffset, int* info, int bi
   int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
   int byteOffset = totalBitOffset >> 3;       // uint8_t from start of buffer
   int bitCounter = numBits;
-  uint8_t* curByte = &(buffer[byteOffset]);
+  uint8_t* curByte = &buffer[byteOffset];
 
   int inf = 0;
   while (numBits--) {
@@ -287,14 +259,14 @@ int cBitStream::getBits (uint8_t buffer[], int totalBitOffset, int* info, int bi
   }
 //}}}
 //{{{
-int cBitStream::ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits) {
+int cBitStream::showBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits) {
 
   if ((totalBitOffset + numBits) > bitCount)
     return -1;
 
   int bitOffset = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
   int byteOffset = totalBitOffset >> 3;      // uint8_t from start of buffer
-  uint8_t* curByte = &(buffer[byteOffset]);
+  uint8_t* curByte = &buffer[byteOffset];
 
   int inf = 0;
   while (numBits--) {
@@ -311,6 +283,31 @@ int cBitStream::ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, in
   return inf; // return absolute offset in bit from start of frame
   }
 //}}}
+//{{{
+int cBitStream::moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
+
+  // there is more until we're in the last uint8_t
+  long byteoffset = (totalBitOffset >> 3);      // uint8_t from start of buffer
+  if (byteoffset < (bytecount - 1))
+    return true;
+  else {
+    int bitOffset   = (7 - (totalBitOffset & 0x07));      // bit from start of uint8_t
+    uint8_t* cur_byte  = &(buffer[byteoffset]);
+    // read one bit
+    int controlBit = ((*cur_byte)>> (bitOffset--)) & 0x01;   // control bit for current bit posision
+
+    // a stop bit has to be one
+    if (controlBit == 0)
+      return true;
+    else {
+      int cnt = 0;
+      while (bitOffset>=0 && !cnt)
+        cnt |= ((*cur_byte)>> (bitOffset--)) & 0x01;   // set up control bit
+      return cnt;
+      }
+    }
+  }
+//}}}
 
 // members
 //{{{
@@ -320,7 +317,6 @@ int cBitStream::readUeV (const string& label) {
   symbol.value1 = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
-
   readSyntaxElement_VLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
@@ -390,12 +386,25 @@ bool cBitStream::readU1 (const string& label) {
 //{{{
 int cBitStream::readSyntaxElement_VLC (sSyntaxElement* se) {
 
-  se->len = GetVLCSymbol (bitStreamBuffer, bitStreamOffset, &(se->inf), bitStreamLen);
+  se->len = getVLCSymbol (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
   if (se->len == -1)
     return -1;
 
   bitStreamOffset += se->len;
-  se->mapping (se->len, se->inf, &(se->value1), &(se->value2));
+  se->mapping (se->len, se->inf, &se->value1, &se->value2);
+
+  return 1;
+  }
+//}}}
+//{{{
+int cBitStream::readSyntaxElement_FLC (sSyntaxElement* se) {
+
+  int bitstreamLengthInBits  = (bitStreamLen << 3) + 7;
+  if (getBits(bitStreamBuffer, bitStreamOffset, &(se->inf), bitstreamLengthInBits, se->len) < 0)
+    return -1;
+
+  se->value1 = se->inf;
+  bitStreamOffset += se->len; // move s pointer
 
   return 1;
   }
@@ -403,7 +412,7 @@ int cBitStream::readSyntaxElement_VLC (sSyntaxElement* se) {
 //{{{
 int cBitStream::readSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se) {
 
-  se->len = GetVLCSymbol_IntraMode (bitStreamBuffer, bitStreamOffset, &(se->inf), bitStreamLen);
+  se->len = getVLCSymbolIntraMode (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
   if (se->len == -1)
     return -1;
 
@@ -413,6 +422,7 @@ int cBitStream::readSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se) {
   return 1;
   }
 //}}}
+
 //{{{
 int cBitStream::readSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se, char *type) {
 
@@ -475,7 +485,7 @@ int cBitStream::readSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se, char
   // vlcnum==3 means (8<=nC) which uses 6bit FLC
   if (vlcnum == 3) {
     // read 6 bit FLC
-    code = ShowBits (buf, offset, BitstreamLengthInBits, 6);
+    code = showBits (buf, offset, BitstreamLengthInBits, 6);
     offset += 6;
     se->value2 = (code & 3);
     se->value1 = (code >> 2);
@@ -552,29 +562,20 @@ int cBitStream::readSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* dec
   return retval;
   }
 //}}}
-//{{{
-int cBitStream::readSyntaxElement_FLC (sSyntaxElement* se) {
 
-  int BitstreamLengthInBits  = (bitStreamLen << 3) + 7;
-  if (getBits(bitStreamBuffer, bitStreamOffset, &(se->inf), BitstreamLengthInBits, se->len) < 0)
-    return -1;
-
-  se->value1 = se->inf;
-  bitStreamOffset += se->len; // move s pointer
-
-  return 1;
-  }
-//}}}
 //{{{
 int cBitStream::readSyntaxElement_Level_VLC0 (sSyntaxElement* se) {
 
   int offset = bitStreamOffset;
-  int BitstreamLengthInBytes = bitStreamLen;
-  int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
+  int bitstreamLengthInBytes = bitStreamLen;
+  int bitstreamLengthInBits = (bitstreamLengthInBytes << 3) + 7;
   uint8_t* buf = bitStreamBuffer;
-  int len = 1, sign = 0, level = 0, code = 1;
+  int len = 1;
+  int sign = 0;
+  int level = 0;
+  int  code = 1;
 
-  while (!ShowBits (buf, offset++, BitstreamLengthInBits, 1))
+  while (!showBits (buf, offset++, bitstreamLengthInBits, 1))
     len++;
 
   if (len < 15) {
@@ -584,7 +585,7 @@ int cBitStream::readSyntaxElement_Level_VLC0 (sSyntaxElement* se) {
   else if (len == 15) {
     // escape code
     code <<= 4;
-    code |= ShowBits(buf, offset, BitstreamLengthInBits, 4);
+    code |= showBits(buf, offset, bitstreamLengthInBits, 4);
     len  += 4;
     offset += 4;
     sign = (code & 0x01);
@@ -595,7 +596,7 @@ int cBitStream::readSyntaxElement_Level_VLC0 (sSyntaxElement* se) {
     int addbit = (len - 16);
     int offset1 = (2048 << addbit) - 2032;
     len -= 4;
-    code = ShowBits (buf, offset, BitstreamLengthInBits, len);
+    code = showBits (buf, offset, bitstreamLengthInBits, len);
     sign = (code & 0x01);
     offset += len;
     level = (code >> 1) + offset1;
@@ -615,18 +616,18 @@ int cBitStream::readSyntaxElement_Level_VLC0 (sSyntaxElement* se) {
 int cBitStream::readSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc) {
 
   int offset = bitStreamOffset;
-  int BitstreamLengthInBytes = bitStreamLen;
-  int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  uint8_t* buf = bitStreamBuffer;
+  int bitstreamLengthInBytes = bitStreamLen;
+  int bitstreamLengthInBits  = (bitstreamLengthInBytes << 3) + 7;
 
-  int levabs, sign;
+  int levabs;
+  int sign;
   int len = 1;
-  int code = 1, sb;
-
+  int code = 1;
+  int sb;
   int shift = vlc - 1;
 
   // read pre zeros
-  while (!ShowBits(buf, offset ++, BitstreamLengthInBits, 1))
+  while (!showBits (bitStreamBuffer, offset ++, bitstreamLengthInBits, 1))
     len++;
 
   offset -= len;
@@ -636,14 +637,14 @@ int cBitStream::readSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc) {
 
     // read (vlc-1) bits -> suffix
     if (shift) {
-      sb =  ShowBits(buf, offset + len, BitstreamLengthInBits, shift);
+      sb =  showBits (bitStreamBuffer, offset + len, bitstreamLengthInBits, shift);
       code = (code << (shift) )| sb;
       levabs += sb;
       len += (shift);
     }
 
     // read 1 bit -> sign
-    sign = ShowBits(buf, offset + len, BitstreamLengthInBits, 1);
+    sign = showBits (bitStreamBuffer, offset + len, bitstreamLengthInBits, 1);
     code = (code << 1)| sign;
     len ++;
     }
@@ -652,14 +653,14 @@ int cBitStream::readSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc) {
     int addbit = len - 5;
     int offset1 = (1 << addbit) + (15 << shift) - 2047;
 
-    sb = ShowBits(buf, offset1 + len, BitstreamLengthInBits, addbit);
+    sb = showBits (bitStreamBuffer, offset1 + len, bitstreamLengthInBits, addbit);
     code = (code << addbit ) | sb;
     len   += addbit;
 
     levabs = sb + offset1;
 
     // read 1 bit -> sign
-    sign = ShowBits(buf, offset1 + len, BitstreamLengthInBits, 1);
+    sign = showBits (bitStreamBuffer, offset1 + len, bitstreamLengthInBits, 1);
     code = (code << 1)| sign;
     len++;
     }
@@ -721,7 +722,6 @@ int cBitStream::readSyntaxElement_TotalZeros (sSyntaxElement* se) {
   int code;
   int vlcnum = se->value1;
   int retval = code_from_bitstream_2d (se, this, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
-
   if (retval)
     cDecoder264::error ("failed to find Total Zeros !cdc\n");
 
@@ -802,7 +802,6 @@ int cBitStream::readSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyn
   int yuv = decoder->activeSps->chromaFormatIdc - 1;
   int vlcnum = se->value1;
   int retval = code_from_bitstream_2d(se, this, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
-
   if (retval)
     cDecoder264::error ("failed to find Total Zeros\n");
 

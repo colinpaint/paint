@@ -190,14 +190,14 @@ public:
   static void linfo_levrun_inter (int len, int info, int* level, int* irun);
   static void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
 
-  static int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
-  static int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
-  static int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
   static int vlcStartCode (cSlice* slice, int dummy);
-  static int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
+  static int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
 
+  static int getVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
+  static int getVLCSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
   static int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
-  static int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);
+  static int showBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);
+  static int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
 
   // members
   int readSeV (const std::string& label);
@@ -209,21 +209,24 @@ public:
   int readSyntaxElement_VLC (sSyntaxElement* se);
   int readSyntaxElement_FLC (sSyntaxElement* se);
   int readSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se);
+
   int readSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se, char* type);
   int readSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se);
+
   int readSyntaxElement_Level_VLC0 (sSyntaxElement* se);
   int readSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc);
+
   int readSyntaxElement_TotalZeros (sSyntaxElement* se);
   int readSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se);
   int readSyntaxElement_Run (sSyntaxElement* se);
 
-  // cavlc Decoding
+  // vars cavlc
   uint8_t* bitStreamBuffer; // codebuffer for read bytes
   int      bitStreamOffset; // position in the codebuffer, bit-oriented
   int      bitStreamLen;    // over codebuffer length, uint8_t oriented
   int      errorFlag;       // error, 0: no error, else unspecified error
 
-  // cabac Decoding
+  // vars cabac
   int      readLen;         // position in the codebuffer
   int      codeLen;         // overall codebuffer length
   };
