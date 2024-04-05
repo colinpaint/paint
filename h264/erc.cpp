@@ -2243,7 +2243,7 @@ void ercSetErrorConcealment (sErcVariables *errorVar, int value ) {
  * \param segment
  *      Segment/cSlice No. counted by the caller
  * \param bitPos
- *      sBitStream pointer: number of bits read from the buffer.
+ *      cBitStream pointer: number of bits read from the buffer.
  * \param errorVar
  *      Variables for error detector
 ** **********************************************************************
@@ -2268,7 +2268,7 @@ void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables
  *      Segment/cSlice No. counted by the caller
  *      If (segment<0) the internal segment counter is used.
  * \param bitPos
- *      sBitStream pointer: number of bits read from the buffer.
+ *      cBitStream pointer: number of bits read from the buffer.
  * \param errorVar
  *      Variables for error detector
 ** **********************************************************************

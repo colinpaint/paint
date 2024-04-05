@@ -353,7 +353,14 @@ struct sCodedBlockPattern {
   };
 //}}}
 //{{{
-struct sBitStream {
+class cBitStream {
+public:
+  int readSeV (const std::string& label);
+  int readUeV (const std::string& label);
+  bool readU1 (const std::string& label);
+  int readUv (int LenInBits, const std::string& label);
+  int readIv (int LenInBits, const std::string& label);
+
   // cavlc Decoding
   uint8_t* bitStreamBuffer; // codebuffer for read bytes
   int   bitStreamOffset; // position in the codebuffer, bit-oriented
@@ -392,9 +399,10 @@ struct sSyntaxElement {
   void (*reading) (sMacroBlock*, sSyntaxElement*, sCabacDecodeEnv*);
   };
 //}}}
+#include "cBitStream.h"
 //{{{
 struct sDataPartition {
-  sBitStream*     stream;
+  cBitStream*     stream;
   sCabacDecodeEnv cabacDecodeEnv;
 
   int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
@@ -1045,7 +1053,7 @@ private:
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
 
   bool isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice);
-  void readDecRefPicMarking (sBitStream* s, cSlice* slice);
+  void readDecRefPicMarking (cBitStream* s, cSlice* slice);
   void initPicture (cSlice* slice);
   void initRefPicture (cSlice* slice);
   void initSlice (cSlice* slice);

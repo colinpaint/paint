@@ -3,7 +3,6 @@
 #include "memory.h"
 
 #include "nalu.h"
-#include "vlc.h"
 
 #include "../common/cLog.h"
 
@@ -12,7 +11,7 @@ using namespace std;
 
 namespace {
   //{{{
-  static void scalingList (int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix, sBitStream* s) {
+  static void scalingList (int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix, cBitStream* s) {
   // syntax for scaling list matrix values
 
     //{{{
@@ -34,7 +33,7 @@ namespace {
     for (int j = 0; j < scalingListSize; j++) {
       int scanj = (scalingListSize == 16) ? ZZ_SCAN[j] : ZZ_SCAN8[j];
       if (nextScale != 0) {
-        int delta_scale = readSeV ("   : delta_sl   ", s);
+        int delta_scale = s->readSeV ("   : delta_sl   ");
         nextScale = (lastScale + delta_scale + 256) % 256;
         *useDefaultScalingMatrix = (bool)(scanj == 0 && nextScale == 0);
         }
@@ -180,30 +179,30 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) {
 // read PPS from NALU
 
-  sBitStream* s = dataPartition->stream;
+  cBitStream* s = dataPartition->stream;
 
-  id = readUeV ("PPS ppsId", s);
-  spsId = readUeV ("PPS spsId", s);
+  id = s->readUeV ("PPS ppsId");
+  spsId = s->readUeV ("PPS spsId");
 
-  entropyCoding = readU1 ("PPS entropyCoding", s);
-  frameBotField = readU1 ("PPS frameBotField", s);
-  numSliceGroupsMinus1 = readUeV ("PPS numSliceGroupsMinus1", s);
+  entropyCoding = s->readU1 ("PPS entropyCoding");
+  frameBotField = s->readU1 ("PPS frameBotField");
+  numSliceGroupsMinus1 = s->readUeV ("PPS numSliceGroupsMinus1");
 
   if (numSliceGroupsMinus1 > 0) {
     //{{{  FMO
-    sliceGroupMapType = readUeV ("PPS sliceGroupMapType", s);
+    sliceGroupMapType = s->readUeV ("PPS sliceGroupMapType");
 
     switch (sliceGroupMapType) {
       case 0: {
         for (uint32_t i = 0; i <= numSliceGroupsMinus1; i++)
-          runLengthMinus1 [i] = readUeV ("PPS runLengthMinus1 [i]", s);
+          runLengthMinus1 [i] = s->readUeV ("PPS runLengthMinus1 [i]");
         break;
         }
 
       case 2: {
         for (uint32_t i = 0; i < numSliceGroupsMinus1; i++) {
-          topLeft [i] = readUeV ("PPS topLeft [i]", s);
-          botRight [i] = readUeV ("PPS botRight [i]", s);
+          topLeft [i] = s->readUeV ("PPS topLeft [i]");
+          botRight [i] = s->readUeV ("PPS botRight [i]");
           }
         break;
         }
@@ -211,8 +210,8 @@ void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
       case 3:
       case 4:
       case 5:
-        sliceGroupChangeDirectionFlag = readU1 ("PPS sliceGroupChangeDirectionFlag", s);
-        sliceGroupChangeRateMius1 = readUeV ("PPS sliceGroupChangeRateMius1", s);
+        sliceGroupChangeDirectionFlag = s->readU1 ("PPS sliceGroupChangeDirectionFlag");
+        sliceGroupChangeRateMius1 = s->readUeV ("PPS sliceGroupChangeRateMius1");
         break;
 
       case 6: {
@@ -224,10 +223,10 @@ void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
         else
           NumberBitsPerSliceGroupId = 1;
 
-        picSizeMapUnitsMinus1 = readUeV ("PPS picSizeMapUnitsMinus1", s);
+        picSizeMapUnitsMinus1 = s->readUeV ("PPS picSizeMapUnitsMinus1");
         sliceGroupId = (uint8_t*)calloc (picSizeMapUnitsMinus1+1, 1);
         for (uint32_t i = 0; i <= picSizeMapUnitsMinus1; i++)
-          sliceGroupId[i] = (uint8_t)readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]", s);
+          sliceGroupId[i] = (uint8_t)s->readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]");
         break;
         }
 
@@ -236,32 +235,32 @@ void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
     }
     //}}}
 
-  numRefIndexL0defaultActiveMinus1 = readUeV ("PPS numRefIndexL0defaultActiveMinus1", s);
-  numRefIndexL1defaultActiveMinus1 = readUeV ("PPS numRefIndexL1defaultActiveMinus1", s);
+  numRefIndexL0defaultActiveMinus1 = s->readUeV ("PPS numRefIndexL0defaultActiveMinus1");
+  numRefIndexL1defaultActiveMinus1 = s->readUeV ("PPS numRefIndexL1defaultActiveMinus1");
 
-  hasWeightedPred = readU1 ("PPS hasWeightedPred", s);
-  weightedBiPredIdc = readUv (2, "PPS weightedBiPredIdc", s);
+  hasWeightedPred = s->readU1 ("PPS hasWeightedPred");
+  weightedBiPredIdc = s->readUv (2, "PPS weightedBiPredIdc");
 
-  picInitQpMinus26 = readSeV ("PPS picInitQpMinus26", s);
-  picInitQsMinus26 = readSeV ("PPS picInitQsMinus26", s);
+  picInitQpMinus26 = s->readSeV ("PPS picInitQpMinus26");
+  picInitQsMinus26 = s->readSeV ("PPS picInitQsMinus26");
 
-  chromaQpOffset = readSeV ("PPS chromaQpOffset", s);
+  chromaQpOffset = s->readSeV ("PPS chromaQpOffset");
 
-  hasDeblockFilterControl = readU1 ("PPS hasDeblockFilterControl" , s);
-  hasConstrainedIntraPred = readU1 ("PPS hasConstrainedIntraPred", s);
-  redundantPicCountPresent = readU1 ("PPS redundantPicCountPresent", s);
+  hasDeblockFilterControl = s->readU1 ("PPS hasDeblockFilterControl" );
+  hasConstrainedIntraPred = s->readU1 ("PPS hasConstrainedIntraPred");
+  redundantPicCountPresent = s->readU1 ("PPS redundantPicCountPresent");
 
   hasMoreData = moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
   if (hasMoreData) {
     //{{{  read fidelity range
-    hasTransform8x8mode = readU1 ("PPS hasTransform8x8mode", s);
+    hasTransform8x8mode = s->readU1 ("PPS hasTransform8x8mode");
 
-    hasPicScalingMatrix = readU1 ("PPS hasPicScalingMatrix", s);
+    hasPicScalingMatrix = s->readU1 ("PPS hasPicScalingMatrix");
     if (hasPicScalingMatrix) {
       int chromaFormatIdc = decoder->sps[spsId].chromaFormatIdc;
       uint32_t n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * hasTransform8x8mode;
       for (uint32_t i = 0; i < n_ScalingList; i++) {
-        picScalingListPresentFlag[i]= readU1 ("PPS picScalingListPresentFlag", s);
+        picScalingListPresentFlag[i]= s->readU1 ("PPS picScalingListPresentFlag");
         if (picScalingListPresentFlag[i]) {
           if (i < 6)
             scalingList (scalingList4x4[i], 16, &useDefaultScalingMatrix4x4Flag[i], s);
@@ -271,7 +270,7 @@ void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
         }
       }
 
-    chromaQpOffset2 = readSeV ("PPS chromaQpOffset2", s);
+    chromaQpOffset2 = s->readSeV ("PPS chromaQpOffset2");
     }
     //}}}
   else

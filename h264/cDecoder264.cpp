@@ -16,7 +16,6 @@
 #include "sei.h"
 #include "syntaxElement.h"
 #include "quant.h"
-#include "vlc.h"
 
 #include "../common/cLog.h"
 
@@ -1404,9 +1403,9 @@ sDataPartition* allocDataPartitions (int numPartitions) {
   for (int i = 0; i < numPartitions; ++i) {
     // loop over all dataPartitions
     sDataPartition* dataPartition = &dataPartitions[i];
-    dataPartition->stream = (sBitStream*)calloc(1, sizeof(sBitStream));
+    dataPartition->stream = (cBitStream*)calloc(1, sizeof(cBitStream));
     if (dataPartition->stream == NULL)
-      cDecoder264::error ("allocDataPartitions: Memory allocation for sBitStream failed");
+      cDecoder264::error ("allocDataPartitions: Memory allocation for cBitStream failed");
 
     dataPartition->stream->bitStreamBuffer = (uint8_t*)calloc(MAX_CODED_FRAME_SIZE, sizeof(uint8_t));
     if (dataPartition->stream->bitStreamBuffer == NULL)
@@ -2327,7 +2326,7 @@ bool cDecoder264::isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* old
   }
 //}}}
 //{{{
-void cDecoder264::readDecRefPicMarking (sBitStream* s, cSlice* slice) {
+void cDecoder264::readDecRefPicMarking (cBitStream* s, cSlice* slice) {
 
   // free old buffer content
   while (slice->decRefPicMarkBuffer) {
@@ -2337,28 +2336,28 @@ void cDecoder264::readDecRefPicMarking (sBitStream* s, cSlice* slice) {
     }
 
   if (slice->isIDR) {
-    slice->noOutputPriorPicFlag = readU1 ("SLC noOutputPriorPicFlag", s);
+    slice->noOutputPriorPicFlag = s->readU1 ("SLC noOutputPriorPicFlag");
     noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
-    slice->longTermRefFlag = readU1 ("SLC longTermRefFlag", s);
+    slice->longTermRefFlag = s->readU1 ("SLC longTermRefFlag");
     }
   else {
-    slice->adaptRefPicBufFlag = readU1 ("SLC adaptRefPicBufFlag", s);
+    slice->adaptRefPicBufFlag = s->readU1 ("SLC adaptRefPicBufFlag");
     if (slice->adaptRefPicBufFlag) {
       // read Memory Management Control Operation
       int val;
       do {
         sDecodedRefPicMark* tempDrpm = (sDecodedRefPicMark*)calloc (1,sizeof (sDecodedRefPicMark));
         tempDrpm->next = NULL;
-        val = tempDrpm->memManagement = readUeV ("SLC memManagement", s);
+        val = tempDrpm->memManagement = s->readUeV ("SLC memManagement");
         if ((val == 1) || (val == 3))
-          tempDrpm->diffPicNumMinus1 = readUeV ("SLC diffPicNumMinus1", s);
+          tempDrpm->diffPicNumMinus1 = s->readUeV ("SLC diffPicNumMinus1");
         if (val == 2)
-          tempDrpm->longTermPicNum = readUeV ("SLC longTermPicNum", s);
+          tempDrpm->longTermPicNum = s->readUeV ("SLC longTermPicNum");
 
         if ((val == 3 ) || (val == 6))
-          tempDrpm->longTermFrameIndex = readUeV ("SLC longTermFrameIndex", s);
+          tempDrpm->longTermFrameIndex = s->readUeV ("SLC longTermFrameIndex");
         if (val == 4)
-          tempDrpm->maxLongTermFrameIndexPlus1 = readUeV ("SLC max_long_term_pic_idx_plus1", s);
+          tempDrpm->maxLongTermFrameIndexPlus1 = s->readUeV ("SLC max_long_term_pic_idx_plus1");
 
         // add command
         if (!slice->decRefPicMarkBuffer)
@@ -2760,20 +2759,20 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
 // - read the rest of the slice header
 
   uint32_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_HEADER];
-  sBitStream* s = slice->dataPartitions[partitionIndex].stream;
+  cBitStream* s = slice->dataPartitions[partitionIndex].stream;
 
-  slice->startMbNum = readUeV ("SLC first_mb_in_slice", s);
+  slice->startMbNum = s->readUeV ("SLC first_mb_in_slice");
 
-  int tmp = readUeV ("SLC sliceType", s);
+  int tmp = s->readUeV ("SLC sliceType");
   if (tmp > 4)
     tmp -= 5;
   slice->sliceType = (eSliceType)tmp;
   coding.sliceType = slice->sliceType;
 
-  slice->ppsId = readUeV ("SLC ppsId", s);
+  slice->ppsId = s->readUeV ("SLC ppsId");
 
   if (coding.isSeperateColourPlane)
-    slice->colourPlaneId = readUv (2, "SLC colourPlaneId", s);
+    slice->colourPlaneId = s->readUv (2, "SLC colourPlaneId");
   else
     slice->colourPlaneId = PLANE_Y;
 
@@ -2784,7 +2783,7 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
   slice->transform8x8Mode = activePps->hasTransform8x8mode;
   slice->chroma444notSeparate = (activeSps->chromaFormatIdc == YUV444) && !coding.isSeperateColourPlane;
 
-  slice->frameNum = readUv (activeSps->log2maxFrameNumMinus4 + 4, "SLC frameNum", s);
+  slice->frameNum = s->readUv (activeSps->log2maxFrameNumMinus4 + 4, "SLC frameNum");
   if (slice->isIDR) {
     preFrameNum = slice->frameNum;
     lastRefPicPoc = 0;
@@ -2796,9 +2795,9 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
     }
 
   else {
-    slice->fieldPic = readU1 ("SLC fieldPic", s);
+    slice->fieldPic = s->readU1 ("SLC fieldPic");
     if (slice->fieldPic) {
-      slice->botField = (uint8_t)readU1 ("SLC botField", s);
+      slice->botField = (uint8_t)s->readU1 ("SLC botField");
       coding.picStructure = slice->botField ? eBotField : eTopField;
       }
     else {
@@ -2812,21 +2811,21 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
   //}}}
 
   if (slice->isIDR)
-    slice->idrPicId = readUeV ("SLC idrPicId", s);
+    slice->idrPicId = s->readUeV ("SLC idrPicId");
   //{{{  read picOrderCount
   if (activeSps->pocType == 0) {
-    slice->picOrderCountLsb = readUv (activeSps->log2maxPocLsbMinus4 + 4, "SLC picOrderCountLsb", s);
+    slice->picOrderCountLsb = s->readUv (activeSps->log2maxPocLsbMinus4 + 4, "SLC picOrderCountLsb");
     if ((activePps->frameBotField == 1) && !slice->fieldPic)
-      slice->deltaPicOrderCountBot = readSeV ("SLC deltaPicOrderCountBot", s);
+      slice->deltaPicOrderCountBot = s->readSeV ("SLC deltaPicOrderCountBot");
     else
       slice->deltaPicOrderCountBot = 0;
     }
 
   if (activeSps->pocType == 1) {
     if (!activeSps->deltaPicOrderAlwaysZero) {
-      slice->deltaPicOrderCount[0] = readSeV ("SLC deltaPicOrderCount[0]", s);
+      slice->deltaPicOrderCount[0] = s->readSeV ("SLC deltaPicOrderCount[0]");
       if ((activePps->frameBotField == 1) && !slice->fieldPic)
-        slice->deltaPicOrderCount[1] = readSeV ("SLC deltaPicOrderCount[1]", s);
+        slice->deltaPicOrderCount[1] = s->readSeV ("SLC deltaPicOrderCount[1]");
       else
         slice->deltaPicOrderCount[1] = 0;  // set to zero if not in stream
       }
@@ -2838,19 +2837,19 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
   //}}}
 
   if (activePps->redundantPicCountPresent)
-    slice->redundantPicCount = readUeV ("SLC redundantPicCount", s);
+    slice->redundantPicCount = s->readUeV ("SLC redundantPicCount");
 
   if (slice->sliceType == eSliceB)
-    slice->directSpatialMvPredFlag = readU1 ("SLC directSpatialMvPredFlag", s);
+    slice->directSpatialMvPredFlag = s->readU1 ("SLC directSpatialMvPredFlag");
 
   // read refPics
   slice->numRefIndexActive[LIST_0] = activePps->numRefIndexL0defaultActiveMinus1 + 1;
   slice->numRefIndexActive[LIST_1] = activePps->numRefIndexL1defaultActiveMinus1 + 1;
   if ((slice->sliceType == eSliceP) || (slice->sliceType == eSliceSP) || (slice->sliceType == eSliceB)) {
-    if (readU1 ("SLC isNumRefIndexOverride", s)) {
-      slice->numRefIndexActive[LIST_0] = 1 + readUeV ("SLC numRefIndexActiveL0minus1", s);
+    if (s->readU1 ("SLC isNumRefIndexOverride")) {
+      slice->numRefIndexActive[LIST_0] = 1 + s->readUeV ("SLC numRefIndexActiveL0minus1");
       if (slice->sliceType == eSliceB)
-        slice->numRefIndexActive[LIST_1] = 1 + readUeV ("SLC numRefIndexActiveL1minus1", s);
+        slice->numRefIndexActive[LIST_1] = 1 + s->readUeV ("SLC numRefIndexActiveL1minus1");
       }
     }
   if (slice->sliceType != eSliceB)
@@ -2859,30 +2858,30 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
   slice->allocRefPicListReordeBuffer();
 
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
-    int value = slice->refPicReorderFlag[LIST_0] = readU1 ("SLC refPicReorderL0", s);
+    int value = slice->refPicReorderFlag[LIST_0] = s->readU1 ("SLC refPicReorderL0");
     if (value) {
       int i = 0;
       do {
-        value = slice->modPicNumsIdc[LIST_0][i] = readUeV("SLC modPicNumsIdcl0", s);
+        value = slice->modPicNumsIdc[LIST_0][i] = s->readUeV("SLC modPicNumsIdcl0");
         if ((value == 0) || (value == 1))
-          slice->absDiffPicNumMinus1[LIST_0][i] = readUeV ("SLC absDiffPicNumMinus1L0", s);
+          slice->absDiffPicNumMinus1[LIST_0][i] = s->readUeV ("SLC absDiffPicNumMinus1L0");
         else if (value == 2)
-          slice->longTermPicIndex[LIST_0][i] = readUeV ("SLC longTermPicIndexL0", s);
+          slice->longTermPicIndex[LIST_0][i] = s->readUeV ("SLC longTermPicIndexL0");
         i++;
         } while (value != 3);
       }
     }
 
   if (slice->sliceType == eSliceB) {
-    int value = slice->refPicReorderFlag[LIST_1] = readU1 ("SLC refPicReorderL1", s);
+    int value = slice->refPicReorderFlag[LIST_1] = s->readU1 ("SLC refPicReorderL1");
     if (value) {
       int i = 0;
       do {
-        value = slice->modPicNumsIdc[LIST_1][i] = readUeV ("SLC modPicNumsIdcl1", s);
+        value = slice->modPicNumsIdc[LIST_1][i] = s->readUeV ("SLC modPicNumsIdcl1");
         if ((value == 0) || (value == 1))
-          slice->absDiffPicNumMinus1[LIST_1][i] = readUeV ("SLC absDiffPicNumMinus1L1", s);
+          slice->absDiffPicNumMinus1[LIST_1][i] = s->readUeV ("SLC absDiffPicNumMinus1L1");
         else if (value == 2)
-          slice->longTermPicIndex[LIST_1][i] = readUeV ("SLC longTermPicIndexL1", s);
+          slice->longTermPicIndex[LIST_1][i] = s->readUeV ("SLC longTermPicIndexL1");
         i++;
         } while (value != 3);
       }
@@ -2903,20 +2902,20 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
   if ((activePps->hasWeightedPred &&
        ((slice->sliceType == eSliceP) || (slice->sliceType == eSliceSP))) ||
       ((activePps->weightedBiPredIdc == 1) && (slice->sliceType == eSliceB))) {
-    slice->lumaLog2weightDenom = (uint16_t)readUeV ("SLC lumaLog2weightDenom", s);
+    slice->lumaLog2weightDenom = (uint16_t)s->readUeV ("SLC lumaLog2weightDenom");
     slice->wpRoundLuma = slice->lumaLog2weightDenom ? 1 << (slice->lumaLog2weightDenom - 1) : 0;
 
     if (activeSps->chromaFormatIdc) {
-      slice->chromaLog2weightDenom = (uint16_t)readUeV ("SLC chromaLog2weightDenom", s);
+      slice->chromaLog2weightDenom = (uint16_t)s->readUeV ("SLC chromaLog2weightDenom");
       slice->wpRoundChroma = slice->chromaLog2weightDenom ? 1 << (slice->chromaLog2weightDenom - 1) : 0;
       }
 
     slice->resetWeightedPredParam();
     for (int i = 0; i < slice->numRefIndexActive[LIST_0]; i++) {
       //{{{  read l0 weights
-      if (readU1 ("SLC hasLumaWeightL0", s)) {
-        slice->weightedPredWeight[LIST_0][i][0] = readSeV ("SLC lumaWeightL0", s);
-        slice->weightedPredOffset[LIST_0][i][0] = readSeV ("SLC lumaOffsetL0", s);
+      if (s->readU1 ("SLC hasLumaWeightL0")) {
+        slice->weightedPredWeight[LIST_0][i][0] = s->readSeV ("SLC lumaWeightL0");
+        slice->weightedPredOffset[LIST_0][i][0] = s->readSeV ("SLC lumaOffsetL0");
         slice->weightedPredOffset[LIST_0][i][0] = slice->weightedPredOffset[LIST_0][i][0] << (bitDepthLuma - 8);
         }
       else {
@@ -2926,11 +2925,11 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
 
       if (activeSps->chromaFormatIdc) {
         // l0 chroma weights
-        int hasChromaWeightL0 = readU1 ("SLC hasChromaWeightL0", s);
+        int hasChromaWeightL0 = s->readU1 ("SLC hasChromaWeightL0");
         for (int j = 1; j < 3; j++) {
           if (hasChromaWeightL0) {
-            slice->weightedPredWeight[LIST_0][i][j] = readSeV ("SLC chromaWeightL0", s);
-            slice->weightedPredOffset[LIST_0][i][j] = readSeV ("SLC chromaOffsetL0", s);
+            slice->weightedPredWeight[LIST_0][i][j] = s->readSeV ("SLC chromaWeightL0");
+            slice->weightedPredOffset[LIST_0][i][j] = s->readSeV ("SLC chromaOffsetL0");
             slice->weightedPredOffset[LIST_0][i][j] = slice->weightedPredOffset[LIST_0][i][j] << (bitDepthChroma-8);
             }
           else {
@@ -2945,10 +2944,10 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
     if ((slice->sliceType == eSliceB) && activePps->weightedBiPredIdc == 1)
       for (int i = 0; i < slice->numRefIndexActive[LIST_1]; i++) {
         //{{{  read l1 weights
-        if (readU1 ("SLC hasLumaWeightL1", s)) {
+        if (s->readU1 ("SLC hasLumaWeightL1")) {
           // read l1 luma weights
-          slice->weightedPredWeight[LIST_1][i][0] = readSeV ("SLC lumaWeightL1", s);
-          slice->weightedPredOffset[LIST_1][i][0] = readSeV ("SLC lumaOffsetL1", s);
+          slice->weightedPredWeight[LIST_1][i][0] = s->readSeV ("SLC lumaWeightL1");
+          slice->weightedPredOffset[LIST_1][i][0] = s->readSeV ("SLC lumaOffsetL1");
           slice->weightedPredOffset[LIST_1][i][0] = slice->weightedPredOffset[LIST_1][i][0] << (bitDepthLuma-8);
           }
         else {
@@ -2957,12 +2956,12 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
           }
 
         if (activeSps->chromaFormatIdc) {
-          int hasChromaWeightL1 = readU1 ("SLC hasChromaWeightL1", s);
+          int hasChromaWeightL1 = s->readU1 ("SLC hasChromaWeightL1");
           for (int j = 1; j < 3; j++) {
             if (hasChromaWeightL1) {
               // read l1 chroma weights
-              slice->weightedPredWeight[LIST_1][i][j] = readSeV("SLC chromaWeightL1", s);
-              slice->weightedPredOffset[LIST_1][i][j] = readSeV("SLC chromaOffsetL1", s);
+              slice->weightedPredWeight[LIST_1][i][j] = s->readSeV ("SLC chromaWeightL1");
+              slice->weightedPredOffset[LIST_1][i][j] = s->readSeV ("SLC chromaOffsetL1");
               slice->weightedPredOffset[LIST_1][i][j] = slice->weightedPredOffset[LIST_1][i][j]<<(bitDepthChroma-8);
               }
             else {
@@ -2981,27 +2980,27 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
 
   if (activePps->entropyCoding &&
       (slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI))
-    slice->cabacInitIdc = readUeV ("SLC cabacInitIdc", s);
+    slice->cabacInitIdc = s->readUeV ("SLC cabacInitIdc");
   else
     slice->cabacInitIdc = 0;
   //{{{  read qp
-  slice->sliceQpDelta = readSeV ("SLC sliceQpDelta", s);
+  slice->sliceQpDelta = s->readSeV ("SLC sliceQpDelta");
   slice->qp = 26 + activePps->picInitQpMinus26 + slice->sliceQpDelta;
 
   if ((slice->sliceType == eSliceSP) || (slice->sliceType == eSliceSI)) {
     if (slice->sliceType == eSliceSP)
-      slice->spSwitch = readU1 ("SLC sp_for_switchFlag", s);
-    slice->sliceQsDelta = readSeV ("SLC sliceQsDelta", s);
+      slice->spSwitch = s->readU1 ("SLC sp_for_switchFlag");
+    slice->sliceQsDelta = s->readSeV ("SLC sliceQsDelta");
     slice->qs = 26 + activePps->picInitQsMinus26 + slice->sliceQsDelta;
     }
   //}}}
 
   if (activePps->hasDeblockFilterControl) {
     //{{{  read deblockFilter
-    slice->deblockFilterDisableIdc = (int16_t)readUeV ("SLC disable_deblocking_filter_idc", s);
+    slice->deblockFilterDisableIdc = (int16_t)s->readUeV ("SLC disable_deblocking_filter_idc");
     if (slice->deblockFilterDisableIdc != 1) {
-      slice->deblockFilterC0Offset = (int16_t)(2 * readSeV ("SLC slice_alpha_c0_offset_div2", s));
-      slice->deblockFilterBetaOffset = (int16_t)(2 * readSeV ("SLC slice_beta_offset_div2", s));
+      slice->deblockFilterC0Offset = (int16_t)(2 * s->readSeV ("SLC slice_alpha_c0_offset_div2"));
+      slice->deblockFilterBetaOffset = (int16_t)(2 * s->readSeV ("SLC slice_beta_offset_div2"));
       }
     else
       slice->deblockFilterC0Offset = slice->deblockFilterBetaOffset = 0;
@@ -3032,7 +3031,7 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
       len += 1;
 
     len = ceilLog2 (len+1);
-    slice->sliceGroupChangeCycle = readUv (len, "SLC sliceGroupChangeCycle", s);
+    slice->sliceGroupChangeCycle = s->readUv (len, "SLC sliceGroupChangeCycle");
     }
   //}}}
 
@@ -3079,7 +3078,7 @@ int cDecoder264::readSlice (cSlice* slice) {
         slice->refId = nalu->refId;
         slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
-        sBitStream* s = slice->dataPartitions[0].stream;
+        cBitStream* s = slice->dataPartitions[0].stream;
         s->readLen = 0;
         s->errorFlag = 0;
         s->bitStreamOffset = 0;
@@ -3168,7 +3167,7 @@ int cDecoder264::readSlice (cSlice* slice) {
         slice->noDataPartitionC = 1;
         slice->dataPartitionMode = eDataPartition3;
         slice->maxDataPartitions = 3;
-        sBitStream* s = slice->dataPartitions[0].stream;
+        cBitStream* s = slice->dataPartitions[0].stream;
         s->errorFlag = 0;
         s->bitStreamOffset = s->readLen = 0;
         memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
@@ -3192,7 +3191,7 @@ int cDecoder264::readSlice (cSlice* slice) {
           slice->mbIndex = slice->startMbNum;
 
         // need to read the slice ID, which depends on the value of redundantPicCountPresent
-        int slice_id_a = readUeV ("NALU: DP_A slice_id", s);
+        int slice_id_a = s->readUeV ("NALU: DP_A slice_id");
         if (activePps->entropyCoding)
           cDecoder264::error ("dataPartition with eCabac not allowed");
 
@@ -3206,7 +3205,7 @@ int cDecoder264::readSlice (cSlice* slice) {
           s->bitStreamOffset = s->readLen = 0;
           memcpy (s->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
           s->codeLen = s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
-          int slice_id_b = readUeV ("NALU dataPartitionB sliceId", s);
+          int slice_id_b = s->readUeV ("NALU dataPartitionB sliceId");
           slice->noDataPartitionB = 0;
 
           if ((slice_id_b != slice_id_a) || (nalu->lostPackets)) {
@@ -3216,7 +3215,7 @@ int cDecoder264::readSlice (cSlice* slice) {
             }
           else {
             if (activePps->redundantPicCountPresent)
-              readUeV ("NALU dataPartitionB redundantPicCount", s);
+              s->readUeV ("NALU dataPartitionB redundantPicCount");
 
             // we're finished with dataPartitionB, so let's continue with next dataPartition
             if (!nalu->readNalu (this))
@@ -3236,14 +3235,14 @@ int cDecoder264::readSlice (cSlice* slice) {
           s->codeLen = s->bitStreamLen = nalu->RBSPtoSODB (s->bitStreamBuffer);
 
           slice->noDataPartitionC = 0;
-          int slice_id_c = readUeV ("NALU: DP_C slice_id", s);
+          int slice_id_c = s->readUeV ("NALU: DP_C slice_id");
           if ((slice_id_c != slice_id_a) || (nalu->lostPackets)) {
             cLog::log (LOGINFO, "dataPartitionC does not match dataPartitionA");
             slice->noDataPartitionC = 1;
             }
 
           if (activePps->redundantPicCountPresent)
-            readUeV ("NALU:SLICE_C redudand_pic_cnt", s);
+            s->readUeV ("NALU:SLICE_C redudand_pic_cnt");
           }
           //}}}
         else {

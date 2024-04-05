@@ -6,7 +6,6 @@
 #include "cabac.h"
 #include "macroblock.h"
 #include "syntaxElement.h"
-#include "vlc.h"
 //}}}
 namespace {
   //{{{  const tables
@@ -1793,7 +1792,7 @@ void readIPCMcabac (cSlice* slice, sDataPartition* dataPartition) {
   cDecoder264* decoder = slice->decoder;
   sPicture* picture = slice->picture;
 
-  sBitStream* s = dataPartition->stream;
+  cBitStream* s = dataPartition->stream;
   sCabacDecodeEnv* cabacDecodeEnv = &dataPartition->cabacDecodeEnv;
   uint8_t* buf = s->bitStreamBuffer;
   int bitStreamLengthInBits = (dataPartition->stream->bitStreamLen << 3) + 7;

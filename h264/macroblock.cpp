@@ -13,7 +13,6 @@
 #include "mcPred.h"
 #include "syntaxElement.h"
 #include "transform.h"
-#include "vlc.h"
 #include "quant.h"
 
 #include <math.h>
@@ -2388,7 +2387,7 @@ namespace {
       }
 
     for (int i = 0; i < dpNum;++i) {
-      sBitStream* stream = slice->dataPartitions[i].stream;
+      cBitStream* stream = slice->dataPartitions[i].stream;
       int byteStartPosition = stream->readLen;
       arithmeticDecodeStartDecoding (&slice->dataPartitions[i].cabacDecodeEnv, stream->bitStreamBuffer, byteStartPosition, &stream->readLen);
       }

@@ -2,8 +2,6 @@
 #include "global.h"
 #include "syntaxElement.h"
 
-#include "vlc.h"
-
 // utils
 #include "../common/cLog.h"
 
@@ -17,7 +15,7 @@ namespace {
     }
   //}}}
   //{{{
-  int code_from_bitstream_2d (sSyntaxElement* se, sBitStream* s, const uint8_t* lentab, const uint8_t* codtab,
+  int code_from_bitstream_2d (sSyntaxElement* se, cBitStream* s, const uint8_t* lentab, const uint8_t* codtab,
                                      int tabwidth, int tabheight, int *code) {
 
     const uint8_t* len = &lentab[0], *cod = &codtab[0];
@@ -57,13 +55,14 @@ namespace {
   }
 
 //{{{
-int readUeV (const string& label, sBitStream* s) {
+int cBitStream::readUeV (const string& label) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
-  readsSyntaxElement_VLC (&symbol, s);
+
+  readsSyntaxElement_VLC (&symbol, this);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
     cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.value1));
@@ -72,13 +71,13 @@ int readUeV (const string& label, sBitStream* s) {
   }
 //}}}
 //{{{
-int readSeV (const string& label, sBitStream* s) {
+int cBitStream::readSeV (const string& label) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_se;
-  readsSyntaxElement_VLC (&symbol, s);
+  readsSyntaxElement_VLC (&symbol, this);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
    cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.value1));
@@ -87,7 +86,7 @@ int readSeV (const string& label, sBitStream* s) {
   }
 //}}}
 //{{{
-int readUv (int LenInBits, const string& label, sBitStream* s) {
+int cBitStream::readUv (int LenInBits, const string& label) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -95,7 +94,7 @@ int readUv (int LenInBits, const string& label, sBitStream* s) {
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readsSyntaxElement_FLC (&symbol, s);
+  readsSyntaxElement_FLC (&symbol, this);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
     cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.inf));
@@ -104,7 +103,7 @@ int readUv (int LenInBits, const string& label, sBitStream* s) {
   }
 //}}}
 //{{{
-int readIv (int LenInBits, const string& label, sBitStream* s) {
+int cBitStream::readIv (int LenInBits, const string& label) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -112,7 +111,7 @@ int readIv (int LenInBits, const string& label, sBitStream* s) {
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readsSyntaxElement_FLC (&symbol, s);
+  readsSyntaxElement_FLC (&symbol, this);
 
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
@@ -124,8 +123,8 @@ int readIv (int LenInBits, const string& label, sBitStream* s) {
   }
 //}}}
 //{{{
-bool readU1 (const string& label, sBitStream* s) {
-  return (bool)readUv (1, label, s);
+bool cBitStream::readU1 (const string& label) {
+  return (bool)readUv (1, label);
   }
 //}}}
 
@@ -225,7 +224,7 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //}}}
 
 //{{{
-int readsSyntaxElement_VLC (sSyntaxElement* se, sBitStream* s) {
+int readsSyntaxElement_VLC (sSyntaxElement* se, cBitStream* s) {
 
   se->len =  GetVLCSymbol (s->bitStreamBuffer, s->bitStreamOffset,
                             &(se->inf), s->bitStreamLen);
@@ -244,7 +243,7 @@ int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* d
   }
 //}}}
 //{{{
-int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitStream* s) {
+int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, cBitStream* s) {
 
   se->len = GetVLCSymbol_IntraMode (s->bitStreamBuffer, s->bitStreamOffset, &(se->inf), s->bitStreamLen);
   if (se->len == -1)
@@ -313,7 +312,7 @@ int vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
   sDataPartition* dataPartition = &slice->dataPartitions[partitionIndex];
-  sBitStream* s = dataPartition->stream;
+  cBitStream* s = dataPartition->stream;
   uint8_t* buf = s->bitStreamBuffer;
 
   return !moreRbspData (buf, s->bitStreamOffset,s->bitStreamLen);
@@ -359,7 +358,7 @@ int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount
 //}}}
 
 //{{{
-int readsSyntaxElement_FLC (sSyntaxElement* se, sBitStream* s)
+int readsSyntaxElement_FLC (sSyntaxElement* se, cBitStream* s)
 {
   int BitstreamLengthInBits  = (s->bitStreamLen << 3) + 7;
 
@@ -374,7 +373,7 @@ int readsSyntaxElement_FLC (sSyntaxElement* se, sBitStream* s)
 //}}}
 //{{{
 int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,
-                                           sBitStream *s,
+                                           cBitStream *s,
                                            char *type)
 {
   int bitStreamOffset        = s->bitStreamOffset;
@@ -465,7 +464,7 @@ int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,
 }
 //}}}
 //{{{
-int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s)
+int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se, cBitStream* s)
 {
   static const uint8_t lentab[3][4][17] =
   {
@@ -520,7 +519,7 @@ int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSynt
 }
 //}}}
 //{{{
-int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, sBitStream* s)
+int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, cBitStream* s)
 {
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
@@ -569,7 +568,7 @@ int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, sBitStream* s)
 }
 //}}}
 //{{{
-int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, sBitStream* s)
+int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, cBitStream* s)
 {
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
@@ -632,7 +631,7 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, sBitStream* s)
 }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  sBitStream* s) {
+int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  cBitStream* s) {
 
   //{{{
   static const uint8_t lentab[TOTRUN_NUM][16] =
@@ -689,7 +688,7 @@ int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  sBitStream* s) {
   }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s) {
+int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, cBitStream* s) {
 
   //{{{
   static const uint8_t lentab[3][TOTRUN_NUM][16] =
@@ -772,7 +771,7 @@ int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement*
   }
 //}}}
 //{{{
-int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s)
+int readsSyntaxElement_Run (sSyntaxElement* se, cBitStream* s)
 {
   //{{{
   static const uint8_t lentab[TOTRUN_NUM][16] =

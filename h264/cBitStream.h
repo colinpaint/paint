@@ -57,12 +57,6 @@ static const uint8_t NTAB3[2][2][2] =
 };
 //}}}
 
-int readSeV (const std::string& label, sBitStream* s);
-int readUeV (const std::string& label, sBitStream* s);
-bool readU1 (const std::string& label, sBitStream* s);
-int readUv (int LenInBits, const std::string& label, sBitStream* s);
-int readIv (int LenInBits, const std::string& label, sBitStream* s);
-
 void linfo_ue (int len, int info, int* value1, int* dummy);
 void linfo_se (int len, int info, int* value1, int* dummy);
 void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy);
@@ -72,22 +66,22 @@ void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int* dumm
 void linfo_levrun_inter (int len, int info, int* level, int* irun);
 void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
 
-int readsSyntaxElement_VLC (sSyntaxElement* se, sBitStream* s);
+int readsSyntaxElement_VLC (sSyntaxElement* se, cBitStream* s);
 int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
-int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitStream* s);
+int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, cBitStream* s);
 int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
 int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
 int vlcStartCode (cSlice* slice, int dummy);
 int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
 
-int readsSyntaxElement_FLC (sSyntaxElement* se, sBitStream* s);
-int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,  sBitStream* s, char* type);
-int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s);
-int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, sBitStream* s);
-int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, sBitStream* s);
-int readsSyntaxElement_TotalZeros (sSyntaxElement* se, sBitStream* s);
-int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s);
-int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s);
+int readsSyntaxElement_FLC (sSyntaxElement* se, cBitStream* s);
+int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,  cBitStream* s, char* type);
+int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se, cBitStream* s);
+int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, cBitStream* s);
+int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, cBitStream* s);
+int readsSyntaxElement_TotalZeros (sSyntaxElement* se, cBitStream* s);
+int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, cBitStream* s);
+int readsSyntaxElement_Run (sSyntaxElement* se, cBitStream* s);
 
 int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
 int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);

@@ -5,7 +5,6 @@
 #include "cabac.h"
 #include "macroblock.h"
 #include "transform.h"
-#include "vlc.h"
 //}}}
 
 namespace {

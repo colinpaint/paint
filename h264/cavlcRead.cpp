@@ -4,7 +4,6 @@
 
 #include "macroblock.h"
 #include "cabac.h"
-#include "vlc.h"
 #include "transform.h"
 //}}}
 namespace {
@@ -1296,7 +1295,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
   se.type = dptype;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
-  sBitStream* s = dataPartition->stream;
+  cBitStream* s = dataPartition->stream;
 
   if (!cdc) {
     //{{{  luma or chroma AC
@@ -1508,7 +1507,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
   se.type = dptype;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
-  sBitStream* s = dataPartition->stream;
+  cBitStream* s = dataPartition->stream;
 
   if (!cdc) {
     //{{{  luma or chroma AC
