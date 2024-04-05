@@ -10,7 +10,6 @@
 #include "fmo.h"
 #include "intraPred.h"
 #include "macroBlock.h"
-#include "mbAccess.h"
 #include "mcPred.h"
 #include "syntaxElement.h"
 #include "transform.h"
@@ -1772,8 +1771,8 @@ namespace {
   //}}}
   //{{{
   void readMBRefPictureIdx (sSyntaxElement* se, sDataPartition* dataPartition,
-                                   sMacroBlock* mb, sPicMotion** mvInfo,
-                                   int list, int step_v0, int step_h0) {
+                            sMacroBlock* mb, sPicMotion** mvInfo,
+                            int list, int step_v0, int step_h0) {
 
     if (mb->mbType == 1) {
       if ((mb->b8pdir[0] == list || mb->b8pdir[0] == BI_PRED)) {
@@ -1962,6 +1961,23 @@ namespace {
       }
     }
   //}}}
+
+  //{{{  macroBlock utils
+  //{{{
+  bool isMbAvailable (int mbIndex, sMacroBlock* mb) {
+
+    cSlice* slice = mb->slice;
+    if ((mbIndex < 0) || (mbIndex > ((int)slice->picture->picSizeInMbs - 1)))
+      return false;
+
+    // the following line checks both: slice number and if the mb has been decoded
+    if (!mb->DeblockCall)
+      if (slice->mbData[mbIndex].sliceNum != mb->sliceNum)
+        return false;
+
+    return true;
+    }
+  //}}}
   //{{{
   void setMbPosInfo (sMacroBlock* mb) {
 
@@ -1980,347 +1996,6 @@ namespace {
     }
   //}}}
 
-  //{{{  interpretMb functions
-  //{{{
-  void interpretMbModeP (sMacroBlock* mb) {
-
-    static const int16_t ICBPTAB[6] = {0,16,32,15,31,47};
-
-    int16_t mbmode = mb->mbType;
-    if (mbmode < 4) {
-      mb->mbType = mbmode;
-      memset(mb->b8mode, mbmode, 4 * sizeof(char));
-      memset(mb->b8pdir, 0, 4 * sizeof(char));
-      }
-    else if ((mbmode == 4 || mbmode == 5)) {
-      mb->mbType = P8x8;
-      mb->slice->allrefzero = (mbmode == 5);
-      }
-    else if (mbmode == 6) {
-      mb->isIntraBlock = true;
-      mb->mbType = I4MB;
-      memset (mb->b8mode, IBLOCK, 4 * sizeof(char));
-      memset (mb->b8pdir,     -1, 4 * sizeof(char));
-      }
-    else if (mbmode == 31) {
-      mb->isIntraBlock = true;
-      mb->mbType = IPCM;
-      mb->codedBlockPattern = -1;
-      mb->i16mode = 0;
-
-      memset (mb->b8mode, 0, 4 * sizeof(char));
-      memset (mb->b8pdir,-1, 4 * sizeof(char));
-      }
-    else {
-      mb->isIntraBlock = true;
-      mb->mbType = I16MB;
-      mb->codedBlockPattern = ICBPTAB[((mbmode-7))>>2];
-      mb->i16mode = ((mbmode-7)) & 0x03;
-      memset (mb->b8mode, 0, 4 * sizeof(char));
-      memset (mb->b8pdir,-1, 4 * sizeof(char));
-      }
-    }
-  //}}}
-  //{{{
-  void interpretMbModeI (sMacroBlock* mb) {
-
-    static const int16_t ICBPTAB[6] = {0,16,32,15,31,47};
-
-    int16_t mbmode = mb->mbType;
-    if (mbmode == 0) {
-      mb->isIntraBlock = true;
-      mb->mbType = I4MB;
-      memset (mb->b8mode,IBLOCK,4 * sizeof(char));
-      memset (mb->b8pdir,-1,4 * sizeof(char));
-      }
-    else if (mbmode == 25) {
-      mb->isIntraBlock = true;
-      mb->mbType=IPCM;
-      mb->codedBlockPattern= -1;
-      mb->i16mode = 0;
-      memset (mb->b8mode, 0,4 * sizeof(char));
-      memset (mb->b8pdir,-1,4 * sizeof(char));
-      }
-    else {
-      mb->isIntraBlock = true;
-      mb->mbType = I16MB;
-      mb->codedBlockPattern= ICBPTAB[(mbmode-1)>>2];
-      mb->i16mode = (mbmode-1) & 0x03;
-      memset (mb->b8mode, 0, 4 * sizeof(char));
-      memset (mb->b8pdir,-1, 4 * sizeof(char));
-      }
-    }
-  //}}}
-  //{{{
-  void interpretMbModeB (sMacroBlock* mb) {
-
-    //{{{
-    static const char offset2pdir16x16[12] = {
-      0, 0, 1, 2, 0,0,0,0,0,0,0,0
-      };
-    //}}}
-    //{{{
-    static const char offset2pdir16x8[22][2] = {
-      {0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{1,1},{0,0},{0,1},{0,0},{1,0},
-      {0,0},{0,2},{0,0},{1,2},{0,0},{2,0},{0,0},{2,1},{0,0},{2,2},{0,0}};
-    //}}}
-    //{{{
-    static const char offset2pdir8x16[22][2] = {
-      {0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{1,1},{0,0},{0,1},{0,0},
-      {1,0},{0,0},{0,2},{0,0},{1,2},{0,0},{2,0},{0,0},{2,1},{0,0},{2,2}
-      };
-    //}}}
-    //{{{
-    static const char ICBPTAB[6] = {
-      0,16,32,15,31,47
-      };
-    //}}}
-
-    int16_t i, mbmode;
-
-    //--- set mbtype, b8type, and b8pdir ---
-    int16_t mbtype  = mb->mbType;
-    if (mbtype == 0) { // direct
-      mbmode = 0;
-      memset (mb->b8mode, 0, 4 * sizeof(char));
-      memset (mb->b8pdir, 2, 4 * sizeof(char));
-      }
-    else if (mbtype == 23) { // intra4x4
-      mb->isIntraBlock = true;
-      mbmode = I4MB;
-      memset (mb->b8mode, IBLOCK,4 * sizeof(char));
-      memset (mb->b8pdir, -1,4 * sizeof(char));
-      }
-    else if ((mbtype > 23) && (mbtype < 48) ) { // intra16x16
-      mb->isIntraBlock = true;
-      mbmode = I16MB;
-      memset (mb->b8mode,  0, 4 * sizeof(char));
-      memset (mb->b8pdir, -1, 4 * sizeof(char));
-      mb->codedBlockPattern = (int) ICBPTAB[(mbtype-24)>>2];
-      mb->i16mode = (mbtype-24) & 0x03;
-      }
-    else if (mbtype == 22) // 8x8(+split)
-      mbmode = P8x8;       // b8mode and pdir is transmitted in additional codewords
-    else if (mbtype < 4) { // 16x16
-      mbmode = 1;
-      memset (mb->b8mode, 1,4 * sizeof(char));
-      memset (mb->b8pdir, offset2pdir16x16[mbtype], 4 * sizeof(char));
-      }
-    else if(mbtype == 48) {
-      mb->isIntraBlock = true;
-      mbmode = IPCM;
-      memset (mb->b8mode, 0,4 * sizeof(char));
-      memset (mb->b8pdir,-1,4 * sizeof(char));
-      mb->codedBlockPattern= -1;
-      mb->i16mode = 0;
-      }
-    else if ((mbtype & 0x01) == 0) { // 16x8
-      mbmode = 2;
-      memset (mb->b8mode, 2,4 * sizeof(char));
-      for (i = 0; i < 4;++i)
-        mb->b8pdir[i] = offset2pdir16x8 [mbtype][i>>1];
-      }
-    else {
-      mbmode = 3;
-      memset (mb->b8mode, 3,4 * sizeof(char));
-      for (i = 0; i < 4; ++i)
-        mb->b8pdir[i] = offset2pdir8x16 [mbtype][i&0x01];
-      }
-
-    mb->mbType = mbmode;
-    }
-  //}}}
-  //{{{
-  void interpretMbModeSI (sMacroBlock* mb) {
-
-    //cDecoder264* decoder = mb->decoder;
-    const int ICBPTAB[6] = {0,16,32,15,31,47};
-
-    int16_t mbmode = mb->mbType;
-    if (mbmode == 0) {
-      mb->isIntraBlock = true;
-      mb->mbType = SI4MB;
-      memset (mb->b8mode,IBLOCK,4 * sizeof(char));
-      memset (mb->b8pdir,-1,4 * sizeof(char));
-      mb->slice->siBlock[mb->mb.y][mb->mb.x]=1;
-      }
-    else if (mbmode == 1) {
-      mb->isIntraBlock = true;
-      mb->mbType = I4MB;
-      memset (mb->b8mode,IBLOCK,4 * sizeof(char));
-      memset (mb->b8pdir,-1,4 * sizeof(char));
-      }
-    else if (mbmode == 26) {
-      mb->isIntraBlock = true;
-      mb->mbType = IPCM;
-      mb->codedBlockPattern= -1;
-      mb->i16mode = 0;
-      memset (mb->b8mode,0,4 * sizeof(char));
-      memset (mb->b8pdir,-1,4 * sizeof(char));
-      }
-    else {
-      mb->isIntraBlock = true;
-      mb->mbType = I16MB;
-      mb->codedBlockPattern= ICBPTAB[(mbmode-2)>>2];
-      mb->i16mode = (mbmode-2) & 0x03;
-      memset (mb->b8mode,0,4 * sizeof(char));
-      memset (mb->b8pdir,-1,4 * sizeof(char));
-      }
-    }
-  //}}}
-  //}}}
-  //{{{  readMotion functions
-  //{{{
-  void readMotionInfoP (sMacroBlock* mb){
-
-    cDecoder264* decoder = mb->decoder;
-    cSlice* slice = mb->slice;
-
-    sSyntaxElement se;
-    sDataPartition* dataPartition = NULL;
-    const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-    int16_t partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
-    int step_h0 = BLOCK_STEP [partmode][0];
-    int step_v0 = BLOCK_STEP [partmode][1];
-
-    int j4;
-    sPicture* picture = slice->picture;
-    sPicMotion *mvInfo = NULL;
-
-    int listOffset = mb->listOffset;
-    sPicture** list0 = slice->listX[LIST_0 + listOffset];
-    sPicMotion** p_mv_info = &picture->mvInfo[mb->blockY];
-
-    //=====  READ REFERENCE PICTURE INDICES =====
-    se.type = SE_REFFRAME;
-    dataPartition = &(slice->dataPartitions[dpMap[SE_REFFRAME]]);
-
-    //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
-    prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!slice->allrefzero));
-    readMBRefPictureIdx  (&se, dataPartition, mb, p_mv_info, LIST_0, step_v0, step_h0);
-
-    //=====  READ MOTION VECTORS =====
-    se.type = SE_MVD;
-    dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
-    if (decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag)
-      se.mapping = linfo_se;
-    else
-      se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
-
-    // LIST_0 Motion vectors
-    readMBMotionVectors (&se, dataPartition, mb, LIST_0, step_h0, step_v0);
-
-    // record reference picture Ids for deblocking decisions
-    for (j4 = 0; j4 < 4;++j4)  {
-      mvInfo = &p_mv_info[j4][mb->blockX];
-      mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
-      mvInfo++;
-      mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
-      mvInfo++;
-      mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
-      mvInfo++;
-      mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
-      }
-    }
-  //}}}
-  //{{{
-  void readMotionInfoB (sMacroBlock* mb) {
-
-    cSlice* slice = mb->slice;
-    cDecoder264* decoder = mb->decoder;
-    sPicture* picture = slice->picture;
-    sSyntaxElement se;
-    sDataPartition* dataPartition = NULL;
-    const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-    int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
-    int step_h0 = BLOCK_STEP [partmode][0];
-    int step_v0 = BLOCK_STEP [partmode][1];
-    int j4, i4;
-
-    int listOffset = mb->listOffset;
-    sPicture** list0 = slice->listX[LIST_0 + listOffset];
-    sPicture** list1 = slice->listX[LIST_1 + listOffset];
-    sPicMotion** p_mv_info = &picture->mvInfo[mb->blockY];
-
-    if (mb->mbType == P8x8)
-      slice->updateDirectMvInfo(mb);
-
-    //=====  READ REFERENCE PICTURE INDICES =====
-    se.type = SE_REFFRAME;
-    dataPartition = &(slice->dataPartitions[dpMap[SE_REFFRAME]]);
-
-    //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
-    prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], true);
-    readMBRefPictureIdx (&se, dataPartition, mb, p_mv_info, LIST_0, step_v0, step_h0);
-
-    //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB
-    prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_1], true);
-    readMBRefPictureIdx (&se, dataPartition, mb, p_mv_info, LIST_1, step_v0, step_h0);
-
-    //=====  READ MOTION VECTORS =====
-    se.type = SE_MVD;
-    dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
-    if (decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag)
-      se.mapping = linfo_se;
-    else
-      se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
-
-    // LIST_0 Motion vectors
-    readMBMotionVectors (&se, dataPartition, mb, LIST_0, step_h0, step_v0);
-
-    // LIST_1 Motion vectors
-    readMBMotionVectors (&se, dataPartition, mb, LIST_1, step_h0, step_v0);
-
-    // record reference picture Ids for deblocking decisions
-    for (j4 = 0; j4 < 4; ++j4) {
-      for (i4 = mb->blockX; i4 < mb->blockX + 4; ++i4) {
-        sPicMotion *mvInfo = &p_mv_info[j4][i4];
-        int16_t refIndex = mvInfo->refIndex[LIST_0];
-        mvInfo->refPic[LIST_0] = (refIndex >= 0) ? list0[refIndex] : NULL;
-        refIndex = mvInfo->refIndex[LIST_1];
-        mvInfo->refPic[LIST_1] = (refIndex >= 0) ? list1[refIndex] : NULL;
-        }
-      }
-    }
-  //}}}
-  //}}}
-
-  //{{{
-  void initCurImgY (cDecoder264* decoder, cSlice* slice, int plane) {
-  // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
-  // this is intended to make get_block_luma faster, but I'm still performing
-  // this at the MB level, and it really should be done at the slice level
-
-    if (decoder->coding.isSeperateColourPlane == 0) {
-      sPicture* vidref = decoder->noReferencePicture;
-      int noref = (slice->framePoc < decoder->recoveryPoc);
-
-      if (plane == PLANE_Y) {
-        for (int j = 0; j < 6; j++) {
-          for (int i = 0; i < slice->listXsize[j] ; i++) {
-            sPicture* curRef = slice->listX[j][i];
-            if (curRef) {
-              curRef->noRef = noref && (curRef == vidref);
-              curRef->curPixelY = curRef->imgY;
-              }
-            }
-          }
-        }
-      else {
-        for (int j = 0; j < 6; j++) {
-          for (int i = 0; i < slice->listXsize[j]; i++) {
-            sPicture* curRef = slice->listX[j][i];
-            if (curRef) {
-              curRef->noRef = noref && (curRef == vidref);
-              curRef->curPixelY = curRef->imgUV[plane-1];
-              }
-            }
-          }
-        }
-      }
-    }
-  //}}}
-  //{{{  read macroBlock utils
   //{{{
   void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
 
@@ -3257,7 +2932,7 @@ namespace {
           }
         else if (slice->codCount > 0 && ((mbNum & 0x01) == 0)) {
           // check left macroBlock pair first
-          if (isMbAvailable(mbNum - 2, mb) && ((mbNum % (decoder->coding.picWidthMbs * 2))!=0))
+          if (isMbAvailable (mbNum - 2, mb) && ((mbNum % (decoder->coding.picWidthMbs * 2))!=0))
             mb->mbField = decoder->mbData[mbNum-2].mbField;
           else {
             // check top macroBlock pair
@@ -3866,7 +3541,798 @@ namespace {
     }
   //}}}
   //}}}
+  //{{{  interpretMb functions
+  //{{{
+  void interpretMbModeP (sMacroBlock* mb) {
+
+    static const int16_t ICBPTAB[6] = {0,16,32,15,31,47};
+
+    int16_t mbmode = mb->mbType;
+    if (mbmode < 4) {
+      mb->mbType = mbmode;
+      memset(mb->b8mode, mbmode, 4 * sizeof(char));
+      memset(mb->b8pdir, 0, 4 * sizeof(char));
+      }
+    else if ((mbmode == 4 || mbmode == 5)) {
+      mb->mbType = P8x8;
+      mb->slice->allrefzero = (mbmode == 5);
+      }
+    else if (mbmode == 6) {
+      mb->isIntraBlock = true;
+      mb->mbType = I4MB;
+      memset (mb->b8mode, IBLOCK, 4 * sizeof(char));
+      memset (mb->b8pdir,     -1, 4 * sizeof(char));
+      }
+    else if (mbmode == 31) {
+      mb->isIntraBlock = true;
+      mb->mbType = IPCM;
+      mb->codedBlockPattern = -1;
+      mb->i16mode = 0;
+
+      memset (mb->b8mode, 0, 4 * sizeof(char));
+      memset (mb->b8pdir,-1, 4 * sizeof(char));
+      }
+    else {
+      mb->isIntraBlock = true;
+      mb->mbType = I16MB;
+      mb->codedBlockPattern = ICBPTAB[((mbmode-7))>>2];
+      mb->i16mode = ((mbmode-7)) & 0x03;
+      memset (mb->b8mode, 0, 4 * sizeof(char));
+      memset (mb->b8pdir,-1, 4 * sizeof(char));
+      }
+    }
+  //}}}
+  //{{{
+  void interpretMbModeI (sMacroBlock* mb) {
+
+    static const int16_t ICBPTAB[6] = {0,16,32,15,31,47};
+
+    int16_t mbmode = mb->mbType;
+    if (mbmode == 0) {
+      mb->isIntraBlock = true;
+      mb->mbType = I4MB;
+      memset (mb->b8mode,IBLOCK,4 * sizeof(char));
+      memset (mb->b8pdir,-1,4 * sizeof(char));
+      }
+    else if (mbmode == 25) {
+      mb->isIntraBlock = true;
+      mb->mbType=IPCM;
+      mb->codedBlockPattern= -1;
+      mb->i16mode = 0;
+      memset (mb->b8mode, 0,4 * sizeof(char));
+      memset (mb->b8pdir,-1,4 * sizeof(char));
+      }
+    else {
+      mb->isIntraBlock = true;
+      mb->mbType = I16MB;
+      mb->codedBlockPattern= ICBPTAB[(mbmode-1)>>2];
+      mb->i16mode = (mbmode-1) & 0x03;
+      memset (mb->b8mode, 0, 4 * sizeof(char));
+      memset (mb->b8pdir,-1, 4 * sizeof(char));
+      }
+    }
+  //}}}
+  //{{{
+  void interpretMbModeB (sMacroBlock* mb) {
+
+    //{{{
+    static const char offset2pdir16x16[12] = {
+      0, 0, 1, 2, 0,0,0,0,0,0,0,0
+      };
+    //}}}
+    //{{{
+    static const char offset2pdir16x8[22][2] = {
+      {0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{1,1},{0,0},{0,1},{0,0},{1,0},
+      {0,0},{0,2},{0,0},{1,2},{0,0},{2,0},{0,0},{2,1},{0,0},{2,2},{0,0}};
+    //}}}
+    //{{{
+    static const char offset2pdir8x16[22][2] = {
+      {0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{1,1},{0,0},{0,1},{0,0},
+      {1,0},{0,0},{0,2},{0,0},{1,2},{0,0},{2,0},{0,0},{2,1},{0,0},{2,2}
+      };
+    //}}}
+    //{{{
+    static const char ICBPTAB[6] = {
+      0,16,32,15,31,47
+      };
+    //}}}
+
+    int16_t i, mbmode;
+
+    //--- set mbtype, b8type, and b8pdir ---
+    int16_t mbtype  = mb->mbType;
+    if (mbtype == 0) { // direct
+      mbmode = 0;
+      memset (mb->b8mode, 0, 4 * sizeof(char));
+      memset (mb->b8pdir, 2, 4 * sizeof(char));
+      }
+    else if (mbtype == 23) { // intra4x4
+      mb->isIntraBlock = true;
+      mbmode = I4MB;
+      memset (mb->b8mode, IBLOCK,4 * sizeof(char));
+      memset (mb->b8pdir, -1,4 * sizeof(char));
+      }
+    else if ((mbtype > 23) && (mbtype < 48) ) { // intra16x16
+      mb->isIntraBlock = true;
+      mbmode = I16MB;
+      memset (mb->b8mode,  0, 4 * sizeof(char));
+      memset (mb->b8pdir, -1, 4 * sizeof(char));
+      mb->codedBlockPattern = (int) ICBPTAB[(mbtype-24)>>2];
+      mb->i16mode = (mbtype-24) & 0x03;
+      }
+    else if (mbtype == 22) // 8x8(+split)
+      mbmode = P8x8;       // b8mode and pdir is transmitted in additional codewords
+    else if (mbtype < 4) { // 16x16
+      mbmode = 1;
+      memset (mb->b8mode, 1,4 * sizeof(char));
+      memset (mb->b8pdir, offset2pdir16x16[mbtype], 4 * sizeof(char));
+      }
+    else if(mbtype == 48) {
+      mb->isIntraBlock = true;
+      mbmode = IPCM;
+      memset (mb->b8mode, 0,4 * sizeof(char));
+      memset (mb->b8pdir,-1,4 * sizeof(char));
+      mb->codedBlockPattern= -1;
+      mb->i16mode = 0;
+      }
+    else if ((mbtype & 0x01) == 0) { // 16x8
+      mbmode = 2;
+      memset (mb->b8mode, 2,4 * sizeof(char));
+      for (i = 0; i < 4;++i)
+        mb->b8pdir[i] = offset2pdir16x8 [mbtype][i>>1];
+      }
+    else {
+      mbmode = 3;
+      memset (mb->b8mode, 3,4 * sizeof(char));
+      for (i = 0; i < 4; ++i)
+        mb->b8pdir[i] = offset2pdir8x16 [mbtype][i&0x01];
+      }
+
+    mb->mbType = mbmode;
+    }
+  //}}}
+  //{{{
+  void interpretMbModeSI (sMacroBlock* mb) {
+
+    //cDecoder264* decoder = mb->decoder;
+    const int ICBPTAB[6] = {0,16,32,15,31,47};
+
+    int16_t mbmode = mb->mbType;
+    if (mbmode == 0) {
+      mb->isIntraBlock = true;
+      mb->mbType = SI4MB;
+      memset (mb->b8mode,IBLOCK,4 * sizeof(char));
+      memset (mb->b8pdir,-1,4 * sizeof(char));
+      mb->slice->siBlock[mb->mb.y][mb->mb.x]=1;
+      }
+    else if (mbmode == 1) {
+      mb->isIntraBlock = true;
+      mb->mbType = I4MB;
+      memset (mb->b8mode,IBLOCK,4 * sizeof(char));
+      memset (mb->b8pdir,-1,4 * sizeof(char));
+      }
+    else if (mbmode == 26) {
+      mb->isIntraBlock = true;
+      mb->mbType = IPCM;
+      mb->codedBlockPattern= -1;
+      mb->i16mode = 0;
+      memset (mb->b8mode,0,4 * sizeof(char));
+      memset (mb->b8pdir,-1,4 * sizeof(char));
+      }
+    else {
+      mb->isIntraBlock = true;
+      mb->mbType = I16MB;
+      mb->codedBlockPattern= ICBPTAB[(mbmode-2)>>2];
+      mb->i16mode = (mbmode-2) & 0x03;
+      memset (mb->b8mode,0,4 * sizeof(char));
+      memset (mb->b8pdir,-1,4 * sizeof(char));
+      }
+    }
+  //}}}
+  //}}}
+  //{{{  readMotion functions
+  //{{{
+  void readMotionInfoP (sMacroBlock* mb){
+
+    cDecoder264* decoder = mb->decoder;
+    cSlice* slice = mb->slice;
+
+    sSyntaxElement se;
+    sDataPartition* dataPartition = NULL;
+    const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+    int16_t partmode = ((mb->mbType == P8x8) ? 4 : mb->mbType);
+    int step_h0 = BLOCK_STEP [partmode][0];
+    int step_v0 = BLOCK_STEP [partmode][1];
+
+    int j4;
+    sPicture* picture = slice->picture;
+    sPicMotion *mvInfo = NULL;
+
+    int listOffset = mb->listOffset;
+    sPicture** list0 = slice->listX[LIST_0 + listOffset];
+    sPicMotion** p_mv_info = &picture->mvInfo[mb->blockY];
+
+    //=====  READ REFERENCE PICTURE INDICES =====
+    se.type = SE_REFFRAME;
+    dataPartition = &(slice->dataPartitions[dpMap[SE_REFFRAME]]);
+
+    //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
+    prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], (mb->mbType != P8x8) || (!slice->allrefzero));
+    readMBRefPictureIdx  (&se, dataPartition, mb, p_mv_info, LIST_0, step_v0, step_h0);
+
+    //=====  READ MOTION VECTORS =====
+    se.type = SE_MVD;
+    dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
+    if (decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag)
+      se.mapping = linfo_se;
+    else
+      se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+
+    // LIST_0 Motion vectors
+    readMBMotionVectors (&se, dataPartition, mb, LIST_0, step_h0, step_v0);
+
+    // record reference picture Ids for deblocking decisions
+    for (j4 = 0; j4 < 4;++j4)  {
+      mvInfo = &p_mv_info[j4][mb->blockX];
+      mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
+      mvInfo++;
+      mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
+      mvInfo++;
+      mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
+      mvInfo++;
+      mvInfo->refPic[LIST_0] = list0[(int16_t) mvInfo->refIndex[LIST_0]];
+      }
+    }
+  //}}}
+  //{{{
+  void readMotionInfoB (sMacroBlock* mb) {
+
+    cSlice* slice = mb->slice;
+    cDecoder264* decoder = mb->decoder;
+    sPicture* picture = slice->picture;
+    sSyntaxElement se;
+    sDataPartition* dataPartition = NULL;
+    const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+    int partmode = (mb->mbType == P8x8) ? 4 : mb->mbType;
+    int step_h0 = BLOCK_STEP [partmode][0];
+    int step_v0 = BLOCK_STEP [partmode][1];
+    int j4, i4;
+
+    int listOffset = mb->listOffset;
+    sPicture** list0 = slice->listX[LIST_0 + listOffset];
+    sPicture** list1 = slice->listX[LIST_1 + listOffset];
+    sPicMotion** p_mv_info = &picture->mvInfo[mb->blockY];
+
+    if (mb->mbType == P8x8)
+      slice->updateDirectMvInfo(mb);
+
+    //=====  READ REFERENCE PICTURE INDICES =====
+    se.type = SE_REFFRAME;
+    dataPartition = &(slice->dataPartitions[dpMap[SE_REFFRAME]]);
+
+    //  For LIST_0, if multiple ref. pictures, read LIST_0 reference picture indices for the MB
+    prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_0], true);
+    readMBRefPictureIdx (&se, dataPartition, mb, p_mv_info, LIST_0, step_v0, step_h0);
+
+    //  For LIST_1, if multiple ref. pictures, read LIST_1 reference picture indices for the MB
+    prepareListforRefIndex (mb, &se, dataPartition, slice->numRefIndexActive[LIST_1], true);
+    readMBRefPictureIdx (&se, dataPartition, mb, p_mv_info, LIST_1, step_v0, step_h0);
+
+    //=====  READ MOTION VECTORS =====
+    se.type = SE_MVD;
+    dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
+    if (decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag)
+      se.mapping = linfo_se;
+    else
+      se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+
+    // LIST_0 Motion vectors
+    readMBMotionVectors (&se, dataPartition, mb, LIST_0, step_h0, step_v0);
+
+    // LIST_1 Motion vectors
+    readMBMotionVectors (&se, dataPartition, mb, LIST_1, step_h0, step_v0);
+
+    // record reference picture Ids for deblocking decisions
+    for (j4 = 0; j4 < 4; ++j4) {
+      for (i4 = mb->blockX; i4 < mb->blockX + 4; ++i4) {
+        sPicMotion *mvInfo = &p_mv_info[j4][i4];
+        int16_t refIndex = mvInfo->refIndex[LIST_0];
+        mvInfo->refPic[LIST_0] = (refIndex >= 0) ? list0[refIndex] : NULL;
+        refIndex = mvInfo->refIndex[LIST_1];
+        mvInfo->refPic[LIST_1] = (refIndex >= 0) ? list1[refIndex] : NULL;
+        }
+      }
+    }
+  //}}}
+  //}}}
+  //{{{
+  void initCurImgY (cDecoder264* decoder, cSlice* slice, int plane) {
+  // probably a better way (or place) to do this, but I'm not sure what (where) it is [CJV]
+  // this is intended to make get_block_luma faster, but I'm still performing
+  // this at the MB level, and it really should be done at the slice level
+
+    if (decoder->coding.isSeperateColourPlane == 0) {
+      sPicture* vidref = decoder->noReferencePicture;
+      int noref = (slice->framePoc < decoder->recoveryPoc);
+
+      if (plane == PLANE_Y) {
+        for (int j = 0; j < 6; j++) {
+          for (int i = 0; i < slice->listXsize[j] ; i++) {
+            sPicture* curRef = slice->listX[j][i];
+            if (curRef) {
+              curRef->noRef = noref && (curRef == vidref);
+              curRef->curPixelY = curRef->imgY;
+              }
+            }
+          }
+        }
+      else {
+        for (int j = 0; j < 6; j++) {
+          for (int i = 0; i < slice->listXsize[j]; i++) {
+            sPicture* curRef = slice->listX[j][i];
+            if (curRef) {
+              curRef->noRef = noref && (curRef == vidref);
+              curRef->curPixelY = curRef->imgUV[plane-1];
+              }
+            }
+          }
+        }
+      }
+    }
+  //}}}
   }
+
+//{{{
+void checkNeighbours (sMacroBlock* mb) {
+
+  cSlice* slice = mb->slice;
+  sPicture* picture = slice->picture; //decoder->picture;
+  const int mb_nr = mb->mbIndexX;
+  sBlockPos* picPos = mb->decoder->picPos;
+
+  if (picture->mbAffFrame) {
+    int cur_mb_pair = mb_nr >> 1;
+    mb->mbIndexA = 2 * (cur_mb_pair - 1);
+    mb->mbIndexB = 2 * (cur_mb_pair - picture->picWidthMbs);
+    mb->mbIndexC = 2 * (cur_mb_pair - picture->picWidthMbs + 1);
+    mb->mbIndexD = 2 * (cur_mb_pair - picture->picWidthMbs - 1);
+
+    mb->mbAvailA = (bool) (isMbAvailable(mb->mbIndexA, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+    mb->mbAvailB = (bool) (isMbAvailable(mb->mbIndexB, mb));
+    mb->mbAvailC = (bool) (isMbAvailable(mb->mbIndexC, mb) && ((picPos[cur_mb_pair + 1].x)!=0));
+    mb->mbAvailD = (bool) (isMbAvailable(mb->mbIndexD, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+    }
+
+  else {
+    sBlockPos* p_pic_pos = &picPos[mb_nr    ];
+    mb->mbIndexA = mb_nr - 1;
+    mb->mbIndexD = mb->mbIndexA - picture->picWidthMbs;
+    mb->mbIndexB = mb->mbIndexD + 1;
+    mb->mbIndexC = mb->mbIndexB + 1;
+
+    mb->mbAvailA = (bool) (isMbAvailable(mb->mbIndexA, mb) && ((p_pic_pos->x)!=0));
+    mb->mbAvailD = (bool) (isMbAvailable(mb->mbIndexD, mb) && ((p_pic_pos->x)!=0));
+    mb->mbAvailC = (bool) (isMbAvailable(mb->mbIndexC, mb) && (((p_pic_pos + 1)->x)!=0));
+    mb->mbAvailB = (bool) (isMbAvailable(mb->mbIndexB, mb));
+    }
+
+  mb->mbCabacLeft = (mb->mbAvailA) ? &(slice->mbData[mb->mbIndexA]) : NULL;
+  mb->mbCabacUp   = (mb->mbAvailB) ? &(slice->mbData[mb->mbIndexB]) : NULL;
+  }
+//}}}
+//{{{
+void checkNeighboursNormal (sMacroBlock* mb) {
+
+  cSlice* slice = mb->slice;
+  sPicture* picture = slice->picture; //decoder->picture;
+  const int mb_nr = mb->mbIndexX;
+  sBlockPos* picPos = mb->decoder->picPos;
+
+  sBlockPos* p_pic_pos = &picPos[mb_nr    ];
+  mb->mbIndexA = mb_nr - 1;
+  mb->mbIndexD = mb->mbIndexA - picture->picWidthMbs;
+  mb->mbIndexB = mb->mbIndexD + 1;
+  mb->mbIndexC = mb->mbIndexB + 1;
+
+  mb->mbAvailA = (bool) (isMbAvailable(mb->mbIndexA, mb) && ((p_pic_pos->x)!=0));
+  mb->mbAvailD = (bool) (isMbAvailable(mb->mbIndexD, mb) && ((p_pic_pos->x)!=0));
+  mb->mbAvailC = (bool) (isMbAvailable(mb->mbIndexC, mb) && (((p_pic_pos + 1)->x)!=0));
+  mb->mbAvailB = (bool) (isMbAvailable(mb->mbIndexB, mb));
+
+  mb->mbCabacLeft = (mb->mbAvailA) ? &(slice->mbData[mb->mbIndexA]) : NULL;
+  mb->mbCabacUp   = (mb->mbAvailB) ? &(slice->mbData[mb->mbIndexB]) : NULL;
+  }
+//}}}
+//{{{
+void checkNeighboursMbAff (sMacroBlock* mb) {
+
+  cSlice* slice = mb->slice;
+  sPicture* picture = slice->picture;
+
+  const int mb_nr = mb->mbIndexX;
+  sBlockPos* picPos = mb->decoder->picPos;
+
+  int cur_mb_pair = mb_nr >> 1;
+  mb->mbIndexA = 2 * (cur_mb_pair - 1);
+  mb->mbIndexB = 2 * (cur_mb_pair - picture->picWidthMbs);
+  mb->mbIndexC = 2 * (cur_mb_pair - picture->picWidthMbs + 1);
+  mb->mbIndexD = 2 * (cur_mb_pair - picture->picWidthMbs - 1);
+
+  mb->mbAvailA = (bool) (isMbAvailable(mb->mbIndexA, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+  mb->mbAvailB = (bool) (isMbAvailable(mb->mbIndexB, mb));
+  mb->mbAvailC = (bool) (isMbAvailable(mb->mbIndexC, mb) && ((picPos[cur_mb_pair + 1].x)!=0));
+  mb->mbAvailD = (bool) (isMbAvailable(mb->mbIndexD, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+
+  mb->mbCabacLeft = (mb->mbAvailA) ? &(slice->mbData[mb->mbIndexA]) : NULL;
+  mb->mbCabacUp   = (mb->mbAvailB) ? &(slice->mbData[mb->mbIndexB]) : NULL;
+  }
+//}}}
+//{{{
+void getAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos* pixelPos) {
+
+  cDecoder264* decoder = mb->decoder;
+  int maxW, maxH;
+  int yM = -1;
+
+  maxW = mbSize[0];
+  maxH = mbSize[1];
+
+  // initialize to "not ok"
+  pixelPos->ok = false;
+
+  if (yN > (maxH - 1))
+    return;
+  if (xN > (maxW - 1) && yN >= 0 && yN < maxH)
+    return;
+
+  if (xN < 0) {
+    if (yN < 0) {
+      if(!mb->mbField) {
+        //{{{  frame
+        if ((mb->mbIndexX & 0x01) == 0) {
+          //  top
+          pixelPos->mbIndex   = mb->mbIndexD  + 1;
+          pixelPos->ok = mb->mbAvailD;
+          yM = yN;
+          }
+
+        else {
+          //  bottom
+          pixelPos->mbIndex   = mb->mbIndexA;
+          pixelPos->ok = mb->mbAvailA;
+          if (mb->mbAvailA) {
+            if(!decoder->mbData[mb->mbIndexA].mbField)
+               yM = yN;
+            else {
+              (pixelPos->mbIndex)++;
+               yM = (yN + maxH) >> 1;
+              }
+            }
+          }
+        }
+        //}}}
+      else {
+        //{{{  field
+        if ((mb->mbIndexX & 0x01) == 0) {
+          //  top
+          pixelPos->mbIndex   = mb->mbIndexD;
+          pixelPos->ok = mb->mbAvailD;
+          if (mb->mbAvailD) {
+            if(!decoder->mbData[mb->mbIndexD].mbField) {
+              (pixelPos->mbIndex)++;
+               yM = 2 * yN;
+              }
+            else
+               yM = yN;
+            }
+          }
+
+        else {
+          //  bottom
+          pixelPos->mbIndex   = mb->mbIndexD+1;
+          pixelPos->ok = mb->mbAvailD;
+          yM = yN;
+          }
+        }
+        //}}}
+      }
+    else {
+      // xN < 0 && yN >= 0
+      if (yN >= 0 && yN <maxH) {
+        if (!mb->mbField) {
+          //{{{  frame
+          if ((mb->mbIndexX & 0x01) == 0) {
+            //{{{  top
+            pixelPos->mbIndex   = mb->mbIndexA;
+            pixelPos->ok = mb->mbAvailA;
+            if (mb->mbAvailA) {
+              if(!decoder->mbData[mb->mbIndexA].mbField)
+                 yM = yN;
+              else {
+                (pixelPos->mbIndex)+= ((yN & 0x01) != 0);
+                yM = yN >> 1;
+                }
+              }
+            }
+            //}}}
+          else {
+            //{{{  bottom
+            pixelPos->mbIndex   = mb->mbIndexA;
+            pixelPos->ok = mb->mbAvailA;
+            if (mb->mbAvailA) {
+              if(!decoder->mbData[mb->mbIndexA].mbField) {
+                (pixelPos->mbIndex)++;
+                 yM = yN;
+                }
+              else {
+                (pixelPos->mbIndex)+= ((yN & 0x01) != 0);
+                yM = (yN + maxH) >> 1;
+                }
+              }
+            }
+            //}}}
+          }
+          //}}}
+        else {
+          //{{{  field
+          if ((mb->mbIndexX & 0x01) == 0) {
+            //{{{  top
+            pixelPos->mbIndex  = mb->mbIndexA;
+            pixelPos->ok = mb->mbAvailA;
+            if (mb->mbAvailA) {
+              if(!decoder->mbData[mb->mbIndexA].mbField) {
+                if (yN < (maxH >> 1))
+                   yM = yN << 1;
+                else {
+                  (pixelPos->mbIndex)++;
+                   yM = (yN << 1 ) - maxH;
+                  }
+                }
+              else
+                 yM = yN;
+              }
+            }
+            //}}}
+          else {
+            //{{{  bottom
+            pixelPos->mbIndex  = mb->mbIndexA;
+            pixelPos->ok = mb->mbAvailA;
+            if (mb->mbAvailA) {
+              if(!decoder->mbData[mb->mbIndexA].mbField) {
+                if (yN < (maxH >> 1))
+                  yM = (yN << 1) + 1;
+                else {
+                  (pixelPos->mbIndex)++;
+                   yM = (yN << 1 ) + 1 - maxH;
+                  }
+                }
+              else {
+                (pixelPos->mbIndex)++;
+                 yM = yN;
+                }
+              }
+            }
+            //}}}
+          }
+          //}}}
+        }
+      }
+    }
+  else {
+     // xN >= 0
+    if (xN >= 0 && xN < maxW) {
+      if (yN<0) {
+        if (!mb->mbField) {
+          //{{{  frame
+          if ((mb->mbIndexX & 0x01) == 0) {
+            //{{{  top
+            pixelPos->mbIndex  = mb->mbIndexB;
+            // for the deblocker if the current MB is a frame and the one above is a field
+            // then the neighbor is the top MB of the pair
+            if (mb->mbAvailB) {
+              if (!(mb->DeblockCall == 1 && (decoder->mbData[mb->mbIndexB]).mbField))
+                pixelPos->mbIndex  += 1;
+              }
+
+            pixelPos->ok = mb->mbAvailB;
+            yM = yN;
+            }
+            //}}}
+          else {
+            //{{{  bottom
+            pixelPos->mbIndex   = mb->mbIndexX - 1;
+            pixelPos->ok = true;
+            yM = yN;
+            }
+            //}}}
+          }
+          //}}}
+        else {
+          //{{{  field
+          if ((mb->mbIndexX & 0x01) == 0) {
+             //{{{  top
+             pixelPos->mbIndex   = mb->mbIndexB;
+             pixelPos->ok = mb->mbAvailB;
+             if (mb->mbAvailB) {
+               if(!decoder->mbData[mb->mbIndexB].mbField) {
+                 (pixelPos->mbIndex)++;
+                  yM = 2* yN;
+                 }
+               else
+                  yM = yN;
+               }
+             }
+             //}}}
+           else {
+            //{{{  bottom
+            pixelPos->mbIndex   = mb->mbIndexB + 1;
+            pixelPos->ok = mb->mbAvailB;
+            yM = yN;
+            }
+            //}}}
+          }
+          //}}}
+        }
+      else {
+        //{{{  yN >=0
+        // for the deblocker if this is the extra edge then do this special stuff
+        if (yN == 0 && mb->DeblockCall == 2) {
+          pixelPos->mbIndex  = mb->mbIndexB + 1;
+          pixelPos->ok = true;
+          yM = yN - 1;
+          }
+
+        else if ((yN >= 0) && (yN <maxH)) {
+          pixelPos->mbIndex   = mb->mbIndexX;
+          pixelPos->ok = true;
+          yM = yN;
+          }
+        }
+        //}}}
+      }
+    else {
+      //{{{  xN >= maxW
+      if(yN < 0) {
+        if (!mb->mbField) {
+          // frame
+          if ((mb->mbIndexX & 0x01) == 0) {
+            // top
+            pixelPos->mbIndex  = mb->mbIndexC + 1;
+            pixelPos->ok = mb->mbAvailC;
+            yM = yN;
+            }
+          else
+            // bottom
+            pixelPos->ok = false;
+          }
+        else {
+          // field
+          if ((mb->mbIndexX & 0x01) == 0) {
+            // top
+            pixelPos->mbIndex   = mb->mbIndexC;
+            pixelPos->ok = mb->mbAvailC;
+            if (mb->mbAvailC) {
+              if(!decoder->mbData[mb->mbIndexC].mbField) {
+                (pixelPos->mbIndex)++;
+                 yM = 2* yN;
+                }
+              else
+                yM = yN;
+              }
+            }
+          else {
+            // bottom
+            pixelPos->mbIndex   = mb->mbIndexC + 1;
+            pixelPos->ok = mb->mbAvailC;
+            yM = yN;
+            }
+          }
+        }
+      }
+      //}}}
+    }
+
+  if (pixelPos->ok || mb->DeblockCall) {
+    pixelPos->x = (int16_t) (xN & (maxW - 1));
+    pixelPos->y = (int16_t) (yM & (maxH - 1));
+    getMbPos (decoder, pixelPos->mbIndex, mbSize, &(pixelPos->posX), &(pixelPos->posY));
+    pixelPos->posX = pixelPos->posX + pixelPos->x;
+    pixelPos->posY = pixelPos->posY + pixelPos->y;
+    }
+  }
+//}}}
+//{{{
+void getNonAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos* pixelPos) {
+
+  int maxW = mbSize[0];
+  int maxH = mbSize[1];
+
+  if (xN < 0) {
+    if (yN < 0) {
+      pixelPos->mbIndex = mb->mbIndexD;
+      pixelPos->ok = mb->mbAvailD;
+      }
+    else if (yN < maxH) {
+      pixelPos->mbIndex = mb->mbIndexA;
+      pixelPos->ok = mb->mbAvailA;
+      }
+    else
+      pixelPos->ok = false;
+    }
+  else if (xN < maxW) {
+    if (yN < 0) {
+      pixelPos->mbIndex = mb->mbIndexB;
+      pixelPos->ok = mb->mbAvailB;
+      }
+    else if (yN < maxH) {
+      pixelPos->mbIndex = mb->mbIndexX;
+      pixelPos->ok = true;
+      }
+    else
+      pixelPos->ok = false;
+    }
+  else if ((xN >= maxW) && (yN < 0)) {
+    pixelPos->mbIndex = mb->mbIndexC;
+    pixelPos->ok = mb->mbAvailC;
+    }
+  else
+    pixelPos->ok = false;
+
+  if (pixelPos->ok || mb->DeblockCall) {
+    sBlockPos* blockPos = &(mb->decoder->picPos[pixelPos->mbIndex]);
+    pixelPos->x = (int16_t)(xN & (maxW - 1));
+    pixelPos->y = (int16_t)(yN & (maxH - 1));
+    pixelPos->posX = (int16_t)(pixelPos->x + blockPos->x * maxW);
+    pixelPos->posY = (int16_t)(pixelPos->y + blockPos->y * maxH);
+    }
+  }
+//}}}
+//{{{
+void get4x4Neighbour (sMacroBlock* mb, int blockX, int blockY, int mbSize[2], sPixelPos* pixelPos) {
+
+  mb->decoder->getNeighbour (mb, blockX, blockY, mbSize, pixelPos);
+  if (pixelPos->ok) {
+    pixelPos->x >>= 2;
+    pixelPos->y >>= 2;
+    pixelPos->posX >>= 2;
+    pixelPos->posY >>= 2;
+    }
+  }
+//}}}
+//{{{
+void get4x4NeighbourBase (sMacroBlock* mb, int blockX, int blockY, int mbSize[2], sPixelPos* pixelPos) {
+
+  mb->decoder->getNeighbour (mb, blockX, blockY, mbSize, pixelPos);
+  if (pixelPos->ok) {
+    pixelPos->x >>= 2;
+    pixelPos->y >>= 2;
+    }
+  }
+//}}}
+//{{{
+void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y) {
+
+  sBlockPos* pPos = &picPos[ mbIndex ];
+  *x = (int16_t) pPos->x;
+  *y = (int16_t) pPos->y;
+  }
+//}}}
+//{{{
+void getMbBlockPosMbaff (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y) {
+
+  sBlockPos* pPos = &picPos[ mbIndex >> 1 ];
+  *x = (int16_t)  pPos->x;
+  *y = (int16_t) ((pPos->y << 1) + (mbIndex & 0x01));
+  }
+//}}}
+//{{{
+void getMbPos (cDecoder264* decoder, int mbIndex, int mbSize[2], int16_t* x, int16_t* y) {
+
+  decoder->getMbBlockPos (decoder->picPos, mbIndex, x, y);
+  (*x) = (int16_t) ((*x) * mbSize[0]);
+  (*y) = (int16_t) ((*y) * mbSize[1]);
+  }
+//}}}
 
 //{{{
 void copyImage4x4 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
@@ -3914,6 +4380,7 @@ int checkVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
     return 0;
   }
 //}}}
+
 //{{{
 void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
@@ -4302,7 +4769,6 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition* dataPartition, sMacroBl
   updateQp (mb, slice->qp);
   }
 //}}}
-
 //{{{
 void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int j, int i0, int j0, int coef_ctr, const uint8_t (*pos_scan4x4)[2], int (*InvLevelScale4x4)[4])
 {
@@ -4318,7 +4784,6 @@ void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int 
     }
   }
 //}}}
-
 //{{{
 void checkDpNeighbours (sMacroBlock* mb) {
 
@@ -4362,6 +4827,36 @@ void getNeighbours (sMacroBlock* mb, sPixelPos* block, int mb_x, int mb_y, int b
     get4x4Neighbour (mb, mb_x - 1, mb_y - 1, mbSize, block + 3);
     block[2] = block[3];
     }
+  }
+//}}}
+
+//{{{
+int decodeMacroBlock (sMacroBlock* mb, sPicture* picture) {
+
+  cSlice* slice = mb->slice;
+  cDecoder264* decoder = mb->decoder;
+
+  if (slice->chroma444notSeparate) {
+    if (!mb->isIntraBlock) {
+      initCurImgY (decoder, slice, PLANE_Y);
+      slice->decodeComponenet (mb, PLANE_Y, picture->imgY, picture);
+      initCurImgY (decoder, slice, PLANE_U);
+      slice->decodeComponenet (mb, PLANE_U, picture->imgUV[0], picture);
+      initCurImgY (decoder, slice, PLANE_V);
+      slice->decodeComponenet (mb, PLANE_V, picture->imgUV[1], picture);
+      }
+    else {
+      slice->decodeComponenet (mb, PLANE_Y, picture->imgY, picture);
+      slice->decodeComponenet (mb, PLANE_U, picture->imgUV[0], picture);
+      slice->decodeComponenet (mb, PLANE_V, picture->imgUV[1], picture);
+      }
+    slice->isResetCoef = false;
+    slice->isResetCoefCr = false;
+    }
+  else
+    slice->decodeComponenet(mb, PLANE_Y, picture->imgY, picture);
+
+  return 0;
   }
 //}}}
 
@@ -4502,10 +4997,8 @@ void cSlice::setSliceFunctions() {
     }
   }
 //}}}
-
 //{{{
 void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
-
 
   *mb = &mbData[mbIndex];
   (*mb)->slice = this;
@@ -4536,7 +5029,7 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
 
   // Save the slice number of this macroBlock. When the macroBlock below
   // is coded it will use this to decide if prediction for above is possible
-  (*mb)->sliceNum = (int16_t) curSliceIndex;
+  (*mb)->sliceNum = (int16_t)curSliceIndex;
 
   checkNeighbours (*mb);
 
@@ -4555,16 +5048,16 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
   memset ((*mb)->codedBlockPatterns, 0, 3 * sizeof(sCodedBlockPattern));
 
   // initialize mbRess
-  if (isResetCoef == false) {
+  if (!isResetCoef) {
     memset (mbRess[0][0], 0, MB_PIXELS * sizeof(int));
     memset (mbRess[1][0], 0, decoder->mbCrSize * sizeof(int));
     memset (mbRess[2][0], 0, decoder->mbCrSize * sizeof(int));
-    if (isResetCoefCr == false) {
+    if (isResetCoefCr)
+      memset (cof[0][0], 0, MB_PIXELS * sizeof(int));
+    else {
       memset (cof[0][0], 0, 3 * MB_PIXELS * sizeof(int));
       isResetCoefCr = true;
       }
-    else
-      memset (cof[0][0], 0, MB_PIXELS * sizeof(int));
     isResetCoef = true;
     }
 
@@ -4577,57 +5070,25 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
   }
 //}}}
 //{{{
-int decodeMacroBlock (sMacroBlock* mb, sPicture* picture) {
-
-  cSlice* slice = mb->slice;
-  cDecoder264* decoder = mb->decoder;
-
-  if (slice->chroma444notSeparate) {
-    if (!mb->isIntraBlock) {
-      initCurImgY (decoder, slice, PLANE_Y);
-      slice->decodeComponenet (mb, PLANE_Y, picture->imgY, picture);
-      initCurImgY (decoder, slice, PLANE_U);
-      slice->decodeComponenet (mb, PLANE_U, picture->imgUV[0], picture);
-      initCurImgY (decoder, slice, PLANE_V);
-      slice->decodeComponenet (mb, PLANE_V, picture->imgUV[1], picture);
-      }
-    else {
-      slice->decodeComponenet (mb, PLANE_Y, picture->imgY, picture);
-      slice->decodeComponenet (mb, PLANE_U, picture->imgUV[0], picture);
-      slice->decodeComponenet (mb, PLANE_V, picture->imgUV[1], picture);
-      }
-    slice->isResetCoef = false;
-    slice->isResetCoefCr = false;
-    }
-  else
-    slice->decodeComponenet(mb, PLANE_Y, picture->imgY, picture);
-
-  return 0;
-  }
-//}}}
-//{{{
 bool cSlice::endMacroBlockDecode (int eos_bit) {
 
   // The if() statement below resembles the original code, which tested
   // decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense
   // In an error prone environment, one can only be sure to have a new
   // picture by checking the tr of the next slice header!
-  ++(numDecodedMbs);
+  ++numDecodedMbs;
 
   if (mbIndex == decoder->picSizeInMbs - 1)
     return true;
   else {
     mbIndex = FmoGetNextMBNr (decoder, mbIndex);
-    if (mbIndex == -1) {
-      // End of cSlice group, MUST be end of slice
+    if (mbIndex == -1) // End of cSlice group, MUST be end of slice
       return true;
-      }
 
     if (nalStartCode (this, eos_bit) == false)
       return false;
 
-    if ((sliceType == eSliceI)  ||
-        (sliceType == eSliceSI) ||
+    if ((sliceType == eSliceI) || (sliceType == eSliceSI) ||
         (decoder->activePps->entropyCoding == eCabac))
       return true;
 
@@ -4635,6 +5096,6 @@ bool cSlice::endMacroBlockDecode (int eos_bit) {
       return true;
 
     return false;
-   }
+    }
   }
 //}}}
