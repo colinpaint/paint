@@ -34,7 +34,6 @@ namespace {
 
       char l0_rFrame, l1_rFrame;
       sMotionVec pmvl0, pmvl1;
-      int is_not_moving;
       sPicMotion* mvInfo = NULL;
 
       prepareDirectParam (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
@@ -47,7 +46,7 @@ namespace {
           i4 = mb->blockX + i;
 
           mvInfo = &picture->mvInfo[j4][i4];
-          is_not_moving = (getColocatedInfo8x8(mb, list1[0], i4, mb->blockYaff + j) == 0);
+          bool is_not_moving = !getColocatedInfo8x8 (mb, list1[0], i4, mb->blockYaff + j);
           if (is_not_moving && (l0_rFrame == 0 || l1_rFrame == 0)) {
             if (l1_rFrame == -1) {
               if  (l0_rFrame == 0) {
@@ -178,7 +177,7 @@ namespace {
               sPicMotion* mvInfo = &picture->mvInfo[j4][i4];
               //===== DIRECT PREDICTION =====
               if (l0_rFrame == 0 || l1_rFrame == 0) {
-                int is_not_moving = (getColocatedInfo4x4(mb, list1[0], i4, mb->blockYaff + j) == 0);
+                bool is_not_moving = !getColocatedInfo4x4 (mb, list1[0], i4, mb->blockYaff + j);
                 if (l1_rFrame == -1) {
                   if (is_not_moving) {
                     mvInfo->refPic[LIST_0] = list0[0];
@@ -1810,10 +1809,10 @@ void getBlockLuma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int b
 //}}}
 
 //{{{
-int getColocatedInfo4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
+bool getColocatedInfo4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
   if (list1->isLongTerm)
-    return 1;
+    return true;
 
   else {
     sPicMotion *fs = &list1->mvInfo[j][i];
@@ -1829,10 +1828,10 @@ int getColocatedInfo4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
   }
 //}}}
 //{{{
-int getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
+bool getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
   if (list1->isLongTerm)
-    return 1;
+    return true;
  else {
     cSlice* slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -1843,7 +1842,7 @@ int getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
       int jj = RSD(j);
       int ii = RSD(i);
       int jdiv = (jj>>1);
-      int moving;
+      bool moving;
 
       sPicMotion* fs = &list1->mvInfo[jj][ii];
 
@@ -1876,7 +1875,7 @@ int getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     else {
       sPicMotion *fs = &list1->mvInfo[RSD(j)][RSD(i)];
 
-      int moving;
+      bool moving;
       if (mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
         fs = &list1->mvInfoJV[mb->slice->colourPlaneId][RSD(j)][RSD(i)];
 

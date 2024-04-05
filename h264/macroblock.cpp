@@ -1130,7 +1130,7 @@ namespace {
     prepareDirectParam (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
 
     if (l0_rFrame == 0 || l1_rFrame == 0) {
-      int is_not_moving;
+      bool is_not_moving;
       for (block8x8 = 0; block8x8 < 4; block8x8++) {
         int k_start = (block8x8 << 2);
         int i  =  (decode_block_scan[k_start] & 3);
@@ -1138,7 +1138,7 @@ namespace {
         i4  = mb->blockX + i;
         j4  = mb->blockY + j;
 
-        is_not_moving = (getColocatedInfo8x8(mb, list1[0], i4, mb->blockYaff + j) == 0);
+        is_not_moving = !getColocatedInfo8x8 (mb, list1[0], i4, mb->blockYaff + j);
         mvInfo = &picture->mvInfo[j4][i4];
 
         if (l1_rFrame == -1) {
@@ -1326,7 +1326,7 @@ namespace {
         mvInfo = &picture->mvInfo[j4][i4];
         // DIRECT PREDICTION
         if (l0_rFrame == 0 || l1_rFrame == 0) {
-          int is_not_moving = (getColocatedInfo4x4 (mb, list1[0], i4, mb->blockYaff + j) == 0);
+          bool is_not_moving = !getColocatedInfo4x4 (mb, list1[0], i4, mb->blockYaff + j);
           if (l1_rFrame == -1) {
             if (is_not_moving) {
               mvInfo->refPic[LIST_0] = list0[0];
