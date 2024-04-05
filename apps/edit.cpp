@@ -2176,12 +2176,11 @@ namespace {
       //{{{  info
       ImGui::SameLine();
       ImGui::Text (fmt::format ("{}:{}:{} {}", getCursorPosition().mColumn+1, getCursorPosition().mLineNumber+1,
-          mFedDocument->getNumLines(), getLanguage().mName).c_str());
+                   mFedDocument->getNumLines(), getLanguage().mName).c_str());
       //}}}
       //{{{  vertice debug
       ImGui::SameLine();
-      ImGui::Text (fmt::format ("{}:{}",
-                   ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
+      ImGui::Text (fmt::format ("{}:{}", ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices/3).c_str());
       //}}}
 
       ImGui::SameLine();
