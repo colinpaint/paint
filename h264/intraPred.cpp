@@ -2,7 +2,7 @@
 #include "global.h"
 
 #include "intraPred.h"
-#include "macroblock.h"
+#include "macroBlock.h"
 #include "mbAccess.h"
 //}}}
 //{{{

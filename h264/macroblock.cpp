@@ -9,7 +9,7 @@
 #include "cavlcRead.h"
 #include "fmo.h"
 #include "intraPred.h"
-#include "macroblock.h"
+#include "macroBlock.h"
 #include "mbAccess.h"
 #include "mcPred.h"
 #include "syntaxElement.h"
@@ -2320,7 +2320,7 @@ namespace {
       }
     }
   //}}}
-  //{{{  read macroblock utils
+  //{{{  read macroBlock utils
   //{{{
   void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
 
@@ -2644,7 +2644,7 @@ namespace {
     }
   //}}}
   //{{{
-  void initMacroblock (sMacroBlock* mb) {
+  void initMacroBlock (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
     sPicMotion** mvInfo = &slice->picture->mvInfo[mb->blockY];
@@ -2664,7 +2664,7 @@ namespace {
     }
   //}}}
   //{{{
-  void initMacroblockDirect (sMacroBlock* mb) {
+  void initMacroBlockDirect (sMacroBlock* mb) {
 
     int slice_no = mb->slice->curSliceIndex;
     sPicMotion** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
@@ -2801,13 +2801,13 @@ namespace {
     if (mb->mbAvailA)
       mb->mbField = decoder->mbData[mb->mbIndexA].mbField;
     else
-      // check top macroblock pair
+      // check top macroBlock pair
       mb->mbField = mb->mbAvailB ? decoder->mbData[mb->mbIndexB].mbField : false;
     }
   //}}}
 
   //{{{
-  void skipMacroblocks (sMacroBlock* mb) {
+  void skipMacroBlocks (sMacroBlock* mb) {
 
     sMotionVec pred_mv;
     int zeroMotionAbove;
@@ -2922,7 +2922,7 @@ namespace {
     }
   //}}}
   //{{{
-  void initMacroblockBasic (sMacroBlock* mb) {
+  void initMacroBlockBasic (sMacroBlock* mb) {
 
     sPicMotion** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
     int slice_no = mb->slice->curSliceIndex;
@@ -2938,7 +2938,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readSkipMacroblock (sMacroBlock* mb) {
+  void readSkipMacroBlock (sMacroBlock* mb) {
 
     mb->lumaTransformSize8x8flag = false;
     if (mb->decoder->activePps->hasConstrainedIntraPred) {
@@ -2946,20 +2946,20 @@ namespace {
       mb->slice->intraBlock[mbNum] = 0;
       }
 
-    initMacroblockBasic (mb);
-    skipMacroblocks (mb);
+    initMacroBlockBasic (mb);
+    skipMacroBlocks (mb);
     }
   //}}}
 
   //{{{
-  void readIntraMacroblock (sMacroBlock* mb) {
+  void readIntraMacroBlock (sMacroBlock* mb) {
 
     mb->noMbPartLessThan8x8Flag = true;
 
     // transform size flag for INTRA_4x4 and INTRA_8x8 modes
     mb->lumaTransformSize8x8flag = false;
 
-    initMacroblock (mb);
+    initMacroBlock (mb);
     readIpredModes (mb);
     mb->slice->readCBPcoeffs (mb);
     }
@@ -2989,13 +2989,13 @@ namespace {
     else
       mb->lumaTransformSize8x8flag = false;
 
-    initMacroblock (mb);
+    initMacroBlock (mb);
     readIpredModes (mb);
     slice->readCBPcoeffs (mb);
     }
   //}}}
   //{{{
-  void readIntra4x4macroblockCabac (sMacroBlock* mb, const uint8_t* dpMap) {
+  void readIntra4x4macroBlockCabac (sMacroBlock* mb, const uint8_t* dpMap) {
 
 
     // transform size flag for INTRA_4x4 and INTRA_8x8 modes
@@ -3024,14 +3024,14 @@ namespace {
     else
       mb->lumaTransformSize8x8flag = false;
 
-    initMacroblock (mb);
+    initMacroBlock (mb);
     readIpredModes (mb);
     slice->readCBPcoeffs (mb);
     }
   //}}}
 
   //{{{
-  void readInterMacroblock (sMacroBlock* mb) {
+  void readInterMacroBlock (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -3042,19 +3042,19 @@ namespace {
       slice->intraBlock[mbNum] = 0;
       }
 
-    initMacroblock (mb);
+    initMacroBlock (mb);
     slice->nalReadMotionInfo (mb);
     slice->readCBPcoeffs (mb);
     }
   //}}}
   //{{{
-  void readIPCMmacroblock (sMacroBlock* mb, const uint8_t* dpMap) {
+  void readIPCMmacroBlock (sMacroBlock* mb, const uint8_t* dpMap) {
 
     cSlice* slice = mb->slice;
     mb->noMbPartLessThan8x8Flag = true;
     mb->lumaTransformSize8x8flag = false;
 
-    initMacroblock (mb);
+    initMacroBlock (mb);
 
     // here dataPartition is assigned with the same dataPartition as SE_MBTYPE, because IPCM syntax is in the
     // same category as MBTYPE
@@ -3067,7 +3067,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readI8x8macroblock (sMacroBlock* mb, sDataPartition* dataPartition, sSyntaxElement* se) {
+  void readI8x8macroBlock (sMacroBlock* mb, sDataPartition* dataPartition, sSyntaxElement* se) {
 
     int i;
     cSlice* slice = mb->slice;
@@ -3085,7 +3085,7 @@ namespace {
         (mb->b8mode[i] == 4);
       }
 
-    initMacroblock (mb);
+    initMacroBlock (mb);
     slice->nalReadMotionInfo (mb);
 
     if (mb->decoder->activePps->hasConstrainedIntraPred) {
@@ -3098,7 +3098,7 @@ namespace {
   //}}}
 
   //{{{
-  void readIcavlcMacroblock (sMacroBlock* mb) {
+  void readIcavlcMacroBlock (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -3139,15 +3139,15 @@ namespace {
 
     mb->noMbPartLessThan8x8Flag = true;
     if(mb->mbType == IPCM)
-      readIPCMmacroblock (mb, dpMap);
+      readIPCMmacroBlock (mb, dpMap);
     else if (mb->mbType == I4MB)
       readIntra4x4macroblocCavlc (mb, dpMap);
     else
-      readIntraMacroblock (mb);
+      readIntraMacroBlock (mb);
     }
   //}}}
   //{{{
-  void readPcavlcMacroblock (sMacroBlock* mb) {
+  void readPcavlcMacroBlock (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
     sSyntaxElement se;
@@ -3256,11 +3256,11 @@ namespace {
           mb->mbField = (bool)se.value1;
           }
         else if (slice->codCount > 0 && ((mbNum & 0x01) == 0)) {
-          // check left macroblock pair first
+          // check left macroBlock pair first
           if (isMbAvailable(mbNum - 2, mb) && ((mbNum % (decoder->coding.picWidthMbs * 2))!=0))
             mb->mbField = decoder->mbData[mbNum-2].mbField;
           else {
-            // check top macroblock pair
+            // check top macroBlock pair
             if (isMbAvailable (mbNum - 2*decoder->coding.picWidthMbs, mb))
               mb->mbField = decoder->mbData[mbNum - 2*decoder->coding.picWidthMbs].mbField;
             else
@@ -3282,25 +3282,25 @@ namespace {
 
     mb->noMbPartLessThan8x8Flag = true;
     if (mb->mbType == IPCM)
-      readIPCMmacroblock (mb, dpMap);
+      readIPCMmacroBlock (mb, dpMap);
     else if (mb->mbType == I4MB)
       readIntra4x4macroblocCavlc (mb, dpMap);
     else if (mb->mbType == P8x8) {
       se.type = SE_MBTYPE;
       se.mapping = linfo_ue;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
-      readI8x8macroblock (mb, dataPartition, &se);
+      readI8x8macroBlock (mb, dataPartition, &se);
       }
     else if (mb->mbType == PSKIP)
-      readSkipMacroblock (mb);
+      readSkipMacroBlock (mb);
     else if (mb->isIntraBlock)
-      readIntraMacroblock (mb);
+      readIntraMacroBlock (mb);
     else
-      readInterMacroblock (mb);
+      readInterMacroBlock (mb);
     }
   //}}}
   //{{{
-  void readBcavlcMacroblock (sMacroBlock* mb) {
+  void readBcavlcMacroBlock (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -3404,11 +3404,11 @@ namespace {
           mb->mbField = (bool)se.value1;
           }
         else if ((slice->codCount > 0) && ((mbNum & 0x01) == 0)) {
-          // check left macroblock pair first
+          // check left macroBlock pair first
           if (isMbAvailable (mbNum - 2, mb) && ((mbNum % (decoder->coding.picWidthMbs * 2))!=0))
             mb->mbField = decoder->mbData[mbNum-2].mbField;
           else {
-            // check top macroblock pair
+            // check top macroBlock pair
             if (isMbAvailable (mbNum - 2*decoder->coding.picWidthMbs, mb))
               mb->mbField = decoder->mbData[mbNum-2*decoder->coding.picWidthMbs].mbField;
             else
@@ -3432,14 +3432,14 @@ namespace {
       }
 
     if (mb->mbType == IPCM)
-      readIPCMmacroblock (mb, dpMap);
+      readIPCMmacroBlock (mb, dpMap);
     else if (mb->mbType == I4MB)
       readIntra4x4macroblocCavlc (mb, dpMap);
     else if (mb->mbType == P8x8) {
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       se.type = SE_MBTYPE;
       se.mapping = linfo_ue;
-      readI8x8macroblock (mb, dataPartition, &se);
+      readI8x8macroBlock (mb, dataPartition, &se);
       }
     else if (mb->mbType == BSKIP_DIRECT) {
       // init noMbPartLessThan8x8Flag
@@ -3448,7 +3448,7 @@ namespace {
       if(decoder->activePps->hasConstrainedIntraPred)
         slice->intraBlock[mbNum] = 0;
 
-      initMacroblockDirect (mb);
+      initMacroBlockDirect (mb);
       if (slice->codCount >= 0) {
         mb->codedBlockPattern = 0;
         resetCoeffs (mb);
@@ -3457,14 +3457,14 @@ namespace {
         slice->readCBPcoeffs (mb);
       }
     else if (mb->isIntraBlock == true)
-      readIntraMacroblock (mb);
+      readIntraMacroBlock (mb);
     else
-      readInterMacroblock (mb);
+      readInterMacroBlock (mb);
     }
   //}}}
 
   //{{{
-  void readIcabacMacroblock (sMacroBlock* mb) {
+  void readIcabacMacroBlock (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -3516,7 +3516,7 @@ namespace {
     // init noMbPartLessThan8x8Flag
     mb->noMbPartLessThan8x8Flag = true;
     if (mb->mbType == IPCM)
-      readIPCMmacroblock (mb, dpMap);
+      readIPCMmacroBlock (mb, dpMap);
     else if (mb->mbType == I4MB) {
       // transform size flag for INTRA_4x4 and INTRA_8x8 modes
       if (slice->transform8x8Mode) {
@@ -3542,16 +3542,16 @@ namespace {
       else
         mb->lumaTransformSize8x8flag = false;
 
-      initMacroblock (mb);
+      initMacroBlock (mb);
       readIpredModes (mb);
       slice->readCBPcoeffs (mb);
       }
     else
-      readIntraMacroblock (mb);
+      readIntraMacroBlock (mb);
     }
   //}}}
   //{{{
-  void readPcabacMacroblock (sMacroBlock* mb)
+  void readPcabacMacroBlock (sMacroBlock* mb)
   {
     cSlice* slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3675,9 +3675,9 @@ namespace {
 
     mb->noMbPartLessThan8x8Flag = true;
     if (mb->mbType == IPCM)
-      readIPCMmacroblock (mb, dpMap);
+      readIPCMmacroBlock (mb, dpMap);
     else if (mb->mbType == I4MB)
-      readIntra4x4macroblockCabac (mb, dpMap);
+      readIntra4x4macroBlockCabac (mb, dpMap);
     else if (mb->mbType == P8x8) {
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       se.type = SE_MBTYPE;
@@ -3687,18 +3687,18 @@ namespace {
       else
         se.reading = readB8_typeInfo_CABAC_p_slice;
 
-      readI8x8macroblock (mb, dataPartition, &se);
+      readI8x8macroBlock (mb, dataPartition, &se);
       }
     else if (mb->mbType == PSKIP)
-      readSkipMacroblock (mb);
+      readSkipMacroBlock (mb);
     else if (mb->isIntraBlock == true)
-      readIntraMacroblock (mb);
+      readIntraMacroBlock (mb);
     else
-      readInterMacroblock (mb);
+      readInterMacroBlock (mb);
     }
   //}}}
   //{{{
-  void readBcabacMacroblock (sMacroBlock* mb) {
+  void readBcabacMacroBlock (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3829,9 +3829,9 @@ namespace {
       }
 
     if (mb->mbType == IPCM)
-      readIPCMmacroblock (mb, dpMap);
+      readIPCMmacroBlock (mb, dpMap);
     else if (mb->mbType == I4MB)
-      readIntra4x4macroblockCabac (mb, dpMap);
+      readIntra4x4macroBlockCabac (mb, dpMap);
     else if (mb->mbType == P8x8) {
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       se.type = SE_MBTYPE;
@@ -3839,7 +3839,7 @@ namespace {
         se.mapping = linfo_ue;
       else
         se.reading = readB8_typeInfo_CABAC_b_slice;
-      readI8x8macroblock(mb, dataPartition, &se);
+      readI8x8macroBlock(mb, dataPartition, &se);
       }
     else if (mb->mbType == BSKIP_DIRECT) {
       //init noMbPartLessThan8x8Flag
@@ -3850,7 +3850,7 @@ namespace {
       if(decoder->activePps->hasConstrainedIntraPred)
         slice->intraBlock[mbNum] = 0;
 
-      initMacroblockDirect (mb);
+      initMacroBlockDirect (mb);
       if (slice->codCount >= 0) {
         slice->isResetCoef = true;
         mb->codedBlockPattern = 0;
@@ -3860,9 +3860,9 @@ namespace {
         slice->readCBPcoeffs (mb);
       }
     else if (mb->isIntraBlock == true)
-      readIntraMacroblock (mb);
+      readIntraMacroBlock (mb);
     else
-      readInterMacroblock (mb);
+      readInterMacroBlock (mb);
     }
   //}}}
   //}}}
@@ -4373,18 +4373,18 @@ void cSlice::setSliceFunctions() {
       case eSliceP:
       //{{{
       case eSliceSP:
-        readMacroblock = readPcabacMacroblock;
+        readMacroBlock = readPcabacMacroBlock;
         break;
       //}}}
       //{{{
       case eSliceB:
-        readMacroblock = readBcabacMacroblock;
+        readMacroBlock = readBcabacMacroBlock;
         break;
       //}}}
       case eSliceI:
       //{{{
       case eSliceSI:
-        readMacroblock = readIcabacMacroblock;
+        readMacroBlock = readIcabacMacroBlock;
         break;
       //}}}
       //{{{
@@ -4400,18 +4400,18 @@ void cSlice::setSliceFunctions() {
       case eSliceP:
       //{{{
       case eSliceSP:
-        readMacroblock = readPcavlcMacroblock;
+        readMacroBlock = readPcavlcMacroBlock;
         break;
       //}}}
       //{{{
       case eSliceB:
-        readMacroblock = readBcavlcMacroblock;
+        readMacroBlock = readBcavlcMacroBlock;
         break;
       //}}}
       case eSliceI:
       //{{{
       case eSliceSI:
-        readMacroblock = readIcavlcMacroblock;
+        readMacroBlock = readIcavlcMacroBlock;
         break;
       //}}}
       //{{{
@@ -4504,7 +4504,7 @@ void cSlice::setSliceFunctions() {
 //}}}
 
 //{{{
-void cSlice::startMacroblockDecode (sMacroBlock** mb) {
+void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
 
 
   *mb = &mbData[mbIndex];
@@ -4512,7 +4512,7 @@ void cSlice::startMacroblockDecode (sMacroBlock** mb) {
   (*mb)->decoder = decoder;
   (*mb)->mbIndexX = mbIndex;
 
-  // Update coordinates of the current macroblock
+  // Update coordinates of the current macroBlock
   if (mbAffFrame) {
     (*mb)->mb.x = (int16_t) (   (mbIndex) % ((2*decoder->coding.width) / MB_BLOCK_SIZE));
     (*mb)->mb.y = (int16_t) (2*((mbIndex) / ((2*decoder->coding.width) / MB_BLOCK_SIZE)));
@@ -4534,7 +4534,7 @@ void cSlice::startMacroblockDecode (sMacroBlock** mb) {
   (*mb)->codedBlockPattern = 0;
   (*mb)->chromaPredMode = DC_PRED_8;
 
-  // Save the slice number of this macroblock. When the macroblock below
+  // Save the slice number of this macroBlock. When the macroBlock below
   // is coded it will use this to decide if prediction for above is possible
   (*mb)->sliceNum = (int16_t) curSliceIndex;
 
@@ -4577,7 +4577,7 @@ void cSlice::startMacroblockDecode (sMacroBlock** mb) {
   }
 //}}}
 //{{{
-int decodeMacroblock (sMacroBlock* mb, sPicture* picture) {
+int decodeMacroBlock (sMacroBlock* mb, sPicture* picture) {
 
   cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
@@ -4606,7 +4606,7 @@ int decodeMacroblock (sMacroBlock* mb, sPicture* picture) {
   }
 //}}}
 //{{{
-bool cSlice::endMacroblockDecode (int eos_bit) {
+bool cSlice::endMacroBlockDecode (int eos_bit) {
 
   // The if() statement below resembles the original code, which tested
   // decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense

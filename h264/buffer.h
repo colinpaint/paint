@@ -4,7 +4,7 @@
 #define MAX_LIST_SIZE 33
 //{{{
 struct sPicMotionOld {
-  uint8_t* mbField; // field macroblock indicator
+  uint8_t* mbField; // field macroBlock indicator
   };
 //}}}
 //{{{

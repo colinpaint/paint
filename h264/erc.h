@@ -40,7 +40,7 @@ typedef struct ErcSegment {
 //{{{  sErcVariables
 /* Error detector & conceal instance data picStructure */
 typedef struct ErcVariables {
-  /*  Number of macroblocks (size or size/4 of the arrays) */
+  /*  Number of macroBlocks (size or size/4 of the arrays) */
   int   nOfMBs;
   /* Number of segments (slices) in frame */
   int     nOfSegments;

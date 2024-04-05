@@ -9,7 +9,7 @@
 #include "errorConceal.h"
 #include "fmo.h"
 #include "loopfilter.h"
-#include "macroblock.h"
+#include "macroBlock.h"
 #include "mbAccess.h"
 #include "mcPred.h"
 #include "nalu.h"
@@ -3310,12 +3310,12 @@ void cDecoder264::decodeSlice (cSlice* slice) {
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI))
     initRefPicture (slice);
 
-  // loop over macroblocks
+  // loop over macroBlocks
   while (!endOfSlice) {
     sMacroBlock* mb;
-    slice->startMacroblockDecode (&mb);
-    slice->readMacroblock (mb);
-    decodeMacroblock (mb, slice->picture);
+    slice->startMacroBlockDecode (&mb);
+    slice->readMacroBlock (mb);
+    decodeMacroBlock (mb, slice->picture);
 
     if (slice->mbAffFrame && mb->mbField) {
       slice->numRefIndexActive[LIST_0] >>= 1;
@@ -3323,7 +3323,7 @@ void cDecoder264::decodeSlice (cSlice* slice) {
       }
 
     ercWriteMbModeMv (mb);
-    endOfSlice = slice->endMacroblockDecode (!slice->mbAffFrame || (slice->mbIndex % 2));
+    endOfSlice = slice->endMacroBlockDecode (!slice->mbAffFrame || (slice->mbIndex % 2));
     }
   }
 //}}}
@@ -3461,8 +3461,7 @@ void cDecoder264::endDecodeFrame() {
 
   // return if the last picture has already been finished
   if (!picture ||
-      ((numDecodedMbs != picSizeInMbs) &&
-       ((coding.yuvFormat != YUV444) || !coding.isSeperateColourPlane)))
+      ((numDecodedMbs != picSizeInMbs) && ((coding.yuvFormat != YUV444) || !coding.isSeperateColourPlane)))
     return;
 
   //{{{  error conceal
@@ -3481,7 +3480,7 @@ void cDecoder264::endDecodeFrame() {
   if (!picture->mbAffFrame) {
     int i;
     ercStartSegment (0, ercSegment, 0 , ercErrorVar);
-    // generate the segments according to the macroblock map
+    // generate the segments according to the macroBlock map
     for (i = 1; i < (int)(picture->picSizeInMbs); ++i) {
       if (mbData[i].errorFlag != mbData[i-1].errorFlag) {
         ercStopSegment (i-1, ercSegment, 0, ercErrorVar); //! stop current segment

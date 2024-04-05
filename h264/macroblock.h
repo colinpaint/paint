@@ -213,4 +213,4 @@ void updateQp (sMacroBlock* mb, int qp);
 void readDeltaQuant (sSyntaxElement* se, sDataPartition* dataPartition, sMacroBlock* mb,
                      const uint8_t* dpMap, int type);
 
-int decodeMacroblock (sMacroBlock* mb, sPicture* picture);
+int decodeMacroBlock (sMacroBlock* mb, sPicture* picture);

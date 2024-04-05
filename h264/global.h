@@ -455,7 +455,7 @@ struct sMacroBlock {
   sMacroBlock* mbUp;    // neighbors for loopfilter
   sMacroBlock* mbLeft;  // neighbors for loopfilter
 
-  // some storage of macroblock syntax elements for global access
+  // some storage of macroBlock syntax elements for global access
   int16_t   mbType;
   int16_t   mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][blockY][blockX][x,y]
   int     codedBlockPattern;
@@ -581,8 +581,8 @@ public:
   void setReadCbpCoefCavlc();
   void setIntraPredFunctions();
   void setSliceFunctions();
-  void startMacroblockDecode (sMacroBlock** mb);
-  bool endMacroblockDecode (int eos_bit);
+  void startMacroBlockDecode (sMacroBlock** mb);
+  bool endMacroBlockDecode (int eos_bit);
 
   // vars
   cDecoder264* decoder;
@@ -618,7 +618,7 @@ public:
   uint32_t  numDecodedMbs;
 
   int16_t  curSliceIndex;
-  int codCount;    // Current count of number of skipped macroblocks in a row
+  int codCount;    // Current count of number of skipped macroBlocks in a row
   int allrefzero;
 
   int mbAffFrame;
@@ -735,7 +735,7 @@ public:
   void (*readCBPcoeffs) (sMacroBlock*);
   int  (*decodeComponenet) (sMacroBlock*, eColorPlane, sPixel**, sPicture*);
   void (*nalReadMotionInfo) (sMacroBlock*);
-  void (*readMacroblock) (sMacroBlock*);
+  void (*readMacroBlock) (sMacroBlock*);
   void (*interpretMbMode) (sMacroBlock*);
   void (*intraPredChroma) (sMacroBlock*);
   int  (*intraPred4x4) (sMacroBlock*, eColorPlane, int, int, int, int);
@@ -782,7 +782,7 @@ struct sCoding {
   int numBlock8x8uv;
   int useLosslessQpPrime;
 
-  // macroblocks
+  // macroBlocks
   uint32_t picWidthMbs;
   uint32_t picHeightMapUnits;
   uint32_t frameHeightMbs;
@@ -793,8 +793,8 @@ struct sCoding {
   int mbCrSizeXblock;
   int mbCrSizeYblock;
   int mbCrSize;
-  int mbSize[3][2];       // component macroblock dimensions
-  int mbSizeBlock[3][2];  // component macroblock dimensions
+  int mbSize[3][2];       // component macroBlock dimensions
+  int mbSizeBlock[3][2];  // component macroBlock dimensions
   int mbSizeShift[3][2];
 
   int maxVmvR;            // maximum vertical motion vector range in lumaQuarterFrame pixel units

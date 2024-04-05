@@ -2,7 +2,7 @@
 #include "global.h"
 #include "syntaxElement.h"
 
-#include "macroblock.h"
+#include "macroBlock.h"
 #include "cabac.h"
 #include "vlc.h"
 #include "transform.h"
@@ -23,7 +23,7 @@ namespace {
       // select scan type
       const uint8_t* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
 
-      // === set offset in current macroblock ===
+      // === set offset in current macroBlock ===
       int boff_x = (b8&0x01) << 3;
       int boff_y = (b8 >> 1) << 3;
       int** tcoeffs = &slice->mbRess[plane][boff_y];
@@ -254,7 +254,7 @@ namespace {
 
       int (*InvLevelScale8x8)[8] = (mb->isIntraBlock == true) ? slice->InvLevelScale8x8_Intra[transform_pl][qp_rem] : slice->InvLevelScale8x8_Inter[transform_pl][qp_rem];
 
-      // set offset in current macroblock
+      // set offset in current macroBlock
       int boff_x = (b8&0x01) << 3;
       int boff_y = (b8 >> 1) << 3;
       tcoeffs = &slice->mbRess[plane][boff_y];

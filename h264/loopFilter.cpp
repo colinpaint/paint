@@ -1431,7 +1431,7 @@ static void deblockMb (cDecoder264* decoder, sPicture* p, int mbIndex) {
     if (mb->deblockFilterDisableIdc == 2) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
-      // if this the bottom of a frame macroblock pair then always filter the top edge
+      // if this the bottom of a frame macroBlock pair then always filter the top edge
       filterTopMbEdgeFlag  = (p->mbAffFrame && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
       }
 
@@ -1440,7 +1440,7 @@ static void deblockMb (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
       if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc != YUV444)
           continue;
@@ -1484,7 +1484,7 @@ static void deblockMb (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
       if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc==YUV420)
           continue;
@@ -1522,7 +1522,7 @@ static void deblockMb (cDecoder264* decoder, sPicture* p, int mbIndex) {
           }
 
         if (!edge && !mb->mbField && mb->mixedModeEdgeFlag) {
-          // this is the extra horizontal edge between a frame macroblock pair and a field above it
+          // this is the extra horizontal edge between a frame macroBlock pair and a field above it
           mb->DeblockCall = 2;
           get_strength_hor_MBAff (Strength, mb, MB_BLOCK_SIZE, mvLimit, p); // Strength for 4 blks in 1 stripe
 
@@ -1587,7 +1587,7 @@ static void getDeblockStrength (cDecoder264* decoder, sPicture* p, int mbIndex) 
     if (mb->deblockFilterDisableIdc==2) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
-      // if this the bottom of a frame macroblock pair then always filter the top edge
+      // if this the bottom of a frame macroBlock pair then always filter the top edge
       filterTopMbEdgeFlag = (p->mbAffFrame && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
       }
 
@@ -1596,7 +1596,7 @@ static void getDeblockStrength (cDecoder264* decoder, sPicture* p, int mbIndex) 
 
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
       if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc != YUV444)
           continue;
@@ -1620,7 +1620,7 @@ static void getDeblockStrength (cDecoder264* decoder, sPicture* p, int mbIndex) 
 
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
       if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc==YUV420)
           continue;
@@ -1682,7 +1682,7 @@ static void performDeblock (cDecoder264* decoder, sPicture* p, int mbIndex) {
     if (mb->deblockFilterDisableIdc==2) {
       // don't filter at slice boundaries
       filterLeftMbEdgeFlag = mb->mbAvailA;
-      // if this the bottom of a frame macroblock pair then always filter the top edge
+      // if this the bottom of a frame macroBlock pair then always filter the top edge
       filterTopMbEdgeFlag  = (p->mbAffFrame && !mb->mbField && (mbIndex & 0x01)) ? 1 : mb->mbAvailB;
       }
 
@@ -1691,7 +1691,7 @@ static void performDeblock (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
     // Vertical deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
       if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc != YUV444)
           continue;
@@ -1727,7 +1727,7 @@ static void performDeblock (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
     // horizontal deblocking
     for (edge = 0; edge < 4 ; ++edge ) {
-      // If codedBlockPattern == 0 then deblocking for some macroblock types could be skipped
+      // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
       if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
         if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc==YUV420)
           continue;
@@ -1765,7 +1765,7 @@ static void performDeblock (cDecoder264* decoder, sPicture* p, int mbIndex) {
 
         if (!edge && !mb->mbField && mb->mixedModeEdgeFlag) {
           //slice->mixedModeEdgeFlag)
-          // this is the extra horizontal edge between a frame macroblock pair and a field above it
+          // this is the extra horizontal edge between a frame macroBlock pair and a field above it
           mb->DeblockCall = 2;
           decoder->getStrengthH (mb, 4, mvLimit, p); // Strength for 4 blks in 1 stripe
 

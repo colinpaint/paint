@@ -4,11 +4,11 @@
 
 #include "buffer.h"
 #include "mcPred.h"
-#include "macroblock.h"
+#include "macroBlock.h"
 #include "erc.h"
 //}}}
 //{{{  defines
-// If the average motion vector of the correctly received macroblocks is less than the
+// If the average motion vector of the correctly received macroBlocks is less than the
 // threshold, concealByCopy is used, otherwise concealByTrial is used. */
 #define MVPERMB_THR 8
 
@@ -61,7 +61,7 @@ static const int uv_div[2][4] = {{0, 1, 1, 0}, {0, 1, 0, 0}}; //[x/y][yuvFormat]
  * \brief
  *      collects prediction blocks only from the current column
  * \return
- *      Number of usable neighbour Macroblocks for conceal.
+ *      Number of usable neighbour MacroBlocks for conceal.
  * \param predBlocks[]
  *      Array for indicating the valid neighbor blocks
  * \param currRow
@@ -221,7 +221,7 @@ static void ercPixConcealIMB (cDecoder264* decoder, sPixel* currFrame, int row, 
 ** **********************************************************************
  * \brief
  *      This function checks the neighbors of a sMacroBlock for usability in
- *      conceal. First the OK macroblocks are marked, and if there is not
+ *      conceal. First the OK macroBlocks are marked, and if there is not
  *      enough of them, then the CONCEALED ones as well.
  *      A "1" in the the output array means reliable, a "0" non reliable MB.
  *      The block order in "predBlocks":
@@ -230,7 +230,7 @@ static void ercPixConcealIMB (cDecoder264* decoder, sPixel* currFrame, int row, 
  *              2 6 3
  *      i.e., corners first.
  * \return
- *      Number of useable neighbor macroblocks for conceal.
+ *      Number of useable neighbor macroBlocks for conceal.
  * \param predBlocks[]
  *      Array for indicating the valid neighbor blocks
  * \param currRow
@@ -635,10 +635,10 @@ static void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
 /*!
 ** **********************************************************************
  * \brief
- *      Calculates a weighted pixel difference between edge Y pixels of the macroblock stored in predMB
+ *      Calculates a weighted pixel difference between edge Y pixels of the macroBlock stored in predMB
  *      and the pixels in the given Y plane of a frame (recY) that would become neighbor pixels if
  *      predMB was placed at currYBlockNum block position into the frame. This "edge distortion" value
- *      is used to determine how well the given macroblock in predMB would fit into the frame when
+ *      is used to determine how well the given macroBlock in predMB would fit into the frame when
  *      considering spatial smoothness. If there are correctly received neighbor blocks (status stored
  *      in predBlocks) only they are used in calculating the edge distorion; otherwise also the already
  *      concealed neighbor blocks can also be used.
@@ -747,7 +747,7 @@ static int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
 * \param y
 *      The y-coordinate of the above-left corner pixel of the current MB
 * \param predMB
-*      memory area for storing temporary pixel values for a macroblock
+*      memory area for storing temporary pixel values for a macroBlock
 *      the Y,U,V planes are concatenated y = predMB, u = predMB+256, v = predMB+320
 ************************************************************************
 */
@@ -780,7 +780,7 @@ static void buildPredRegionYUV (cDecoder264* decoder, int *mv, int x, int y, sPi
   // This should be allocated only once.
   getMem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
-  /* Update coordinates of the current concealed macroblock */
+  /* Update coordinates of the current concealed macroBlock */
   mb->mb.x = (int16_t) (x/MB_BLOCK_SIZE);
   mb->mb.y = (int16_t) (y/MB_BLOCK_SIZE);
   mb->blockY = mb->mb.y * BLOCK_SIZE;
@@ -944,7 +944,7 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
 ** **********************************************************************
  * \brief
  *      It conceals a given MB by simply copying the pixel area from the reference image
- *      that is at the same location as the macroblock in the current image. This correcponds
+ *      that is at the same location as the macroBlock in the current image. This correcponds
  *      to COPY MBs.
  * \return
  *      Always zero (0).
@@ -986,7 +986,7 @@ static int concealByCopy (frame *recfr, int currMBNum,
  * \param recfr
  *      Reconstructed frame buffer
  * \param predMB
- *      memory area for storing temporary pixel values for a macroblock
+ *      memory area for storing temporary pixel values for a macroBlock
  *      the Y,U,V planes are concatenated y = predMB, u = predMB+256, v = predMB+320
  * \param currMBNum
  *      current MB index
@@ -1373,7 +1373,7 @@ static void buildPredblockRegionYUV (cDecoder264* decoder, int *mv,
 
   getMem2Dpel(&tmp_block, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
-  /* Update coordinates of the current concealed macroblock */
+  /* Update coordinates of the current concealed macroBlock */
 
   mb->mb.x = (int16_t) (x/BLOCK_SIZE);
   mb->mb.y = (int16_t) (y/BLOCK_SIZE);

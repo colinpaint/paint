@@ -91,8 +91,8 @@ typedef struct {
   uint8_t  period_type;
   uint16_t num_seconds;
   uint16_t num_pictures;
-  uint8_t percent_non_zero_macroblocks;
-  uint8_t percent_intra_coded_macroblocks;
+  uint8_t percent_non_zero_macroBlocks;
+  uint8_t percent_intra_coded_macroBlocks;
   uint8_t percent_six_tap_filtering;
   uint8_t percent_alpha_point_deblocking_instance;
   uint8_t xsd_metric_type;
@@ -1129,17 +1129,17 @@ static void process_green_metadata_info (uint8_t* payload, int size, cDecoder264
       printf ("green_metadata_num_pictures = %d\n", seiGreenMetadataInfo.num_pictures);
       }
 
-    seiGreenMetadataInfo.percent_non_zero_macroblocks =
-      (uint8_t)readUv(8, "SEI percent_non_zero_macroblocks", buf);
-    seiGreenMetadataInfo.percent_intra_coded_macroblocks =
-      (uint8_t)readUv(8, "SEI percent_intra_coded_macroblocks", buf);
+    seiGreenMetadataInfo.percent_non_zero_macroBlocks =
+      (uint8_t)readUv(8, "SEI percent_non_zero_macroBlocks", buf);
+    seiGreenMetadataInfo.percent_intra_coded_macroBlocks =
+      (uint8_t)readUv(8, "SEI percent_intra_coded_macroBlocks", buf);
     seiGreenMetadataInfo.percent_six_tap_filtering =
       (uint8_t)readUv(8, "SEI percent_six_tap_filtering", buf);
     seiGreenMetadataInfo.percent_alpha_point_deblocking_instance =
       (uint8_t)readUv(8, "SEI percent_alpha_point_deblocking_instance", buf);
 
-    printf ("percent_non_zero_macroblocks = %f\n", (float)seiGreenMetadataInfo.percent_non_zero_macroblocks/255);
-    printf ("percent_intra_coded_macroblocks = %f\n", (float)seiGreenMetadataInfo.percent_intra_coded_macroblocks/255);
+    printf ("percent_non_zero_macroBlocks = %f\n", (float)seiGreenMetadataInfo.percent_non_zero_macroBlocks/255);
+    printf ("percent_intra_coded_macroBlocks = %f\n", (float)seiGreenMetadataInfo.percent_intra_coded_macroBlocks/255);
     printf ("percent_six_tap_filtering = %f\n", (float)seiGreenMetadataInfo.percent_six_tap_filtering/255);
     printf ("percent_alpha_point_deblocking_instance      = %f\n", (float)seiGreenMetadataInfo.percent_alpha_point_deblocking_instance/255);
     }
