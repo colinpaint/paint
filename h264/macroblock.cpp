@@ -1274,47 +1274,6 @@ static void initCurImgY (cDecoder264* decoder, cSlice* slice, int plane) {
     }
   }
 //}}}
-//{{{
-void changePlaneJV (cDecoder264* decoder, int nplane, cSlice* slice) {
-
-  decoder->mbData = decoder->mbDataJV[nplane];
-  decoder->picture  = decoder->decPictureJV[nplane];
-  decoder->siBlock = decoder->siBlockJV[nplane];
-  decoder->predMode = decoder->predModeJV[nplane];
-  decoder->intraBlock = decoder->intraBlockJV[nplane];
-
-  if (slice) {
-    slice->mbData = decoder->mbDataJV[nplane];
-    slice->picture  = decoder->decPictureJV[nplane];
-    slice->siBlock = decoder->siBlockJV[nplane];
-    slice->predMode = decoder->predModeJV[nplane];
-    slice->intraBlock = decoder->intraBlockJV[nplane];
-    }
-  }
-//}}}
-//{{{
-void makeFramePictureJV (cDecoder264* decoder) {
-
-  decoder->picture = decoder->decPictureJV[0];
-
-  // copy;
-  if (decoder->picture->usedForReference) {
-    int nsize = (decoder->picture->sizeY/BLOCK_SIZE)*(decoder->picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotion);
-    memcpy (&(decoder->picture->mvInfoJV[PLANE_Y][0][0]), &(decoder->decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
-    memcpy (&(decoder->picture->mvInfoJV[PLANE_U][0][0]), &(decoder->decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
-    memcpy (&(decoder->picture->mvInfoJV[PLANE_V][0][0]), &(decoder->decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
-    }
-
-  // This could be done with pointers and seems not necessary
-  for (int uv = 0; uv < 2; uv++) {
-    for (int line = 0; line < decoder->coding.height; line++) {
-      int nsize = sizeof(sPixel) * decoder->coding.width;
-      memcpy (decoder->picture->imgUV[uv][line], decoder->decPictureJV[uv+1]->imgY[line], nsize );
-      }
-    freePicture (decoder->decPictureJV[uv+1]);
-    }
-  }
-//}}}
 
 //{{{
 int decodeMacroblock (sMacroBlock* mb, sPicture* picture) {

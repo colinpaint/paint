@@ -1852,16 +1852,16 @@ static void initNeighbours (cDecoder264* decoder) {
 void initDeblock (cDecoder264* decoder, int mbAffFrame) {
 
   if (decoder->coding.yuvFormat == YUV444 && decoder->coding.isSeperateColourPlane) {
-    changePlaneJV (decoder, PLANE_Y, NULL);
+    decoder->changePlaneJV (PLANE_Y, NULL);
     initNeighbours (decoder);
 
-    changePlaneJV (decoder, PLANE_U, NULL);
+    decoder->changePlaneJV (PLANE_U, NULL);
     initNeighbours (decoder);
 
-    changePlaneJV (decoder, PLANE_V, NULL);
+    decoder->changePlaneJV (PLANE_V, NULL);
     initNeighbours (decoder);
 
-    changePlaneJV (decoder, PLANE_Y, NULL);
+    decoder->changePlaneJV (PLANE_Y, NULL);
     }
   else
     initNeighbours (decoder);

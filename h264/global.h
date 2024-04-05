@@ -865,6 +865,9 @@ public:
   void decodePOC (cSlice* slice);
   void padPicture (sPicture* picture);
 
+  void makeFramePictureJV();
+  void changePlaneJV (int nplane, cSlice* slice);
+
   // static var
   static inline cDecoder264* gDecoder = nullptr;
 
@@ -1049,9 +1052,6 @@ private:
   void endDecodeFrame();
   };
 //}}}
-// For 4:4:4 independent mode
-void changePlaneJV (cDecoder264* decoder, int nplane, cSlice* slice);
-void makeFramePictureJV (cDecoder264* decoder);
 
 sDataPartition* allocDataPartitions (int numPartitions);
 void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions);

@@ -1777,6 +1777,48 @@ void cDecoder264::decodePOC (cSlice* slice) {
   }
 //}}}
 
+//{{{
+void cDecoder264::changePlaneJV (int nplane, cSlice* slice) {
+
+  mbData = mbDataJV[nplane];
+  picture  = decPictureJV[nplane];
+  siBlock = siBlockJV[nplane];
+  predMode = predModeJV[nplane];
+  intraBlock = intraBlockJV[nplane];
+
+  if (slice) {
+    slice->mbData = mbDataJV[nplane];
+    slice->picture  = decPictureJV[nplane];
+    slice->siBlock = siBlockJV[nplane];
+    slice->predMode = predModeJV[nplane];
+    slice->intraBlock = intraBlockJV[nplane];
+    }
+  }
+//}}}
+//{{{
+void cDecoder264::makeFramePictureJV() {
+
+  picture = decPictureJV[0];
+
+  // copy;
+  if (picture->usedForReference) {
+    int nsize = (picture->sizeY/BLOCK_SIZE)*(picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotion);
+    memcpy (&(picture->mvInfoJV[PLANE_Y][0][0]), &(decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
+    memcpy (&(picture->mvInfoJV[PLANE_U][0][0]), &(decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
+    memcpy (&(picture->mvInfoJV[PLANE_V][0][0]), &(decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
+    }
+
+  // This could be done with pointers and seems not necessary
+  for (int uv = 0; uv < 2; uv++) {
+    for (int line = 0; line < coding.height; line++) {
+      int nsize = sizeof(sPixel) * coding.width;
+      memcpy (picture->imgUV[uv][line], decPictureJV[uv+1]->imgY[line], nsize );
+      }
+    freePicture (decPictureJV[uv+1]);
+    }
+  }
+//}}}
+
 // private
 //{{{
 void cDecoder264::clearDecodedPics() {
@@ -3254,7 +3296,7 @@ void cDecoder264::decodeSlice (cSlice* slice) {
   slice->codCount = -1;
 
   if (coding.isSeperateColourPlane)
-    changePlaneJV (this, slice->colourPlaneId, slice);
+    changePlaneJV (slice->colourPlaneId, slice);
   else {
     slice->mbData = mbData;
     slice->picture = picture;
@@ -3481,18 +3523,18 @@ void cDecoder264::endDecodeFrame() {
       int colourPlaneId = sliceList[0]->colourPlaneId;
       for (int nplane = 0; nplane < MAX_PLANE; ++nplane) {
         sliceList[0]->colourPlaneId = nplane;
-        changePlaneJV (this, nplane, NULL );
+        changePlaneJV (nplane, NULL );
         deblockPicture (this, picture);
         }
       sliceList[0]->colourPlaneId = colourPlaneId;
-      makeFramePictureJV (this);
+      makeFramePictureJV();
       }
       //}}}
     else
       deblockPicture (this, picture);
     }
   else if (coding.isSeperateColourPlane)
-    makeFramePictureJV (this);
+    makeFramePictureJV();
 
   if (picture->mbAffFrame)
     mbAffPostProc();
