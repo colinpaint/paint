@@ -8,212 +8,772 @@
 #include "mbAccess.h"
 #include "vlc.h"
 //}}}
+namespace {
+  //{{{  const tables
+  static const int16_t maxpos       [] = {15, 14, 63, 31, 31, 15,  3, 14,  7, 15, 15, 14, 63, 31, 31, 15, 15, 14, 63, 31, 31, 15};
+  static const int16_t c1isdc       [] = { 1,  0,  1,  1,  1,  1,  1,  0,  1,  1,  1,  0,  1,  1,  1,  1,  1,  0,  1,  1,  1,  1};
+  static const int16_t type2ctx_bcbp[] = { 0,  1,  2,  3,  3,  4,  5,  6,  5,  5, 10, 11, 12, 13, 13, 14, 16, 17, 18, 19, 19, 20};
+  static const int16_t type2ctx_map [] = { 0,  1,  2,  3,  4,  5,  6,  7,  6,  6, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}; // 8
+  static const int16_t type2ctx_last[] = { 0,  1,  2,  3,  4,  5,  6,  7,  6,  6, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}; // 8
+  static const int16_t type2ctx_one [] = { 0,  1,  2,  3,  3,  4,  5,  6,  5,  5, 10, 11, 12, 13, 13, 14, 16, 17, 18, 19, 19, 20}; // 7
+  static const int16_t type2ctx_abs [] = { 0,  1,  2,  3,  3,  4,  5,  6,  5,  5, 10, 11, 12, 13, 13, 14, 16, 17, 18, 19, 19, 20}; // 7
+  static const int16_t max_c2       [] = { 4,  4,  4,  4,  4,  4,  3,  4,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4}; // 9
 
-//{{{  static const tables
-static const int16_t maxpos       [] = {15, 14, 63, 31, 31, 15,  3, 14,  7, 15, 15, 14, 63, 31, 31, 15, 15, 14, 63, 31, 31, 15};
-static const int16_t c1isdc       [] = { 1,  0,  1,  1,  1,  1,  1,  0,  1,  1,  1,  0,  1,  1,  1,  1,  1,  0,  1,  1,  1,  1};
-static const int16_t type2ctx_bcbp[] = { 0,  1,  2,  3,  3,  4,  5,  6,  5,  5, 10, 11, 12, 13, 13, 14, 16, 17, 18, 19, 19, 20};
-static const int16_t type2ctx_map [] = { 0,  1,  2,  3,  4,  5,  6,  7,  6,  6, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}; // 8
-static const int16_t type2ctx_last[] = { 0,  1,  2,  3,  4,  5,  6,  7,  6,  6, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}; // 8
-static const int16_t type2ctx_one [] = { 0,  1,  2,  3,  3,  4,  5,  6,  5,  5, 10, 11, 12, 13, 13, 14, 16, 17, 18, 19, 19, 20}; // 7
-static const int16_t type2ctx_abs [] = { 0,  1,  2,  3,  3,  4,  5,  6,  5,  5, 10, 11, 12, 13, 13, 14, 16, 17, 18, 19, 19, 20}; // 7
-static const int16_t max_c2       [] = { 4,  4,  4,  4,  4,  4,  3,  4,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4}; // 9
+  //===== position -> ctx for MAP =====
+  //--- zig-zag scan ----
+  static const uint8_t  pos2ctx_map8x8 [] = { 0,  1,  2,  3,  4,  5,  5,  4,  4,  3,  3,  4,  4,  4,  5,  5,
+                                              4,  4,  4,  4,  3,  3,  6,  7,  7,  7,  8,  9, 10,  9,  8,  7,
+                                              7,  6, 11, 12, 13, 11,  6,  7,  8,  9, 14, 10,  9,  8,  6, 11,
+                                             12, 13, 11,  6,  9, 14, 10,  9, 11, 12, 13, 11 ,14, 10, 12, 14}; // 15 CTX
 
-//===== position -> ctx for MAP =====
-//--- zig-zag scan ----
-static const uint8_t  pos2ctx_map8x8 [] = { 0,  1,  2,  3,  4,  5,  5,  4,  4,  3,  3,  4,  4,  4,  5,  5,
-                                            4,  4,  4,  4,  3,  3,  6,  7,  7,  7,  8,  9, 10,  9,  8,  7,
-                                            7,  6, 11, 12, 13, 11,  6,  7,  8,  9, 14, 10,  9,  8,  6, 11,
-                                           12, 13, 11,  6,  9, 14, 10,  9, 11, 12, 13, 11 ,14, 10, 12, 14}; // 15 CTX
- 
-static const uint8_t  pos2ctx_map8x4 [] = { 0,  1,  2,  3,  4,  5,  7,  8,  9, 10, 11,  9,  8,  6,  7,  8,
-                                            9, 10, 11,  9,  8,  6, 12,  8,  9, 10, 11,  9, 13, 13, 14, 14}; // 15 CTX
+  static const uint8_t  pos2ctx_map8x4 [] = { 0,  1,  2,  3,  4,  5,  7,  8,  9, 10, 11,  9,  8,  6,  7,  8,
+                                              9, 10, 11,  9,  8,  6, 12,  8,  9, 10, 11,  9, 13, 13, 14, 14}; // 15 CTX
 
-static const uint8_t  pos2ctx_map4x4 [] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 14}; // 15 CTX
-static const uint8_t  pos2ctx_map2x4c[] = { 0,  0,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
-static const uint8_t  pos2ctx_map4x4c[] = { 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
+  static const uint8_t  pos2ctx_map4x4 [] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 14}; // 15 CTX
+  static const uint8_t  pos2ctx_map2x4c[] = { 0,  0,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
+  static const uint8_t  pos2ctx_map4x4c[] = { 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
 
-static const uint8_t* pos2ctx_map    [] = { pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8, pos2ctx_map8x4,
-                                            pos2ctx_map8x4, pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
-                                            pos2ctx_map2x4c, pos2ctx_map4x4c,
-                                            pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
-                                            pos2ctx_map8x4, pos2ctx_map4x4,
-                                            pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
-                                            pos2ctx_map8x4,pos2ctx_map4x4};
+  static const uint8_t* pos2ctx_map    [] = { pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8, pos2ctx_map8x4,
+                                              pos2ctx_map8x4, pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
+                                              pos2ctx_map2x4c, pos2ctx_map4x4c,
+                                              pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
+                                              pos2ctx_map8x4, pos2ctx_map4x4,
+                                              pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
+                                              pos2ctx_map8x4,pos2ctx_map4x4};
 
-//--- interlace scan ----
-//taken from ABT
-//{{{
-static const uint8_t  pos2ctx_map8x8i[] = { 0,  1,  1,  2,  2,  3,  3,  4,  5,  6,  7,  7,  7,  8,  4,  5,
-                                         6,  9, 10, 10,  8, 11, 12, 11,  9,  9, 10, 10,  8, 11, 12, 11,
-                                         9,  9, 10, 10,  8, 11, 12, 11,  9,  9, 10, 10,  8, 13, 13,  9,
-                                         9, 10, 10,  8, 13, 13,  9,  9, 10, 10, 14, 14, 14, 14, 14, 14}; // 15 CTX
-//}}}
-//{{{
-static const uint8_t  pos2ctx_map8x4i[] = { 0,  1,  2,  3,  4,  5,  6,  3,  4,  5,  6,  3,  4,  7,  6,  8,
-                                         9,  7,  6,  8,  9, 10, 11, 12, 12, 10, 11, 13, 13, 14, 14, 14}; // 15 CTX
-//}}}
-//{{{
-static const uint8_t  pos2ctx_map4x8i[] = { 0,  1,  1,  1,  2,  3,  3,  4,  4,  4,  5,  6,  2,  7,  7,  8,
-                                         8,  8,  5,  6,  9, 10, 10, 11, 11, 11, 12, 13, 13, 14, 14, 14}; // 15 CTX
-//}}}
-//{{{
-static const uint8_t* pos2ctx_map_int[] = {pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
-                                        pos2ctx_map4x8i,pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
-                                        pos2ctx_map2x4c, pos2ctx_map4x4c,
-                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
-                                        pos2ctx_map8x4i,pos2ctx_map4x4,
-                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
-                                        pos2ctx_map8x4i,pos2ctx_map4x4};
-//}}}
+  //--- interlace scan ----
+  //taken from ABT
+  //{{{
+  static const uint8_t  pos2ctx_map8x8i[] = { 0,  1,  1,  2,  2,  3,  3,  4,  5,  6,  7,  7,  7,  8,  4,  5,
+                                           6,  9, 10, 10,  8, 11, 12, 11,  9,  9, 10, 10,  8, 11, 12, 11,
+                                           9,  9, 10, 10,  8, 11, 12, 11,  9,  9, 10, 10,  8, 13, 13,  9,
+                                           9, 10, 10,  8, 13, 13,  9,  9, 10, 10, 14, 14, 14, 14, 14, 14}; // 15 CTX
+  //}}}
+  //{{{
+  static const uint8_t  pos2ctx_map8x4i[] = { 0,  1,  2,  3,  4,  5,  6,  3,  4,  5,  6,  3,  4,  7,  6,  8,
+                                           9,  7,  6,  8,  9, 10, 11, 12, 12, 10, 11, 13, 13, 14, 14, 14}; // 15 CTX
+  //}}}
+  //{{{
+  static const uint8_t  pos2ctx_map4x8i[] = { 0,  1,  1,  1,  2,  3,  3,  4,  4,  4,  5,  6,  2,  7,  7,  8,
+                                           8,  8,  5,  6,  9, 10, 10, 11, 11, 11, 12, 13, 13, 14, 14, 14}; // 15 CTX
+  //}}}
+  //{{{
+  static const uint8_t* pos2ctx_map_int[] = {pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
+                                          pos2ctx_map4x8i,pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
+                                          pos2ctx_map2x4c, pos2ctx_map4x4c,
+                                          pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
+                                          pos2ctx_map8x4i,pos2ctx_map4x4,
+                                          pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8i,pos2ctx_map8x4i,
+                                          pos2ctx_map8x4i,pos2ctx_map4x4};
+  //}}}
 
-//===== position -> ctx for LAST =====
-//{{{
-static const uint8_t  pos2ctx_last8x8 [] = { 0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
-                                          2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-                                          3,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,
-                                          5,  5,  5,  5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  8}; //  9 CTX
-//}}}
-//{{{
-static const uint8_t  pos2ctx_last8x4 [] = { 0,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,
-                                          3,  3,  3,  3,  4,  4,  4,  4,  5,  5,  6,  6,  7,  7,  8,  8}; //  9 CTX
-//}}}
+  //===== position -> ctx for LAST =====
+  //{{{
+  static const uint8_t  pos2ctx_last8x8 [] = { 0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+                                            2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
+                                            3,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,
+                                            5,  5,  5,  5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  8}; //  9 CTX
+  //}}}
+  //{{{
+  static const uint8_t  pos2ctx_last8x4 [] = { 0,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,
+                                            3,  3,  3,  3,  4,  4,  4,  4,  5,  5,  6,  6,  7,  7,  8,  8}; //  9 CTX
+  //}}}
 
-static const uint8_t  pos2ctx_last4x4 [] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15}; // 15 CTX
-static const uint8_t  pos2ctx_last2x4c[] = { 0,  0,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
-static const uint8_t  pos2ctx_last4x4c[] = { 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
+  static const uint8_t  pos2ctx_last4x4 [] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15}; // 15 CTX
+  static const uint8_t  pos2ctx_last2x4c[] = { 0,  0,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
+  static const uint8_t  pos2ctx_last4x4c[] = { 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
 
-static const uint8_t* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8, pos2ctx_last8x4,
-                                         pos2ctx_last8x4, pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last4x4,
-                                         pos2ctx_last2x4c, pos2ctx_last4x4c,
-                                         pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8,pos2ctx_last8x4,
-                                         pos2ctx_last8x4, pos2ctx_last4x4,
-                                         pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8,pos2ctx_last8x4,
-                                         pos2ctx_last8x4, pos2ctx_last4x4};
-//}}}
+  static const uint8_t* pos2ctx_last    [] = {pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8, pos2ctx_last8x4,
+                                           pos2ctx_last8x4, pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last4x4,
+                                           pos2ctx_last2x4c, pos2ctx_last4x4c,
+                                           pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8,pos2ctx_last8x4,
+                                           pos2ctx_last8x4, pos2ctx_last4x4,
+                                           pos2ctx_last4x4, pos2ctx_last4x4, pos2ctx_last8x8,pos2ctx_last8x4,
+                                           pos2ctx_last8x4, pos2ctx_last4x4};
+  //}}}
+  //{{{
+  uint32_t unary_bin_max_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context,
+                                            int ctx_offset, uint32_t max_symbol) {
 
-//{{{
-static uint32_t unary_bin_max_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context,
-                                          int ctx_offset, uint32_t max_symbol) {
+    uint32_t symbol =  binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
 
-  uint32_t symbol =  binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
+    if (symbol == 0 || (max_symbol == 0))
+      return symbol;
+    else {
+      uint32_t l;
+      context += ctx_offset;
+      symbol = 0;
+      do {
+        l = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
+        ++symbol;
+        }
+      while( (l != 0) && (symbol < max_symbol) );
 
-  if (symbol == 0 || (max_symbol == 0))
-    return symbol;
-  else {
+      if ((l != 0) && (symbol == max_symbol))
+        ++symbol;
+      return symbol;
+      }
+    }
+  //}}}
+  //{{{
+  uint32_t unary_bin_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context, int ctx_offset) {
+
+    uint32_t symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
+
+    if (symbol == 0)
+      return 0;
+    else {
+      uint32_t l;
+      context += ctx_offset;;
+      symbol = 0;
+      do {
+        l = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
+        ++symbol;
+        }
+      while (l != 0);
+
+      return symbol;
+      }
+    }
+  //}}}
+  //{{{
+  uint32_t exp_golomb_decode_eq_prob (sCabacDecodeEnv* cabacDecodeEnv, int k) {
+
     uint32_t l;
-    context += ctx_offset;
-    symbol = 0;
+    int symbol = 0;
+    int binary_symbol = 0;
+
     do {
-      l = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
-      ++symbol;
+      l = binaryArithmeticDecodeSymbolEqProb(cabacDecodeEnv);
+      if (l == 1) {
+        symbol += (1<<k);
+        ++k;
+        }
+      } while (l!=0);
+
+    while (k--)
+      // next binary part
+      if (binaryArithmeticDecodeSymbolEqProb(cabacDecodeEnv)==1)
+        binary_symbol |= (1 << k);
+
+    return (uint32_t)(symbol + binary_symbol);
+    }
+  //}}}
+  //{{{
+  uint32_t unary_exp_golomb_level_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context) {
+
+    uint32_t symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
+
+    if (symbol == 0)
+      return 0;
+    else {
+      uint32_t l, k = 1;
+      uint32_t exp_start = 13;
+      symbol = 0;
+      do {
+        l = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
+        ++symbol;
+        ++k;
+        } while ((l != 0) && (k != exp_start));
+
+      if (l != 0)
+        symbol += exp_golomb_decode_eq_prob (cabacDecodeEnv,0)+1;
+      return symbol;
       }
-    while( (l != 0) && (symbol < max_symbol) );
-
-    if ((l != 0) && (symbol == max_symbol))
-      ++symbol;
-    return symbol;
     }
-  }
-//}}}
-//{{{
-static uint32_t unary_bin_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context, int ctx_offset) {
+  //}}}
+  //{{{
+  uint32_t unary_exp_golomb_mv_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context, uint32_t max_bin) {
 
-  uint32_t symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
+    uint32_t symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
 
-  if (symbol == 0)
-    return 0;
-  else {
-    uint32_t l;
-    context += ctx_offset;;
-    symbol = 0;
-    do {
-      l = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
-      ++symbol;
+    if (symbol == 0)
+      return 0;
+
+    else {
+      uint32_t exp_start = 8;
+      uint32_t l,k = 1;
+      uint32_t bin = 1;
+      symbol = 0;
+      ++context;
+      do {
+        l = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
+        if ((++bin) == 2)
+          context++;
+        if (bin == max_bin)
+          ++context;
+        ++symbol;
+        ++k;
+        } while ((l != 0) && (k != exp_start));
+
+      if (l != 0)
+        symbol += exp_golomb_decode_eq_prob (cabacDecodeEnv, 3) + 1;
+
+      return symbol;
       }
-    while (l != 0);
-
-    return symbol;
     }
-  }
-//}}}
-//{{{
-static uint32_t exp_golomb_decode_eq_prob (sCabacDecodeEnv* cabacDecodeEnv, int k) {
+  //}}}
 
-  uint32_t l;
-  int symbol = 0;
-  int binary_symbol = 0;
+  //{{{
+  int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDecodeEnv, int type) {
 
-  do {
-    l = binaryArithmeticDecodeSymbolEqProb(cabacDecodeEnv);
-    if (l == 1) {
-      symbol += (1<<k);
-      ++k;
+    cDecoder264* decoder = mb->decoder;
+    cSlice* slice = mb->slice;
+    sPicture* picture = slice->picture;
+    sTextureContexts* textureInfoContexts = slice->textureInfoContexts;
+    sMacroBlock* mbData = slice->mbData;
+
+    int y_ac        = (type==LUMA_16AC || type==LUMA_8x8 || type==LUMA_8x4 || type==LUMA_4x8 || type==LUMA_4x4
+                      || type==CB_16AC || type==CB_8x8 || type==CB_8x4 || type==CB_4x8 || type==CB_4x4
+                      || type==CR_16AC || type==CR_8x8 || type==CR_8x4 || type==CR_4x8 || type==CR_4x4);
+    int y_dc        = (type==LUMA_16DC || type==CB_16DC || type==CR_16DC);
+    int u_ac        = (type==CHROMA_AC && !mb->isVblock);
+    int v_ac        = (type==CHROMA_AC &&  mb->isVblock);
+    int chroma_dc   = (type==CHROMA_DC || type==CHROMA_DC_2x4 || type==CHROMA_DC_4x4);
+    int u_dc        = (chroma_dc && !mb->isVblock);
+    int v_dc        = (chroma_dc &&  mb->isVblock);
+    int j           = (y_ac || u_ac || v_ac ? mb->subblockY : 0);
+    int i           = (y_ac || u_ac || v_ac ? mb->subblockX : 0);
+    int bit         = (y_dc ? 0 : y_ac ? 1 : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 : 35);
+    int default_bit = (mb->isIntraBlock ? 1 : 0);
+    int upper_bit   = default_bit;
+    int left_bit    = default_bit;
+    int codedBlockPatternBit     = 1;  // always one for 8x8 mode
+    int ctx;
+    int bit_pos_a   = 0;
+    int bit_pos_b   = 0;
+
+    sPixelPos block_a, block_b;
+    if (y_ac) {
+      get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+      if (block_a.ok)
+          bit_pos_a = 4*block_a.y + block_a.x;
+      if (block_b.ok)
+        bit_pos_b = 4*block_b.y + block_b.x;
       }
-    } while (l!=0);
+    else if (y_dc) {
+      get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+      }
+    else if (u_ac||v_ac) {
+      get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+      get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
+      if (block_a.ok)
+        bit_pos_a = 4*block_a.y + block_a.x;
+      if (block_b.ok)
+        bit_pos_b = 4*block_b.y + block_b.x;
+      }
+    else {
+      get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+      get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
+      }
 
-  while (k--)
-    // next binary part
-    if (binaryArithmeticDecodeSymbolEqProb(cabacDecodeEnv)==1)
-      binary_symbol |= (1 << k);
+    if (picture->chromaFormatIdc!=YUV444) {
+      if (type != LUMA_8x8) {
+        // get bits from neighboring blocks ---
+        if (block_b.ok) {
+          if(mbData[block_b.mbIndex].mbType==IPCM)
+            upper_bit=1;
+          else
+            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_b);
+          }
 
-  return (uint32_t)(symbol + binary_symbol);
-  }
-//}}}
-//{{{
-static uint32_t unary_exp_golomb_level_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context) {
+        if (block_a.ok) {
+          if(mbData[block_a.mbIndex].mbType==IPCM)
+            left_bit=1;
+          else
+            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_a);
+          }
 
-  uint32_t symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
 
-  if (symbol == 0)
-    return 0;
-  else {
-    uint32_t l, k = 1;
-    uint32_t exp_start = 13;
-    symbol = 0;
-    do {
-      l = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
-      ++symbol;
-      ++k;
-      } while ((l != 0) && (k != exp_start));
+        ctx = 2 * upper_bit + left_bit;
+        // encode symbol =====
+        codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+        }
+      }
+    else if( (decoder->coding.isSeperateColourPlane != 0) ) {
+      if (type != LUMA_8x8) {
+        // get bits from neighbouring blocks ---
+        if (block_b.ok) {
+          if(mbData[block_b.mbIndex].mbType==IPCM)
+            upper_bit = 1;
+          else
+            upper_bit = getBit(mbData[block_b.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_b);
+          }
 
-    if (l != 0)
-      symbol += exp_golomb_decode_eq_prob (cabacDecodeEnv,0)+1;
-    return symbol;
+
+        if (block_a.ok) {
+          if(mbData[block_a.mbIndex].mbType==IPCM)
+            left_bit = 1;
+          else
+            left_bit = getBit(mbData[block_a.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_a);
+          }
+
+
+        ctx = 2 * upper_bit + left_bit;
+        //===== encode symbol =====
+        codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+        }
+      }
+
+    else {
+      if (block_b.ok) {
+        if(mbData[block_b.mbIndex].mbType==IPCM)
+          upper_bit=1;
+        else if ((type==LUMA_8x8 || type==CB_8x8 || type==CR_8x8) &&
+                 !mbData[block_b.mbIndex].lumaTransformSize8x8flag)
+          upper_bit = 0;
+        else {
+          if (type == LUMA_8x8)
+            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits8x8, bit + bit_pos_b);
+          else if (type == CB_8x8)
+            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[1].bits8x8, bit + bit_pos_b);
+          else if (type == CR_8x8)
+            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[2].bits8x8, bit + bit_pos_b);
+          else if ((type == CB_4x4)||(type == CB_4x8) || (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
+            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[1].bits,bit+bit_pos_b);
+          else if ((type == CR_4x4)||(type == CR_4x8) || (type == CR_8x4) || (type == CR_16AC)||(type == CR_16DC))
+            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[2].bits,bit+bit_pos_b);
+          else
+            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_b);
+          }
+        }
+
+
+      if (block_a.ok) {
+        if(mbData[block_a.mbIndex].mbType == IPCM)
+          left_bit=1;
+        else if ((type == LUMA_8x8 || type == CB_8x8 || type == CR_8x8) &&
+                 !mbData[block_a.mbIndex].lumaTransformSize8x8flag)
+          left_bit = 0;
+        else {
+          if(type == LUMA_8x8)
+            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits8x8,bit+bit_pos_a);
+          else if (type == CB_8x8)
+            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[1].bits8x8,bit+bit_pos_a);
+          else if (type == CR_8x8)
+            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[2].bits8x8,bit+bit_pos_a);
+          else if ((type == CB_4x4) || (type == CB_4x8) ||
+                   (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
+            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[1].bits,bit+bit_pos_a);
+          else if ((type == CR_4x4) || (type==CR_4x8) ||
+                   (type == CR_8x4) || (type == CR_16AC) || (type == CR_16DC))
+            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[2].bits,bit+bit_pos_a);
+          else
+            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_a);
+          }
+        }
+
+      ctx = 2 * upper_bit + left_bit;
+      // encode symbol
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      }
+
+    // set bits for current block ---
+    bit = (y_dc ? 0 : y_ac ? 1 + j + (i >> 2) : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
+    if (codedBlockPatternBit) {
+      sCodedBlockPattern * codedBlockPatterns = mb->codedBlockPatterns;
+      if (type == LUMA_8x8) {
+        codedBlockPatterns[0].bits |= ((int64_t) 0x33 << bit);
+        if (picture->chromaFormatIdc == YUV444)
+          codedBlockPatterns[0].bits8x8 |= ((int64_t) 0x33 << bit);
+        }
+      else if (type == CB_8x8) {
+        codedBlockPatterns[1].bits8x8 |= ((int64_t) 0x33 << bit);
+        codedBlockPatterns[1].bits |= ((int64_t) 0x33 << bit);
+        }
+      else if (type == CR_8x8) {
+        codedBlockPatterns[2].bits8x8 |= ((int64_t) 0x33 << bit);
+        codedBlockPatterns[2].bits |= ((int64_t) 0x33 << bit);
+        }
+      else if (type == LUMA_8x4)
+        codedBlockPatterns[0].bits |= ((int64_t) 0x03 << bit);
+      else if (type == CB_8x4)
+        codedBlockPatterns[1].bits |= ((int64_t) 0x03 << bit);
+      else if (type == CR_8x4)
+        codedBlockPatterns[2].bits |= ((int64_t) 0x03 << bit);
+      else if (type == LUMA_4x8)
+        codedBlockPatterns[0].bits |= ((int64_t) 0x11<< bit);
+      else if (type == CB_4x8)
+        codedBlockPatterns[1].bits |= ((int64_t)0x11<< bit);
+      else if (type == CR_4x8)
+        codedBlockPatterns[2].bits |= ((int64_t)0x11<< bit);
+      else if ((type == CB_4x4) || (type == CB_16AC) || (type == CB_16DC))
+        codedBlockPatterns[1].bits |= i64power2 (bit);
+      else if ((type == CR_4x4) || (type == CR_16AC) || (type == CR_16DC))
+        codedBlockPatterns[2].bits |= i64power2 (bit);
+      else
+        codedBlockPatterns[0].bits |= i64power2 (bit);
+      }
+
+    return codedBlockPatternBit;
     }
-  }
-//}}}
-//{{{
-static uint32_t unary_exp_golomb_mv_decode (sCabacDecodeEnv* cabacDecodeEnv, sBiContext* context, uint32_t max_bin) {
+  //}}}
+  //{{{
+  int setCodedBlockPatternBit (sMacroBlock* neighbor_mb) {
 
-  uint32_t symbol = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context );
-
-  if (symbol == 0)
-    return 0;
-
-  else {
-    uint32_t exp_start = 8;
-    uint32_t l,k = 1;
-    uint32_t bin = 1;
-    symbol = 0;
-    ++context;
-    do {
-      l = binaryArithmeticDecodeSymbol (cabacDecodeEnv, context);
-      if ((++bin) == 2)
-        context++;
-      if (bin == max_bin)
-        ++context;
-      ++symbol;
-      ++k;
-      } while ((l != 0) && (k != exp_start));
-
-    if (l != 0)
-      symbol += exp_golomb_decode_eq_prob (cabacDecodeEnv, 3) + 1;
-
-    return symbol;
+    if (neighbor_mb->mbType == IPCM)
+      return 1;
+    else
+      return (int)(neighbor_mb->codedBlockPatterns[0].bits & 0x01);
     }
+  //}}}
+  //{{{
+  int setCodedBlockPatternBitAC (sMacroBlock* neighbor_mb, sPixelPos* block) {
+
+    if (neighbor_mb->mbType == IPCM)
+      return 1;
+    else {
+      int bit_pos = 1 + (block->y << 2) + block->x;
+      return getBit (neighbor_mb->codedBlockPatterns[0].bits, bit_pos);
+      }
+    }
+  //}}}
+  //{{{
+  int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDecodeEnv, int type) {
+
+    cDecoder264* decoder = mb->decoder;
+    cSlice* slice = mb->slice;
+    sMacroBlock* mbData = slice->mbData;
+
+    sTextureContexts* textureInfoContexts = slice->textureInfoContexts;
+
+    int codedBlockPatternBit = 1;  // always one for 8x8 mode
+    if (type == LUMA_16DC) {
+      //{{{  luma_16dc
+      int upper_bit = 1;
+      int left_bit = 1;
+      int ctx;
+
+      sPixelPos block_a, block_b;
+      get4x4NeighbourBase (mb, -1,  0, decoder->mbSize[eLuma], &block_a);
+      get4x4NeighbourBase (mb,  0, -1, decoder->mbSize[eLuma], &block_b);
+
+      //--- get bits from neighboring blocks ---
+      if (block_b.ok)
+        upper_bit = setCodedBlockPatternBit (&mbData[block_b.mbIndex]);
+
+      if (block_a.ok)
+        left_bit = setCodedBlockPatternBit (&mbData[block_a.mbIndex]);
+
+      ctx = 2 * upper_bit + left_bit;
+
+      // encode symbol =====
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+
+      // set bits for current block ---
+      if (codedBlockPatternBit)
+        mb->codedBlockPatterns[0].bits |= 1;
+      }
+      //}}}
+    else if (type == LUMA_16AC) {
+      //{{{  luma_16ac
+      int j = mb->subblockY;
+      int i = mb->subblockX;
+      int bit = 1;
+      int default_bit = (mb->isIntraBlock ? 1 : 0);
+      int upper_bit = default_bit;
+      int left_bit = default_bit;
+      int ctx;
+
+      sPixelPos block_a, block_b;
+      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+
+      // get bits from neighboring blocks ---
+      if (block_b.ok)
+        upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
+      if (block_a.ok)
+        left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
+
+      ctx = 2 * upper_bit + left_bit;
+
+      // encode symbol =====
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+
+      if (codedBlockPatternBit) {
+        // set bits for current block ---
+        bit = 1 + j + (i >> 2);
+        mb->codedBlockPatterns[0].bits |= i64power2(bit);
+        }
+      }
+      //}}}
+    else if (type == LUMA_8x4) {
+      //{{{  luma8x4
+      int j = mb->subblockY;
+      int i = mb->subblockX;
+      int bit = 1;
+      int default_bit = (mb->isIntraBlock ? 1 : 0);
+      int upper_bit = default_bit;
+      int left_bit = default_bit;
+      int ctx;
+
+      sPixelPos block_a, block_b;
+
+      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+
+      // get bits from neighboring blocks ---
+      if (block_b.ok)
+        upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
+
+      if (block_a.ok)
+        left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
+
+      ctx = 2 * upper_bit + left_bit;
+      // encode symbol =====
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+
+      if (codedBlockPatternBit) {
+        // set bits for current block ---
+        bit = 1 + j + (i >> 2);
+        mb->codedBlockPatterns[0].bits |= ((int64_t) 0x03 << bit   );
+        }
+      }
+      //}}}
+    else if (type == LUMA_4x8) {
+      //{{{  luma4x8
+      int j           = mb->subblockY;
+      int i           = mb->subblockX;
+      int bit         = 1;
+      int default_bit = (mb->isIntraBlock ? 1 : 0);
+      int upper_bit   = default_bit;
+      int left_bit    = default_bit;
+      int ctx;
+
+      sPixelPos block_a, block_b;
+
+      get4x4NeighbourBase(mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      get4x4NeighbourBase(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+
+      // get bits from neighboring blocks ---
+      if (block_b.ok)
+        upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
+
+      if (block_a.ok)
+        left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
+
+      ctx = 2 * upper_bit + left_bit;
+      // encode symbol =====
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+
+      if (codedBlockPatternBit) {
+        // set bits for current block ---
+        bit = 1 + j + (i >> 2);
+        mb->codedBlockPatterns[0].bits   |= ((int64_t) 0x11 << bit   );
+        }
+      }
+      //}}}
+    else if (type==LUMA_4x4) {
+      //{{{  luma4x4
+      int j = mb->subblockY;
+      int i = mb->subblockX;
+      int bit = 1;
+      int default_bit = (mb->isIntraBlock ? 1 : 0);
+      int upper_bit = default_bit;
+      int left_bit = default_bit;
+
+      sPixelPos block_a, block_b;
+      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+
+      // get bits from neighboring blocks ---
+      if (block_b.ok)
+        upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
+
+      if (block_a.ok)
+        left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
+
+      int ctx = 2 * upper_bit + left_bit;
+      // encode symbol =====
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+
+      if (codedBlockPatternBit) {
+        // set bits for current block ---
+        bit = 1 + j + (i >> 2);
+        mb->codedBlockPatterns[0].bits   |= i64power2(bit);
+        }
+      }
+      //}}}
+    else if (type == LUMA_8x8) {
+      //{{{  luma8x8
+      int j = mb->subblockY;
+      int i = mb->subblockX;
+
+      // set bits for current block ---
+      int bit = 1 + j + (i >> 2);
+      mb->codedBlockPatterns[0].bits |= ((int64_t) 0x33 << bit   );
+      }
+      //}}}
+    else if (type == CHROMA_DC || type == CHROMA_DC_2x4 || type == CHROMA_DC_4x4) {
+      //{{{  chromaDC  2x4 4x4
+      int u_dc = (!mb->isVblock);
+      int j = 0;
+      int i = 0;
+      int bit = (u_dc ? 17 : 18);
+      int default_bit = (mb->isIntraBlock ? 1 : 0);
+      int upper_bit = default_bit;
+      int left_bit = default_bit;
+
+      sPixelPos block_a, block_b;
+      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+      get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
+
+      //--- get bits from neighboring blocks ---
+      if (block_b.ok) {
+        if (mbData[block_b.mbIndex].mbType==IPCM)
+          upper_bit = 1;
+        else
+          upper_bit = getBit(mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit);
+        }
+
+      if (block_a.ok) {
+        if (mbData[block_a.mbIndex].mbType==IPCM)
+          left_bit = 1;
+        else
+          left_bit = getBit(mbData[block_a.mbIndex].codedBlockPatterns[0].bits, bit);
+        }
+
+      int ctx = 2 * upper_bit + left_bit;
+      // encode symbol =====
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+
+      if (codedBlockPatternBit) {
+        // set bits for current block ---
+        bit = (u_dc ? 17 : 18);
+        mb->codedBlockPatterns[0].bits   |= i64power2(bit);
+        }
+      }
+      //}}}
+    else {
+      //{{{  others
+      int u_ac = (!mb->isVblock);
+      int j = mb->subblockY;
+      int i = mb->subblockX;
+      int bit = (u_ac ? 19 : 35);
+      int default_bit = (mb->isIntraBlock ? 1 : 0);
+      int upper_bit = default_bit;
+      int left_bit = default_bit;
+
+      sPixelPos block_a, block_b;
+      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+      get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
+
+      // get bits from neighboring blocks ---
+      if (block_b.ok) {
+        if(mbData[block_b.mbIndex].mbType==IPCM)
+          upper_bit = 1;
+        else {
+          int bit_pos_b = 4*block_b.y + block_b.x;
+          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_b);
+          }
+        }
+
+      if (block_a.ok) {
+        if (mbData[block_a.mbIndex].mbType == IPCM)
+          left_bit = 1;
+        else {
+          int bit_pos_a = 4*block_a.y + block_a.x;
+          left_bit = getBit(mbData[block_a.mbIndex].codedBlockPatterns[0].bits,bit + bit_pos_a);
+          }
+        }
+
+      int ctx = 2 * upper_bit + left_bit;
+
+      // encode symbol
+      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      if (codedBlockPatternBit) {
+        // set bits for current block ---
+        bit = (u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
+        mb->codedBlockPatterns[0].bits   |= i64power2(bit);
+        }
+      }
+      //}}}
+
+    return codedBlockPatternBit;
+    }
+  //}}}
+  //{{{
+  int read_significance_map (sMacroBlock* mb, sCabacDecodeEnv*  cabacDecodeEnv, int type, int coeff[]) {
+
+    cSlice* slice = mb->slice;
+    int fld = ( slice->picStructure!=eFrame || mb->mbField );
+    const uint8_t* pos2ctx_Map = (fld) ? pos2ctx_map_int[type] : pos2ctx_map[type];
+    const uint8_t* pos2ctx_Last = pos2ctx_last[type];
+
+    sBiContext*  map_ctx  = slice->textureInfoContexts->mapContexts [fld][type2ctx_map [type]];
+    sBiContext*  last_ctx = slice->textureInfoContexts->lastContexts[fld][type2ctx_last[type]];
+
+    int i;
+    int coefCount = 0;
+    int i0 = 0;
+    int i1 = maxpos[type];
+
+
+    if (!c1isdc[type]) {
+      ++i0;
+      ++i1;
+      }
+
+    for (i = i0; i < i1; ++i){
+      // if last coeff is reached, it has to be significant
+      //--- read significance symbol ---
+      if (binaryArithmeticDecodeSymbol (cabacDecodeEnv, map_ctx + pos2ctx_Map[i])) {
+        *(coeff++) = 1;
+        ++coefCount;
+        //--- read last coefficient symbol ---
+        if (binaryArithmeticDecodeSymbol (cabacDecodeEnv, last_ctx + pos2ctx_Last[i])) {
+          memset(coeff, 0, (i1 - i) * sizeof(int));
+          return coefCount;
+          }
+        }
+      else
+        *(coeff++) = 0;
+      }
+
+    //--- last coefficient must be significant if no last symbol was received ---
+    if (i < i1 + 1) {
+      *coeff = 1;
+      ++coefCount;
+      }
+
+    return coefCount;
+    }
+  //}}}
+  //{{{
+  void read_significant_coefficients (sCabacDecodeEnv* cabacDecodeEnv, sTextureContexts* textureInfoContexts,
+                                             int type, int* coeff) {
+
+    sBiContext* oneContexts = textureInfoContexts->oneContexts[type2ctx_one[type]];
+    sBiContext* absContexts = textureInfoContexts->absContexts[type2ctx_abs[type]];
+
+    const int16_t max_type = max_c2[type];
+    int i = maxpos[type];
+    int *cof = coeff + i;
+    int c1 = 1;
+    int c2 = 0;
+
+    for (; i >= 0; i--) {
+      if (*cof != 0) {
+        *cof += binaryArithmeticDecodeSymbol (cabacDecodeEnv, oneContexts + c1);
+
+        if (*cof == 2) {
+          *cof += unary_exp_golomb_level_decode (cabacDecodeEnv, absContexts + c2);
+          c2 = imin (++c2, max_type);
+          c1 = 0;
+          }
+        else if (c1)
+          c1 = imin (++c1, 4);
+
+        if (binaryArithmeticDecodeSymbolEqProb (cabacDecodeEnv))
+          *cof = - *cof;
+        }
+      cof--;
+      }
+    }
+  //}}}
   }
-//}}}
 
 //{{{
 void cabacNewSlice (cSlice* slice) {
@@ -1168,486 +1728,6 @@ void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv*
 //}}}
 
 //{{{
-static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDecodeEnv, int type) {
-
-  cDecoder264* decoder = mb->decoder;
-  cSlice* slice = mb->slice;
-  sPicture* picture = slice->picture;
-  sTextureContexts* textureInfoContexts = slice->textureInfoContexts;
-  sMacroBlock* mbData = slice->mbData;
-
-  int y_ac        = (type==LUMA_16AC || type==LUMA_8x8 || type==LUMA_8x4 || type==LUMA_4x8 || type==LUMA_4x4
-                    || type==CB_16AC || type==CB_8x8 || type==CB_8x4 || type==CB_4x8 || type==CB_4x4
-                    || type==CR_16AC || type==CR_8x8 || type==CR_8x4 || type==CR_4x8 || type==CR_4x4);
-  int y_dc        = (type==LUMA_16DC || type==CB_16DC || type==CR_16DC);
-  int u_ac        = (type==CHROMA_AC && !mb->isVblock);
-  int v_ac        = (type==CHROMA_AC &&  mb->isVblock);
-  int chroma_dc   = (type==CHROMA_DC || type==CHROMA_DC_2x4 || type==CHROMA_DC_4x4);
-  int u_dc        = (chroma_dc && !mb->isVblock);
-  int v_dc        = (chroma_dc &&  mb->isVblock);
-  int j           = (y_ac || u_ac || v_ac ? mb->subblockY : 0);
-  int i           = (y_ac || u_ac || v_ac ? mb->subblockX : 0);
-  int bit         = (y_dc ? 0 : y_ac ? 1 : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 : 35);
-  int default_bit = (mb->isIntraBlock ? 1 : 0);
-  int upper_bit   = default_bit;
-  int left_bit    = default_bit;
-  int codedBlockPatternBit     = 1;  // always one for 8x8 mode
-  int ctx;
-  int bit_pos_a   = 0;
-  int bit_pos_b   = 0;
-
-  sPixelPos block_a, block_b;
-  if (y_ac) {
-    get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
-    get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-    if (block_a.ok)
-        bit_pos_a = 4*block_a.y + block_a.x;
-    if (block_b.ok)
-      bit_pos_b = 4*block_b.y + block_b.x;
-    }
-  else if (y_dc) {
-    get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
-    get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-    }
-  else if (u_ac||v_ac) {
-    get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
-    get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
-    if (block_a.ok)
-      bit_pos_a = 4*block_a.y + block_a.x;
-    if (block_b.ok)
-      bit_pos_b = 4*block_b.y + block_b.x;
-    }
-  else {
-    get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
-    get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
-    }
-
-  if (picture->chromaFormatIdc!=YUV444) {
-    if (type != LUMA_8x8) {
-      // get bits from neighboring blocks ---
-      if (block_b.ok) {
-        if(mbData[block_b.mbIndex].mbType==IPCM)
-          upper_bit=1;
-        else
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_b);
-        }
-
-      if (block_a.ok) {
-        if(mbData[block_a.mbIndex].mbType==IPCM)
-          left_bit=1;
-        else
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_a);
-        }
-
-
-      ctx = 2 * upper_bit + left_bit;
-      // encode symbol =====
-      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-      }
-    }
-  else if( (decoder->coding.isSeperateColourPlane != 0) ) {
-    if (type != LUMA_8x8) {
-      // get bits from neighbouring blocks ---
-      if (block_b.ok) {
-        if(mbData[block_b.mbIndex].mbType==IPCM)
-          upper_bit = 1;
-        else
-          upper_bit = getBit(mbData[block_b.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_b);
-        }
-
-
-      if (block_a.ok) {
-        if(mbData[block_a.mbIndex].mbType==IPCM)
-          left_bit = 1;
-        else
-          left_bit = getBit(mbData[block_a.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_a);
-        }
-
-
-      ctx = 2 * upper_bit + left_bit;
-      //===== encode symbol =====
-      codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-      }
-    }
-
-  else {
-    if (block_b.ok) {
-      if(mbData[block_b.mbIndex].mbType==IPCM)
-        upper_bit=1;
-      else if ((type==LUMA_8x8 || type==CB_8x8 || type==CR_8x8) &&
-               !mbData[block_b.mbIndex].lumaTransformSize8x8flag)
-        upper_bit = 0;
-      else {
-        if (type == LUMA_8x8)
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits8x8, bit + bit_pos_b);
-        else if (type == CB_8x8)
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[1].bits8x8, bit + bit_pos_b);
-        else if (type == CR_8x8)
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[2].bits8x8, bit + bit_pos_b);
-        else if ((type == CB_4x4)||(type == CB_4x8) || (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[1].bits,bit+bit_pos_b);
-        else if ((type == CR_4x4)||(type == CR_4x8) || (type == CR_8x4) || (type == CR_16AC)||(type == CR_16DC))
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[2].bits,bit+bit_pos_b);
-        else
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_b);
-        }
-      }
-
-
-    if (block_a.ok) {
-      if(mbData[block_a.mbIndex].mbType == IPCM)
-        left_bit=1;
-      else if ((type == LUMA_8x8 || type == CB_8x8 || type == CR_8x8) &&
-               !mbData[block_a.mbIndex].lumaTransformSize8x8flag)
-        left_bit = 0;
-      else {
-        if(type == LUMA_8x8)
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits8x8,bit+bit_pos_a);
-        else if (type == CB_8x8)
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[1].bits8x8,bit+bit_pos_a);
-        else if (type == CR_8x8)
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[2].bits8x8,bit+bit_pos_a);
-        else if ((type == CB_4x4) || (type == CB_4x8) ||
-                 (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[1].bits,bit+bit_pos_a);
-        else if ((type == CR_4x4) || (type==CR_4x8) ||
-                 (type == CR_8x4) || (type == CR_16AC) || (type == CR_16DC))
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[2].bits,bit+bit_pos_a);
-        else
-          left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_a);
-        }
-      }
-
-    ctx = 2 * upper_bit + left_bit;
-    // encode symbol
-    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-    }
-
-  // set bits for current block ---
-  bit = (y_dc ? 0 : y_ac ? 1 + j + (i >> 2) : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
-  if (codedBlockPatternBit) {
-    sCodedBlockPattern * codedBlockPatterns = mb->codedBlockPatterns;
-    if (type == LUMA_8x8) {
-      codedBlockPatterns[0].bits |= ((int64_t) 0x33 << bit);
-      if (picture->chromaFormatIdc == YUV444)
-        codedBlockPatterns[0].bits8x8 |= ((int64_t) 0x33 << bit);
-      }
-    else if (type == CB_8x8) {
-      codedBlockPatterns[1].bits8x8 |= ((int64_t) 0x33 << bit);
-      codedBlockPatterns[1].bits |= ((int64_t) 0x33 << bit);
-      }
-    else if (type == CR_8x8) {
-      codedBlockPatterns[2].bits8x8 |= ((int64_t) 0x33 << bit);
-      codedBlockPatterns[2].bits |= ((int64_t) 0x33 << bit);
-      }
-    else if (type == LUMA_8x4)
-      codedBlockPatterns[0].bits |= ((int64_t) 0x03 << bit);
-    else if (type == CB_8x4)
-      codedBlockPatterns[1].bits |= ((int64_t) 0x03 << bit);
-    else if (type == CR_8x4)
-      codedBlockPatterns[2].bits |= ((int64_t) 0x03 << bit);
-    else if (type == LUMA_4x8)
-      codedBlockPatterns[0].bits |= ((int64_t) 0x11<< bit);
-    else if (type == CB_4x8)
-      codedBlockPatterns[1].bits |= ((int64_t)0x11<< bit);
-    else if (type == CR_4x8)
-      codedBlockPatterns[2].bits |= ((int64_t)0x11<< bit);
-    else if ((type == CB_4x4) || (type == CB_16AC) || (type == CB_16DC))
-      codedBlockPatterns[1].bits |= i64power2 (bit);
-    else if ((type == CR_4x4) || (type == CR_16AC) || (type == CR_16DC))
-      codedBlockPatterns[2].bits |= i64power2 (bit);
-    else
-      codedBlockPatterns[0].bits |= i64power2 (bit);
-    }
-
-  return codedBlockPatternBit;
-  }
-//}}}
-//{{{
-static int setCodedBlockPatternBit (sMacroBlock* neighbor_mb) {
-
-  if (neighbor_mb->mbType == IPCM)
-    return 1;
-  else
-    return (int)(neighbor_mb->codedBlockPatterns[0].bits & 0x01);
-  }
-//}}}
-//{{{
-static int setCodedBlockPatternBitAC (sMacroBlock* neighbor_mb, sPixelPos* block) {
-
-  if (neighbor_mb->mbType == IPCM)
-    return 1;
-  else {
-    int bit_pos = 1 + (block->y << 2) + block->x;
-    return getBit (neighbor_mb->codedBlockPatterns[0].bits, bit_pos);
-    }
-  }
-//}}}
-//{{{
-static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDecodeEnv, int type) {
-
-  cDecoder264* decoder = mb->decoder;
-  cSlice* slice = mb->slice;
-  sMacroBlock* mbData = slice->mbData;
-
-  sTextureContexts* textureInfoContexts = slice->textureInfoContexts;
-
-  int codedBlockPatternBit = 1;  // always one for 8x8 mode
-  if (type == LUMA_16DC) {
-    //{{{  luma_16dc
-    int upper_bit = 1;
-    int left_bit = 1;
-    int ctx;
-
-    sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, -1,  0, decoder->mbSize[eLuma], &block_a);
-    get4x4NeighbourBase (mb,  0, -1, decoder->mbSize[eLuma], &block_b);
-
-    //--- get bits from neighboring blocks ---
-    if (block_b.ok)
-      upper_bit = setCodedBlockPatternBit (&mbData[block_b.mbIndex]);
-
-    if (block_a.ok)
-      left_bit = setCodedBlockPatternBit (&mbData[block_a.mbIndex]);
-
-    ctx = 2 * upper_bit + left_bit;
-
-    // encode symbol =====
-    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-
-    // set bits for current block ---
-    if (codedBlockPatternBit)
-      mb->codedBlockPatterns[0].bits |= 1;
-    }
-    //}}}
-  else if (type == LUMA_16AC) {
-    //{{{  luma_16ac
-    int j = mb->subblockY;
-    int i = mb->subblockX;
-    int bit = 1;
-    int default_bit = (mb->isIntraBlock ? 1 : 0);
-    int upper_bit = default_bit;
-    int left_bit = default_bit;
-    int ctx;
-
-    sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-
-    // get bits from neighboring blocks ---
-    if (block_b.ok)
-      upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
-    if (block_a.ok)
-      left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
-
-    ctx = 2 * upper_bit + left_bit;
-
-    // encode symbol =====
-    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-
-    if (codedBlockPatternBit) {
-      // set bits for current block ---
-      bit = 1 + j + (i >> 2);
-      mb->codedBlockPatterns[0].bits |= i64power2(bit);
-      }
-    }
-    //}}}
-  else if (type == LUMA_8x4) {
-    //{{{  luma8x4
-    int j = mb->subblockY;
-    int i = mb->subblockX;
-    int bit = 1;
-    int default_bit = (mb->isIntraBlock ? 1 : 0);
-    int upper_bit = default_bit;
-    int left_bit = default_bit;
-    int ctx;
-
-    sPixelPos block_a, block_b;
-
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-
-    // get bits from neighboring blocks ---
-    if (block_b.ok)
-      upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
-
-    if (block_a.ok)
-      left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
-
-    ctx = 2 * upper_bit + left_bit;
-    // encode symbol =====
-    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-
-    if (codedBlockPatternBit) {
-      // set bits for current block ---
-      bit = 1 + j + (i >> 2);
-      mb->codedBlockPatterns[0].bits |= ((int64_t) 0x03 << bit   );
-      }
-    }
-    //}}}
-  else if (type == LUMA_4x8) {
-    //{{{  luma4x8
-    int j           = mb->subblockY;
-    int i           = mb->subblockX;
-    int bit         = 1;
-    int default_bit = (mb->isIntraBlock ? 1 : 0);
-    int upper_bit   = default_bit;
-    int left_bit    = default_bit;
-    int ctx;
-
-    sPixelPos block_a, block_b;
-
-    get4x4NeighbourBase(mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
-    get4x4NeighbourBase(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-
-    // get bits from neighboring blocks ---
-    if (block_b.ok)
-      upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
-
-    if (block_a.ok)
-      left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
-
-    ctx = 2 * upper_bit + left_bit;
-    // encode symbol =====
-    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-
-    if (codedBlockPatternBit) {
-      // set bits for current block ---
-      bit = 1 + j + (i >> 2);
-      mb->codedBlockPatterns[0].bits   |= ((int64_t) 0x11 << bit   );
-      }
-    }
-    //}}}
-  else if (type==LUMA_4x4) {
-    //{{{  luma4x4
-    int j = mb->subblockY;
-    int i = mb->subblockX;
-    int bit = 1;
-    int default_bit = (mb->isIntraBlock ? 1 : 0);
-    int upper_bit = default_bit;
-    int left_bit = default_bit;
-
-    sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-
-    // get bits from neighboring blocks ---
-    if (block_b.ok)
-      upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
-
-    if (block_a.ok)
-      left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
-
-    int ctx = 2 * upper_bit + left_bit;
-    // encode symbol =====
-    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-
-    if (codedBlockPatternBit) {
-      // set bits for current block ---
-      bit = 1 + j + (i >> 2);
-      mb->codedBlockPatterns[0].bits   |= i64power2(bit);
-      }
-    }
-    //}}}
-  else if (type == LUMA_8x8) {
-    //{{{  luma8x8
-    int j = mb->subblockY;
-    int i = mb->subblockX;
-
-    // set bits for current block ---
-    int bit = 1 + j + (i >> 2);
-    mb->codedBlockPatterns[0].bits |= ((int64_t) 0x33 << bit   );
-    }
-    //}}}
-  else if (type == CHROMA_DC || type == CHROMA_DC_2x4 || type == CHROMA_DC_4x4) {
-    //{{{  chromaDC  2x4 4x4
-    int u_dc = (!mb->isVblock);
-    int j = 0;
-    int i = 0;
-    int bit = (u_dc ? 17 : 18);
-    int default_bit = (mb->isIntraBlock ? 1 : 0);
-    int upper_bit = default_bit;
-    int left_bit = default_bit;
-
-    sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
-
-    //--- get bits from neighboring blocks ---
-    if (block_b.ok) {
-      if (mbData[block_b.mbIndex].mbType==IPCM)
-        upper_bit = 1;
-      else
-        upper_bit = getBit(mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit);
-      }
-
-    if (block_a.ok) {
-      if (mbData[block_a.mbIndex].mbType==IPCM)
-        left_bit = 1;
-      else
-        left_bit = getBit(mbData[block_a.mbIndex].codedBlockPatterns[0].bits, bit);
-      }
-
-    int ctx = 2 * upper_bit + left_bit;
-    // encode symbol =====
-    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-
-    if (codedBlockPatternBit) {
-      // set bits for current block ---
-      bit = (u_dc ? 17 : 18);
-      mb->codedBlockPatterns[0].bits   |= i64power2(bit);
-      }
-    }
-    //}}}
-  else {
-    //{{{  others
-    int u_ac = (!mb->isVblock);
-    int j = mb->subblockY;
-    int i = mb->subblockX;
-    int bit = (u_ac ? 19 : 35);
-    int default_bit = (mb->isIntraBlock ? 1 : 0);
-    int upper_bit = default_bit;
-    int left_bit = default_bit;
-
-    sPixelPos block_a, block_b;
-    get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
-    get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
-
-    // get bits from neighboring blocks ---
-    if (block_b.ok) {
-      if(mbData[block_b.mbIndex].mbType==IPCM)
-        upper_bit = 1;
-      else {
-        int bit_pos_b = 4*block_b.y + block_b.x;
-        upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_b);
-        }
-      }
-
-    if (block_a.ok) {
-      if (mbData[block_a.mbIndex].mbType == IPCM)
-        left_bit = 1;
-      else {
-        int bit_pos_a = 4*block_a.y + block_a.x;
-        left_bit = getBit(mbData[block_a.mbIndex].codedBlockPatterns[0].bits,bit + bit_pos_a);
-        }
-      }
-
-    int ctx = 2 * upper_bit + left_bit;
-
-    // encode symbol
-    codedBlockPatternBit = binaryArithmeticDecodeSymbol (cabacDecodeEnv, textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-    if (codedBlockPatternBit) {
-      // set bits for current block ---
-      bit = (u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
-      mb->codedBlockPatterns[0].bits   |= i64power2(bit);
-      }
-    }
-    //}}}
-
-  return codedBlockPatternBit;
-  }
-//}}}
-//{{{
 void setReadStoreCodedBlockPattern (sMacroBlock** mb, int chromaFormatIdc) {
 
   if (chromaFormatIdc == YUV444)
@@ -1657,85 +1737,6 @@ void setReadStoreCodedBlockPattern (sMacroBlock** mb, int chromaFormatIdc) {
   }
 //}}}
 
-//{{{
-static int read_significance_map (sMacroBlock* mb, sCabacDecodeEnv*  cabacDecodeEnv, int type, int coeff[]) {
-
-  cSlice* slice = mb->slice;
-  int fld = ( slice->picStructure!=eFrame || mb->mbField );
-  const uint8_t* pos2ctx_Map = (fld) ? pos2ctx_map_int[type] : pos2ctx_map[type];
-  const uint8_t* pos2ctx_Last = pos2ctx_last[type];
-
-  sBiContext*  map_ctx  = slice->textureInfoContexts->mapContexts [fld][type2ctx_map [type]];
-  sBiContext*  last_ctx = slice->textureInfoContexts->lastContexts[fld][type2ctx_last[type]];
-
-  int i;
-  int coefCount = 0;
-  int i0 = 0;
-  int i1 = maxpos[type];
-
-
-  if (!c1isdc[type]) {
-    ++i0;
-    ++i1;
-    }
-
-  for (i = i0; i < i1; ++i){
-    // if last coeff is reached, it has to be significant
-    //--- read significance symbol ---
-    if (binaryArithmeticDecodeSymbol (cabacDecodeEnv, map_ctx + pos2ctx_Map[i])) {
-      *(coeff++) = 1;
-      ++coefCount;
-      //--- read last coefficient symbol ---
-      if (binaryArithmeticDecodeSymbol (cabacDecodeEnv, last_ctx + pos2ctx_Last[i])) {
-        memset(coeff, 0, (i1 - i) * sizeof(int));
-        return coefCount;
-        }
-      }
-    else
-      *(coeff++) = 0;
-    }
-
-  //--- last coefficient must be significant if no last symbol was received ---
-  if (i < i1 + 1) {
-    *coeff = 1;
-    ++coefCount;
-    }
-
-  return coefCount;
-  }
-//}}}
-//{{{
-static void read_significant_coefficients (sCabacDecodeEnv* cabacDecodeEnv, sTextureContexts* textureInfoContexts,
-                                           int type, int* coeff) {
-
-  sBiContext* oneContexts = textureInfoContexts->oneContexts[type2ctx_one[type]];
-  sBiContext* absContexts = textureInfoContexts->absContexts[type2ctx_abs[type]];
-
-  const int16_t max_type = max_c2[type];
-  int i = maxpos[type];
-  int *cof = coeff + i;
-  int c1 = 1;
-  int c2 = 0;
-
-  for (; i >= 0; i--) {
-    if (*cof != 0) {
-      *cof += binaryArithmeticDecodeSymbol (cabacDecodeEnv, oneContexts + c1);
-
-      if (*cof == 2) {
-        *cof += unary_exp_golomb_level_decode (cabacDecodeEnv, absContexts + c2);
-        c2 = imin (++c2, max_type);
-        c1 = 0;
-        }
-      else if (c1)
-        c1 = imin (++c1, 4);
-
-      if (binaryArithmeticDecodeSymbolEqProb (cabacDecodeEnv))
-        *cof = - *cof;
-      }
-    cof--;
-    }
-  }
-//}}}
 //{{{
 void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabacDecodeEnv) {
 

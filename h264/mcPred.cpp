@@ -1851,7 +1851,7 @@ static void perform_mc_single_wp (sMacroBlock* mb, eColorPlane plane, sPicture* 
   check_motion_vector_range(mv_array, slice);
   vec1_x = i4 * mv_mul + mv_array->mvX;
   vec1_y = (mb->blockYaff + j) * mv_mul + mv_array->mvY;
-  if(blockSizeY > (decoder->coding.lumaPadY-4) && CheckVertMV(mb, vec1_y, blockSizeY))
+  if(blockSizeY > (decoder->coding.lumaPadY-4) && checkVertMV(mb, vec1_y, blockSizeY))
   {
     get_block_luma(list, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
     get_block_luma(list, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
@@ -1942,7 +1942,7 @@ static void perform_mc_single (sMacroBlock* mb, eColorPlane plane, sPicture* pic
   vec1_x = i4 * mv_mul + mv_array->mvX;
   vec1_y = (mb->blockYaff + j) * mv_mul + mv_array->mvY;
 
-  if (blockSizeY > (decoder->coding.lumaPadY-4) && CheckVertMV(mb, vec1_y, blockSizeY))
+  if (blockSizeY > (decoder->coding.lumaPadY-4) && checkVertMV(mb, vec1_y, blockSizeY))
   {
     get_block_luma(list, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
     get_block_luma(list, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
