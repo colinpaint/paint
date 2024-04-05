@@ -2,10 +2,10 @@
 #include "global.h"
 #include "memory.h"
 
-#include "cabac.h"
-#include "syntaxElement.h"
 #include "binaryArithmeticDecode.h"
-#include "mbAccess.h"
+#include "cabac.h"
+#include "macroblock.h"
+#include "syntaxElement.h"
 #include "vlc.h"
 //}}}
 namespace {

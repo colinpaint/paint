@@ -2,12 +2,11 @@
 #include "global.h"
 #include "buffer.h"
 
-void get_block_luma (sPicture* curRef, int x_pos, int y_pos,
-                     int blockSizeX, int blockSizeY, sPixel** block,
-                     int shift_x, int maxold_x, int maxold_y,
-                     int** tempRes, int max_imgpel_value,
-                     sPixel no_ref_value, sMacroBlock* mb);
-void update_direct_types (cSlice* slice);
+void getBlockLuma (sPicture* curRef, int x_pos, int y_pos,
+                   int blockSizeX, int blockSizeY, sPixel** block,
+                   int shift_x, int maxold_x, int maxold_y,
+                   int** tempRes, int max_imgpel_value,
+                   sPixel no_ref_value, sMacroBlock* mb);
 
 int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j);
 int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j);

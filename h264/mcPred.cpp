@@ -249,9 +249,7 @@ namespace {
   {
     bool has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) | (mb->b8mode[2] == 0) | (mb->b8mode[3] == 0);
 
-    if (has_direct)
-    {
-      //cDecoder264* decoder = mb->decoder;
+    if (has_direct) {
       cSlice* slice = mb->slice;
       int i,j,k;
 
@@ -267,149 +265,124 @@ namespace {
       int is_not_moving;
       sPicMotion *mvInfo = NULL;
 
-      prepare_direct_params(mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
+      prepare_direct_params (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
 
-      for (k = 0; k < 4; ++k)
-      {
-        if (mb->b8mode[k] == 0)
-        {
+      for (k = 0; k < 4; ++k) {
+        if (mb->b8mode[k] == 0) {
           i = 2 * (k & 0x01);
           j = 2 * (k >> 1);
-
-          //j6 = mb->blockYaff + j;
-          j4 = mb->blockY     + j;
-          i4 = mb->blockX     + i;
+          j4 = mb->blockY + j;
+          i4 = mb->blockX + i;
 
           mvInfo = &picture->mvInfo[j4][i4];
-
           is_not_moving = (get_colocated_info_8x8(mb, list1[0], i4, mb->blockYaff + j) == 0);
-
-          if (is_not_moving && (l0_rFrame == 0 || l1_rFrame == 0))
-          {
-            if (l1_rFrame == -1)
-            {
-              if  (l0_rFrame == 0)
-              {
+          if (is_not_moving && (l0_rFrame == 0 || l1_rFrame == 0)) {
+            if (l1_rFrame == -1) {
+              if  (l0_rFrame == 0) {
                 mvInfo->refPic[LIST_0] = list0[0];
                 mvInfo->refPic[LIST_1] = list1[0];
                 mvInfo->mv[LIST_0] = kZeroMv;
                 mvInfo->mv[LIST_1] = kZeroMv;
                 mvInfo->refIndex[LIST_0] = 0;
                 mvInfo->refIndex[LIST_1] = -1;
-              }
-              else
-              {
+                }
+              else {
                 mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
                 mvInfo->refPic[LIST_1] = NULL;
                 mvInfo->mv[LIST_0] = pmvl0;
                 mvInfo->mv[LIST_1] = kZeroMv;
                 mvInfo->refIndex[LIST_0] = l0_rFrame;
                 mvInfo->refIndex[LIST_1] = -1;
+                }
               }
-            }
-            else if (l0_rFrame == -1)
-            {
-              if  (l1_rFrame == 0)
-              {
+            else if (l0_rFrame == -1) {
+              if  (l1_rFrame == 0) {
                 mvInfo->refPic[LIST_0] = NULL;
                 mvInfo->refPic[LIST_1] = list1[0];
                 mvInfo->mv[LIST_0] = kZeroMv;
                 mvInfo->mv[LIST_1] = kZeroMv;
                 mvInfo->refIndex[LIST_0] = -1;
                 mvInfo->refIndex[LIST_1] = 0;
-              }
-              else
-              {
+                }
+              else {
                 mvInfo->refPic[LIST_0] = NULL;
                 mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                 mvInfo->mv[LIST_0] = kZeroMv;
                 mvInfo->mv[LIST_1] = pmvl1;
                 mvInfo->refIndex[LIST_0] = -1;
                 mvInfo->refIndex[LIST_1] = l1_rFrame;
+                }
               }
-            }
-            else
-            {
-              if  (l0_rFrame == 0)
-              {
+            else {
+              if (l0_rFrame == 0) {
                 mvInfo->refPic[LIST_0] = list0[0];
                 mvInfo->mv[LIST_0] = kZeroMv;
                 mvInfo->refIndex[LIST_0] = 0;
-              }
-              else
-              {
+                }
+              else {
                 mvInfo->refPic[LIST_1] = list1[(int16_t) l0_rFrame];
                 mvInfo->mv[LIST_0] = pmvl0;
                 mvInfo->refIndex[LIST_0] = l0_rFrame;
-              }
+                }
 
-              if  (l1_rFrame == 0)
-              {
+              if (l1_rFrame == 0) {
                 mvInfo->refPic[LIST_1] = list1[0];
                 mvInfo->mv[LIST_1] = kZeroMv;
                 mvInfo->refIndex[LIST_1] = 0;
-              }
-              else
-              {
+                }
+              else {
                 mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                 mvInfo->mv[LIST_1] = pmvl1;
                 mvInfo->refIndex[LIST_1] = l1_rFrame;
+                }
               }
             }
-          }
-          else
-          {
-            if (l0_rFrame < 0 && l1_rFrame < 0)
-            {
+          else {
+            if (l0_rFrame < 0 && l1_rFrame < 0) {
               mvInfo->refPic[LIST_0] = list0[0];
               mvInfo->refPic[LIST_1] = list1[0];
               mvInfo->mv[LIST_0] = kZeroMv;
               mvInfo->mv[LIST_1] = kZeroMv;
               mvInfo->refIndex[LIST_0] = 0;
               mvInfo->refIndex[LIST_1] = 0;
-            }
-            else if (l0_rFrame < 0)
-            {
+              }
+            else if (l0_rFrame < 0) {
               mvInfo->refPic[LIST_0] = NULL;
               mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
               mvInfo->mv[LIST_0] = kZeroMv;
               mvInfo->mv[LIST_1] = pmvl1;
               mvInfo->refIndex[LIST_0] = -1;
               mvInfo->refIndex[LIST_1] = l1_rFrame;
-            }
-            else  if (l1_rFrame < 0)
-            {
+              }
+            else  if (l1_rFrame < 0) {
               mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
               mvInfo->refPic[LIST_1] = NULL;
-
               mvInfo->mv[LIST_0] = pmvl0;
               mvInfo->mv[LIST_1] = kZeroMv;
               mvInfo->refIndex[LIST_0] = l0_rFrame;
               mvInfo->refIndex[LIST_1] = -1;
-            }
-            else
-            {
+              }
+            else {
               mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
               mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
               mvInfo->mv[LIST_0] = pmvl0;
               mvInfo->mv[LIST_1] = pmvl1;
               mvInfo->refIndex[LIST_0] = l0_rFrame;
               mvInfo->refIndex[LIST_1] = l1_rFrame;
+              }
             }
+          updateNeighbourMvs (&picture->mvInfo[j4], mvInfo, i4);
           }
-          updateNeighbourMvs(&picture->mvInfo[j4], mvInfo, i4);
         }
       }
     }
-  }
   //}}}
   //{{{
   void update_direct_mv_info_spatial_4x4 (sMacroBlock* mb)
   {
     bool has_direct = (mb->b8mode[0] == 0) | (mb->b8mode[1] == 0) | (mb->b8mode[2] == 0) | (mb->b8mode[3] == 0);
 
-    if (has_direct)
-    {
+    if (has_direct) {
       cDecoder264* decoder = mb->decoder;
       cSlice* slice = mb->slice;
       int i,j,k;
@@ -424,135 +397,112 @@ namespace {
       char  l0_rFrame, l1_rFrame;
       sMotionVec pmvl0, pmvl1;
 
-      prepare_direct_params(mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
-      for (k = 0; k < 4; ++k)
-      {
-        if (mb->b8mode[k] == 0)
-        {
-
+      prepare_direct_params (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
+      for (k = 0; k < 4; ++k) {
+        if (mb->b8mode[k] == 0) {
           i = 2 * (k & 0x01);
-          for(j = 2 * (k >> 1); j < 2 * (k >> 1)+2;++j)
-          {
-            j4 = mb->blockY     + j;
-
-            for(i4 = mb->blockX + i; i4 < mb->blockX + i + 2; ++i4)
-            {
-              sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
+          for(j = 2 * (k >> 1); j < 2 * (k >> 1)+2;++j) {
+            j4 = mb->blockY + j;
+            for(i4 = mb->blockX + i; i4 < mb->blockX + i + 2; ++i4) {
+              sPicMotion* mvInfo = &picture->mvInfo[j4][i4];
               //===== DIRECT PREDICTION =====
-              if (l0_rFrame == 0 || l1_rFrame == 0)
-              {
+              if (l0_rFrame == 0 || l1_rFrame == 0) {
                 int is_not_moving = (get_colocated_info_4x4(mb, list1[0], i4, mb->blockYaff + j) == 0);
-
-                if (l1_rFrame == -1)
-                {
-                  if (is_not_moving)
-                  {
+                if (l1_rFrame == -1) {
+                  if (is_not_moving) {
                     mvInfo->refPic[LIST_0] = list0[0];
                     mvInfo->refPic[LIST_1] = NULL;
                     mvInfo->mv[LIST_0] = kZeroMv;
                     mvInfo->mv[LIST_1] = kZeroMv;
                     mvInfo->refIndex[LIST_0] = 0;
                     mvInfo->refIndex[LIST_1] = -1;
-                  }
-                  else
-                  {
+                    }
+                  else {
                     mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
                     mvInfo->refPic[LIST_1] = NULL;
                     mvInfo->mv[LIST_0] = pmvl0;
                     mvInfo->mv[LIST_1] = kZeroMv;
                     mvInfo->refIndex[LIST_0] = l0_rFrame;
                     mvInfo->refIndex[LIST_1] = -1;
+                    }
                   }
-                }
-                else if (l0_rFrame == -1)
-                {
-                  if  (is_not_moving)
-                  {
+                else if (l0_rFrame == -1) {
+                  if  (is_not_moving) {
                     mvInfo->refPic[LIST_0] = NULL;
                     mvInfo->refPic[LIST_1] = list1[0];
                     mvInfo->mv[LIST_0] = kZeroMv;
                     mvInfo->mv[LIST_1] = kZeroMv;
                     mvInfo->refIndex[LIST_0] = -1;
                     mvInfo->refIndex[LIST_1] = 0;
-                  }
-                  else
-                  {
+                   }
+                  else {
                     mvInfo->refPic[LIST_0] = NULL;
                     mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                     mvInfo->mv[LIST_0] = kZeroMv;
                     mvInfo->mv[LIST_1] = pmvl1;
                     mvInfo->refIndex[LIST_0] = -1;
                     mvInfo->refIndex[LIST_1] = l1_rFrame;
+                    }
                   }
-                }
-                else
-                {
-                  if (l0_rFrame == 0 && ((is_not_moving)))
-                  {
+                else {
+                  if (l0_rFrame == 0 && ((is_not_moving))) {
                     mvInfo->refPic[LIST_0] = list0[0];
                     mvInfo->mv[LIST_0] = kZeroMv;
                     mvInfo->refIndex[LIST_0] = 0;
-                  }
-                  else
-                  {
+                    }
+                  else {
                     mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
                     mvInfo->mv[LIST_0] = pmvl0;
                     mvInfo->refIndex[LIST_0] = l0_rFrame;
-                  }
+                    }
 
-                  if  (l1_rFrame == 0 && ((is_not_moving)))
-                  {
+                  if  (l1_rFrame == 0 && ((is_not_moving))) {
                     mvInfo->refPic[LIST_1] = list1[0];
                     mvInfo->mv[LIST_1] = kZeroMv;
                     mvInfo->refIndex[LIST_1]    = 0;
-                  }
-                  else
-                  {
+                    }
+                  else {
                     mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                     mvInfo->mv[LIST_1] = pmvl1;
                     mvInfo->refIndex[LIST_1] = l1_rFrame;
+                    }
                   }
                 }
-              }
-              else
-              {
+              else {
                 mvInfo = &picture->mvInfo[j4][i4];
 
-                if (l0_rFrame < 0 && l1_rFrame < 0)
-                {
+                if (l0_rFrame < 0 && l1_rFrame < 0) {
                   mvInfo->refPic[LIST_0] = list0[0];
                   mvInfo->refPic[LIST_1] = list1[0];
                   mvInfo->mv[LIST_0] = kZeroMv;
                   mvInfo->mv[LIST_1] = kZeroMv;
                   mvInfo->refIndex[LIST_0] = 0;
                   mvInfo->refIndex[LIST_1] = 0;
-                }
-                else if (l1_rFrame == -1)
-                {
+                  }
+                else if (l1_rFrame == -1) {
                   mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
                   mvInfo->refPic[LIST_1] = NULL;
                   mvInfo->mv[LIST_0] = pmvl0;
                   mvInfo->mv[LIST_1] = kZeroMv;
                   mvInfo->refIndex[LIST_0] = l0_rFrame;
                   mvInfo->refIndex[LIST_1] = -1;
-                }
-                else if (l0_rFrame == -1)
-                {
+                  }
+                else if (l0_rFrame == -1) {
                   mvInfo->refPic[LIST_0] = NULL;
                   mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                   mvInfo->mv[LIST_0] = kZeroMv;
                   mvInfo->mv[LIST_1] = pmvl1;
                   mvInfo->refIndex[LIST_0] = -1;
                   mvInfo->refIndex[LIST_1] = l1_rFrame;
-                }
-                else
-                {
+                  }
+                else {
                   mvInfo->refPic[LIST_0] = list0[(int16_t) l0_rFrame];
                   mvInfo->refPic[LIST_1] = list1[(int16_t) l1_rFrame];
                   mvInfo->mv[LIST_0] = pmvl0;
                   mvInfo->mv[LIST_1] = pmvl1;
                   mvInfo->refIndex[LIST_0] = l0_rFrame;
                   mvInfo->refIndex[LIST_1] = l1_rFrame;
+                  }
                 }
               }
             }
@@ -560,92 +510,72 @@ namespace {
         }
       }
     }
-  }
   //}}}
   //{{{
-  void mc_prediction (sPixel** mbPred, sPixel** block, int blockSizeY, int blockSizeX, int ioff)
-  {
-    for (int j = 0; j < blockSizeY; j++)
-      memcpy(&mbPred[j][ioff], block[j], blockSizeX * sizeof(sPixel));
-  }
-  //}}}
-  //{{{
-  void weighted_mc_prediction (sPixel** mbPred, sPixel** block,
-                                      int blockSizeY, int blockSizeX,
-                                      int ioff, int wp_scale, int weightedPredOffset,
-                                      int weight_denom, int color_clip)
-  {
-    int i, j;
-    int result;
+  void mc_prediction (sPixel** mbPred, sPixel** block, int blockSizeY, int blockSizeX, int ioff) {
 
-    for(j = 0; j < blockSizeY; j++)
-    {
-      for(i = 0; i < blockSizeX; i++)
-      {
-        result = rshift_rnd((wp_scale * block[j][i]), weight_denom) + weightedPredOffset;
+    for (int j = 0; j < blockSizeY; j++)
+      memcpy (&mbPred[j][ioff], block[j], blockSizeX * sizeof(sPixel));
+    }
+  //}}}
+  //{{{
+  void weighted_mc_prediction (sPixel** mbPred, sPixel** block, int blockSizeY, int blockSizeX,
+                               int ioff, int wp_scale, int weightedPredOffset, int weight_denom, int color_clip) {
+
+    for (int j = 0; j < blockSizeY; j++) {
+      for (int i = 0; i < blockSizeX; i++) {
+        int result = rshift_rnd ((wp_scale * block[j][i]), weight_denom) + weightedPredOffset;
         mbPred[j][i + ioff] = (sPixel)iClip3(0, color_clip, result);
+        }
       }
     }
-  }
   //}}}
   //{{{
-  void bi_prediction (sPixel** mbPred,
-                             sPixel** block_l0,
-                             sPixel** block_l1,
-                             int blockSizeY,
-                             int blockSizeX,
-                             int ioff)
-  {
-    sPixel *mpr = &mbPred[0][ioff];
-    sPixel *b0 = block_l0[0];
-    sPixel *b1 = block_l1[0];
-    int ii, jj;
+  void bi_prediction (sPixel** mbPred, sPixel** block_l0, sPixel** block_l1,
+                      int blockSizeY, int blockSizeX, int ioff) {
+
+    sPixel* mpr = &mbPred[0][ioff];
+    sPixel* b0 = block_l0[0];
+    sPixel* b1 = block_l1[0];
+
     int row_inc = MB_BLOCK_SIZE - blockSizeX;
-    for(jj = 0;jj < blockSizeY;jj++)
-    {
+    for (int jj = 0; jj < blockSizeY;jj++) {
       // unroll the loop
-      for(ii = 0; ii < blockSizeX; ii += 2)
-      {
+      for (int ii = 0; ii < blockSizeX; ii += 2) {
         *(mpr++) = (sPixel)(((*(b0++) + *(b1++)) + 1) >> 1);
         *(mpr++) = (sPixel)(((*(b0++) + *(b1++)) + 1) >> 1);
-      }
+        }
+
       mpr += row_inc;
       b0  += row_inc;
       b1  += row_inc;
+      }
     }
-  }
   //}}}
   //{{{
-  void weighted_bi_prediction (sPixel *mbPred,
-                                      sPixel *block_l0,
-                                      sPixel *block_l1,
-                                      int blockSizeY,
-                                      int blockSizeX,
-                                      int wp_scale_l0,
-                                      int wp_scale_l1,
-                                      int weightedPredOffset,
-                                      int weight_denom,
-                                      int color_clip)
-  {
-    int i, j, result;
+  void weighted_bi_prediction (sPixel *mbPred, sPixel *block_l0, sPixel *block_l1,
+                                      int blockSizeY, int blockSizeX,
+                                      int wp_scale_l0, int wp_scale_l1,
+                                      int weightedPredOffset, int weight_denom, int color_clip) {
+
     int row_inc = MB_BLOCK_SIZE - blockSizeX;
 
-    for(j = 0; j < blockSizeY; j++)
-    {
-      for(i = 0; i < blockSizeX; i++)
-      {
-        result = rshift_rnd_sf((wp_scale_l0 * *(block_l0++) + wp_scale_l1 * *(block_l1++)),  weight_denom);
+    for (int j = 0; j < blockSizeY; j++) {
+      for (int i = 0; i < blockSizeX; i++) {
+        int result = rshift_rnd_sf((wp_scale_l0 * *(block_l0++) + wp_scale_l1 * *(block_l1++)),  weight_denom);
         *(mbPred++) = (sPixel) iClip1(color_clip, result + weightedPredOffset);
-      }
+        }
+
       mbPred += row_inc;
       block_l0 += row_inc;
       block_l1 += row_inc;
+      }
     }
-  }
   //}}}
 
+  // getBlockLuma utils
   //{{{
-  void get_block_00 (sPixel *block, sPixel* pixel, int span, int blockSizeY)
+  void getBlock00 (sPixel *block, sPixel* pixel, int span, int blockSizeY)
   {
     // fastest to just move an entire block, since block is a temp block is a 256 uint8_t block (16x16)
     // writes 2 lines of 16 sPixel 1 to 8 times depending in blockSizeY
@@ -664,7 +594,7 @@ namespace {
 
   //}}}
   //{{{
-  void get_luma_10 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos , int max_imgpel_value)
+  void getLuma10 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos , int max_imgpel_value)
   {
     sPixel *p0, *p1, *p2, *p3, *p4, *p5;
     sPixel *orig_line, *cur_line;
@@ -694,7 +624,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_20 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos , int max_imgpel_value)
+  void getLuma20 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos , int max_imgpel_value)
   {
     sPixel *p0, *p1, *p2, *p3, *p4, *p5;
     sPixel *orig_line;
@@ -719,7 +649,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_30 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos , int max_imgpel_value)
+  void getLuma30 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos , int max_imgpel_value)
   {
     sPixel *p0, *p1, *p2, *p3, *p4, *p5;
     sPixel *orig_line, *cur_line;
@@ -748,7 +678,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_01 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
+  void getLuma01 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
   {
     sPixel *p0, *p1, *p2, *p3, *p4, *p5;
     sPixel *orig_line, *cur_line;
@@ -779,7 +709,7 @@ namespace {
 
   //}}}
   //{{{
-  void get_luma_02 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
+  void getLuma02 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
   {
     sPixel *p0, *p1, *p2, *p3, *p4, *p5;
     sPixel *orig_line;
@@ -805,7 +735,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_03 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
+  void getLuma03 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
   {
     sPixel *p0, *p1, *p2, *p3, *p4, *p5;
     sPixel *orig_line, *cur_line;
@@ -836,7 +766,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_21 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int max_imgpel_value)
+  void getLuma21 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int max_imgpel_value)
   {
     int i, j;
     /* Vertical & horizontal interpolation */
@@ -888,7 +818,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_22 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int max_imgpel_value)
+  void getLuma22 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int max_imgpel_value)
   {
     int i, j;
     /* Vertical & horizontal interpolation */
@@ -933,7 +863,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_23 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int max_imgpel_value)
+  void getLuma23 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int max_imgpel_value)
   {
     int i, j;
     /* Vertical & horizontal interpolation */
@@ -983,7 +913,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_12 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
+  void getLuma12 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
   {
     int i, j;
     int *tmp_line;
@@ -1032,7 +962,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_32 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
+  void getLuma32 (sPixel** block, sPixel** curPixelY, int** tempRes, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
   {
     int i, j;
     int *tmp_line;
@@ -1079,7 +1009,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_33 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
+  void getLuma33 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
   {
     int i, j;
     sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -1127,7 +1057,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_11 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
+  void getLuma11 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
   {
     int i, j;
     sPixel *p0, *p1, *p2, *p3, *p4, *p5;
@@ -1175,7 +1105,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_13 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
+  void getLuma13 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
   {
     /* Diagonal interpolation */
     int i, j;
@@ -1224,7 +1154,7 @@ namespace {
   }
   //}}}
   //{{{
-  void get_luma_31 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
+  void getLuma31 (sPixel** block, sPixel** curPixelY, int blockSizeY, int blockSizeX, int x_pos, int shift_x, int max_imgpel_value)
   {
     /* Diagonal interpolation */
     int i, j;
@@ -1274,7 +1204,7 @@ namespace {
   //}}}
 
   //{{{
-  void get_chroma_0X (sPixel* block, sPixel* pixel, int span, int blockSizeY, int blockSizeX, int w00, int w01, int totalScale)
+  void getChroma0X (sPixel* block, sPixel* pixel, int span, int blockSizeY, int blockSizeX, int w00, int w01, int totalScale)
   {
     sPixel *cur_row = pixel;
     sPixel *nxt_row = pixel + span;
@@ -1301,120 +1231,104 @@ namespace {
   }
   //}}}
   //{{{
-  void get_chroma_X0 (sPixel* block, sPixel* pixel, int span, int blockSizeY, int blockSizeX, int w00, int w10, int totalScale)
-  {
-    sPixel *cur_row = pixel;
+  void getChromaX0 (sPixel* block, sPixel* pixel, int span, int blockSizeY, int blockSizeX, 
+                    int w00, int w10, int totalScale) {
 
-
-      sPixel *cur_line, *cur_line_p1;
-      sPixel *blk_line;
-      int result;
-      int i, j;
-      for (j = 0; j < blockSizeY; j++)
-      {
-        cur_line    = cur_row;
-        cur_line_p1 = cur_line + 1;
-        blk_line = block;
-        block += 16;
-        cur_row += span;
-        for (i = 0; i < blockSizeX; i++)
-        {
-          result = (w00 * *cur_line++ + w10 * *cur_line_p1++);
-          //*(blk_line++) = (sPixel) iClip1(max_imgpel_value, rshift_rnd_sf(result, totalScale));
-          *(blk_line++) = (sPixel) rshift_rnd_sf(result, totalScale);
-        }
-      }
-  }
-  //}}}
-  //{{{
-  void get_chroma_XY (sPixel* block, sPixel* pixel, int span, int blockSizeY, int blockSizeX, int w00, int w01, int w10, int w11, int totalScale)
-  {
-    sPixel *cur_row = pixel;
-    sPixel *nxt_row = pixel + span;
-
-
-    {
-      sPixel *cur_line, *cur_line_p1;
-      sPixel *blk_line;
-      int result;
-      int i, j;
-      for (j = 0; j < blockSizeY; j++)
-      {
-        cur_line    = cur_row;
-        cur_line_p1 = nxt_row;
-        blk_line = block;
-        block += 16;
-        cur_row = nxt_row;
-        nxt_row += span;
-        for (i = 0; i < blockSizeX; i++)
-        {
-          result  = (w00 * *(cur_line++) + w01 * *(cur_line_p1++));
-          result += (w10 * *(cur_line  ) + w11 * *(cur_line_p1  ));
-          *(blk_line++) = (sPixel) rshift_rnd_sf(result, totalScale);
+    sPixel* cur_row = pixel;
+    sPixel* cur_line, *cur_line_p1;
+    sPixel* blk_line;
+    for (int j = 0; j < blockSizeY; j++) {
+      cur_line = cur_row;
+      cur_line_p1 = cur_line + 1;
+      blk_line = block;
+      block += 16;
+      cur_row += span;
+      for (int i = 0; i < blockSizeX; i++) {
+        int result= (w00 * *cur_line++ + w10 * *cur_line_p1++);
+        *(blk_line++) = (sPixel)rshift_rnd_sf (result, totalScale);
         }
       }
     }
-  }
+  //}}}
+  //{{{
+  void getChromaXY (sPixel* block, sPixel* pixel, int span, int blockSizeY, int blockSizeX, 
+                    int w00, int w01, int w10, int w11, int totalScale) {
+
+    sPixel* cur_row = pixel;
+    sPixel* nxt_row = pixel + span;
+    sPixel* cur_line, *cur_line_p1;
+    sPixel* blk_line;
+    for (int j = 0; j < blockSizeY; j++) {
+      cur_line    = cur_row;
+      cur_line_p1 = nxt_row;
+      blk_line = block;
+      block += 16;
+      cur_row = nxt_row;
+      nxt_row += span;
+      for (int i = 0; i < blockSizeX; i++) {
+        int result = (w00 * *(cur_line++) + w01 * *(cur_line_p1++));
+        result += (w10 * *(cur_line  ) + w11 * *(cur_line_p1  ));
+        *(blk_line++) = (sPixel) rshift_rnd_sf(result, totalScale);
+        }
+      }
+    }
   //}}}
   //{{{
   void get_block_chroma (sPicture* curRef, int x_pos, int y_pos, int subpelX, int subpelY, int maxold_x, int maxold_y,
                                int blockSizeX, int vert_block_size, int shiftpelX, int shiftpelY,
-                               sPixel *block1, sPixel *block2, int totalScale, sPixel no_ref_value, cDecoder264* decoder)
-  {
+                               sPixel *block1, sPixel *block2, int totalScale, 
+                               sPixel no_ref_value, cDecoder264* decoder) {
+
     sPixel *img1,*img2;
     int16_t dx,dy;
     int span = curRef->chromaStride;
     if (curRef->noRef) {
-      //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
-      memset(block1,no_ref_value,vert_block_size * blockSizeX * sizeof(sPixel));
-      memset(block2,no_ref_value,vert_block_size * blockSizeX * sizeof(sPixel));
-    }
+      memset (block1,no_ref_value,vert_block_size * blockSizeX * sizeof(sPixel));
+      memset (block2,no_ref_value,vert_block_size * blockSizeX * sizeof(sPixel));
+      }
     else
     {
       dx = (int16_t) (x_pos & subpelX);
       dy = (int16_t) (y_pos & subpelY);
       x_pos = x_pos >> shiftpelX;
       y_pos = y_pos >> shiftpelY;
-      //clip MV;
+
+      // clip MV
       x_pos = iClip3(-decoder->coding.chromaPadX, maxold_x, x_pos); //16
       y_pos = iClip3(-decoder->coding.chromaPadY, maxold_y, y_pos); //8
       img1 = &curRef->imgUV[0][y_pos][x_pos];
       img2 = &curRef->imgUV[1][y_pos][x_pos];
 
-      if (dx == 0 && dy == 0)
-      {
-        get_block_00(block1, img1, span, vert_block_size);
-        get_block_00(block2, img2, span, vert_block_size);
-      }
-      else
-      {
+      if (dx == 0 && dy == 0) {
+        getBlock00 (block1, img1, span, vert_block_size);
+        getBlock00 (block2, img2, span, vert_block_size);
+        }
+      else  {
         int16_t dxcur = (int16_t) (subpelX + 1 - dx);
         int16_t dycur = (int16_t) (subpelY + 1 - dy);
         int16_t w00 = dxcur * dycur;
-        if (dx == 0)
-        {
+        if (dx == 0) {
           int16_t w01 = dxcur * dy;
-          get_chroma_0X(block1, img1, span, vert_block_size, blockSizeX, w00, w01, totalScale);
-          get_chroma_0X(block2, img2, span, vert_block_size, blockSizeX, w00, w01, totalScale);
-        }
-        else if (dy == 0)
-        {
+          getChroma0X (block1, img1, span, vert_block_size, blockSizeX, w00, w01, totalScale);
+          getChroma0X (block2, img2, span, vert_block_size, blockSizeX, w00, w01, totalScale);
+          }
+        else if (dy == 0) {
           int16_t w10 = dx * dycur;
-          get_chroma_X0(block1, img1, span, vert_block_size, blockSizeX, w00, w10, totalScale);
-          get_chroma_X0(block2, img2, span, vert_block_size, blockSizeX, w00, w10, totalScale);
-        }
-        else
-        {
+          getChromaX0 (block1, img1, span, vert_block_size, blockSizeX, w00, w10, totalScale);
+          getChromaX0 (block2, img2, span, vert_block_size, blockSizeX, w00, w10, totalScale);
+          }
+        else {
           int16_t w01 = dxcur * dy;
           int16_t w10 = dx * dycur;
           int16_t w11 = dx * dy;
-          get_chroma_XY(block1, img1, span, vert_block_size, blockSizeX, w00, w01, w10, w11, totalScale);
-          get_chroma_XY(block2, img2, span, vert_block_size, blockSizeX, w00, w01, w10, w11, totalScale);
+          getChromaXY (block1, img1, span, vert_block_size, blockSizeX, w00, w01, w10, w11, totalScale);
+          getChromaXY (block2, img2, span, vert_block_size, blockSizeX, w00, w01, w10, w11, totalScale);
+          }
         }
       }
     }
-  }
   //}}}
+
   //{{{
   void set_direct_references (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotion** mvInfo)
   {
@@ -1483,20 +1397,17 @@ namespace {
   void check_motion_vector_range (const sMotionVec *mv, cSlice *slice) {
 
     if (mv->mvX > 8191 || mv->mvX < -8192)
-      fprintf(stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroBlock %d\n", mv->mvX, slice->decoder->idrFrameNum, slice->mbIndex);
+      fprintf (stderr,"WARNING! Horizontal motion vector %d is out of allowed range {-8192, 8191} in picture %d, macroBlock %d\n", mv->mvX, slice->decoder->idrFrameNum, slice->mbIndex);
 
     if (mv->mvY > (slice->maxMbVmvR - 1) || mv->mvY < (-slice->maxMbVmvR))
-      fprintf(stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroBlock %d\n", mv->mvY, (-slice->maxMbVmvR), (slice->maxMbVmvR - 1), slice->decoder->idrFrameNum, slice->mbIndex);
+      fprintf (stderr,"WARNING! Vertical motion vector %d is out of allowed range {%d, %d} in picture %d, macroBlock %d\n", mv->mvY, (-slice->maxMbVmvR), (slice->maxMbVmvR - 1), slice->decoder->idrFrameNum, slice->mbIndex);
     }
   //}}}
   //{{{
   bool check_vert_mv (int llimit, int vec1_y,int rlimit) {
 
     int y_pos = vec1_y >> 2;
-    if (y_pos < llimit || y_pos > rlimit)
-      return 1;
-    else
-      return 0;
+    return (y_pos < llimit) || (y_pos > rlimit);
     }
   //}}}
 
@@ -1537,21 +1448,19 @@ namespace {
     vec1_x = i4 * mv_mul + mv_array->mvX;
     vec1_y = (mb->blockYaff + j) * mv_mul + mv_array->mvY;
     if (blockSizeY > (decoder->coding.lumaPadY-4) && checkVertMV(mb, vec1_y, blockSizeY)) {
-      get_block_luma(list, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
-      get_block_luma(list, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
       }
     else
-      get_block_luma(list, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
 
-    {
-      int alpha_l0, weightedPredOffset, wp_denom;
-      if (mb->mbField && ((decoder->activePps->hasWeightedPred&&(type==eSliceP|| type == eSliceSP))||(decoder->activePps->weightedBiPredIdc==1 && (type==eSliceB))))
-        ref_idx_wp >>=1;
-      alpha_l0  = slice->weightedPredWeight[predDir][ref_idx_wp][plane];
-      weightedPredOffset = slice->weightedPredOffset[predDir][ref_idx_wp][plane];
-      wp_denom  = plane > 0 ? slice->chromaLog2weightDenom : slice->lumaLog2weightDenom;
-      weighted_mc_prediction(&slice->mbPred[plane][joff], tempBlockL0, blockSizeY, blockSizeX, ioff, alpha_l0, weightedPredOffset, wp_denom, max_imgpel_value);
-    }
+    int alpha_l0, weightedPredOffset, wp_denom;
+    if (mb->mbField && ((decoder->activePps->hasWeightedPred&&(type==eSliceP|| type == eSliceSP))||(decoder->activePps->weightedBiPredIdc==1 && (type==eSliceB))))
+      ref_idx_wp >>=1;
+    alpha_l0  = slice->weightedPredWeight[predDir][ref_idx_wp][plane];
+    weightedPredOffset = slice->weightedPredOffset[predDir][ref_idx_wp][plane];
+    wp_denom  = plane > 0 ? slice->chromaLog2weightDenom : slice->lumaLog2weightDenom;
+    weighted_mc_prediction (&slice->mbPred[plane][joff], tempBlockL0, blockSizeY, blockSizeX, ioff, alpha_l0, weightedPredOffset, wp_denom, max_imgpel_value);
 
     if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444)) {
       int ioff_cr,joff_cr,block_size_x_cr,block_size_y_cr;
@@ -1620,11 +1529,11 @@ namespace {
     vec1_y = (mb->blockYaff + j) * mv_mul + mv_array->mvY;
 
     if (blockSizeY > (decoder->coding.lumaPadY-4) && checkVertMV(mb, vec1_y, blockSizeY)) {
-      get_block_luma (list, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
-      get_block_luma (list, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
       }
     else
-      get_block_luma (list, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
 
     mc_prediction (&slice->mbPred[plane][joff], tempBlockL0, blockSizeY, blockSizeX, ioff);
 
@@ -1722,17 +1631,17 @@ namespace {
     vec2_y = (blockYaff + j) * mv_mul + l1_mv_array->mvY;
 
     if (big_blocky && check_vert_mv (llimit, vec1_y, rlimit)) {
-      get_block_luma (list0, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
-      get_block_luma (list0, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list0, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list0, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
       }
     else
-      get_block_luma (list0, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list0, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
     if (big_blocky && check_vert_mv (llimit, vec2_y, rlimit)) {
-      get_block_luma (list1, vec2_x, vec2_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL1, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
-      get_block_luma (list1, vec2_x, vec2_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL1 + BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list1, vec2_x, vec2_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL1, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list1, vec2_x, vec2_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL1 + BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
       }
     else
-      get_block_luma (list1, vec2_x, vec2_y, blockSizeX, blockSizeY, tempBlockL1,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list1, vec2_x, vec2_y, blockSizeX, blockSizeY, tempBlockL1,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
 
     weightedPredOffset = ((offset0[plane] + offset1[plane] + 1) >>1);
     wp_denom  = plane > 0 ? slice->chromaLog2weightDenom : slice->lumaLog2weightDenom;
@@ -1799,9 +1708,9 @@ namespace {
     int ioff = (i << 2);
     int joff = (j << 2);
     int chromaFormatIdc = picture->chromaFormatIdc;
-    sPicMotion *mvInfo = &picture->mvInfo[j4][i4];
-    sMotionVec *l0_mv_array = &mvInfo->mv[LIST_0];
-    sMotionVec *l1_mv_array = &mvInfo->mv[LIST_1];
+    sPicMotion* mvInfo = &picture->mvInfo[j4][i4];
+    sMotionVec* l0_mv_array = &mvInfo->mv[LIST_0];
+    sMotionVec* l1_mv_array = &mvInfo->mv[LIST_1];
     int16_t l0_refframe = mvInfo->refIndex[LIST_0];
     int16_t l1_refframe = mvInfo->refIndex[LIST_1];
     int listOffset = mb->listOffset;
@@ -1811,17 +1720,18 @@ namespace {
     int rlimit = maxold_y + pady - blockSizeY - 2;
     int llimit = 2 - pady;
     int big_blocky = blockSizeY > (pady - 4);
-    sPicture *list0 = slice->listX[LIST_0 + listOffset][l0_refframe];
-    sPicture *list1 = slice->listX[LIST_1 + listOffset][l1_refframe];
+    sPicture* list0 = slice->listX[LIST_0 + listOffset][l0_refframe];
+    sPicture* list1 = slice->listX[LIST_1 + listOffset][l1_refframe];
     sPixel** tempBlockL0 = slice->tempBlockL0;
-    sPixel *block0 = tempBlockL0[0];
+    sPixel* block0 = tempBlockL0[0];
     sPixel** tempBlockL1 = slice->tempBlockL1;
-    sPixel *block1 = tempBlockL1[0];
+    sPixel* block1 = tempBlockL1[0];
     sPixel** tempBlockL2 = slice->tempBlockL2;
-    sPixel *block2 = tempBlockL2[0];
+    sPixel* block2 = tempBlockL2[0];
     sPixel** tempBlockL3 = slice->tempBlockL3;
-    sPixel *block3 = tempBlockL3[0];
-    // vars for get_block_luma
+    sPixel* block3 = tempBlockL3[0];
+
+    // vars for getBlockLuma
     int maxold_x = picture->size_x_m1;
     int shift_x  = picture->lumaStride;
     int** tempRes = slice->tempRes;
@@ -1834,18 +1744,18 @@ namespace {
     vec1_y = (blockYaff + j) * mv_mul + l0_mv_array->mvY;
     vec2_y = (blockYaff + j) * mv_mul + l1_mv_array->mvY;
     if (big_blocky && check_vert_mv (llimit, vec1_y, rlimit)) {
-      get_block_luma (list0, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
-      get_block_luma (list0, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list0, vec1_x, vec1_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL0, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list0, vec1_x, vec1_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL0+BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
       }
     else
-      get_block_luma (list0, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list0, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
 
     if (big_blocky && check_vert_mv (llimit, vec2_y, rlimit)) {
-      get_block_luma (list1, vec2_x, vec2_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL1, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
-      get_block_luma (list1, vec2_x, vec2_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL1 + BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list1, vec2_x, vec2_y, blockSizeX, BLOCK_SIZE_8x8, tempBlockL1, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list1, vec2_x, vec2_y+BLOCK_SIZE_8x8_SP, blockSizeX, blockSizeY-BLOCK_SIZE_8x8, tempBlockL1 + BLOCK_SIZE_8x8, shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
       }
     else
-      get_block_luma (list1, vec2_x, vec2_y, blockSizeX, blockSizeY, tempBlockL1,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
+      getBlockLuma (list1, vec2_x, vec2_y, blockSizeX, blockSizeY, tempBlockL1,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
     bi_prediction (&slice->mbPred[plane][joff],tempBlockL0,tempBlockL1, blockSizeY, blockSizeX, ioff);
 
     if ((chromaFormatIdc != YUV400) && (chromaFormatIdc != YUV444)) {
@@ -1893,28 +1803,13 @@ namespace {
   }
 
 //{{{
-void update_direct_types (cSlice* slice)
-{
-  if (slice->activeSps->isDirect8x8inference)
-    slice->updateDirectMvInfo =
-      slice->directSpatialMvPredFlag ? update_direct_mv_info_spatial_8x8 :
-                                               update_direct_mv_info_temporal;
-  else
-    slice->updateDirectMvInfo =
-      slice->directSpatialMvPredFlag ? update_direct_mv_info_spatial_4x4 :
-                                               update_direct_mv_info_temporal;
-}
-//}}}
-//{{{
-void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int blockSizeY, sPixel** block,
-                    int shift_x, int maxold_x, int maxold_y, int** tempRes, int max_imgpel_value, sPixel no_ref_value, sMacroBlock* mb)
-{
-  if (curRef->noRef) {
-    //printf("list[ref_frame] is equal to 'no reference picture' before RAP\n");
-    memset(block[0],no_ref_value,blockSizeY * blockSizeX * sizeof(sPixel));
-  }
-  else
-  {
+void getBlockLuma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int blockSizeY, sPixel** block,
+                     int shift_x, int maxold_x, int maxold_y, int** tempRes,
+                     int max_imgpel_value, sPixel no_ref_value, sMacroBlock* mb) {
+
+  if (curRef->noRef)
+    memset (block[0], no_ref_value,blockSizeY * blockSizeX * sizeof(sPixel));
+  else {
     sPixel** curPixelY = (mb->decoder->coding.isSeperateColourPlane && mb->slice->colourPlaneId>PLANE_Y)? curRef->imgUV[mb->slice->colourPlaneId-1] : curRef->curPixelY;
     int dx = (x_pos & 3);
     int dy = (y_pos & 3);
@@ -1924,63 +1819,55 @@ void get_block_luma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int
     y_pos = iClip3(-10, maxold_y+2, y_pos);
 
     if (dx == 0 && dy == 0)
-      get_block_00(&block[0][0], &curPixelY[y_pos][x_pos], curRef->lumaStride, blockSizeY);
-    else
-    { /* other positions */
-      if (dy == 0) /* No vertical interpolation */
-      {
+      getBlock00 (&block[0][0], &curPixelY[y_pos][x_pos], curRef->lumaStride, blockSizeY);
+    else {
+      if (dy == 0) { /* No vertical interpolation */
         if (dx == 1)
-          get_luma_10(block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, max_imgpel_value);
+          getLuma10 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, max_imgpel_value);
         else if (dx == 2)
-          get_luma_20(block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, max_imgpel_value);
+          getLuma20 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, max_imgpel_value);
         else
-          get_luma_30(block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, max_imgpel_value);
-      }
-      else if (dx == 0) /* No horizontal interpolation */
-      {
-        if (dy == 1)
-          get_luma_01(block, &curPixelY[y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
-        else if (dy == 2)
-          get_luma_02(block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
-        else
-          get_luma_03(block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
-      }
-      else if (dx == 2)  /* Vertical & horizontal interpolation */
-      {
-        if (dy == 1)
-          get_luma_21(block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, max_imgpel_value);
-        else if (dy == 2)
-          get_luma_22(block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, max_imgpel_value);
-        else
-          get_luma_23(block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, max_imgpel_value);
-      }
-      else if (dy == 2)
-      {
-        if (dx == 1)
-          get_luma_12(block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
-        else
-          get_luma_32(block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
-      }
-      else
-      {
-        if (dx == 1)
-        {
-          if (dy == 1)
-            get_luma_11(block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
-          else
-            get_luma_13(block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
+          getLuma30 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, max_imgpel_value);
         }
+      else if (dx == 0) { /* No horizontal interpolation */
+        if (dy == 1)
+          getLuma01 (block, &curPixelY[y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
+        else if (dy == 2)
+          getLuma02 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
         else
-        {
-          if (dy == 1)
-            get_luma_31(block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
-          else
-            get_luma_33(block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
+          getLuma03 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
         }
-      }
+      else if (dx == 2) { /* Vertical & horizontal interpolation */
+        if (dy == 1)
+          getLuma21 (block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, max_imgpel_value);
+        else if (dy == 2)
+          getLuma22 (block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, max_imgpel_value);
+        else
+          getLuma23 (block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, max_imgpel_value);
+        }
+      else if (dy == 2) {
+        if (dx == 1)
+          getLuma12 (block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
+        else
+          getLuma32 (block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
+        }
+      else {
+        if (dx == 1) {
+          if (dy == 1)
+            getLuma11 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
+          else
+            getLuma13 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
+          }
+        else {
+          if (dy == 1)
+            getLuma31 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
+          else
+            getLuma33 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
+          }
+        }
+     }
     }
   }
-}
 //}}}
 
 //{{{
@@ -1988,6 +1875,7 @@ int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
   if (list1->isLongTerm)
     return 1;
+
   else {
     sPicMotion *fs = &list1->mvInfo[j][i];
     int moving = !((((fs->refIndex[LIST_0] == 0) &&
@@ -2006,7 +1894,7 @@ int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
   if (list1->isLongTerm)
     return 1;
-  else {
+ else {
     cSlice* slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
     if ((slice->mbAffFrame) ||
@@ -2080,66 +1968,51 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
 
   slice->intraPredChroma(mb);// last argument is ignored, computes needed data for both uv channels
 
-  for(uv = 0; uv < 2; uv++)
-  {
+  for (uv = 0; uv < 2; uv++) {
     mb->iTrans4x4 = (mb->isLossless == false) ? itrans4x4 : itrans4x4Lossless;
-
     curUV = picture->imgUV[uv];
-
-    if(mb->isLossless)
-    {
+    if (mb->isLossless) {
       if ((mb->chromaPredMode == VERT_PRED_8)||(mb->chromaPredMode == HOR_PRED_8))
         invResidualTransChroma(mb, uv) ;
-      else
-      {
+      else {
         for(j=0;j<decoder->mbCrSizeY;j++)
           for(i=0;i<decoder->mbCrSizeX;i++)
             slice->mbRess [uv+1][j][i]=slice->cof[uv+1][j][i];
+        }
       }
-    }
 
-    if ((!(mb->mbType == SI4MB) && (mb->codedBlockPattern >> 4)) )
-    {
-      for (b8 = 0; b8 < (decoder->coding.numUvBlocks); b8++)
-      {
-        for(b4 = 0; b4 < 4; b4++)
-        {
+    if ((!(mb->mbType == SI4MB) && (mb->codedBlockPattern >> 4)) ) { 
+      for (b8 = 0; b8 < (decoder->coding.numUvBlocks); b8++) {
+        for(b4 = 0; b4 < 4; b4++) {
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
           mb->iTrans4x4(mb, (eColorPlane) (uv + 1), ioff, joff);
           copyImage4x4(&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
+          }
         }
-      }
       slice->isResetCoefCr = false;
-    }
-    else if (mb->mbType == SI4MB)
-    {
+      }
+    else if (mb->mbType == SI4MB) {
       itransSpChroma(mb, uv);
-
-      for (joff  = 0; joff < 8; joff += 4)
-      {
-        for(ioff = 0; ioff < 8;ioff+=4)
-        {
+      for (joff  = 0; joff < 8; joff += 4) {
+        for(ioff = 0; ioff < 8;ioff+=4) {
           mb->iTrans4x4 (mb, (eColorPlane) (uv + 1), ioff, joff);
           copyImage4x4 (&curUV[mb->piccY + joff], &(slice->mbRec[uv + 1][joff]), mb->pixcX + ioff, ioff);
+          }
         }
-      }
       slice->isResetCoefCr = false;
-    }
-    else
-    {
-      for (b8 = 0; b8 < (decoder->coding.numUvBlocks); b8++)
-      {
-        for(b4 = 0; b4 < 4; b4++)
-        {
+      }
+    else {
+      for (b8 = 0; b8 < (decoder->coding.numUvBlocks); b8++) {
+        for(b4 = 0; b4 < 4; b4++) {
           joff = subblk_offset_y[yuv][b8][b4];
           ioff = subblk_offset_x[yuv][b8][b4];
           copyImage4x4(&curUV[mb->piccY + joff], &(slice->mbPred[uv + 1][joff]), mb->pixcX + ioff, ioff);
+          }
         }
       }
     }
   }
-}
 //}}}
 //{{{
 void prepare_direct_params (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl0, sMotionVec *pmvl1, char *l0_rFrame, char *l1_rFrame)
@@ -2201,4 +2074,16 @@ void perform_mc (sMacroBlock* mb, eColorPlane plane, sPicture* picture,
       perform_mc_bi(mb, plane, picture, i, j, blockSizeX, blockSizeY);
     }
   }
+//}}}
+
+//{{{
+void cSlice::setUpdateDirectFunction() {
+
+  if (activeSps->isDirect8x8inference)
+    updateDirectMvInfo = directSpatialMvPredFlag ? update_direct_mv_info_spatial_8x8 :
+                                                   update_direct_mv_info_temporal;
+  else
+    updateDirectMvInfo = directSpatialMvPredFlag ? update_direct_mv_info_spatial_4x4 :
+                                                   update_direct_mv_info_temporal;
+}
 //}}}

@@ -804,7 +804,7 @@ static void buildPredRegionYUV (cDecoder264* decoder, int *mv, int x, int y, sPi
       vec1_x = i4*4*mv_mul + mv[0];
       vec1_y = j4*4*mv_mul + mv[1];
 
-      get_block_luma(slice->listX[0][ref_frame], vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE,
+      getBlockLuma (slice->listX[0][ref_frame], vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE,
         tmp_block,
         picture->lumaStride,picture->size_x_m1,
         (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,tempRes,
@@ -1388,7 +1388,7 @@ static void buildPredblockRegionYUV (cDecoder264* decoder, int *mv,
 
   vec1_x = x*mv_mul + mv[0];
   vec1_y = y*mv_mul + mv[1];
-  get_block_luma(slice->listX[list][ref_frame],  vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE, tmp_block,
+  getBlockLuma (slice->listX[list][ref_frame],  vec1_x, vec1_y, BLOCK_SIZE, BLOCK_SIZE, tmp_block,
     picture->lumaStride,picture->size_x_m1, (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1,slice->tempRes,
     decoder->coding.maxPelValueComp[PLANE_Y],(sPixel) decoder->coding.dcPredValueComp[PLANE_Y], mb);
 

@@ -580,6 +580,7 @@ public:
   void setReadCbpCoefsCabac();
   void setReadCbpCoefCavlc();
   void setIntraPredFunctions();
+  void setUpdateDirectFunction();
   void setSliceFunctions();
   void startMacroBlockDecode (sMacroBlock** mb);
   bool endMacroBlockDecode (int eos_bit);

@@ -4939,7 +4939,7 @@ void cSlice::setSliceFunctions() {
       interpretMbMode = interpretMbModeB;
       nalReadMotionInfo = readMotionInfoB;
       decodeComponenet = decodeComponentB;
-      update_direct_types (this);
+      setUpdateDirectFunction();
       initLists  = initListsSliceB;
       break;
     //}}}
