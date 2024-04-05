@@ -10,6 +10,52 @@
 using namespace std;
 //}}}
 
+namespace {
+  //{{{
+  int ShowBitsThres (int inf, int numbits) {
+    return ((inf) >> ((sizeof(uint8_t) * 24) - (numbits)));
+    }
+  //}}}
+  //{{{
+  int code_from_bitstream_2d (sSyntaxElement* se, sBitStream* s, const uint8_t* lentab, const uint8_t* codtab,
+                                     int tabwidth, int tabheight, int *code) {
+
+    const uint8_t* len = &lentab[0], *cod = &codtab[0];
+
+    int* bitStreamOffset = &s->bitStreamOffset;
+    uint8_t* buf = &s->bitStreamBuffer[*bitStreamOffset >> 3];
+
+    // Apply bitOffset to three bytes (maximum that may be traversed by ShowBitsThres)
+    // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
+    uint32_t inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
+    // Offset is constant so apply before extracting different numbers of bits
+    inf <<= (*bitStreamOffset & 0x07);
+    // Arithmetic shift so wipe any sign which may be extended inside ShowBitsThres
+    inf  &= 0xFFFFFF;
+
+    // this VLC decoding method is not optimized for speed
+    for (int j = 0; j < tabheight; j++) {
+      for (int i = 0; i < tabwidth; i++) {
+        if ((*len == 0) || (ShowBitsThres(inf, (int) *len) != *cod)) {
+          ++len;
+          ++cod;
+          }
+        else {
+          se->len = *len;
+          *bitStreamOffset += *len; // move s pointer
+          *code = *cod;
+          se->value1 = i;
+          se->value2 = j;
+          return 0;                 // found code and return
+          }
+        }
+      }
+
+    return -1;  // failed to find code
+    }
+  //}}}
+  }
+
 //{{{
 int readUeV (const string& label, sBitStream* s) {
 
@@ -309,50 +355,6 @@ int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount
 
   *info = inf;
   return bitCounter;           // return absolute offset in bit from start of frame
-  }
-//}}}
-
-//{{{
-static inline int ShowBitsThres (int inf, int numbits) {
-  return ((inf) >> ((sizeof(uint8_t) * 24) - (numbits)));
-  }
-//}}}
-//{{{
-static int code_from_bitstream_2d (sSyntaxElement* se, sBitStream* s, const uint8_t* lentab, const uint8_t* codtab,
-                                   int tabwidth, int tabheight, int *code) {
-
-  const uint8_t* len = &lentab[0], *cod = &codtab[0];
-
-  int* bitStreamOffset = &s->bitStreamOffset;
-  uint8_t* buf = &s->bitStreamBuffer[*bitStreamOffset >> 3];
-
-  // Apply bitOffset to three bytes (maximum that may be traversed by ShowBitsThres)
-  // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
-  uint32_t inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
-  // Offset is constant so apply before extracting different numbers of bits
-  inf <<= (*bitStreamOffset & 0x07);
-  // Arithmetic shift so wipe any sign which may be extended inside ShowBitsThres
-  inf  &= 0xFFFFFF;
-
-  // this VLC decoding method is not optimized for speed
-  for (int j = 0; j < tabheight; j++) {
-    for (int i = 0; i < tabwidth; i++) {
-      if ((*len == 0) || (ShowBitsThres(inf, (int) *len) != *cod)) {
-        ++len;
-        ++cod;
-        }
-      else {
-        se->len = *len;
-        *bitStreamOffset += *len; // move s pointer
-        *code = *cod;
-        se->value1 = i;
-        se->value2 = j;
-        return 0;                 // found code and return
-        }
-      }
-    }
-
-  return -1;  // failed to find code
   }
 //}}}
 

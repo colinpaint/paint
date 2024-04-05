@@ -577,8 +577,8 @@ public:
   void allocRefPicListReordeBuffer();
   void freeRefPicListReorderBuffer();
 
-  void setReadCbpCoefsCabac();
   void setReadCbpCoefCavlc();
+  void setReadCbpCoefsCabac();
   void setIntraPredFunctions();
   void setUpdateDirectFunction();
   void setSliceFunctions();
@@ -660,7 +660,7 @@ public:
   char listXsize[6];
   sPicture** listX[6];
 
-  sDataPartition*       dataPartitions; // array of dataPartition
+  sDataPartition*   dataPartitions;      // array of dataPartition
   sMotionContexts*  motionInfoContexts;  // pointer to struct of context models for use in eCabac
   sTextureContexts* textureInfoContexts; // pointer to struct of context models for use in eCabac
 
