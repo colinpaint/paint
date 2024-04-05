@@ -75,7 +75,7 @@ void linfo_cbp_intra_normal (int len, int info, int* codedBlockPattern, int* dum
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
-  *codedBlockPattern = NCBP[1][cbp_idx][0];
+  *codedBlockPattern = cBitStream::NCBP[1][cbp_idx][0];
   }
 //}}}
 //{{{
@@ -83,7 +83,7 @@ void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dumm
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
-  *codedBlockPattern = NCBP[0][cbp_idx][0];
+  *codedBlockPattern = cBitStream::NCBP[0][cbp_idx][0];
   }
 //}}}
 //{{{
@@ -91,7 +91,7 @@ void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dum
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
-  *codedBlockPattern = NCBP[1][cbp_idx][1];
+  *codedBlockPattern = cBitStream::NCBP[1][cbp_idx][1];
   }
 //}}}
 //{{{
@@ -99,7 +99,7 @@ void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int *dumm
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
-  *codedBlockPattern = NCBP[0][cbp_idx][1];
+  *codedBlockPattern = cBitStream::NCBP[0][cbp_idx][1];
   }
 //}}}
 //{{{
@@ -108,15 +108,15 @@ void linfo_levrun_inter (int len, int info, int* level, int* irun) {
   if (len <= 9) {
     int l2 = imax(0,(len >> 1)-1);
     int inf = info >> 1;
-    *level = NTAB1[l2][inf][0];
-    *irun = NTAB1[l2][inf][1];
+    *level = cBitStream::NTAB1[l2][inf][0];
+    *irun = cBitStream::NTAB1[l2][inf][1];
     if ((info & 0x01) == 1)
       *level = -*level;                   // make sign
     }
   else {
     // if len > 9, skip using the array
     *irun = (info & 0x1e) >> 1;
-    *level = LEVRUN1[*irun] + (info >> 5) + ( 1 << ((len >> 1) - 5));
+    *level = cBitStream::LEVRUN1[*irun] + (info >> 5) + ( 1 << ((len >> 1) - 5));
     if ((info & 0x01) == 1)
       *level = -*level;
     }
@@ -131,15 +131,15 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
   if (len <= 5) {
     int l2 = imax(0, (len >> 1) - 1);
     int inf = info >> 1;
-    *level = NTAB3[l2][inf][0];
-    *irun = NTAB3[l2][inf][1];
+    *level = cBitStream::NTAB3[l2][inf][0];
+    *irun = cBitStream::NTAB3[l2][inf][1];
     if ((info & 0x01) == 1)
       *level = -*level;                 // make sign
     }
   else {
     // if len > 5, skip using the array
     *irun  = (info & 0x06) >> 1;
-    *level = LEVRUN3[*irun] + (info >> 3) + (1 << ((len >> 1) - 3));
+    *level = cBitStream::LEVRUN3[*irun] + (info >> 3) + (1 << ((len >> 1) - 3));
     if ((info & 0x01) == 1)
       *level = -*level;
     }
