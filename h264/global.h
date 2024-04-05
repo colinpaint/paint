@@ -7,7 +7,7 @@
 #include <string>
 
 #include <string.h> // for memset
-#include <stdlib.h>
+//#include <stdlib.h>
 
 #include "win32.h"
 #include "functions.h"
@@ -16,7 +16,10 @@
 #include "nalu.h"
 #include "cSps.h"
 #include "cPps.h"
+#include "cBitStream.h"
+//}}}
 
+//{{{  defines
 #define MAX_NUM_SLICES          8
 #define MAX_REFERENCE_PICTURES  32       // H.264 allows 32 fields
 #define MAX_CODED_FRAME_SIZE    8000000  // bytes for one frame
@@ -65,7 +68,6 @@
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
 #define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
 //}}}
-
 //{{{
 enum eStartEnd {
   eEOS = 1, // End Of Sequence
@@ -112,30 +114,6 @@ enum ePicStructure {
 enum eDataPartitionType {
   eDataPartition1, // no dataPartiton
   eDataPartition3  // 3 dataPartitions
-  };
-//}}}
-//{{{  enum eSyntaxElementType
-// almost the same as syntaxElements.h but not quite
-enum eSyntaxElementType {
-  SE_HEADER,
-  SE_PTYPE,
-  SE_MBTYPE,
-  SE_REFFRAME,
-  SE_INTRAPREDMODE,
-  SE_MVD,
-  SE_CBP,
-  SE_LUM_DC_INTRA,
-  SE_CHR_DC_INTRA,
-  SE_LUM_AC_INTRA,
-  SE_CHR_AC_INTRA,
-  SE_LUM_DC_INTER,
-  SE_CHR_DC_INTER,
-  SE_LUM_AC_INTER,
-  SE_CHR_AC_INTER,
-  SE_DELTA_QUANT,
-  SE_BFRAME,
-  SE_EOS,
-  SE_MAX_ELEMENTS = 20
   };
 //}}}
 //{{{
@@ -352,8 +330,6 @@ struct sCodedBlockPattern {
   int64_t bits8x8;
   };
 //}}}
-struct sSyntaxElement;
-#include "cBitStream.h"
 //{{{
 struct sCabacDecodeEnv {
   uint32_t range;
@@ -361,24 +337,6 @@ struct sCabacDecodeEnv {
   int      bitsLeft;
   uint8_t* codeStream;
   int*     codeStreamLen;
-  };
-//}}}
-//{{{
-struct sSyntaxElement {
-  int      type;        // type of syntax element for data part.
-  int      value1;      // numerical value of syntax element
-  int      value2;      // for blocked symbols, e.g. run/level
-  int      len;         // length of code
-  int      inf;         // info part of eCavlc code
-  uint32_t bitpattern;  // cavlc bitpattern
-  int      context;     // cabac context
-  int      k;           // cabac context for coeff_count,uv
-
-  // eCavlc mapping to syntaxElement
-  void (*mapping) (int, int, int*, int*);
-
-  // eCabac actual coding method of each individual syntax element type
-  void (*reading) (sMacroBlock*, sSyntaxElement*, sCabacDecodeEnv*);
   };
 //}}}
 //{{{

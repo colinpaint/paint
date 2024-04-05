@@ -1,8 +1,124 @@
 #pragma once
-
-struct sSyntaxElement;
+struct sMacroBlock;
+struct sCabacDecodeEnv;
 class cDecoder;
 class cSlice;
+
+//{{{  enum eSyntaxElementType
+// almost the same as syntaxElements.h but not quite
+enum eSyntaxElementType {
+  SE_HEADER,
+  SE_PTYPE,
+  SE_MBTYPE,
+  SE_REFFRAME,
+  SE_INTRAPREDMODE,
+  SE_MVD,
+  SE_CBP,
+  SE_LUM_DC_INTRA,
+  SE_CHR_DC_INTRA,
+  SE_LUM_AC_INTRA,
+  SE_CHR_AC_INTRA,
+  SE_LUM_DC_INTER,
+  SE_CHR_DC_INTER,
+  SE_LUM_AC_INTER,
+  SE_CHR_AC_INTER,
+  SE_DELTA_QUANT,
+  SE_BFRAME,
+  SE_EOS,
+  SE_MAX_ELEMENTS = 20
+  };
+//}}}
+//{{{  H.264 syntax elements
+//  definition of H.264 syntax elements
+//  order of elements follow dependencies for picture reconstruction
+// *  old element     | new elements
+// *  ----------------+-------------------------------------------------------------------
+// *  TYPE_HEADER     | SE_HEADER, SE_PTYPE
+// *  TYPE_MBHEADER   | SE_MBTYPE, SE_REFFRAME, SE_INTRAPREDMODE
+// *  TYPE_MVD        | SE_MVD
+// *  TYPE_CBP        | SE_CBP_INTRA, SE_CBP_INTER
+// *  SE_DELTA_QUANT_INTER
+// *  SE_DELTA_QUANT_INTRA
+// *  TYPE_COEFF_Y    | SE_LUM_DC_INTRA, SE_LUM_AC_INTRA, SE_LUM_DC_INTER, SE_LUM_AC_INTER
+// *  TYPE_2x2DC      | SE_CHR_DC_INTRA, SE_CHR_DC_INTER
+// *  TYPE_COEFF_C    | SE_CHR_AC_INTRA, SE_CHR_AC_INTER
+// *  TYPE_EOS        | SE_EOS
+#define SE_HEADER            0
+#define SE_PTYPE             1
+#define SE_MBTYPE            2
+#define SE_REFFRAME          3
+#define SE_INTRAPREDMODE     4
+#define SE_MVD               5
+#define SE_CBP_INTRA         6
+#define SE_LUM_DC_INTRA      7
+#define SE_CHR_DC_INTRA      8
+#define SE_LUM_AC_INTRA      9
+#define SE_CHR_AC_INTRA      10
+#define SE_CBP_INTER         11
+#define SE_LUM_DC_INTER      12
+#define SE_CHR_DC_INTER      13
+#define SE_LUM_AC_INTER      14
+#define SE_CHR_AC_INTER      15
+#define SE_DELTA_QUANT_INTER 16
+#define SE_DELTA_QUANT_INTRA 17
+#define SE_BFRAME            18
+#define SE_EOS               19
+#define SE_MAX_ELEMENTS      20
+
+#define NO_EC                0   // no error conceal necessary
+#define EC_REQ               1   // error conceal required
+//}}}
+//{{{
+//{{{  maximum possible dataPartition modes as defined in kSyntaxElementToDataPartitionIndex[][]
+
+/*!
+ *  \brief  lookup-table to assign different elements to dataPartition
+ *  \note   here we defined up to 6 different dps similar to
+ *          document Q15-k-18 described in the PROGFRAMEMODE.
+ *          The Sliceheader contains the PSYNC information. \par
+ *
+ *          Elements inside a dataPartition are not ordered. They are
+ *          ordered by occurence in the stream.
+ *          Assumption: Only dplosses are considered. \par
+ *
+ *          The texture elements luminance and chrominance are
+ *          not ordered in the progressive form
+ *          This may be changed in image.c \par
+ *
+ *          We also defined the proposed internet dataPartition mode
+ *          of Stephan Wenger here. To select the desired mode
+ *          uncomment one of the two following lines. \par
+ *
+ *  -IMPORTANT:
+ *          Picture- or Sliceheaders must be assigned to dataPartition 0. \par
+ *          Furthermore dps must follow syntax dependencies as
+ *          outlined in document Q15-J-23.
+ */
+//}}}
+static const uint8_t kSyntaxElementToDataPartitionIndex[][SE_MAX_ELEMENTS] = {
+  // 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19    // element number (do not uncomment)
+  {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // all elements in one dataPartition no data dping
+  {  0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 0, 0, 0 }  // three dps per slice
+  };
+//}}}
+//{{{
+struct sSyntaxElement {
+  int      type;        // type of syntax element for data part.
+  int      value1;      // numerical value of syntax element
+  int      value2;      // for blocked symbols, e.g. run/level
+  int      len;         // length of code
+  int      inf;         // info part of eCavlc code
+  uint32_t bitpattern;  // cavlc bitpattern
+  int      context;     // cabac context
+  int      k;           // cabac context for coeff_count,uv
+
+  // eCavlc mapping to syntaxElement
+  void (*mapping) (int, int, int*, int*);
+
+  // eCabac actual coding method of each individual syntax element type
+  void (*reading) (sMacroBlock*, sSyntaxElement*, sCabacDecodeEnv*);
+  };
+//}}}
 
 class cBitStream {
 public:
@@ -64,6 +180,7 @@ public:
   };
   //}}}
 
+  // statics
   static void linfo_ue (int len, int info, int* value1, int* dummy);
   static void linfo_se (int len, int info, int* value1, int* dummy);
   static void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy);
@@ -82,6 +199,7 @@ public:
   static int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
   static int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);
 
+  // members
   int readSeV (const std::string& label);
   int readUeV (const std::string& label);
   bool readU1 (const std::string& label);

@@ -1,6 +1,5 @@
 //{{{  includes
 #include "global.h"
-#include "syntaxElement.h"
 
 #include "cabac.h"
 #include "macroblock.h"

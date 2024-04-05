@@ -14,7 +14,6 @@
 #include "nalu.h"
 #include "output.h"
 #include "sei.h"
-#include "syntaxElement.h"
 #include "quant.h"
 
 #include "../common/cLog.h"

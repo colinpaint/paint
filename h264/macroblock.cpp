@@ -11,7 +11,6 @@
 #include "intraPred.h"
 #include "macroblock.h"
 #include "mcPred.h"
-#include "syntaxElement.h"
 #include "transform.h"
 #include "quant.h"
 

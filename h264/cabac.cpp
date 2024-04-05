@@ -5,7 +5,6 @@
 #include "binaryArithmeticDecode.h"
 #include "cabac.h"
 #include "macroblock.h"
-#include "syntaxElement.h"
 //}}}
 namespace {
   //{{{  const tables
