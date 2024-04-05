@@ -1693,7 +1693,7 @@ void intra_cr_decoding (sMacroBlock* mb, int yuv)
 //{{{
 static inline void set_direct_references (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotion** mvInfo)
 {
-  if (mb->available)
+  if (mb->ok)
   {
     char *refIndex = mvInfo[mb->posY][mb->posX].refIndex;
     *l0_rFrame  = refIndex[LIST_0];
@@ -1709,7 +1709,7 @@ static inline void set_direct_references (const sPixelPos* mb, char* l0_rFrame, 
 //{{{
 static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotion** mvInfo, sMacroBlock *mbData)
 {
-  if (mb->available)
+  if (mb->ok)
   {
     char *refIndex = mvInfo[mb->posY][mb->posX].refIndex;
     if (mbData[mb->mbIndex].mbField)
@@ -1733,7 +1733,7 @@ static void set_direct_references_mb_field (const sPixelPos* mb, char* l0_rFrame
 //{{{
 static void set_direct_references_mb_frame (const sPixelPos* mb, char* l0_rFrame, char* l1_rFrame, sPicMotion** mvInfo, sMacroBlock *mbData)
 {
-  if (mb->available)
+  if (mb->ok)
   {
     char *refIndex = mvInfo[mb->posY][mb->posX].refIndex;
     if (mbData[mb->mbIndex].mbField)

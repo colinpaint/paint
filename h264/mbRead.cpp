@@ -60,12 +60,12 @@ static void read_ipred_8x8_modes_mbaff (sMacroBlock* mb) {
 
     // get from array and decode
     if (decoder->activePps->hasConstrainedIntraPred) {
-      left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
-      top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex]  : 0;
+      left_block.ok = left_block.ok ? slice->intraBlock[left_block.mbIndex] : 0;
+      top_block.ok = top_block.ok  ? slice->intraBlock[top_block.mbIndex]  : 0;
       }
 
-    upIntraPredMode = (top_block.available ) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
-    leftIntraPredMode = (left_block.available) ? slice->predMode[left_block.posY][left_block.posX] : -1;
+    upIntraPredMode = (top_block.ok ) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
+    leftIntraPredMode = (left_block.ok) ? slice->predMode[left_block.posY][left_block.posX] : -1;
     mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED :
                                   upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
     dec = (se.value1 == -1) ?
@@ -123,12 +123,12 @@ static void read_ipred_8x8_modes (sMacroBlock* mb) {
 
     // get from array and decode
     if (decoder->activePps->hasConstrainedIntraPred) {
-      left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
-      top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex] : 0;
+      left_block.ok = left_block.ok ? slice->intraBlock[left_block.mbIndex] : 0;
+      top_block.ok = top_block.ok  ? slice->intraBlock[top_block.mbIndex] : 0;
     }
 
-    upIntraPredMode = (top_block.available ) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
-    leftIntraPredMode = (left_block.available) ? slice->predMode[left_block.posY][left_block.posX] : -1;
+    upIntraPredMode = (top_block.ok ) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
+    leftIntraPredMode = (left_block.ok) ? slice->predMode[left_block.posY][left_block.posX] : -1;
     mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ?
       DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
     dec = (se.value1 == -1) ?
@@ -185,24 +185,24 @@ static void read_ipred_4x4_modes_mbaff (sMacroBlock* mb) {
 
         // get from array and decode
         if (decoder->activePps->hasConstrainedIntraPred) {
-          left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
-          top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex]  : 0;
+          left_block.ok = left_block.ok ? slice->intraBlock[left_block.mbIndex] : 0;
+          top_block.ok = top_block.ok  ? slice->intraBlock[top_block.mbIndex]  : 0;
           }
 
         // !! KS: not sure if the following is still correct...
         ts = ls = 0;   // Check to see if the neighboring block is SI
         if (slice->sliceType == eSliceSI) { // need support for MBINTLC1
-          if (left_block.available)
+          if (left_block.ok)
             if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
               ls = 1;
 
-          if (top_block.available)
+          if (top_block.ok)
             if (slice->siBlock [picPos[top_block.mbIndex].y][picPos[top_block.mbIndex].x])
               ts = 1;
           }
 
-        upIntraPredMode = (top_block.available  &&(ts == 0)) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
-        leftIntraPredMode = (left_block.available &&(ls == 0)) ? slice->predMode[left_block.posY][left_block.posX] : -1;
+        upIntraPredMode = (top_block.ok  &&(ts == 0)) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
+        leftIntraPredMode = (left_block.ok &&(ls == 0)) ? slice->predMode[left_block.posY][left_block.posX] : -1;
         mostProbableIntraPredMode = (upIntraPredMode < 0 || leftIntraPredMode < 0) ?
           DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
         slice->predMode[bj][bi] = (uint8_t) ((se.value1 == -1) ?
@@ -259,26 +259,26 @@ static void read_ipred_4x4_modes (sMacroBlock* mb) {
 
         //get from array and decode
         if (decoder->activePps->hasConstrainedIntraPred) {
-          left_block.available = left_block.available ? slice->intraBlock[left_block.mbIndex] : 0;
-          top_block.available = top_block.available  ? slice->intraBlock[top_block.mbIndex]  : 0;
+          left_block.ok = left_block.ok ? slice->intraBlock[left_block.mbIndex] : 0;
+          top_block.ok = top_block.ok  ? slice->intraBlock[top_block.mbIndex]  : 0;
           }
 
         int ts = 0;
         int ls = 0;   // Check to see if the neighboring block is SI
         if (slice->sliceType == eSliceSI) {
           //{{{  need support for MBINTLC1
-          if (left_block.available)
+          if (left_block.ok)
             if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
               ls = 1;
 
-          if (top_block.available)
+          if (top_block.ok)
             if (slice->siBlock [picPos[top_block.mbIndex].y][picPos[top_block.mbIndex].x])
               ts = 1;
           }
           //}}}
 
-        upIntraPredMode = (top_block.available  &&(ts == 0)) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
-        leftIntraPredMode = (left_block.available &&(ls == 0)) ? slice->predMode[left_block.posY][left_block.posX] : -1;
+        upIntraPredMode = (top_block.ok  &&(ts == 0)) ? slice->predMode[top_block.posY ][top_block.posX ] : -1;
+        leftIntraPredMode = (left_block.ok &&(ls == 0)) ? slice->predMode[left_block.posY][left_block.posX] : -1;
         mostProbableIntraPredMode  = (upIntraPredMode < 0 || leftIntraPredMode < 0) ? DC_PRED : upIntraPredMode < leftIntraPredMode ? upIntraPredMode : leftIntraPredMode;
         slice->predMode[bj][bi] = (uint8_t)((se.value1 == -1) ?
           mostProbableIntraPredMode : se.value1 + (se.value1 >= mostProbableIntraPredMode));
@@ -526,20 +526,20 @@ static void skipMacroblocks (sMacroBlock* mb) {
 
   getNeighbours (mb, neighbourMb, 0, 0, MB_BLOCK_SIZE);
   if (slice->mbAffFrame == 0) {
-    if (neighbourMb[0].available) {
+    if (neighbourMb[0].ok) {
       a_mv = &picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].mv[LIST_0];
       a_mv_y = a_mv->mvY;
       a_ref_idx = picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].refIndex[LIST_0];
       }
 
-    if (neighbourMb[1].available) {
+    if (neighbourMb[1].ok) {
       b_mv = &picture->mvInfo[neighbourMb[1].posY][neighbourMb[1].posX].mv[LIST_0];
       b_mv_y = b_mv->mvY;
       b_ref_idx = picture->mvInfo[neighbourMb[1].posY][neighbourMb[1].posX].refIndex[LIST_0];
       }
     }
   else {
-    if (neighbourMb[0].available) {
+    if (neighbourMb[0].ok) {
       a_mv = &picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].mv[LIST_0];
       a_mv_y = a_mv->mvY;
       a_ref_idx = picture->mvInfo[neighbourMb[0].posY][neighbourMb[0].posX].refIndex[LIST_0];
@@ -554,7 +554,7 @@ static void skipMacroblocks (sMacroBlock* mb) {
         }
       }
 
-    if (neighbourMb[1].available) {
+    if (neighbourMb[1].ok) {
       b_mv = &picture->mvInfo[neighbourMb[1].posY][neighbourMb[1].posX].mv[LIST_0];
       b_mv_y = b_mv->mvY;
       b_ref_idx = picture->mvInfo[neighbourMb[1].posY][neighbourMb[1].posX].refIndex[LIST_0];
@@ -570,9 +570,9 @@ static void skipMacroblocks (sMacroBlock* mb) {
       }
     }
 
-  zeroMotionLeft = !neighbourMb[0].available ?
+  zeroMotionLeft = !neighbourMb[0].ok ?
                      1 : (a_ref_idx==0 && a_mv->mvX == 0 && a_mv_y == 0) ? 1 : 0;
-  zeroMotionAbove = !neighbourMb[1].available ?
+  zeroMotionAbove = !neighbourMb[1].ok ?
                      1 : (b_ref_idx==0 && b_mv->mvX == 0 && b_mv_y == 0) ? 1 : 0;
 
   mb->codedBlockPattern = 0;

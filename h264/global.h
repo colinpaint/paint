@@ -337,7 +337,7 @@ struct sBlockPos {
 //}}}
 //{{{
 struct sPixelPos {
-  int   available;
+  int   ok;
   int   mbIndex;
   int16_t x;
   int16_t y;
@@ -616,7 +616,7 @@ public:
 
   int mbAffFrame;
   int directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
-  int numRefIndexActive[2];    // number of available list references
+  int numRefIndexActive[2];    // number of ok list references
 
   int errorFlag;   // 0 if the dataPartitons[0] contains valid information
   int qp;

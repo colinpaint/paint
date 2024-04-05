@@ -81,12 +81,12 @@ namespace {
     getNonAffNeighbour (mb, ioff    , joff -1, decoder->mbSize[eLuma], &pix_b);
 
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_left = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
-      block_available_up   = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_left = pix_a.ok ? slice->intraBlock [pix_a.mbIndex] : 0;
+      block_available_up   = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a.available;
-      block_available_up   = pix_b.available;
+      block_available_left = pix_a.ok;
+      block_available_up   = pix_b.ok;
       }
 
     // form predictor pels
@@ -143,9 +143,9 @@ namespace {
     getNonAffNeighbour (mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
 
     if (decoder->activePps->hasConstrainedIntraPred)
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
     else
-      block_available_up = pix_b.available;
+      block_available_up = pix_b.ok;
 
     if (!block_available_up)
       printf ("warning: Intra_4x4_Vertical prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
@@ -174,9 +174,9 @@ namespace {
     getNonAffNeighbour(mb, ioff - 1 , joff, decoder->mbSize[eLuma], &pix_a);
 
     if (decoder->activePps->hasConstrainedIntraPred)
-      block_available_left = pix_a.available ? slice->intraBlock[pix_a.mbIndex]: 0;
+      block_available_left = pix_a.ok ? slice->intraBlock[pix_a.mbIndex]: 0;
     else
-      block_available_left = pix_a.available;
+      block_available_left = pix_a.ok;
 
     if (!block_available_left)
       printf ("warning: Intra_4x4_Horizontal prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
@@ -217,14 +217,14 @@ namespace {
     getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_left = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_left = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left = pix_a.ok ? slice->intraBlock [pix_a.mbIndex]: 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a.available;
-      block_available_up = pix_b.available;
-      block_available_up_left = pix_d.available;
+      block_available_left = pix_a.ok;
+      block_available_up = pix_b.ok;
+      block_available_up_left = pix_d.ok;
       }
 
     if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
@@ -276,15 +276,15 @@ namespace {
     getNonAffNeighbour(mb, ioff    , joff - 1, decoder->mbSize[eLuma], &pix_b);
     getNonAffNeighbour(mb, ioff + 4, joff - 1, decoder->mbSize[eLuma], &pix_c);
 
-    pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
+    pix_c.ok = pix_c.ok && !((ioff==4) && ((joff==4)||(joff==12)));
 
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
      }
      else {
-      block_available_up = pix_b.available;
-      block_available_up_right = pix_c.available;
+      block_available_up = pix_b.ok;
+      block_available_up_right = pix_c.ok;
       }
 
     if (!block_available_up)
@@ -341,14 +341,14 @@ namespace {
     getNonAffNeighbour (mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_left = pix_a.available ? slice->intraBlock[pix_a.mbIndex]: 0;
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left = pix_a.ok ? slice->intraBlock[pix_a.mbIndex]: 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a.available;
-      block_available_up = pix_b.available;
-      block_available_up_left = pix_d.available;
+      block_available_left = pix_a.ok;
+      block_available_up = pix_b.ok;
+      block_available_up_left = pix_d.ok;
       }
 
     if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
@@ -406,15 +406,15 @@ namespace {
     getNonAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
     getNonAffNeighbour(mb, ioff +4 , joff -1 , decoder->mbSize[eLuma], &pix_c);
 
-    pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
+    pix_c.ok = pix_c.ok && !((ioff==4) && ((joff==4)||(joff==12)));
 
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
       }
     else {
-      block_available_up = pix_b.available;
-      block_available_up_right = pix_c.available;
+      block_available_up = pix_b.ok;
+      block_available_up_right = pix_c.ok;
       }
 
     if (!block_available_up)
@@ -469,9 +469,9 @@ namespace {
     getNonAffNeighbour (mb, ioff -1 , joff, decoder->mbSize[eLuma], &pix_a);
 
     if (decoder->activePps->hasConstrainedIntraPred)
-      block_available_left = pix_a.available ? slice->intraBlock[pix_a.mbIndex]: 0;
+      block_available_left = pix_a.ok ? slice->intraBlock[pix_a.mbIndex]: 0;
     else
-      block_available_left = pix_a.available;
+      block_available_left = pix_a.ok;
 
     if (!block_available_left)
       printf ("warning: Intra_4x4_Horizontal_Up prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
@@ -527,14 +527,14 @@ namespace {
     getNonAffNeighbour(mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_left = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_left = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left = pix_a.ok ? slice->intraBlock [pix_a.mbIndex]: 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a.available;
-      block_available_up = pix_b.available;
-      block_available_up_left = pix_d.available;
+      block_available_left = pix_a.ok;
+      block_available_up = pix_b.ok;
+      block_available_up_left = pix_d.ok;
       }
 
     if ((!block_available_up) || (!block_available_left) || (!block_available_up_left))
@@ -654,12 +654,12 @@ namespace {
     int block_available_left;
     if (decoder->activePps->hasConstrainedIntraPred) {
       for (i = 0, block_available_left = 1; i < 4;++i)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a[0].available;
-      block_available_up = pix_b.available;
+      block_available_left = pix_a[0].ok;
+      block_available_up = pix_b.ok;
       }
 
     // form predictor pels
@@ -709,9 +709,9 @@ namespace {
     getAffNeighbour (mb, ioff, joff - 1 , decoder->mbSize[eLuma], &pix_b);
 
     if (decoder->activePps->hasConstrainedIntraPred)
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
     else
-      block_available_up = pix_b.available;
+      block_available_up = pix_b.ok;
 
     if (!block_available_up)
       printf ("warning: Intra_4x4_Vertical prediction mode not allowed at mb %d\n", (int) slice->mbIndex);
@@ -745,9 +745,9 @@ namespace {
     int block_available_left = 1;
     if (decoder->activePps->hasConstrainedIntraPred)
       for (int i = 0, block_available_left = 1; i < 4; ++i)
-        block_available_left &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+        block_available_left &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
     else
-      block_available_left = pix_a[0].available;
+      block_available_left = pix_a[0].ok;
 
     if (!block_available_left)
       printf ("warning: Intra_4x4_Horizontal prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
@@ -786,14 +786,14 @@ namespace {
     int block_available_up_left;
     if (decoder->activePps->hasConstrainedIntraPred) {
       for (int i = 0, block_available_left = 1; i < 4; ++i)
-        block_available_left &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_left = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a[0].available;
-      block_available_up = pix_b.available;
-      block_available_up_left = pix_d.available;
+      block_available_left = pix_a[0].ok;
+      block_available_up = pix_b.ok;
+      block_available_up_left = pix_d.ok;
       }
 
     if ((!block_available_up) || (!block_available_left) || (!block_available_up_left))
@@ -840,17 +840,17 @@ namespace {
     getAffNeighbour(mb, ioff    , joff - 1, decoder->mbSize[eLuma], &pix_b);
     getAffNeighbour(mb, ioff + 4, joff - 1, decoder->mbSize[eLuma], &pix_c);
 
-    pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
+    pix_c.ok = pix_c.ok && !((ioff==4) && ((joff==4)||(joff==12)));
 
     int block_available_up;
     int block_available_up_right;
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
       }
     else {
-      block_available_up = pix_b.available;
-      block_available_up_right = pix_c.available;
+      block_available_up = pix_b.ok;
+      block_available_up_right = pix_c.ok;
       }
 
     if (!block_available_up)
@@ -915,14 +915,14 @@ namespace {
     int block_available_up_left;
     if (decoder->activePps->hasConstrainedIntraPred) {
       for (int i = 0, block_available_left = 1; i < 4;++i)
-        block_available_left &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_left = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a[0].available;
-      block_available_up = pix_b.available;
-      block_available_up_left = pix_d.available;
+      block_available_left = pix_a[0].ok;
+      block_available_up = pix_b.ok;
+      block_available_up_left = pix_d.ok;
       }
 
     if ((!block_available_up) || (!block_available_left) || (!block_available_up_left))
@@ -971,17 +971,17 @@ namespace {
     getAffNeighbour(mb, ioff    , joff -1 , decoder->mbSize[eLuma], &pix_b);
     getAffNeighbour(mb, ioff +4 , joff -1 , decoder->mbSize[eLuma], &pix_c);
 
-    pix_c.available = pix_c.available && !((ioff==4) && ((joff==4)||(joff==12)));
+    pix_c.ok = pix_c.ok && !((ioff==4) && ((joff==4)||(joff==12)));
 
     int block_available_up;
     int block_available_up_right;
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
       }
     else {
-      block_available_up = pix_b.available;
-      block_available_up_right = pix_c.available;
+      block_available_up = pix_b.ok;
+      block_available_up_right = pix_c.ok;
       }
 
     if (!block_available_up)
@@ -1042,9 +1042,9 @@ namespace {
     int block_available_left = 1;
     if (decoder->activePps->hasConstrainedIntraPred)
       for (int i = 0, block_available_left = 1; i < 4; ++i)
-        block_available_left &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+        block_available_left &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
     else
-      block_available_left = pix_a[0].available;
+      block_available_left = pix_a[0].ok;
 
     if (!block_available_left)
       printf ("warning: Intra_4x4_Horizontal_Up prediction mode not allowed at mb %d\n",(int) slice->mbIndex);
@@ -1102,14 +1102,14 @@ namespace {
     int block_available_up_left;
     if (decoder->activePps->hasConstrainedIntraPred) {
       for (int i = 0, block_available_left = 1; i < 4;++i)
-        block_available_left &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_left = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a[0].available;
-      block_available_up = pix_b.available;
-      block_available_up_left = pix_d.available;
+      block_available_left = pix_a[0].ok;
+      block_available_up = pix_b.ok;
+      block_available_up_left = pix_d.ok;
       }
 
     if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
@@ -1344,18 +1344,18 @@ namespace {
     getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available && !(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok && !(ioff == 8 && joff == 8);
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left     = pix_a.ok ? slice->intraBlock [pix_a.mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
       }
     else {
-      block_available_left     = pix_a.available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a.ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
       }
 
     // form predictor pels
@@ -1444,19 +1444,19 @@ namespace {
     getNonAffNeighbour (mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getNonAffNeighbour (mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_left = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left = pix_a.ok ? slice->intraBlock [pix_a.mbIndex] : 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a.available;
-      block_available_up = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left = pix_d.available;
+      block_available_left = pix_a.ok;
+      block_available_up = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left = pix_d.ok;
      }
 
     if (!block_available_up)
@@ -1514,14 +1514,14 @@ namespace {
     int block_available_left;
     int block_available_up_left;
     if (decoder->activePps->hasConstrainedIntraPred) {
-      block_available_left = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
-      block_available_up = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_left = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left = pix_a.ok ? slice->intraBlock [pix_a.mbIndex]: 0;
+      block_available_up = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
       }
     else {
-      block_available_left = pix_a.available;
-      block_available_up = pix_b.available;
-      block_available_up_left = pix_d.available;
+      block_available_left = pix_a.ok;
+      block_available_up = pix_b.ok;
+      block_available_up_left = pix_d.ok;
       }
 
     if (!block_available_left)
@@ -1588,21 +1588,21 @@ namespace {
     getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
-      block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left     = pix_a.ok ? slice->intraBlock [pix_a.mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a.available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a.ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
@@ -1702,21 +1702,21 @@ namespace {
     getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
-      block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left     = pix_a.ok ? slice->intraBlock [pix_a.mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a.available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a.ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if (!block_available_up)
@@ -1818,21 +1818,21 @@ namespace {
     getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
-      block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left     = pix_a.ok ? slice->intraBlock [pix_a.mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a.available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a.ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
@@ -1940,21 +1940,21 @@ namespace {
     getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
-      block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left     = pix_a.ok ? slice->intraBlock [pix_a.mbIndex] : 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a.available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a.ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if (!block_available_up)
@@ -2061,21 +2061,21 @@ namespace {
     getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
-      block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left     = pix_a.ok ? slice->intraBlock [pix_a.mbIndex] : 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a.available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a.ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if (!block_available_left)
@@ -2179,21 +2179,21 @@ namespace {
     getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
-      block_available_left     = pix_a.available ? slice->intraBlock [pix_a.mbIndex] : 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+      block_available_left     = pix_a.ok ? slice->intraBlock [pix_a.mbIndex] : 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a.available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a.ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
@@ -2360,22 +2360,22 @@ namespace {
     getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
       for (i=0, block_available_left=1; i<8;i++)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a[0].available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a[0].ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     // form predictor pels
@@ -2465,22 +2465,22 @@ namespace {
     getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
       for (i=0, block_available_left=1; i<8;i++)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a[0].available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a[0].ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if (!block_available_up)
@@ -2546,20 +2546,20 @@ namespace {
     getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
       for (i=0, block_available_left=1; i<8;i++)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a[0].available;
-      block_available_up       = pix_b.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a[0].ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if (!block_available_left)
@@ -2633,22 +2633,22 @@ namespace {
     getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
       for (i=0, block_available_left=1; i<8;i++)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a[0].available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a[0].ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
@@ -2752,22 +2752,22 @@ namespace {
     getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
       for (i=0, block_available_left=1; i<8;i++)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a[0].available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a[0].ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if (!block_available_up)
@@ -2872,22 +2872,22 @@ namespace {
     getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
       for (i=0, block_available_left=1; i<8;i++)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a[0].available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a[0].ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
@@ -2998,22 +2998,22 @@ namespace {
     getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
       for (i=0, block_available_left=1; i<8;i++)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a[0].available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a[0].ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if (!block_available_up)
@@ -3124,22 +3124,22 @@ namespace {
     getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
       for (i=0, block_available_left=1; i<8;i++)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a[0].available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a[0].ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if (!block_available_left)
@@ -3248,22 +3248,22 @@ namespace {
     getAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
     getAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
-    pix_c.available = pix_c.available &&!(ioff == 8 && joff == 8);
+    pix_c.ok = pix_c.ok &&!(ioff == 8 && joff == 8);
 
     if (decoder->activePps->hasConstrainedIntraPred)
     {
       for (i=0, block_available_left=1; i<8;i++)
-        block_available_left  &= pix_a[i].available ? slice->intraBlock[pix_a[i].mbIndex]: 0;
-      block_available_up       = pix_b.available ? slice->intraBlock [pix_b.mbIndex] : 0;
-      block_available_up_right = pix_c.available ? slice->intraBlock [pix_c.mbIndex] : 0;
-      block_available_up_left  = pix_d.available ? slice->intraBlock [pix_d.mbIndex] : 0;
+        block_available_left  &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
+      block_available_up       = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
+      block_available_up_right = pix_c.ok ? slice->intraBlock [pix_c.mbIndex] : 0;
+      block_available_up_left  = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
     }
     else
     {
-      block_available_left     = pix_a[0].available;
-      block_available_up       = pix_b.available;
-      block_available_up_right = pix_c.available;
-      block_available_up_left  = pix_d.available;
+      block_available_left     = pix_a[0].ok;
+      block_available_up       = pix_b.ok;
+      block_available_up_right = pix_c.ok;
+      block_available_up_left  = pix_d.ok;
     }
 
     if ((!block_available_up)||(!block_available_left)||(!block_available_up_left))
@@ -3408,13 +3408,13 @@ namespace {
 
     if (!decoder->activePps->hasConstrainedIntraPred)
     {
-      up_avail      = b.available;
-      left_avail    = a.available;
+      up_avail      = b.ok;
+      left_avail    = a.ok;
     }
     else
     {
-      up_avail      = b.available ? slice->intraBlock[b.mbIndex] : 0;
-      left_avail    = a.available ? slice->intraBlock[a.mbIndex]: 0;
+      up_avail      = b.ok ? slice->intraBlock[b.mbIndex] : 0;
+      left_avail    = a.ok ? slice->intraBlock[a.mbIndex]: 0;
     }
 
     // Sum top predictors
@@ -3467,9 +3467,9 @@ namespace {
     getNonAffNeighbour(mb,    0,   -1, decoder->mbSize[eLuma], &b);
 
     if (!decoder->activePps->hasConstrainedIntraPred)
-      up_avail = b.available;
+      up_avail = b.ok;
     else
-      up_avail = b.available ? slice->intraBlock[b.mbIndex] : 0;
+      up_avail = b.ok ? slice->intraBlock[b.mbIndex] : 0;
 
     if (!up_avail)
       cDecoder264::error ("invalid 16x16 intra pred Mode VERT_PRED_16");
@@ -3508,9 +3508,9 @@ namespace {
     getNonAffNeighbour(mb, -1,  0, decoder->mbSize[eLuma], &a);
 
     if (!decoder->activePps->hasConstrainedIntraPred)
-      left_avail    = a.available;
+      left_avail    = a.ok;
     else
-      left_avail  = a.available ? slice->intraBlock[a.mbIndex]: 0;
+      left_avail  = a.ok ? slice->intraBlock[a.mbIndex]: 0;
 
     if (!left_avail)
       cDecoder264::error ("invalid 16x16 intra pred Mode HOR_PRED_16");
@@ -3555,15 +3555,15 @@ namespace {
 
     if (!decoder->activePps->hasConstrainedIntraPred)
     {
-      up_avail      = b.available;
-      left_avail    = a.available;
-      left_up_avail = d.available;
+      up_avail      = b.ok;
+      left_avail    = a.ok;
+      left_up_avail = d.ok;
     }
     else
     {
-      up_avail      = b.available ? slice->intraBlock[b.mbIndex] : 0;
-      left_avail    = a.available ? slice->intraBlock[a.mbIndex] : 0;
-      left_up_avail = d.available ? slice->intraBlock[d.mbIndex] : 0;
+      up_avail      = b.ok ? slice->intraBlock[b.mbIndex] : 0;
+      left_avail    = a.ok ? slice->intraBlock[a.mbIndex] : 0;
+      left_up_avail = d.ok ? slice->intraBlock[d.mbIndex] : 0;
     }
 
     if (!up_avail || !left_up_avail  || !left_avail)
@@ -3652,13 +3652,13 @@ namespace {
     getAffNeighbour (mb,    0,   -1, decoder->mbSize[eLuma], &b);
 
     if (!decoder->activePps->hasConstrainedIntraPred) {
-      up_avail      = b.available;
-      left_avail    = left[1].available;
+      up_avail      = b.ok;
+      left_avail    = left[1].ok;
       }
     else {
-      up_avail      = b.available ? slice->intraBlock[b.mbIndex] : 0;
+      up_avail      = b.ok ? slice->intraBlock[b.mbIndex] : 0;
       for (i = 1, left_avail = 1; i < 17; ++i)
-        left_avail  &= left[i].available ? slice->intraBlock[left[i].mbIndex]: 0;
+        left_avail  &= left[i].ok ? slice->intraBlock[left[i].mbIndex]: 0;
       }
 
     for (i = 0; i < MB_BLOCK_SIZE; ++i) {
@@ -3697,9 +3697,9 @@ namespace {
     getAffNeighbour (mb,    0,   -1, decoder->mbSize[eLuma], &b);
 
     if (!decoder->activePps->hasConstrainedIntraPred)
-      up_avail = b.available;
+      up_avail = b.ok;
     else
-      up_avail = b.available ? slice->intraBlock[b.mbIndex] : 0;
+      up_avail = b.ok ? slice->intraBlock[b.mbIndex] : 0;
 
     if  (!up_avail)
       cDecoder264::error ("invalid 16x16 intra pred Mode VERT_PRED_16");
@@ -3736,10 +3736,10 @@ namespace {
       getAffNeighbour (mb, -1,  i-1, decoder->mbSize[eLuma], &left[i]);
 
     if (!decoder->activePps->hasConstrainedIntraPred)
-      left_avail    = left[1].available;
+      left_avail    = left[1].ok;
     else
       for (i = 1, left_avail = 1; i < 17; ++i)
-        left_avail  &= left[i].available ? slice->intraBlock[left[i].mbIndex]: 0;
+        left_avail  &= left[i].ok ? slice->intraBlock[left[i].mbIndex]: 0;
 
     if (!left_avail)
       cDecoder264::error ("invalid 16x16 intra pred Mode HOR_PRED_16");
@@ -3779,15 +3779,15 @@ namespace {
     getAffNeighbour (mb,    0,   -1, decoder->mbSize[eLuma], &b);
 
     if (!decoder->activePps->hasConstrainedIntraPred) {
-      up_avail = b.available;
-      left_avail = left[1].available;
-      left_up_avail = left[0].available;
+      up_avail = b.ok;
+      left_avail = left[1].ok;
+      left_up_avail = left[0].ok;
       }
     else {
-      up_avail = b.available ? slice->intraBlock[b.mbIndex] : 0;
+      up_avail = b.ok ? slice->intraBlock[b.mbIndex] : 0;
       for (i = 1, left_avail = 1; i < 17; ++i)
-        left_avail  &= left[i].available ? slice->intraBlock[left[i].mbIndex]: 0;
-      left_up_avail = left[0].available ? slice->intraBlock[left[0].mbIndex]: 0;
+        left_avail  &= left[i].ok ? slice->intraBlock[left[i].mbIndex]: 0;
+      left_up_avail = left[0].ok ? slice->intraBlock[left[0].mbIndex]: 0;
       }
 
     if (!up_avail || !left_up_avail  || !left_avail)
@@ -3923,13 +3923,13 @@ namespace {
 
     if (!decoder->activePps->hasConstrainedIntraPred)
     {
-      up_avail      = up.available;
-      left_avail    = left.available;
+      up_avail      = up.ok;
+      left_avail    = left.ok;
     }
     else
     {
-      up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
-      left_avail = left.available ? slice->intraBlock[left.mbIndex]: 0;
+      up_avail = up.ok ? slice->intraBlock[up.mbIndex] : 0;
+      left_avail = left.ok ? slice->intraBlock[left.mbIndex]: 0;
     }
 
     // DC prediction
@@ -3986,9 +3986,9 @@ namespace {
     getNonAffNeighbour(mb, -1, 0, decoder->mbSize[eChroma], &a);
 
     if (!decoder->activePps->hasConstrainedIntraPred)
-      left_avail = a.available;
+      left_avail = a.ok;
     else
-      left_avail = a.available ? mb->slice->intraBlock[a.mbIndex]: 0;
+      left_avail = a.ok ? mb->slice->intraBlock[a.mbIndex]: 0;
     // Horizontal Prediction
     if (!left_avail )
       cDecoder264::cDecoder264::error ("unexpected HOR_PRED_8 chroma intra prediction mode");
@@ -4030,9 +4030,9 @@ namespace {
     getNonAffNeighbour(mb, 0, -1, decoder->mbSize[eChroma], &up);
 
     if (!decoder->activePps->hasConstrainedIntraPred)
-      up_avail      = up.available;
+      up_avail      = up.ok;
     else
-      up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
+      up_avail = up.ok ? slice->intraBlock[up.mbIndex] : 0;
     // Vertical Prediction
     if (!up_avail)
       cDecoder264::cDecoder264::error ("unexpected VERT_PRED_8 chroma intra prediction mode");
@@ -4069,15 +4069,15 @@ namespace {
 
     if (!decoder->activePps->hasConstrainedIntraPred)
     {
-      up_avail      = up.available;
-      left_avail    = left.available;
-      left_up_avail = up_left.available;
+      up_avail      = up.ok;
+      left_avail    = left.ok;
+      left_up_avail = up_left.ok;
     }
     else
     {
-      up_avail      = up.available ? slice->intraBlock[up.mbIndex] : 0;
-      left_avail    = left.available ? slice->intraBlock[left.mbIndex]: 0;
-      left_up_avail = up_left.available ? slice->intraBlock[up_left.mbIndex]: 0;
+      up_avail      = up.ok ? slice->intraBlock[up.mbIndex] : 0;
+      left_avail    = left.ok ? slice->intraBlock[left.mbIndex]: 0;
+      left_up_avail = up_left.ok ? slice->intraBlock[up_left.mbIndex]: 0;
     }
     // plane prediction
     if (!left_up_avail || !left_avail || !up_avail)
@@ -4213,17 +4213,17 @@ namespace {
 
           if (!decoder->activePps->hasConstrainedIntraPred)
           {
-            up_avail      = up.available;
-            left_avail[0] = left_avail[1] = left[1].available;
+            up_avail      = up.ok;
+            left_avail[0] = left_avail[1] = left[1].ok;
           }
           else
           {
-            up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
+            up_avail = up.ok ? slice->intraBlock[up.mbIndex] : 0;
             for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-              left_avail[0]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
+              left_avail[0]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
             for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-              left_avail[1]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
+              left_avail[1]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
           }
           // DC prediction
@@ -4304,15 +4304,15 @@ namespace {
 
           if (!decoder->activePps->hasConstrainedIntraPred)
           {
-            left_avail[0] = left_avail[1] = left[1].available;
+            left_avail[0] = left_avail[1] = left[1].ok;
           }
           else
           {
             for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-              left_avail[0]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
+              left_avail[0]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
             for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-              left_avail[1]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
+              left_avail[1]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
           }
           // Horizontal Prediction
           if (!left_avail[0] || !left_avail[1])
@@ -4351,9 +4351,9 @@ namespace {
           getAffNeighbour(mb, 0, -1, decoder->mbSize[eChroma], &up);
 
           if (!decoder->activePps->hasConstrainedIntraPred)
-            up_avail      = up.available;
+            up_avail      = up.ok;
           else
-            up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
+            up_avail = up.ok ? slice->intraBlock[up.mbIndex] : 0;
           // Vertical Prediction
           if (!up_avail)
             cDecoder264::cDecoder264::error ("unexpected VERT_PRED_8 chroma intra prediction mode");
@@ -4391,20 +4391,20 @@ namespace {
 
           if (!decoder->activePps->hasConstrainedIntraPred)
           {
-            up_avail      = up.available;
-            left_avail[0] = left_avail[1] = left[1].available;
-            left_up_avail = left[0].available;
+            up_avail      = up.ok;
+            left_avail[0] = left_avail[1] = left[1].ok;
+            left_up_avail = left[0].ok;
           }
           else
           {
-            up_avail = up.available ? slice->intraBlock[up.mbIndex] : 0;
+            up_avail = up.ok ? slice->intraBlock[up.mbIndex] : 0;
             for (i=0, left_avail[0] = 1; i < cr_MB_y2;++i)
-              left_avail[0]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
+              left_avail[0]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
             for (i = cr_MB_y2, left_avail[1] = 1; i<cr_MB_y;++i)
-              left_avail[1]  &= left[i + 1].available ? slice->intraBlock[left[i + 1].mbIndex]: 0;
+              left_avail[1]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
-            left_up_avail = left[0].available ? slice->intraBlock[left[0].mbIndex]: 0;
+            left_up_avail = left[0].ok ? slice->intraBlock[left[0].mbIndex]: 0;
           }
           // plane prediction
           if (!left_up_avail || !left_avail[0] || !left_avail[1] || !up_avail)

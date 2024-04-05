@@ -22,24 +22,24 @@ static const int16_t max_c2       [] = { 4,  4,  4,  4,  4,  4,  3,  4,  3,  3, 
 //===== position -> ctx for MAP =====
 //--- zig-zag scan ----
 static const uint8_t  pos2ctx_map8x8 [] = { 0,  1,  2,  3,  4,  5,  5,  4,  4,  3,  3,  4,  4,  4,  5,  5,
-                                         4,  4,  4,  4,  3,  3,  6,  7,  7,  7,  8,  9, 10,  9,  8,  7,
-                                         7,  6, 11, 12, 13, 11,  6,  7,  8,  9, 14, 10,  9,  8,  6, 11,
-                                        12, 13, 11,  6,  9, 14, 10,  9, 11, 12, 13, 11 ,14, 10, 12, 14}; // 15 CTX
-
+                                            4,  4,  4,  4,  3,  3,  6,  7,  7,  7,  8,  9, 10,  9,  8,  7,
+                                            7,  6, 11, 12, 13, 11,  6,  7,  8,  9, 14, 10,  9,  8,  6, 11,
+                                           12, 13, 11,  6,  9, 14, 10,  9, 11, 12, 13, 11 ,14, 10, 12, 14}; // 15 CTX
+ 
 static const uint8_t  pos2ctx_map8x4 [] = { 0,  1,  2,  3,  4,  5,  7,  8,  9, 10, 11,  9,  8,  6,  7,  8,
-                                         9, 10, 11,  9,  8,  6, 12,  8,  9, 10, 11,  9, 13, 13, 14, 14}; // 15 CTX
+                                            9, 10, 11,  9,  8,  6, 12,  8,  9, 10, 11,  9, 13, 13, 14, 14}; // 15 CTX
 
 static const uint8_t  pos2ctx_map4x4 [] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 14}; // 15 CTX
 static const uint8_t  pos2ctx_map2x4c[] = { 0,  0,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
 static const uint8_t  pos2ctx_map4x4c[] = { 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2}; // 15 CTX
 
-static const uint8_t* pos2ctx_map    [] = {pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8, pos2ctx_map8x4,
-                                        pos2ctx_map8x4, pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
-                                        pos2ctx_map2x4c, pos2ctx_map4x4c,
-                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
-                                        pos2ctx_map8x4, pos2ctx_map4x4,
-                                        pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
-                                        pos2ctx_map8x4,pos2ctx_map4x4};
+static const uint8_t* pos2ctx_map    [] = { pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8, pos2ctx_map8x4,
+                                            pos2ctx_map8x4, pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map4x4,
+                                            pos2ctx_map2x4c, pos2ctx_map4x4c,
+                                            pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
+                                            pos2ctx_map8x4, pos2ctx_map4x4,
+                                            pos2ctx_map4x4, pos2ctx_map4x4, pos2ctx_map8x8,pos2ctx_map8x4,
+                                            pos2ctx_map8x4,pos2ctx_map4x4};
 
 //--- interlace scan ----
 //taken from ABT
@@ -244,14 +244,14 @@ void checkNeighbourCabac (sMacroBlock* mb) {
 
   sPixelPos up;
   decoder->getNeighbour (mb,  0, -1, mbSize, &up);
-  if (up.available)
+  if (up.ok)
     mb->mbCabacUp = &mb->slice->mbData[up.mbIndex];
   else
     mb->mbCabacUp = NULL;
 
   sPixelPos left;
   decoder->getNeighbour (mb, -1,  0, mbSize, &left);
-  if (left.available)
+  if (left.ok)
     mb->mbCabacLeft = &mb->slice->mbData[left.mbIndex];
   else
     mb->mbCabacLeft = NULL;
@@ -469,9 +469,9 @@ void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabac
   sPixelPos block_a, block_b;
   get4x4NeighbourBase (mb, i - 1, j    , mbSize, &block_a);
   get4x4NeighbourBase (mb, i    , j - 1, mbSize, &block_b);
-  if (block_a.available)
+  if (block_a.ok)
     a = iabs (slice->mbData[block_a.mbIndex].mvd[list_idx][block_a.y][block_a.x][k]);
-  if (block_b.available)
+  if (block_b.ok)
     a += iabs (slice->mbData[block_b.mbIndex].mvd[list_idx][block_b.y][block_b.x][k]);
 
   if (a < 3)
@@ -512,7 +512,7 @@ void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv*
 
   sPixelPos block_a, block_b;
   get4x4NeighbourBase (mb, i - 1, j, decoder->mbSize[eLuma], &block_a);
-  if (block_a.available) {
+  if (block_a.ok) {
     a = iabs (slice->mbData[block_a.mbIndex].mvd[list_idx][block_a.y][block_a.x][k]);
     if (slice->mbAffFrame && (k == 1)) {
       if ((mb->mbField == 0) && (slice->mbData[block_a.mbIndex].mbField==1))
@@ -523,7 +523,7 @@ void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv*
     }
 
   get4x4NeighbourBase(mb, i, j - 1, decoder->mbSize[eLuma], &block_b);
-  if (block_b.available) {
+  if (block_b.ok) {
     b = iabs(slice->mbData[block_b.mbIndex].mvd[list_idx][block_b.y][block_b.x][k]);
     if (slice->mbAffFrame && (k==1)) {
       if ((mb->mbField == 0) && (slice->mbData[block_b.mbIndex].mbField==1))
@@ -984,7 +984,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
   get4x4Neighbour (mb, mb->subblockX - 1, mb->subblockY, decoder->mbSize[eLuma], &block_a);
   get4x4Neighbour (mb, mb->subblockX, mb->subblockY - 1, decoder->mbSize[eLuma], &block_b);
 
-  if (block_b.available) {
+  if (block_b.ok) {
     int b8b = ((block_b.x >> 1) & 0x01) + (block_b.y & 0x02);
     neighborMB = &slice->mbData[block_b.mbIndex];
     if (!((neighborMB->mbType == IPCM) || IS_DIRECT(neighborMB) ||
@@ -996,7 +996,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* c
       }
     }
 
-  if (block_a.available) {
+  if (block_a.ok) {
     int b8a = ((block_a.x >> 1) & 0x01) + (block_a.y & 0x02);
     neighborMB = &slice->mbData[block_a.mbIndex];
     if (!((neighborMB->mbType==IPCM) || IS_DIRECT(neighborMB) ||
@@ -1081,7 +1081,7 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecodeEnv* cabac
 
       if (mb_x == 0) {
         get4x4Neighbour (mb, (mb_x<<2) - 1, (mb_y << 2), decoder->mbSize[eLuma], &block_a);
-        if (block_a.available) {
+        if (block_a.ok) {
           if (slice->mbData[block_a.mbIndex].mbType==IPCM)
             a = 0;
           else
@@ -1200,9 +1200,9 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
   if (y_ac) {
     get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
     get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-    if (block_a.available)
+    if (block_a.ok)
         bit_pos_a = 4*block_a.y + block_a.x;
-    if (block_b.available)
+    if (block_b.ok)
       bit_pos_b = 4*block_b.y + block_b.x;
     }
   else if (y_dc) {
@@ -1212,9 +1212,9 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
   else if (u_ac||v_ac) {
     get4x4Neighbour(mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
     get4x4Neighbour(mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
-    if (block_a.available)
+    if (block_a.ok)
       bit_pos_a = 4*block_a.y + block_a.x;
-    if (block_b.available)
+    if (block_b.ok)
       bit_pos_b = 4*block_b.y + block_b.x;
     }
   else {
@@ -1225,14 +1225,14 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
   if (picture->chromaFormatIdc!=YUV444) {
     if (type != LUMA_8x8) {
       // get bits from neighboring blocks ---
-      if (block_b.available) {
+      if (block_b.ok) {
         if(mbData[block_b.mbIndex].mbType==IPCM)
           upper_bit=1;
         else
           upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_b);
         }
 
-      if (block_a.available) {
+      if (block_a.ok) {
         if(mbData[block_a.mbIndex].mbType==IPCM)
           left_bit=1;
         else
@@ -1248,7 +1248,7 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
   else if( (decoder->coding.isSeperateColourPlane != 0) ) {
     if (type != LUMA_8x8) {
       // get bits from neighbouring blocks ---
-      if (block_b.available) {
+      if (block_b.ok) {
         if(mbData[block_b.mbIndex].mbType==IPCM)
           upper_bit = 1;
         else
@@ -1256,7 +1256,7 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
         }
 
 
-      if (block_a.available) {
+      if (block_a.ok) {
         if(mbData[block_a.mbIndex].mbType==IPCM)
           left_bit = 1;
         else
@@ -1271,7 +1271,7 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
     }
 
   else {
-    if (block_b.available) {
+    if (block_b.ok) {
       if(mbData[block_b.mbIndex].mbType==IPCM)
         upper_bit=1;
       else if ((type==LUMA_8x8 || type==CB_8x8 || type==CR_8x8) &&
@@ -1294,7 +1294,7 @@ static int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecodeEnv*  cabacDeco
       }
 
 
-    if (block_a.available) {
+    if (block_a.ok) {
       if(mbData[block_a.mbIndex].mbType == IPCM)
         left_bit=1;
       else if ((type == LUMA_8x8 || type == CB_8x8 || type == CR_8x8) &&
@@ -1404,10 +1404,10 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     get4x4NeighbourBase (mb,  0, -1, decoder->mbSize[eLuma], &block_b);
 
     //--- get bits from neighboring blocks ---
-    if (block_b.available)
+    if (block_b.ok)
       upper_bit = setCodedBlockPatternBit (&mbData[block_b.mbIndex]);
 
-    if (block_a.available)
+    if (block_a.ok)
       left_bit = setCodedBlockPatternBit (&mbData[block_a.mbIndex]);
 
     ctx = 2 * upper_bit + left_bit;
@@ -1435,9 +1435,9 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
     // get bits from neighboring blocks ---
-    if (block_b.available)
+    if (block_b.ok)
       upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
-    if (block_a.available)
+    if (block_a.ok)
       left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
 
     ctx = 2 * upper_bit + left_bit;
@@ -1468,10 +1468,10 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
     // get bits from neighboring blocks ---
-    if (block_b.available)
+    if (block_b.ok)
       upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
 
-    if (block_a.available)
+    if (block_a.ok)
       left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
 
     ctx = 2 * upper_bit + left_bit;
@@ -1501,10 +1501,10 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     get4x4NeighbourBase(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
     // get bits from neighboring blocks ---
-    if (block_b.available)
+    if (block_b.ok)
       upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
 
-    if (block_a.available)
+    if (block_a.ok)
       left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
 
     ctx = 2 * upper_bit + left_bit;
@@ -1532,10 +1532,10 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
     // get bits from neighboring blocks ---
-    if (block_b.available)
+    if (block_b.ok)
       upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
 
-    if (block_a.available)
+    if (block_a.ok)
       left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
 
     int ctx = 2 * upper_bit + left_bit;
@@ -1574,14 +1574,14 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
 
     //--- get bits from neighboring blocks ---
-    if (block_b.available) {
+    if (block_b.ok) {
       if (mbData[block_b.mbIndex].mbType==IPCM)
         upper_bit = 1;
       else
         upper_bit = getBit(mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit);
       }
 
-    if (block_a.available) {
+    if (block_a.ok) {
       if (mbData[block_a.mbIndex].mbType==IPCM)
         left_bit = 1;
       else
@@ -1614,7 +1614,7 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
     get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
 
     // get bits from neighboring blocks ---
-    if (block_b.available) {
+    if (block_b.ok) {
       if(mbData[block_b.mbIndex].mbType==IPCM)
         upper_bit = 1;
       else {
@@ -1623,7 +1623,7 @@ static int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecodeEnv* cabacDe
         }
       }
 
-    if (block_a.available) {
+    if (block_a.ok) {
       if (mbData[block_a.mbIndex].mbType == IPCM)
         left_bit = 1;
       else {

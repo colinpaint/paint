@@ -2740,7 +2740,7 @@ void cDecoder264::useParameterSet (cSlice* slice) {
     }
     //}}}
 
-  // slice->dataPartitionMode is set by read_new_slice (NALU first uint8_t available there)
+  // slice->dataPartitionMode is set by read_new_slice (NALU first uint8_t ok there)
   if (activePps->entropyCoding == eCavlc) {
     slice->nalStartCode = vlcStartCode;
     for (int i = 0; i < 3; i++)

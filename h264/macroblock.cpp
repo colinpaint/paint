@@ -32,29 +32,29 @@ static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
   mvPredType = MVPRED_MEDIAN;
 
   if (mb->mbField) {
-    rFrameL  = block[0].available
+    rFrameL  = block[0].ok
       ? (decoder->mbData[block[0].mbIndex].mbField
       ? mvInfo[block[0].posY][block[0].posX].refIndex[list]
     : mvInfo[block[0].posY][block[0].posX].refIndex[list] * 2) : -1;
-    rFrameU  = block[1].available
+    rFrameU  = block[1].ok
       ? (decoder->mbData[block[1].mbIndex].mbField
       ? mvInfo[block[1].posY][block[1].posX].refIndex[list]
     : mvInfo[block[1].posY][block[1].posX].refIndex[list] * 2) : -1;
-    rFrameUR = block[2].available
+    rFrameUR = block[2].ok
       ? (decoder->mbData[block[2].mbIndex].mbField
       ? mvInfo[block[2].posY][block[2].posX].refIndex[list]
     : mvInfo[block[2].posY][block[2].posX].refIndex[list] * 2) : -1;
     }
   else {
-    rFrameL = block[0].available
+    rFrameL = block[0].ok
       ? (decoder->mbData[block[0].mbIndex].mbField
       ? mvInfo[block[0].posY][block[0].posX].refIndex[list] >>1
       : mvInfo[block[0].posY][block[0].posX].refIndex[list]) : -1;
-    rFrameU  = block[1].available
+    rFrameU  = block[1].ok
       ? (decoder->mbData[block[1].mbIndex].mbField
       ? mvInfo[block[1].posY][block[1].posX].refIndex[list] >>1
       : mvInfo[block[1].posY][block[1].posX].refIndex[list]) : -1;
-    rFrameUR = block[2].available
+    rFrameUR = block[2].ok
       ? (decoder->mbData[block[2].mbIndex].mbField
       ? mvInfo[block[2].posY][block[2].posX].refIndex[list] >>1
       : mvInfo[block[2].posY][block[2].posX].refIndex[list]) : -1;
@@ -92,35 +92,35 @@ static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
 
   for (hv = 0; hv < 2; hv++) {
     if (hv == 0) {
-      mv_a = block[0].available ? mvInfo[block[0].posY][block[0].posX].mv[list].mvX : 0;
-      mv_b = block[1].available ? mvInfo[block[1].posY][block[1].posX].mv[list].mvX : 0;
-      mv_c = block[2].available ? mvInfo[block[2].posY][block[2].posX].mv[list].mvX : 0;
+      mv_a = block[0].ok ? mvInfo[block[0].posY][block[0].posX].mv[list].mvX : 0;
+      mv_b = block[1].ok ? mvInfo[block[1].posY][block[1].posX].mv[list].mvX : 0;
+      mv_c = block[2].ok ? mvInfo[block[2].posY][block[2].posX].mv[list].mvX : 0;
       }
     else {
       if (mb->mbField) {
-        mv_a = block[0].available  ? decoder->mbData[block[0].mbIndex].mbField
+        mv_a = block[0].ok  ? decoder->mbData[block[0].mbIndex].mbField
           ? mvInfo[block[0].posY][block[0].posX].mv[list].mvY
         : mvInfo[block[0].posY][block[0].posX].mv[list].mvY / 2
           : 0;
-        mv_b = block[1].available  ? decoder->mbData[block[1].mbIndex].mbField
+        mv_b = block[1].ok  ? decoder->mbData[block[1].mbIndex].mbField
           ? mvInfo[block[1].posY][block[1].posX].mv[list].mvY
         : mvInfo[block[1].posY][block[1].posX].mv[list].mvY / 2
           : 0;
-        mv_c = block[2].available  ? decoder->mbData[block[2].mbIndex].mbField
+        mv_c = block[2].ok  ? decoder->mbData[block[2].mbIndex].mbField
           ? mvInfo[block[2].posY][block[2].posX].mv[list].mvY
         : mvInfo[block[2].posY][block[2].posX].mv[list].mvY / 2
           : 0;
         }
       else {
-        mv_a = block[0].available  ? decoder->mbData[block[0].mbIndex].mbField
+        mv_a = block[0].ok  ? decoder->mbData[block[0].mbIndex].mbField
           ? mvInfo[block[0].posY][block[0].posX].mv[list].mvY * 2
           : mvInfo[block[0].posY][block[0].posX].mv[list].mvY
         : 0;
-        mv_b = block[1].available  ? decoder->mbData[block[1].mbIndex].mbField
+        mv_b = block[1].ok  ? decoder->mbData[block[1].mbIndex].mbField
           ? mvInfo[block[1].posY][block[1].posX].mv[list].mvY * 2
           : mvInfo[block[1].posY][block[1].posX].mv[list].mvY
         : 0;
-        mv_c = block[2].available  ? decoder->mbData[block[2].mbIndex].mbField
+        mv_c = block[2].ok  ? decoder->mbData[block[2].mbIndex].mbField
           ? mvInfo[block[2].posY][block[2].posX].mv[list].mvY * 2
           : mvInfo[block[2].posY][block[2].posX].mv[list].mvY
         : 0;
@@ -129,7 +129,7 @@ static void GetMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
 
     switch (mvPredType) {
       case MVPRED_MEDIAN:
-        if (!(block[1].available || block[2].available))
+        if (!(block[1].ok || block[2].ok))
           pred_vec = mv_a;
         else
           pred_vec = imedian (mv_a, mv_b, mv_c);
@@ -160,9 +160,9 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
                                             int list, int mb_x, int mb_y, int blockshape_x, int blockshape_y) {
   int mvPredType = MVPRED_MEDIAN;
 
-  int rFrameL = block[0].available ? mvInfo[block[0].posY][block[0].posX].refIndex[list] : -1;
-  int rFrameU = block[1].available ? mvInfo[block[1].posY][block[1].posX].refIndex[list] : -1;
-  int rFrameUR = block[2].available ? mvInfo[block[2].posY][block[2].posX].refIndex[list] : -1;
+  int rFrameL = block[0].ok ? mvInfo[block[0].posY][block[0].posX].refIndex[list] : -1;
+  int rFrameU = block[1].ok ? mvInfo[block[1].posY][block[1].posX].refIndex[list] : -1;
+  int rFrameUR = block[2].ok ? mvInfo[block[2].posY][block[2].posX].refIndex[list] : -1;
 
   // Prediction if only one of the neighbors uses the reference frame we are checking
   if (rFrameL == ref_frame && rFrameU != ref_frame && rFrameUR != ref_frame)
@@ -197,18 +197,18 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
   switch (mvPredType) {
     //{{{
     case MVPRED_MEDIAN:
-      if(!(block[1].available || block[2].available))
+      if(!(block[1].ok || block[2].ok))
       {
-        if (block[0].available)
+        if (block[0].ok)
           *pmv = mvInfo[block[0].posY][block[0].posX].mv[list];
         else
           *pmv = kZeroMv;
       }
       else
       {
-        sMotionVec *mv_a = block[0].available ? &mvInfo[block[0].posY][block[0].posX].mv[list] : (sMotionVec *) &kZeroMv;
-        sMotionVec *mv_b = block[1].available ? &mvInfo[block[1].posY][block[1].posX].mv[list] : (sMotionVec *) &kZeroMv;
-        sMotionVec *mv_c = block[2].available ? &mvInfo[block[2].posY][block[2].posX].mv[list] : (sMotionVec *) &kZeroMv;
+        sMotionVec *mv_a = block[0].ok ? &mvInfo[block[0].posY][block[0].posX].mv[list] : (sMotionVec *) &kZeroMv;
+        sMotionVec *mv_b = block[1].ok ? &mvInfo[block[1].posY][block[1].posX].mv[list] : (sMotionVec *) &kZeroMv;
+        sMotionVec *mv_c = block[2].ok ? &mvInfo[block[2].posY][block[2].posX].mv[list] : (sMotionVec *) &kZeroMv;
 
         pmv->mvX = (int16_t)imedian (mv_a->mvX, mv_b->mvX, mv_c->mvX);
         pmv->mvY = (int16_t)imedian (mv_a->mvY, mv_b->mvY, mv_c->mvY);
@@ -217,7 +217,7 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
     //}}}
     //{{{
     case MVPRED_L:
-      if (block[0].available)
+      if (block[0].ok)
         *pmv = mvInfo[block[0].posY][block[0].posX].mv[list];
       else
         *pmv = kZeroMv;
@@ -225,7 +225,7 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
     //}}}
     //{{{
     case MVPRED_U:
-      if (block[1].available)
+      if (block[1].ok)
         *pmv = mvInfo[block[1].posY][block[1].posX].mv[list];
       else
         *pmv = kZeroMv;
@@ -233,7 +233,7 @@ static void GetMotionVectorPredictorNormal (sMacroBlock* mb, sPixelPos* block,
     //}}}
     //{{{
     case MVPRED_UR:
-      if (block[2].available)
+      if (block[2].ok)
         *pmv = mvInfo[block[2].posY][block[2].posX].mv[list];
       else
         *pmv = kZeroMv;
@@ -1207,16 +1207,16 @@ void getNeighbours (sMacroBlock* mb, sPixelPos* block, int mb_x, int mb_y, int b
       // first column of 8x8 blocks
       if (mb_y == 8) {
         if (blockshape_x == MB_BLOCK_SIZE)
-          block[2].available  = 0;
+          block[2].ok  = 0;
         }
       else if (mb_x + blockshape_x == 8)
-        block[2].available = 0;
+        block[2].ok = 0;
       }
     else if (mb_x + blockshape_x == MB_BLOCK_SIZE)
-      block[2].available = 0;
+      block[2].ok = 0;
     }
 
-  if (!block[2].available) {
+  if (!block[2].ok) {
     get4x4Neighbour (mb, mb_x - 1, mb_y - 1, mbSize, block + 3);
     block[2] = block[3];
     }
@@ -1231,9 +1231,9 @@ void checkDpNeighbours (sMacroBlock* mb) {
   decoder->getNeighbour (mb,  0, -1, decoder->mbSize[1], &up);
 
   if ((mb->isIntraBlock == false) || (!(decoder->activePps->hasConstrainedIntraPred)) ) {
-    if (left.available)
+    if (left.ok)
       mb->dplFlag |= decoder->mbData[left.mbIndex].dplFlag;
-    if (up.available)
+    if (up.ok)
       mb->dplFlag |= decoder->mbData[up.mbIndex].dplFlag;
     }
   }

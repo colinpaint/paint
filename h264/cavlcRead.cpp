@@ -20,15 +20,15 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
 
   int cnt = 0;
   cSlice* slice = mb->slice;
-  if ((mb->isIntraBlock == true) && pixelPos.available &&
+  if ((mb->isIntraBlock == true) && pixelPos.ok &&
       decoder->activePps->hasConstrainedIntraPred && (slice->dataPartitionMode == eDataPartition3)) {
-    pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
-    if (!pixelPos.available)
+    pixelPos.ok &= slice->intraBlock[pixelPos.mbIndex];
+    if (!pixelPos.ok)
       ++cnt;
     }
 
   int pred_nnz = 0;
-  if (pixelPos.available) {
+  if (pixelPos.ok) {
     switch (block_type) {
       //{{{
       case LUMA:
@@ -59,14 +59,14 @@ static int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
   // top block
   get4x4Neighbour (mb, i, j - 1, decoder->mbSize[eLuma], &pixelPos);
 
-  if ((mb->isIntraBlock == true) && pixelPos.available &&
+  if ((mb->isIntraBlock == true) && pixelPos.ok &&
       decoder->activePps->hasConstrainedIntraPred && (slice->dataPartitionMode == eDataPartition3)) {
-    pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
-    if (!pixelPos.available)
+    pixelPos.ok &= slice->intraBlock[pixelPos.mbIndex];
+    if (!pixelPos.ok)
       ++cnt;
     }
 
-  if (pixelPos.available) {
+  if (pixelPos.ok) {
     switch (block_type) {
       //{{{
       case LUMA:
@@ -118,14 +118,14 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
     // left block
     get4x4Neighbour (mb, ((i&0x01)<<2) - 1, j, decoder->mbSize[eChroma], &pixelPos);
 
-    if ((mb->isIntraBlock == true) && pixelPos.available &&
+    if ((mb->isIntraBlock == true) && pixelPos.ok &&
         decoder->activePps->hasConstrainedIntraPred && (slice->dataPartitionMode==eDataPartition3)) {
-      pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
-      if (!pixelPos.available)
+      pixelPos.ok &= slice->intraBlock[pixelPos.mbIndex];
+      if (!pixelPos.ok)
         ++cnt;
       }
 
-    if (pixelPos.available) {
+    if (pixelPos.ok) {
       pred_nnz = decoder->nzCoeff [pixelPos.mbIndex ][1][pixelPos.y][2 * (i>>1) + pixelPos.x];
       ++cnt;
       }
@@ -133,14 +133,14 @@ static int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
     // top block
     get4x4Neighbour (mb, ((i&0x01)<<2), j - 1, decoder->mbSize[eChroma], &pixelPos);
 
-    if ((mb->isIntraBlock == true) && pixelPos.available &&
+    if ((mb->isIntraBlock == true) && pixelPos.ok &&
         decoder->activePps->hasConstrainedIntraPred && (slice->dataPartitionMode==eDataPartition3)) {
-      pixelPos.available &= slice->intraBlock[pixelPos.mbIndex];
-      if (!pixelPos.available)
+      pixelPos.ok &= slice->intraBlock[pixelPos.mbIndex];
+      if (!pixelPos.ok)
         ++cnt;
       }
 
-    if (pixelPos.available) {
+    if (pixelPos.ok) {
       pred_nnz += decoder->nzCoeff [pixelPos.mbIndex ][1][pixelPos.y][2 * (i>>1) + pixelPos.x];
       ++cnt;
       }
