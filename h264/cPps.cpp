@@ -250,7 +250,7 @@ void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
   hasConstrainedIntraPred = s->readU1 ("PPS hasConstrainedIntraPred");
   redundantPicCountPresent = s->readU1 ("PPS redundantPicCountPresent");
 
-  hasMoreData = moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
+  hasMoreData = cBitStream::moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
   if (hasMoreData) {
     //{{{  read fidelity range
     hasTransform8x8mode = s->readU1 ("PPS hasTransform8x8mode");

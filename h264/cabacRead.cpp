@@ -98,7 +98,7 @@ namespace {
           se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
           dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
           if (dataPartition->stream->errorFlag)
-            se->mapping = linfo_levrun_inter;
+            se->mapping = cBitStream::linfo_levrun_inter;
           else
             se->reading = readRunLevel_CABAC;
           dataPartition->readSyntaxElement (mb, se, dataPartition);
@@ -118,7 +118,7 @@ namespace {
           se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
           dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
           if (dataPartition->stream->errorFlag)
-            se->mapping = linfo_levrun_inter;
+            se->mapping = cBitStream::linfo_levrun_inter;
           else
             se->reading = readRunLevel_CABAC;
 
@@ -425,7 +425,7 @@ namespace {
           se.type         = SE_LUM_DC_INTRA;
 
           if (dataPartition->stream->errorFlag)
-            se.mapping = linfo_levrun_inter;
+            se.mapping = cBitStream::linfo_levrun_inter;
           else
             se.reading = readRunLevel_CABAC;
 
@@ -585,7 +585,7 @@ namespace {
           se.type = SE_LUM_DC_INTRA;
 
           if (dataPartition->stream->errorFlag)
-            se.mapping = linfo_levrun_inter;
+            se.mapping = cBitStream::linfo_levrun_inter;
           else
             se.reading = readRunLevel_CABAC;
 
@@ -645,7 +645,7 @@ namespace {
             se.context = (uv==0) ? CB_16DC : CR_16DC;
 
           if (dataPartition->stream->errorFlag)
-            se.mapping = linfo_levrun_inter;
+            se.mapping = cBitStream::linfo_levrun_inter;
           else
             se.reading = readRunLevel_CABAC;
 
@@ -813,7 +813,7 @@ namespace {
           se.type = SE_LUM_DC_INTRA;
 
           if (dataPartition->stream->errorFlag)
-            se.mapping = linfo_levrun_inter;
+            se.mapping = cBitStream::linfo_levrun_inter;
           else
             se.reading = readRunLevel_CABAC;
 
@@ -887,7 +887,7 @@ namespace {
 
               dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
               if (dataPartition->stream->errorFlag)
-                se.mapping = linfo_levrun_c2x2;
+                se.mapping = cBitStream::linfo_levrun_c2x2;
               else
                 se.reading = readRunLevel_CABAC;
               dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -950,7 +950,7 @@ namespace {
         se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
         dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
         if (dataPartition->stream->errorFlag)
-          se.mapping = linfo_levrun_inter;
+          se.mapping = cBitStream::linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
 
@@ -1134,7 +1134,7 @@ namespace {
         se.context = LUMA_16DC;
         se.type = SE_LUM_DC_INTRA;
         if (dataPartition->stream->errorFlag)
-          se.mapping = linfo_levrun_inter;
+          se.mapping = cBitStream::linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
 
@@ -1192,7 +1192,7 @@ namespace {
         se.type = (intra ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
         dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
         if (dataPartition->stream->errorFlag)
-          se.mapping = linfo_levrun_c2x2;
+          se.mapping = cBitStream::linfo_levrun_c2x2;
         else
           se.reading = readRunLevel_CABAC;
 
@@ -1239,7 +1239,7 @@ namespace {
       se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       if (dataPartition->stream->errorFlag)
-        se.mapping = linfo_levrun_inter;
+        se.mapping = cBitStream::linfo_levrun_inter;
       else
         se.reading = readRunLevel_CABAC;
 

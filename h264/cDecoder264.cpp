@@ -2616,12 +2616,12 @@ void cDecoder264::initSlice (cSlice* slice) {
 
   if (!slice->activeSps->chromaFormatIdc ||
       (slice->activeSps->chromaFormatIdc == 3)) {
-    slice->linfoCbpIntra = linfo_cbp_intra_other;
-    slice->linfoCbpInter = linfo_cbp_inter_other;
+    slice->linfoCbpIntra = cBitStream::linfo_cbp_intra_other;
+    slice->linfoCbpInter = cBitStream::linfo_cbp_inter_other;
     }
   else {
-    slice->linfoCbpIntra = linfo_cbp_intra_normal;
-    slice->linfoCbpInter = linfo_cbp_inter_normal;
+    slice->linfoCbpIntra = cBitStream::linfo_cbp_intra_normal;
+    slice->linfoCbpInter = cBitStream::linfo_cbp_inter_normal;
     }
   }
 //}}}
@@ -2737,9 +2737,9 @@ void cDecoder264::useParameterSet (cSlice* slice) {
 
   // slice->dataPartitionMode is set by read_new_slice (NALU first uint8_t ok there)
   if (activePps->entropyCoding == eCavlc) {
-    slice->nalStartCode = vlcStartCode;
+    slice->nalStartCode = cBitStream::vlcStartCode;
     for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementVLC;
+      slice->dataPartitions[i].readSyntaxElement = cBitStream::readSyntaxElementVLC;
     }
   else {
     slice->nalStartCode = cabacStartCode;

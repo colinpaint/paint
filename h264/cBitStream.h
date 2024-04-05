@@ -1,5 +1,9 @@
 #pragma once
 
+struct sSyntaxElement;
+class cDecoder;
+class cSlice;
+
 class cBitStream {
 public:
   //{{{
@@ -60,6 +64,24 @@ public:
   };
   //}}}
 
+  static void linfo_ue (int len, int info, int* value1, int* dummy);
+  static void linfo_se (int len, int info, int* value1, int* dummy);
+  static void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy);
+  static void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy);
+  static void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy);
+  static void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int* dummy);
+  static void linfo_levrun_inter (int len, int info, int* level, int* irun);
+  static void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
+
+  static int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
+  static int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
+  static int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
+  static int vlcStartCode (cSlice* slice, int dummy);
+  static int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
+
+  static int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
+  static int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);
+
   int readSeV (const std::string& label);
   int readUeV (const std::string& label);
   bool readU1 (const std::string& label);
@@ -87,22 +109,3 @@ public:
   int      readLen;         // position in the codebuffer
   int      codeLen;         // overall codebuffer length
   };
-
-
-void linfo_ue (int len, int info, int* value1, int* dummy);
-void linfo_se (int len, int info, int* value1, int* dummy);
-void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy);
-void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy);
-void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy);
-void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int* dummy);
-void linfo_levrun_inter (int len, int info, int* level, int* irun);
-void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
-
-int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
-int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
-int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
-int vlcStartCode (cSlice* slice, int dummy);
-int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
-
-int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
-int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);

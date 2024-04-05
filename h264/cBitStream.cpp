@@ -54,13 +54,14 @@ namespace {
   //}}}
   }
 
+// static
 //{{{
-void linfo_ue (int len, int info, int* value1, int* dummy) {
+void cBitStream::linfo_ue (int len, int info, int* value1, int* dummy) {
   *value1 = (int) (((uint32_t) 1 << (len >> 1)) + (uint32_t) (info) - 1);
   }
 //}}}
 //{{{
-void linfo_se (int len, int info, int* value1, int* dummy) {
+void cBitStream::linfo_se (int len, int info, int* value1, int* dummy) {
 
   uint32_t n = ((uint32_t) 1 << (len >> 1)) + (uint32_t) info - 1;
   *value1 = (n + 1) >> 1;
@@ -71,7 +72,7 @@ void linfo_se (int len, int info, int* value1, int* dummy) {
   }
 //}}}
 //{{{
-void linfo_cbp_intra_normal (int len, int info, int* codedBlockPattern, int* dummy) {
+void cBitStream::linfo_cbp_intra_normal (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
@@ -79,7 +80,7 @@ void linfo_cbp_intra_normal (int len, int info, int* codedBlockPattern, int* dum
   }
 //}}}
 //{{{
-void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy) {
+void cBitStream::linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
@@ -87,7 +88,7 @@ void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dumm
   }
 //}}}
 //{{{
-void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy) {
+void cBitStream::linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
@@ -95,7 +96,7 @@ void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dum
   }
 //}}}
 //{{{
-void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int *dummy) {
+void cBitStream::linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int *dummy) {
 
   int cbp_idx;
   linfo_ue (len, info, &cbp_idx, dummy);
@@ -103,7 +104,7 @@ void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int *dumm
   }
 //}}}
 //{{{
-void linfo_levrun_inter (int len, int info, int* level, int* irun) {
+void cBitStream::linfo_levrun_inter (int len, int info, int* level, int* irun) {
 
   if (len <= 9) {
     int l2 = imax(0,(len >> 1)-1);
@@ -126,7 +127,7 @@ void linfo_levrun_inter (int len, int info, int* level, int* irun) {
   }
 //}}}
 //{{{
-void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
+void cBitStream::linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 
   if (len <= 5) {
     int l2 = imax(0, (len >> 1) - 1);
@@ -150,12 +151,12 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //}}}
 
 //{{{
-int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
+int cBitStream::readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
   return dataPartition->stream->readSyntaxElement_VLC (se);
   }
 //}}}
 //{{{
-int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
+int cBitStream::GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
   int byteoffset = (totalBitOffset >> 3);        // uint8_t from start of buffer
   int bitOffset   = (7 - (totalBitOffset & 0x07)); // bit from start of uint8_t
@@ -182,7 +183,7 @@ int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int
   }
 //}}}
 //{{{
-int moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
+int cBitStream::moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
 
   // there is more until we're in the last uint8_t
   long byteoffset = (totalBitOffset >> 3);      // uint8_t from start of buffer
@@ -207,7 +208,7 @@ int moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
   }
 //}}}
 //{{{
-int vlcStartCode (cSlice* slice, int dummy) {
+int cBitStream::vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
   sDataPartition* dataPartition = &slice->dataPartitions[partitionIndex];
@@ -218,7 +219,7 @@ int vlcStartCode (cSlice* slice, int dummy) {
   }
 //}}}
 //{{{
-int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
+int cBitStream::GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
   long byteoffset = totalBitOffset >> 3;        // uint8_t from start of buffer
   int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
@@ -257,7 +258,7 @@ int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount
 //}}}
 
 //{{{
-int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
+int cBitStream::getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
 
   if ((totalBitOffset + numBits) > bitCount)
     return -1;
@@ -287,7 +288,7 @@ int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int 
   }
 //}}}
 //{{{
-int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits) {
+int cBitStream::ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits) {
 
   if ((totalBitOffset + numBits) > bitCount)
     return -1;
@@ -312,6 +313,7 @@ int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits) {
   }
 //}}}
 
+// members
 //{{{
 int cBitStream::readUeV (const string& label) {
 
@@ -721,7 +723,7 @@ int cBitStream::readSyntaxElement_TotalZeros (sSyntaxElement* se) {
   int vlcnum = se->value1;
   int retval = code_from_bitstream_2d (se, this, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
 
-  if (retval) 
+  if (retval)
     cDecoder264::error ("failed to find Total Zeros !cdc\n");
 
   return retval;
@@ -802,7 +804,7 @@ int cBitStream::readSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyn
   int vlcnum = se->value1;
   int retval = code_from_bitstream_2d(se, this, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
 
-  if (retval) 
+  if (retval)
     cDecoder264::error ("failed to find Total Zeros\n");
 
   return retval;
@@ -839,7 +841,7 @@ int cBitStream::readSyntaxElement_Run (sSyntaxElement* se) {
   int code;
   int vlcnum = se->value1;
   int retval = code_from_bitstream_2d (se, this, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
-  if (retval) 
+  if (retval)
     cDecoder264::error ("failed to find Run\n");
 
   return retval;
