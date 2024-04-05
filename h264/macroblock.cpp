@@ -660,7 +660,7 @@ namespace {
 
     // chroma decoding
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
-      intra_cr_decoding(mb, yuv);
+      intraChromaDecode(mb, yuv);
 
     if (mb->codedBlockPattern != 0)
       slice->isResetCoef = false;
@@ -680,7 +680,7 @@ namespace {
 
     // chroma decoding
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
-      intra_cr_decoding(mb, yuv);
+      intraChromaDecode(mb, yuv);
 
     mb->slice->isResetCoef = false;
     return 1;
@@ -711,7 +711,7 @@ namespace {
     }
     // chroma decoding** *****************************************************
     if ((picture->chromaFormatIdc != YUV400) && (picture->chromaFormatIdc != YUV444))
-      intra_cr_decoding(mb, yuv);
+      intraChromaDecode(mb, yuv);
 
     if (mb->codedBlockPattern != 0)
       slice->isResetCoef = false;
@@ -726,7 +726,7 @@ namespace {
     cSlice* slice = mb->slice;
     setChromaVector (mb);
 
-    perform_mc (mb, plane, picture, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+    performMotionCompensation (mb, plane, picture, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
     copyImage16x16 (&pixel[mb->pixY], slice->mbPred[plane], mb->pixX, 0);
 
@@ -743,7 +743,7 @@ namespace {
 
     setChromaVector (mb);
 
-    perform_mc (mb, plane, picture, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+    performMotionCompensation (mb, plane, picture, LIST_0, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
     iTransform (mb, plane, 1);
     return 1;
     }
@@ -773,7 +773,7 @@ namespace {
       for (k = k_start; k < k_end; k += k_inc) {
         i =  (decode_block_scan[k] & 3);
         j = ((decode_block_scan[k] >> 2) & 3);
-        perform_mc (mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
+        performMotionCompensation (mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
         }
       }
 
@@ -792,7 +792,7 @@ namespace {
     int smb = (slice->sliceType == eSliceSP);
 
     setChromaVector(mb);
-    perform_mc (mb, plane, picture, mb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+    performMotionCompensation (mb, plane, picture, mb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
     iTransform (mb, plane, smb);
 
     if (mb->codedBlockPattern != 0)
@@ -809,8 +809,8 @@ namespace {
 
     setChromaVector (mb);
 
-    perform_mc (mb, plane, picture, mb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, BLOCK_SIZE_8x8);
-    perform_mc (mb, plane, picture, mb->b8pdir[2], 0, 2, MB_BLOCK_SIZE, BLOCK_SIZE_8x8);
+    performMotionCompensation (mb, plane, picture, mb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, BLOCK_SIZE_8x8);
+    performMotionCompensation (mb, plane, picture, mb->b8pdir[2], 0, 2, MB_BLOCK_SIZE, BLOCK_SIZE_8x8);
     iTransform (mb, plane, smb);
 
     if (mb->codedBlockPattern != 0)
@@ -827,8 +827,8 @@ namespace {
 
     setChromaVector (mb);
 
-    perform_mc (mb, plane, picture, mb->b8pdir[0], 0, 0, BLOCK_SIZE_8x8, MB_BLOCK_SIZE);
-    perform_mc (mb, plane, picture, mb->b8pdir[1], 2, 0, BLOCK_SIZE_8x8, MB_BLOCK_SIZE);
+    performMotionCompensation (mb, plane, picture, mb->b8pdir[0], 0, 0, BLOCK_SIZE_8x8, MB_BLOCK_SIZE);
+    performMotionCompensation (mb, plane, picture, mb->b8pdir[1], 2, 0, BLOCK_SIZE_8x8, MB_BLOCK_SIZE);
     iTransform (mb, plane, smb);
 
     if (mb->codedBlockPattern != 0)
@@ -988,7 +988,7 @@ namespace {
       for (k = k_start; k < k_end; k ++) {
         int i = decode_block_scan[k] & 3;
         int j = (decode_block_scan[k] >> 2) & 3;
-        perform_mc (mb, plane, picture, predDir, i, j, SMB_BLOCK_SIZE, SMB_BLOCK_SIZE);
+        performMotionCompensation (mb, plane, picture, predDir, i, j, SMB_BLOCK_SIZE, SMB_BLOCK_SIZE);
         }
       }
 
@@ -1090,7 +1090,7 @@ namespace {
       for (int k = k_start; k < k_end; k ++) {
         int i =  (decode_block_scan[k] & 3);
         int j = ((decode_block_scan[k] >> 2) & 3);
-        perform_mc (mb, plane, picture, predDir, i, j, BLOCK_SIZE, BLOCK_SIZE);
+        performMotionCompensation (mb, plane, picture, predDir, i, j, BLOCK_SIZE, BLOCK_SIZE);
         }
       }
 
@@ -1127,7 +1127,7 @@ namespace {
     int predDir = 0;
 
     setChromaVector (mb);
-    prepare_direct_params (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
+    prepareDirectParam (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
 
     if (l0_rFrame == 0 || l1_rFrame == 0) {
       int is_not_moving;
@@ -1138,7 +1138,7 @@ namespace {
         i4  = mb->blockX + i;
         j4  = mb->blockY + j;
 
-        is_not_moving = (get_colocated_info_8x8(mb, list1[0], i4, mb->blockYaff + j) == 0);
+        is_not_moving = (getColocatedInfo8x8(mb, list1[0], i4, mb->blockYaff + j) == 0);
         mvInfo = &picture->mvInfo[j4][i4];
 
         if (l1_rFrame == -1) {
@@ -1206,7 +1206,7 @@ namespace {
           }
 
         updateNeighbourMvs (&picture->mvInfo[j4], mvInfo, i4);
-        perform_mc (mb, plane, picture, predDir, i, j, SMB_BLOCK_SIZE, SMB_BLOCK_SIZE);
+        performMotionCompensation (mb, plane, picture, predDir, i, j, SMB_BLOCK_SIZE, SMB_BLOCK_SIZE);
         }
       }
     else {
@@ -1275,7 +1275,7 @@ namespace {
         }
 
       // Now perform Motion Compensation
-      perform_mc (mb, plane, picture, predDir, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+      performMotionCompensation (mb, plane, picture, predDir, 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
       }
 
     if (mb->codedBlockPattern == 0) {
@@ -1312,7 +1312,7 @@ namespace {
 
     setChromaVector (mb);
 
-    prepare_direct_params (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
+    prepareDirectParam (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
 
     for (block8x8 = 0; block8x8 < 4; block8x8++) {
       int k_start = (block8x8 << 2);
@@ -1326,7 +1326,7 @@ namespace {
         mvInfo = &picture->mvInfo[j4][i4];
         // DIRECT PREDICTION
         if (l0_rFrame == 0 || l1_rFrame == 0) {
-          int is_not_moving = (get_colocated_info_4x4 (mb, list1[0], i4, mb->blockYaff + j) == 0);
+          int is_not_moving = (getColocatedInfo4x4 (mb, list1[0], i4, mb->blockYaff + j) == 0);
           if (l1_rFrame == -1) {
             if (is_not_moving) {
               mvInfo->refPic[LIST_0] = list0[0];
@@ -1433,9 +1433,9 @@ namespace {
         }
 
       for (k = k_start; k < k_end; k ++) {
-        int i =  (decode_block_scan[k] & 3);
+        int i = (decode_block_scan[k] & 3);
         int j = ((decode_block_scan[k] >> 2) & 3);
-        perform_mc (mb, plane, picture, predDir, i, j, BLOCK_SIZE, BLOCK_SIZE);
+        performMotionCompensation (mb, plane, picture, predDir, i, j, BLOCK_SIZE, BLOCK_SIZE);
         }
       }
 
@@ -1474,7 +1474,7 @@ namespace {
     // prepare direct modes
     if (slice->directSpatialMvPredFlag &&
         (!(mb->b8mode[0] && mb->b8mode[1] && mb->b8mode[2] && mb->b8mode[3])))
-      prepare_direct_params (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
+      prepareDirectParam (mb, picture, &pmvl0, &pmvl1, &l0_rFrame, &l1_rFrame);
 
     for (block8x8 = 0; block8x8 < 4; block8x8++) {
       int mv_mode  = mb->b8mode[block8x8];
@@ -1492,7 +1492,7 @@ namespace {
         for (k = k_start; k < k_end; k += k_inc) {
           int i = decode_block_scan[k] & 3;
           int j = (decode_block_scan[k] >> 2) & 3;
-          perform_mc (mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
+          performMotionCompensation (mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
           }
         }
       else {
@@ -1545,7 +1545,7 @@ namespace {
         for (k = k_start; k < k_end; k ++) {
           int i = decode_block_scan[k] & 3;
           int j = (decode_block_scan[k] >> 2) & 3;
-          perform_mc (mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
+          performMotionCompensation (mb, plane, picture, predDir, i, j, blockSizeX, blockSizeY);
           }
         }
       }
@@ -3804,7 +3804,7 @@ namespace {
     sPicMotion** p_mv_info = &picture->mvInfo[mb->blockY];
 
     if (mb->mbType == P8x8)
-      slice->updateDirectMvInfo(mb);
+      slice->updateDirectMv (mb);
 
     //=====  READ REFERENCE PICTURE INDICES =====
     se.type = SE_REFFRAME;
@@ -4921,7 +4921,7 @@ void cSlice::setSliceFunctions() {
       interpretMbMode = interpretMbModeP;
       nalReadMotionInfo = readMotionInfoP;
       decodeComponenet = decodeComponentP;
-      updateDirectMvInfo = NULL;
+      updateDirectMv = NULL;
       initLists = initListsSliceP;
       break;
     //}}}
@@ -4930,7 +4930,7 @@ void cSlice::setSliceFunctions() {
       interpretMbMode = interpretMbModeP;
       nalReadMotionInfo = readMotionInfoP;
       decodeComponenet = decodeComponentSP;
-      updateDirectMvInfo = NULL;
+      updateDirectMv = NULL;
       initLists = initListsSliceP;
       break;
     //}}}
@@ -4948,7 +4948,7 @@ void cSlice::setSliceFunctions() {
       interpretMbMode = interpretMbModeI;
       nalReadMotionInfo = NULL;
       decodeComponenet = decodeComponentI;
-      updateDirectMvInfo = NULL;
+      updateDirectMv = NULL;
       initLists = initListsSliceI;
       break;
     //}}}
@@ -4957,7 +4957,7 @@ void cSlice::setSliceFunctions() {
       interpretMbMode = interpretMbModeSI;
       nalReadMotionInfo = NULL;
       decodeComponenet = decodeComponentI;
-      updateDirectMvInfo = NULL;
+      updateDirectMv = NULL;
       initLists = initListsSliceI;
       break;
     //}}}

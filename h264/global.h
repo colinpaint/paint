@@ -742,7 +742,7 @@ public:
   int  (*intraPred4x4) (sMacroBlock*, eColorPlane, int, int, int, int);
   int  (*intraPred8x8) (sMacroBlock*, eColorPlane, int, int);
   int  (*intraPred16x16) (sMacroBlock*, eColorPlane plane, int);
-  void (*updateDirectMvInfo) (sMacroBlock*);
+  void (*updateDirectMv) (sMacroBlock*);
   void (*readCoef4x4cavlc) (sMacroBlock*, int, int, int, int[16], int[16], int*);
   void (*linfoCbpIntra) (int, int, int*, int*);
   void (*linfoCbpInter) (int, int, int*, int*);
