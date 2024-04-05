@@ -1,4 +1,5 @@
 #pragma once
+struct sMacroBlock;
 
 void forward4x4 (int** block , int** tblock, int posY, int posX);
 void inverse4x4 (int** tblock, int** block , int posY, int posX);

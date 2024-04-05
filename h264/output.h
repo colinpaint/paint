@@ -1,4 +1,7 @@
 #pragma once
+class cDecoder;
+struct sFrameStore;
+struct sPicture;
 
 void allocOutput (cDecoder264* decoder);
 void freeOutput (cDecoder264* decoder);

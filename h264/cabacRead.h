@@ -1,4 +1,4 @@
 #pragma once
-#include "global.h"
+struct sMacroBlock;
 
 void setReadCompCabac (sMacroBlock* mb);

@@ -1,4 +1,5 @@
 #pragma once
+class cDecoder;
 
 //{{{
 static const int dequant_coef8[6][8][8] = {

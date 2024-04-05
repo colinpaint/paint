@@ -1,4 +1,6 @@
 #pragma once
+class cDecoder;
+class cSlice;
 
 int initFmo (cDecoder264* decoder, cSlice* slice);
 int closeFmo (cDecoder264* decoder);

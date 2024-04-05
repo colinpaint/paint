@@ -1,4 +1,4 @@
 #pragma once
-#include "global.h"
+class cSlice;
 
 void setIntraPredFunctions (cSlice* slice);
