@@ -58,9 +58,9 @@
 //}}}
 
 namespace {
-  //{{{  intra4x4 normal
+  //{{{  intra4x4normal
   //{{{
-  int intra4x4_dc_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4DcPred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -131,8 +131,9 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
-  int intra4x4_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4PredV (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -162,7 +163,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra4x4_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4PredH (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice *slice = mb->slice;
@@ -195,6 +196,7 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
   int intra4x4_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
@@ -324,6 +326,7 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
   int intra4x4_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
@@ -456,6 +459,7 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
   int intra4x4_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
@@ -579,6 +583,7 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
   int intra_pred_4x4_normal (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
                             int img_block_x, int img_block_y) {
@@ -589,28 +594,23 @@ namespace {
 
     switch (predmode) {
       case DC_PRED:
-        return intra4x4_dc_pred (mb, plane, ioff, joff);
-        break;
+        return intra4x4DcPred (mb, plane, ioff, joff);
 
       case VERT_PRED:
-        return intra4x4_vert_pred (mb, plane, ioff, joff);
+        return intra4x4PredV (mb, plane, ioff, joff);
         break;
 
       case HOR_PRED:
-        return intra4x4_hor_pred (mb, plane, ioff, joff);
-        break;
+        return intra4x4PredH (mb, plane, ioff, joff);
 
       case DIAG_DOWN_RIGHT_PRED:
         return intra4x4_diag_down_right_pred (mb, plane, ioff, joff);
-        break;
 
       case DIAG_DOWN_LEFT_PRED:
         return intra4x4_diag_down_left_pred (mb, plane, ioff, joff);
-        break;
 
       case VERT_RIGHT_PRED:
         return intra4x4_vert_right_pred (mb, plane, ioff, joff);
-        break;
 
       case VERT_LEFT_PRED:
         return intra4x4_vert_left_pred (mb, plane, ioff, joff);
@@ -618,7 +618,6 @@ namespace {
 
       case HOR_UP_PRED:
         return intra4x4_hor_up_pred (mb, plane, ioff, joff);
-        break;
 
       case HOR_DOWN_PRED:
         return intra4x4_hor_down_pred (mb, plane, ioff, joff);
@@ -626,14 +625,13 @@ namespace {
       default:
         printf ("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
         return eSearchSync;
-        break;
       }
     }
   //}}}
   //}}}
-  //{{{  intra 4x4 mbAff
+  //{{{  intra4x4mbAff
   //{{{
-  int intra4x4_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4DcPredMbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -698,7 +696,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra4x4_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4PredVmbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -728,7 +726,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra4x4_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4PredHmbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -762,8 +760,9 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
-  int intra4x4_diag_down_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4_diag_down_right_predMbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -830,7 +829,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra4x4_diag_down_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4_diag_down_left_predMbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -891,8 +890,9 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
-  int intra4x4_vert_right_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4_vert_right_predMbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -961,7 +961,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra4x4_vert_left_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4_vert_left_predMbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -1024,8 +1024,9 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
-  int intra4x4_hor_up_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4_hor_up_predMbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -1079,7 +1080,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra4x4_hor_down_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra4x4_hor_down_predMbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -1150,8 +1151,9 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
-  int intra_pred_4x4_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
+  int intra_pred_4x4MbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
                             int img_block_x, int img_block_y) {
 
     cDecoder264* decoder = mb->decoder;
@@ -1160,50 +1162,41 @@ namespace {
 
     switch (predmode) {
       case DC_PRED:
-        return intra4x4_dc_pred_mbaff (mb, plane, ioff, joff);
-        break;
+        return intra4x4DcPredMbAff (mb, plane, ioff, joff);
 
       case VERT_PRED:
-        return intra4x4_vert_pred_mbaff (mb, plane, ioff, joff);
-        break;
+        return intra4x4PredVmbAff (mb, plane, ioff, joff);
 
       case HOR_PRED:
-        return intra4x4_hor_pred_mbaff (mb, plane, ioff, joff);
-        break;
+        return intra4x4PredHmbAff (mb, plane, ioff, joff);
 
       case DIAG_DOWN_RIGHT_PRED:
-        return intra4x4_diag_down_right_pred_mbaff (mb, plane, ioff, joff);
-        break;
+        return intra4x4_diag_down_right_predMbAff (mb, plane, ioff, joff);
 
       case DIAG_DOWN_LEFT_PRED:
-        return intra4x4_diag_down_left_pred_mbaff (mb, plane, ioff, joff);
-        break;
+        return intra4x4_diag_down_left_predMbAff (mb, plane, ioff, joff);
 
       case VERT_RIGHT_PRED:
-        return intra4x4_vert_right_pred_mbaff (mb, plane, ioff, joff);
-        break;
+        return intra4x4_vert_right_predMbAff (mb, plane, ioff, joff);
 
       case VERT_LEFT_PRED:
-        return intra4x4_vert_left_pred_mbaff (mb, plane, ioff, joff);
-        break;
+        return intra4x4_vert_left_predMbAff (mb, plane, ioff, joff);
 
       case HOR_UP_PRED:
-        return intra4x4_hor_up_pred_mbaff (mb, plane, ioff, joff);
-        break;
+        return intra4x4_hor_up_predMbAff (mb, plane, ioff, joff);
 
       case HOR_DOWN_PRED:
-        return intra4x4_hor_down_pred_mbaff (mb, plane, ioff, joff);
+        return intra4x4_hor_down_predMbAff (mb, plane, ioff, joff);
 
       default:
         printf ("Error: illegal intra_4x4 prediction mode: %d\n", (int) predmode);
         return eSearchSync;
-        break;
       }
     }
   //}}}
   //}}}
 
-  //{{{  lowPass 8x8
+  //{{{  lowPass8x8
   //{{{
   void LowPassForIntra8x8Pred (sPixel* PredPel, int block_up_left, int block_up, int block_left) {
 
@@ -1312,9 +1305,9 @@ namespace {
     }
   //}}}
   //}}}
-  //{{{  intra8x8 normal
+  //{{{  intra8x8normal
   //{{{
-  int intra8x8_dc_pred (sMacroBlock * mb, eColorPlane plane, int ioff, int joff) {
+  int intra8x8DcPred (sMacroBlock * mb, eColorPlane plane, int ioff, int joff) {
 
     int i,j;
     int s0 = 0;
@@ -1415,7 +1408,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra8x8_vert_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra8x8PredV (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -1487,7 +1480,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra8x8_hor_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra8x8PredH (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -1559,6 +1552,7 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
   int intra8x8_diag_down_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
@@ -1789,6 +1783,7 @@ namespace {
     return eDecodingOk;
   }
   //}}}
+
   //{{{
   int intra8x8_vert_right_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
@@ -2031,6 +2026,7 @@ namespace {
     return eDecodingOk;
   }
   //}}}
+
   //{{{
   int intra8x8_hor_up_pred (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
@@ -2280,54 +2276,54 @@ namespace {
     return eDecodingOk;
   }
   //}}}
+
   //{{{
   int intra_pred_8x8_normal (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     int blockX = (mb->blockX) + (ioff >> 2);
     int blockY = (mb->blockY) + (joff >> 2);
-    uint8_t predmode = mb->slice->predMode[blockY][blockX];
 
+    uint8_t predmode = mb->slice->predMode[blockY][blockX];
     mb->dpcmMode = predmode;  //For residual DPCM
 
-    switch (predmode)
-    {
-    case DC_PRED:
-      return (intra8x8_dc_pred(mb, plane, ioff, joff));
-      break;
-    case VERT_PRED:
-      return (intra8x8_vert_pred(mb, plane, ioff, joff));
-      break;
-    case HOR_PRED:
-      return (intra8x8_hor_pred(mb, plane, ioff, joff));
-      break;
-    case DIAG_DOWN_RIGHT_PRED:
-      return (intra8x8_diag_down_right_pred(mb, plane, ioff, joff));
-      break;
-    case DIAG_DOWN_LEFT_PRED:
-      return (intra8x8_diag_down_left_pred(mb, plane, ioff, joff));
-      break;
-    case VERT_RIGHT_PRED:
-      return (intra8x8_vert_right_pred(mb, plane, ioff, joff));
-      break;
-    case VERT_LEFT_PRED:
-      return (intra8x8_vert_left_pred(mb, plane, ioff, joff));
-      break;
-    case HOR_UP_PRED:
-      return (intra8x8_hor_up_pred(mb, plane, ioff, joff));
-      break;
-    case HOR_DOWN_PRED:
-      return (intra8x8_hor_down_pred(mb, plane, ioff, joff));
-    default:
-      printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
-      return eSearchSync;
-      break;
+    switch (predmode) {
+      case DC_PRED:
+        return (intra8x8DcPred (mb, plane, ioff, joff));
+
+      case VERT_PRED:
+        return (intra8x8PredV (mb, plane, ioff, joff));
+
+      case HOR_PRED:
+        return (intra8x8PredH (mb, plane, ioff, joff));
+
+      case DIAG_DOWN_RIGHT_PRED:
+        return (intra8x8_diag_down_right_pred (mb, plane, ioff, joff));
+
+      case DIAG_DOWN_LEFT_PRED:
+        return (intra8x8_diag_down_left_pred (mb, plane, ioff, joff));
+
+      case VERT_RIGHT_PRED:
+        return (intra8x8_vert_right_pred (mb, plane, ioff, joff));
+
+      case VERT_LEFT_PRED:
+        return (intra8x8_vert_left_pred (mb, plane, ioff, joff));
+
+      case HOR_UP_PRED:
+        return (intra8x8_hor_up_pred (mb, plane, ioff, joff));
+
+      case HOR_DOWN_PRED:
+        return (intra8x8_hor_down_pred (mb, plane, ioff, joff));
+
+      default:
+        printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
+        return eSearchSync;
+      }
     }
-  }
   //}}}
   //}}}
-  //{{{  intra 8x8 mbAff
+  //{{{  intra8x8mbAff
   //{{{
-  int intra8x8_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intra8x8DcPredMbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     int i,j;
     int s0 = 0;
@@ -2431,7 +2427,7 @@ namespace {
   }
   //}}}
   //{{{
-  int intra8x8_vert_pred_mbaff (sMacroBlock* mb,
+  int intra8x8PredVmbAff (sMacroBlock* mb,
                                        eColorPlane plane,         //!< current image plane
                                        int ioff,              //!< pixel offset X within MB
                                        int joff)              //!< pixel offset Y within MB
@@ -2511,7 +2507,7 @@ namespace {
   }
   //}}}
   //{{{
-  int intra8x8_hor_pred_mbaff (sMacroBlock* mb,
+  int intra8x8PredHmbAff (sMacroBlock* mb,
                                       eColorPlane plane,         //!< current image plane
                                       int ioff,              //!< pixel offset X within MB
                                       int joff)              //!< pixel offset Y within MB
@@ -2596,8 +2592,9 @@ namespace {
     return eDecodingOk;
   }
   //}}}
+
   //{{{
-  int intra8x8_diag_down_right_pred_mbaff (sMacroBlock* mb,
+  int intra8x8_diag_down_right_predMbAff (sMacroBlock* mb,
                                                   eColorPlane plane,         //!< current image plane
                                                   int ioff,              //!< pixel offset X within MB
                                                   int joff)              //!< pixel offset Y within MB
@@ -2716,7 +2713,7 @@ namespace {
   }
   //}}}
   //{{{
-  int intra8x8_diag_down_left_pred_mbaff (sMacroBlock* mb,
+  int intra8x8_diag_down_left_predMbAff (sMacroBlock* mb,
                                                  eColorPlane plane,         //!< current image plane
                                                  int ioff,              //!< pixel offset X within MB
                                                  int joff)              //!< pixel offset Y within MB
@@ -2836,8 +2833,9 @@ namespace {
     return eDecodingOk;
   }
   //}}}
+
   //{{{
-  int intra8x8_vert_right_pred_mbaff (sMacroBlock* mb,
+  int intra8x8_vert_right_predMbAff (sMacroBlock* mb,
                                              eColorPlane plane,         //!< current image plane
                                              int ioff,              //!< pixel offset X within MB
                                              int joff)              //!< pixel offset Y within MB
@@ -2962,7 +2960,7 @@ namespace {
   }
   //}}}
   //{{{
-  int intra8x8_vert_left_pred_mbaff (sMacroBlock* mb,
+  int intra8x8_vert_left_predMbAff (sMacroBlock* mb,
                                             eColorPlane plane,         //!< current image plane
                                             int ioff,              //!< pixel offset X within MB
                                             int joff)              //!< pixel offset Y within MB
@@ -3086,8 +3084,9 @@ namespace {
     return eDecodingOk;
   }
   //}}}
+
   //{{{
-  int intra8x8_hor_up_pred_mbaff (sMacroBlock* mb,
+  int intra8x8_hor_up_predMbAff (sMacroBlock* mb,
                                          eColorPlane plane,         //!< current image plane
                                          int ioff,              //!< pixel offset X within MB
                                          int joff)              //!< pixel offset Y within MB
@@ -3213,7 +3212,7 @@ namespace {
   }
   //}}}
   //{{{
-  int intra8x8_hor_down_pred_mbaff (sMacroBlock* mb,
+  int intra8x8_hor_down_predMbAff (sMacroBlock* mb,
                                            eColorPlane plane,         //!< current image plane
                                            int ioff,              //!< pixel offset X within MB
                                            int joff)              //!< pixel offset Y within MB
@@ -3336,8 +3335,9 @@ namespace {
     return eDecodingOk;
   }
   //}}}
+
   //{{{
-  int intra_pred_8x8_mbaff (sMacroBlock* mb,
+  int intra_pred_8x8MbAff (sMacroBlock* mb,
                      eColorPlane plane,         //!< Current color plane
                      int ioff,              //!< ioff
                      int joff)              //!< joff
@@ -3350,44 +3350,44 @@ namespace {
     mb->dpcmMode = predmode;  //For residual DPCM
 
     switch (predmode) {
-    case DC_PRED:
-      return (intra8x8_dc_pred_mbaff(mb, plane, ioff, joff));
-      break;
-    case VERT_PRED:
-      return (intra8x8_vert_pred_mbaff(mb, plane, ioff, joff));
-      break;
-    case HOR_PRED:
-      return (intra8x8_hor_pred_mbaff(mb, plane, ioff, joff));
-      break;
-    case DIAG_DOWN_RIGHT_PRED:
-      return (intra8x8_diag_down_right_pred_mbaff(mb, plane, ioff, joff));
-      break;
-    case DIAG_DOWN_LEFT_PRED:
-      return (intra8x8_diag_down_left_pred_mbaff(mb, plane, ioff, joff));
-      break;
-    case VERT_RIGHT_PRED:
-      return (intra8x8_vert_right_pred_mbaff(mb, plane, ioff, joff));
-      break;
-    case VERT_LEFT_PRED:
-      return (intra8x8_vert_left_pred_mbaff(mb, plane, ioff, joff));
-      break;
-    case HOR_UP_PRED:
-      return (intra8x8_hor_up_pred_mbaff(mb, plane, ioff, joff));
-      break;
-    case HOR_DOWN_PRED:
-      return (intra8x8_hor_down_pred_mbaff(mb, plane, ioff, joff));
-    default:
-      printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
-      return eSearchSync;
-      break;
+      case DC_PRED:
+        return (intra8x8DcPredMbAff(mb, plane, ioff, joff));
+
+      case VERT_PRED:
+        return (intra8x8PredVmbAff(mb, plane, ioff, joff));
+
+      case HOR_PRED:
+        return (intra8x8PredHmbAff(mb, plane, ioff, joff));
+
+      case DIAG_DOWN_RIGHT_PRED:
+        return (intra8x8_diag_down_right_predMbAff(mb, plane, ioff, joff));
+
+      case DIAG_DOWN_LEFT_PRED:
+        return (intra8x8_diag_down_left_predMbAff(mb, plane, ioff, joff));
+
+      case VERT_RIGHT_PRED:
+        return (intra8x8_vert_right_predMbAff(mb, plane, ioff, joff));
+
+      case VERT_LEFT_PRED:
+        return (intra8x8_vert_left_predMbAff(mb, plane, ioff, joff));
+
+      case HOR_UP_PRED:
+        return (intra8x8_hor_up_predMbAff(mb, plane, ioff, joff));
+
+      case HOR_DOWN_PRED:
+        return (intra8x8_hor_down_predMbAff(mb, plane, ioff, joff));
+
+      default:
+        printf("Error: illegal intra_8x8 prediction mode: %d\n", (int) predmode);
+        return eSearchSync;
+      }
     }
-  }
   //}}}
   //}}}
 
-  //{{{  intra16x16 normal
+  //{{{  intra16x16normal
   //{{{
-  int intra16x16_dc_pred (sMacroBlock* mb, eColorPlane plane)
+  int intra16x16DcPred (sMacroBlock* mb, eColorPlane plane)
   {
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3451,7 +3451,7 @@ namespace {
   }
   //}}}
   //{{{
-  int intra16x16_vert_pred (sMacroBlock* mb, eColorPlane plane)
+  int intra16x16PredV (sMacroBlock* mb, eColorPlane plane)
   {
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3490,7 +3490,7 @@ namespace {
   }
   //}}}
   //{{{
-  int intra16x16_hor_pred (sMacroBlock* mb, eColorPlane plane)
+  int intra16x16PredH (sMacroBlock* mb, eColorPlane plane)
   {
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3529,7 +3529,7 @@ namespace {
   }
   //}}}
   //{{{
-  int intra16x16_plane_pred (sMacroBlock* mb, eColorPlane plane)
+  int intra16x16PlanePred (sMacroBlock* mb, eColorPlane plane)
   {
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3601,34 +3601,33 @@ namespace {
     return eDecodingOk;
   }
   //}}}
+
   //{{{
-  int intra_pred_16x16_normal (sMacroBlock* mb, eColorPlane plane, int predmode) {
+  int intraPred16x16Normal (sMacroBlock* mb, eColorPlane plane, int predmode) {
 
     switch (predmode) {
       case VERT_PRED_16:                       // vertical prediction from block above
-        return (intra16x16_vert_pred(mb, plane));
-        break;
+        return (intra16x16PredV (mb, plane));
+
       case HOR_PRED_16:                        // horizontal prediction from left block
-        return (intra16x16_hor_pred(mb, plane));
-        break;
+        return (intra16x16PredH (mb, plane));
+
       case DC_PRED_16:                         // DC prediction
-        return (intra16x16_dc_pred(mb, plane));
-        break;
+        return (intra16x16DcPred (mb, plane));
+
       case PLANE_16:// 16 bit integer plan pred
-        return (intra16x16_plane_pred(mb, plane));
-        break;
+        return (intra16x16PlanePred (mb, plane));
+
       default:
-        {                                    // indication of fault in s,exit
-          printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
-          return eSearchSync;
-        }
+        printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
+        return eSearchSync;
       }
     }
   //}}}
   //}}}
-  //{{{  intra16x16 mbAff
+  //{{{  intra16x16mbAff
   //{{{
-  int intra16x16_dc_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
+  int intra16x16DcPredMbAff (sMacroBlock* mb, eColorPlane plane) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3684,7 +3683,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra16x16_vert_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
+  int intra16x16PredVmbAff (sMacroBlock* mb, eColorPlane plane) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3718,7 +3717,7 @@ namespace {
     }
   //}}}
   //{{{
-  int intra16x16_hor_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
+  int intra16x16PredHmbAff (sMacroBlock* mb, eColorPlane plane) {
 
     cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3754,10 +3753,10 @@ namespace {
     }
   //}}}
   //{{{
-  int intra16x16_plane_pred_mbaff (sMacroBlock* mb, eColorPlane plane) {
+  int intra16x16PlanePredMbAff (sMacroBlock* mb, eColorPlane plane) {
 
-    cSlice *slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
+    cSlice* slice = mb->slice;
 
     int i,j;
 
@@ -3813,27 +3812,26 @@ namespace {
     return eDecodingOk;
     }
   //}}}
+
   //{{{
-  int intra_pred_16x16_mbaff (sMacroBlock* mb, eColorPlane plane, int predmode) {
+  int intraPred16x16MbAff (sMacroBlock* mb, eColorPlane plane, int predmode) {
 
     switch (predmode) {
       case VERT_PRED_16:                       // vertical prediction from block above
-        return (intra16x16_vert_pred_mbaff(mb, plane));
-        break;
+        return (intra16x16PredVmbAff (mb, plane));
+
       case HOR_PRED_16:                        // horizontal prediction from left block
-        return (intra16x16_hor_pred_mbaff(mb, plane));
-        break;
+        return (intra16x16PredHmbAff (mb, plane));
+
       case DC_PRED_16:                         // DC prediction
-        return (intra16x16_dc_pred_mbaff(mb, plane));
-        break;
+        return (intra16x16DcPredMbAff (mb, plane));
+
       case PLANE_16:// 16 bit integer plan pred
-        return (intra16x16_plane_pred_mbaff(mb, plane));
-        break;
+        return (intra16x16PlanePredMbAff (mb, plane));
+
       default:
-        {                                    // indication of fault in s,exit
-          printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
-          return eSearchSync;
-        }
+        printf("illegal 16x16 intra prediction mode input: %d\n",predmode);
+        return eSearchSync;
       }
     }
   //}}}
@@ -3891,7 +3889,7 @@ namespace {
     }
   //}}}
   //{{{
-  void intrapred_chroma_dc (sMacroBlock* mb) {
+  void intrapredChromaDc (sMacroBlock* mb) {
 
     //{{{
     static const int block_pos[3][4][4]= {
@@ -3968,7 +3966,7 @@ namespace {
     }
   //}}}
   //{{{
-  void intrapred_chroma_hor (sMacroBlock* mb) {
+  void intrapredChromaH (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
 
@@ -4005,7 +4003,7 @@ namespace {
     }
   //}}}
   //{{{
-  void intrapred_chroma_ver (sMacroBlock* mb) {
+  void intrapredChromaV (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -4039,7 +4037,7 @@ namespace {
     }
   //}}}
   //{{{
-  void intrapred_chroma_plane (sMacroBlock* mb) {
+  void intrapredChromaPlane (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice *slice = mb->slice;
@@ -4112,7 +4110,7 @@ namespace {
     }
   //}}}
   //{{{
-  void intraChromaDcSingle_mbaff (sPixel** pixels, int upOk, int leftOk,
+  void intraChromaDcSingleMbAff (sPixel** pixels, int upOk, int leftOk,
                                   sPixelPos up, sPixelPos left[17],
                                   int blk_x, int blk_y, int *pred, int direction ) {
 
@@ -4132,7 +4130,7 @@ namespace {
     }
   //}}}
   //{{{
-  void intraChromaDcAll_mbaff (sPixel** pixels, int upOk, int leftOk,
+  void intraChromaDcAllMbAff (sPixel** pixels, int upOk, int leftOk,
                                sPixelPos up, sPixelPos left[17], int blk_x, int blk_y, int *pred ) {
 
     int s0 = 0;
@@ -4155,7 +4153,7 @@ namespace {
     }
   //}}}
   //{{{
-  void intra_pred_chroma_mbaff (sMacroBlock* mb) {
+  void intraPredChromaMbAff (sMacroBlock* mb) {
 
     //{{{
     static const int block_pos[3][4][4]= { //[yuv][b8][b4]
@@ -4226,29 +4224,29 @@ namespace {
                 //===== get prediction value =====
                 switch (block_pos[yuv][b8][b4]) {
                   case 0:  //===== TOP TOP-LEFT =====
-                    intraChromaDcAll_mbaff    (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred);
-                    intraChromaDcAll_mbaff    (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1);
+                    intraChromaDcAllMbAff    (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred);
+                    intraChromaDcAllMbAff    (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1);
                     break;
                   case 1: //===== TOP TOP-RIGHT =====
-                    intraChromaDcSingle_mbaff (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred, 1);
-                    intraChromaDcSingle_mbaff (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1, 1);
+                    intraChromaDcSingleMbAff (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred, 1);
+                    intraChromaDcSingleMbAff (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1, 1);
                     break;
                   case 2:  //===== TOP BOTTOM-LEFT =====
-                    intraChromaDcSingle_mbaff (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred, 0);
-                    intraChromaDcSingle_mbaff (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1, 0);
+                    intraChromaDcSingleMbAff (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred, 0);
+                    intraChromaDcSingleMbAff (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1, 0);
                     break;
                   case 3: //===== TOP BOTTOM-RIGHT =====
-                    intraChromaDcAll_mbaff    (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred);
-                    intraChromaDcAll_mbaff    (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1);
+                    intraChromaDcAllMbAff    (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred);
+                    intraChromaDcAllMbAff    (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1);
                     break;
 
                   case 4: //===== BOTTOM LEFT =====
-                    intraChromaDcSingle_mbaff (imgUV0, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred, 0);
-                    intraChromaDcSingle_mbaff (imgUV1, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred1, 0);
+                    intraChromaDcSingleMbAff (imgUV0, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred, 0);
+                    intraChromaDcSingleMbAff (imgUV1, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred1, 0);
                     break;
                   case 5: //===== BOTTOM RIGHT =====
-                    intraChromaDcAll_mbaff   (imgUV0, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred);
-                    intraChromaDcAll_mbaff   (imgUV1, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred1);
+                    intraChromaDcAllMbAff   (imgUV0, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred);
+                    intraChromaDcAllMbAff   (imgUV1, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred1);
                     break;
                   }
 
@@ -4412,19 +4410,19 @@ namespace {
 
     switch (mb->chromaPredMode) {
       case DC_PRED_8:
-        intrapred_chroma_dc (mb);
+        intrapredChromaDc (mb);
         break;
 
       case HOR_PRED_8:
-        intrapred_chroma_hor (mb);
+        intrapredChromaH (mb);
         break;
 
       case VERT_PRED_8:
-        intrapred_chroma_ver (mb);
+        intrapredChromaV (mb);
         break;
 
       case PLANE_8:
-        intrapred_chroma_plane (mb);
+        intrapredChromaPlane (mb);
         break;
 
       default:
@@ -4436,18 +4434,18 @@ namespace {
   }
 
 //{{{
-void set_intra_prediction_modes (cSlice *slice) {
+void setIntraPredFunctions (cSlice *slice) {
 
   if (slice->mbAffFrame) {
-    slice->intraPred4x4 = intra_pred_4x4_mbaff;
-    slice->intraPred8x8 = intra_pred_8x8_mbaff;
-    slice->intraPred16x16 = intra_pred_16x16_mbaff;
-    slice->intraPredChroma = intra_pred_chroma_mbaff;
+    slice->intraPred4x4 = intra_pred_4x4MbAff;
+    slice->intraPred8x8 = intra_pred_8x8MbAff;
+    slice->intraPred16x16 = intraPred16x16MbAff;
+    slice->intraPredChroma = intraPredChromaMbAff;
     }
   else {
     slice->intraPred4x4 = intra_pred_4x4_normal;
     slice->intraPred8x8 = intra_pred_8x8_normal;
-    slice->intraPred16x16 = intra_pred_16x16_normal;
+    slice->intraPred16x16 = intraPred16x16Normal;
     slice->intraPredChroma = intraPredChroma;
     }
   }

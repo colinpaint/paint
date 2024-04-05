@@ -1172,7 +1172,7 @@ void setSliceFunctions (cSlice* slice) {
     //}}}
     }
 
-  set_intra_prediction_modes (slice);
+  setIntraPredFunctions (slice);
 
   if (slice->decoder->activeSps->chromaFormatIdc==YUV444 && (slice->decoder->coding.isSeperateColourPlane == 0) )
     slice->readCoef4x4cavlc = readCoef4x4cavlc444;
