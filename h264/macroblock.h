@@ -192,7 +192,14 @@ static const uint8_t subblk_offset_y[3][8][4] = {
 };
 //}}}
 
-//  utils
+void copyImage16x16 (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2);
+void copyImage8x8 (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2);
+void copyImage4x4 (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2);
+
+void getMbPos (cDecoder264* decoder, int mbIndex, int mbSize[2], int16_t* x, int16_t* y);
+void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y);
+void getMbBlockPosMbaff  (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y);
+
 void checkNeighbours (sMacroBlock* mb);
 void checkNeighboursMbAff (sMacroBlock* mb);
 void checkNeighboursNormal (sMacroBlock* mb);
@@ -200,16 +207,10 @@ void getAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos 
 void getNonAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos *pixelPos);
 void get4x4Neighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos *pixelPos);
 void get4x4NeighbourBase (sMacroBlock* mb, int blockX, int blockY, int mbSize[2], sPixelPos *pixelPos);
-void getMbPos (cDecoder264* decoder, int mbIndex, int mbSize[2], int16_t* x, int16_t* y);
-void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y);
-void getMbBlockPosMbaff  (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y);
 
 int checkVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY);
 int get_colocated_info_8x8 (sMacroBlock* mb, sPicture* list1, int i, int j);
 int get_colocated_info_4x4 (sMacroBlock* mb, sPicture* list1, int i, int j);
-void copyImage16x16 (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2);
-void copyImage8x8 (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2);
-void copyImage4x4 (sPixel ** imgBuf1, sPixel ** imgBuf2, int off1, int off2);
 void itransSpChroma (sMacroBlock* mb, int uv);
 void invResidualTransChroma (sMacroBlock* mb, int uv);
 void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff);

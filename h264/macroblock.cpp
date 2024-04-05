@@ -2773,7 +2773,7 @@ namespace {
   //}}}
 
   //{{{
-  void readIcavlcMacroBlock (sMacroBlock* mb) {
+  void readCavlcMacroBlockI (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -2822,7 +2822,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readPcavlcMacroBlock (sMacroBlock* mb) {
+  void readCavlcMacroBlockP (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
     sSyntaxElement se;
@@ -2975,7 +2975,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readBcavlcMacroBlock (sMacroBlock* mb) {
+  void readCavlcMacroBlockB (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -3883,6 +3883,63 @@ namespace {
   }
 
 //{{{
+void copyImage4x4 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
+
+  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
+  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
+  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
+  memcpy ((*imgBuf1   + off1), (*imgBuf2   + off2), BLOCK_SIZE * sizeof (sPixel));
+  }
+//}}}
+//{{{
+void copyImage8x8 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
+
+  for (int j = 0; j < BLOCK_SIZE_8x8; j+=4) {
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
+    }
+  }
+//}}}
+//{{{
+void copyImage16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
+
+  for (int j = 0; j < MB_BLOCK_SIZE; j += 4) {
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
+    }
+  }
+//}}}
+
+//{{{
+void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y) {
+
+  sBlockPos* pPos = &picPos[mbIndex];
+  *x = (int16_t) pPos->x;
+  *y = (int16_t) pPos->y;
+  }
+//}}}
+//{{{
+void getMbBlockPosMbaff (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y) {
+
+  sBlockPos* pPos = &picPos[mbIndex >> 1];
+  *x = (int16_t)pPos->x;
+  *y = (int16_t)((pPos->y << 1) + (mbIndex & 0x01));
+  }
+//}}}
+//{{{
+void getMbPos (cDecoder264* decoder, int mbIndex, int mbSize[2], int16_t* x, int16_t* y) {
+
+  decoder->getMbBlockPos (decoder->picPos, mbIndex, x, y);
+  (*x) = (int16_t)((*x) * mbSize[0]);
+  (*y) = (int16_t)((*y) * mbSize[1]);
+  }
+//}}}
+
+//{{{
 void checkNeighbours (sMacroBlock* mb) {
 
   cSlice* slice = mb->slice;
@@ -4309,62 +4366,7 @@ void get4x4NeighbourBase (sMacroBlock* mb, int blockX, int blockY, int mbSize[2]
     }
   }
 //}}}
-//{{{
-void getMbBlockPosNormal (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y) {
 
-  sBlockPos* pPos = &picPos[ mbIndex ];
-  *x = (int16_t) pPos->x;
-  *y = (int16_t) pPos->y;
-  }
-//}}}
-//{{{
-void getMbBlockPosMbaff (sBlockPos* picPos, int mbIndex, int16_t* x, int16_t* y) {
-
-  sBlockPos* pPos = &picPos[ mbIndex >> 1 ];
-  *x = (int16_t)  pPos->x;
-  *y = (int16_t) ((pPos->y << 1) + (mbIndex & 0x01));
-  }
-//}}}
-//{{{
-void getMbPos (cDecoder264* decoder, int mbIndex, int mbSize[2], int16_t* x, int16_t* y) {
-
-  decoder->getMbBlockPos (decoder->picPos, mbIndex, x, y);
-  (*x) = (int16_t) ((*x) * mbSize[0]);
-  (*y) = (int16_t) ((*y) * mbSize[1]);
-  }
-//}}}
-
-//{{{
-void copyImage4x4 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
-
-  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
-  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
-  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
-  memcpy ((*imgBuf1   + off1), (*imgBuf2   + off2), BLOCK_SIZE * sizeof (sPixel));
-  }
-//}}}
-//{{{
-void copyImage8x8 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
-
-  for (int j = 0; j < BLOCK_SIZE_8x8; j+=4) {
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    }
-  }
-//}}}
-//{{{
-void copyImage16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
-
-  for (int j = 0; j < MB_BLOCK_SIZE; j += 4) {
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    }
-  }
-//}}}
 //{{{
 int checkVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
 
@@ -4895,18 +4897,18 @@ void cSlice::setSliceFunctions() {
       case eSliceP:
       //{{{
       case eSliceSP:
-        readMacroBlock = readPcavlcMacroBlock;
+        readMacroBlock = readCavlcMacroBlockP;
         break;
       //}}}
       //{{{
       case eSliceB:
-        readMacroBlock = readBcavlcMacroBlock;
+        readMacroBlock = readCavlcMacroBlockB;
         break;
       //}}}
       case eSliceI:
       //{{{
       case eSliceSI:
-        readMacroBlock = readIcavlcMacroBlock;
+        readMacroBlock = readCavlcMacroBlockI;
         break;
       //}}}
       //{{{
