@@ -213,10 +213,4 @@ void updateQp (sMacroBlock* mb, int qp);
 void readDeltaQuant (sSyntaxElement* se, sDataPartition* dataPartition, sMacroBlock* mb,
                      const uint8_t* dpMap, int type);
 
-void setReadMacroblock (cSlice* slice);
-void setSliceFunctions (cSlice* slice);
-void setup_slice_methods_mbaff (cSlice* slice);
-
-void startMacroblock (cSlice* slice, sMacroBlock** mb);
 int decodeMacroblock (sMacroBlock* mb, sPicture* picture);
-bool exitMacroblock (cSlice* slice, int eos_bit);

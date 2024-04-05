@@ -4278,27 +4278,24 @@ void updateQp (sMacroBlock* mb, int qp) {
   }
 //}}}
 //{{{
-void readDeltaQuant (sSyntaxElement* se, sDataPartition *dataPartition, sMacroBlock* mb, const uint8_t *dpMap, int type)
-{
-  cSlice* slice = mb->slice;
+void readDeltaQuant (sSyntaxElement* se, sDataPartition* dataPartition, sMacroBlock* mb, const uint8_t* dpMap, int type) {
+
   cDecoder264* decoder = mb->decoder;
+  cSlice* slice = mb->slice;
 
   se->type = type;
-
-  dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
-
+  dataPartition = &slice->dataPartitions[dpMap[se->type]];
   if (decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag)
     se->mapping = linfo_se;
   else
-    se->reading= read_dQuant_CABAC;
+    se->reading = read_dQuant_CABAC;
 
-  dataPartition->readSyntaxElement(mb, se, dataPartition);
-  mb->deltaQuant = (int16_t) se->value1;
+  dataPartition->readSyntaxElement (mb, se, dataPartition);
+  mb->deltaQuant = (int16_t)se->value1;
   if ((mb->deltaQuant < -(26 + decoder->coding.bitDepthLumaQpScale/2)) ||
       (mb->deltaQuant > (25 + decoder->coding.bitDepthLumaQpScale/2))) {
-    printf("mb_qp_delta is out of range (%d)\n", mb->deltaQuant);
-    mb->deltaQuant = iClip3(-(26 + decoder->coding.bitDepthLumaQpScale/2), (25 + decoder->coding.bitDepthLumaQpScale/2), mb->deltaQuant);
-    //cDecoder264::error ("mb_qp_delta is out of range", 500);
+    printf ("mb_qp_delta is out of range (%d)\n", mb->deltaQuant);
+    mb->deltaQuant = iClip3 (-(26 + decoder->coding.bitDepthLumaQpScale/2), (25 + decoder->coding.bitDepthLumaQpScale/2), mb->deltaQuant);
     }
 
   slice->qp = ((slice->qp + mb->deltaQuant + 52 + 2*decoder->coding.bitDepthLumaQpScale) % (52+decoder->coding.bitDepthLumaQpScale)) - decoder->coding.bitDepthLumaQpScale;
@@ -4369,102 +4366,106 @@ void getNeighbours (sMacroBlock* mb, sPixelPos* block, int mb_x, int mb_y, int b
 //}}}
 
 //{{{
-void setReadMacroblock (cSlice* slice) {
+void cSlice::setSliceFunctions() {
 
-  if (slice->decoder->activePps->entropyCoding == eCabac) {
-    switch (slice->sliceType) {
+  if (decoder->activePps->entropyCoding == eCabac) {
+    switch (sliceType) {
       case eSliceP:
+      //{{{
       case eSliceSP:
-        slice->readMacroblock = readPcabacMacroblock;
+        readMacroblock = readPcabacMacroblock;
         break;
-
+      //}}}
+      //{{{
       case eSliceB:
-        slice->readMacroblock = readBcabacMacroblock;
+        readMacroblock = readBcabacMacroblock;
         break;
-
+      //}}}
       case eSliceI:
+      //{{{
       case eSliceSI:
-        slice->readMacroblock = readIcabacMacroblock;
+        readMacroblock = readIcabacMacroblock;
         break;
-
+      //}}}
+      //{{{
       default:
         printf ("Unsupported slice type\n");
         break;
+      //}}}
       }
     }
 
   else {
-    switch (slice->sliceType) {
+    switch (sliceType) {
       case eSliceP:
+      //{{{
       case eSliceSP:
-        slice->readMacroblock = readPcavlcMacroblock;
+        readMacroblock = readPcavlcMacroblock;
         break;
-
+      //}}}
+      //{{{
       case eSliceB:
-        slice->readMacroblock = readBcavlcMacroblock;
+        readMacroblock = readBcavlcMacroblock;
         break;
-
+      //}}}
       case eSliceI:
+      //{{{
       case eSliceSI:
-        slice->readMacroblock = readIcavlcMacroblock;
+        readMacroblock = readIcavlcMacroblock;
         break;
-
+      //}}}
+      //{{{
       default:
         printf ("Unsupported slice type\n");
         break;
+      //}}}
       }
     }
-  }
-//}}}
-//{{{
-void setSliceFunctions (cSlice* slice) {
 
-  setReadMacroblock (slice);
-
-  switch (slice->sliceType) {
+  switch (sliceType) {
     //{{{
     case eSliceP:
-      slice->interpretMbMode = interpretMbModeP;
-      slice->nalReadMotionInfo = readMotionInfoP;
-      slice->decodeComponenet = decodeComponentP;
-      slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsSliceP;
+      interpretMbMode = interpretMbModeP;
+      nalReadMotionInfo = readMotionInfoP;
+      decodeComponenet = decodeComponentP;
+      updateDirectMvInfo = NULL;
+      initLists = initListsSliceP;
       break;
     //}}}
     //{{{
     case eSliceSP:
-      slice->interpretMbMode = interpretMbModeP;
-      slice->nalReadMotionInfo = readMotionInfoP;
-      slice->decodeComponenet = decodeComponentSP;
-      slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsSliceP;
+      interpretMbMode = interpretMbModeP;
+      nalReadMotionInfo = readMotionInfoP;
+      decodeComponenet = decodeComponentSP;
+      updateDirectMvInfo = NULL;
+      initLists = initListsSliceP;
       break;
     //}}}
     //{{{
     case eSliceB:
-      slice->interpretMbMode = interpretMbModeB;
-      slice->nalReadMotionInfo = readMotionInfoB;
-      slice->decodeComponenet = decodeComponentB;
-      update_direct_types (slice);
-      slice->initLists  = initListsSliceB;
+      interpretMbMode = interpretMbModeB;
+      nalReadMotionInfo = readMotionInfoB;
+      decodeComponenet = decodeComponentB;
+      update_direct_types (this);
+      initLists  = initListsSliceB;
       break;
     //}}}
     //{{{
     case eSliceI:
-      slice->interpretMbMode = interpretMbModeI;
-      slice->nalReadMotionInfo = NULL;
-      slice->decodeComponenet = decodeComponentI;
-      slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsSliceI;
+      interpretMbMode = interpretMbModeI;
+      nalReadMotionInfo = NULL;
+      decodeComponenet = decodeComponentI;
+      updateDirectMvInfo = NULL;
+      initLists = initListsSliceI;
       break;
     //}}}
     //{{{
     case eSliceSI:
-      slice->interpretMbMode = interpretMbModeSI;
-      slice->nalReadMotionInfo = NULL;
-      slice->decodeComponenet = decodeComponentI;
-      slice->updateDirectMvInfo = NULL;
-      slice->initLists = initListsSliceI;
+      interpretMbMode = interpretMbModeSI;
+      nalReadMotionInfo = NULL;
+      decodeComponenet = decodeComponentI;
+      updateDirectMvInfo = NULL;
+      initLists = initListsSliceI;
       break;
     //}}}
     //{{{
@@ -4474,43 +4475,45 @@ void setSliceFunctions (cSlice* slice) {
     //}}}
     }
 
-  slice->setIntraPredFunctions();
+  setIntraPredFunctions();
 
-  if ((slice->decoder->activeSps->chromaFormatIdc == YUV444) &&
-      (slice->decoder->coding.isSeperateColourPlane == 0))
-    slice->readCoef4x4cavlc = readCoef4x4cavlc444;
+  if ((decoder->activeSps->chromaFormatIdc == YUV444) &&
+      (decoder->coding.isSeperateColourPlane == 0))
+    readCoef4x4cavlc = readCoef4x4cavlc444;
   else
-    slice->readCoef4x4cavlc = readCoef4x4cavlc;
+    readCoef4x4cavlc = readCoef4x4cavlcNormal;
 
-  switch (slice->decoder->activePps->entropyCoding) {
+  switch (decoder->activePps->entropyCoding) {
+    //{{{
     case eCabac:
-      slice->setReadCbpCoefsCabac();
+      setReadCbpCoefsCabac();
       break;
-
+    //}}}
+    //{{{
     case eCavlc:
-      slice->setReadCbpCoefCavlc();
+      setReadCbpCoefCavlc();
       break;
-
+    //}}}
+    //{{{
     default:
       printf ("Unsupported entropy coding mode\n");
       break;
+    //}}}
     }
   }
 //}}}
 
 //{{{
-void startMacroblock (cSlice* slice, sMacroBlock** mb) {
+void cSlice::startMacroblockDecode (sMacroBlock** mb) {
 
-  cDecoder264* decoder = slice->decoder;
-  int mbIndex = slice->mbIndex;
 
-  *mb = &slice->mbData[mbIndex];
-  (*mb)->slice = slice;
-  (*mb)->decoder   = decoder;
+  *mb = &mbData[mbIndex];
+  (*mb)->slice = this;
+  (*mb)->decoder = decoder;
   (*mb)->mbIndexX = mbIndex;
 
   // Update coordinates of the current macroblock
-  if (slice->mbAffFrame) {
+  if (mbAffFrame) {
     (*mb)->mb.x = (int16_t) (   (mbIndex) % ((2*decoder->coding.width) / MB_BLOCK_SIZE));
     (*mb)->mb.y = (int16_t) (2*((mbIndex) / ((2*decoder->coding.width) / MB_BLOCK_SIZE)));
     (*mb)->mb.y += ((*mb)->mb.x & 0x01);
@@ -4533,17 +4536,17 @@ void startMacroblock (cSlice* slice, sMacroBlock** mb) {
 
   // Save the slice number of this macroblock. When the macroblock below
   // is coded it will use this to decide if prediction for above is possible
-  (*mb)->sliceNum = (int16_t) slice->curSliceIndex;
+  (*mb)->sliceNum = (int16_t) curSliceIndex;
 
   checkNeighbours (*mb);
 
   // Select appropriate MV predictor function
-  initMotionVectorPrediction (*mb, slice->mbAffFrame);
-  setReadStoreCodedBlockPattern (mb, slice->activeSps->chromaFormatIdc);
+  initMotionVectorPrediction (*mb, mbAffFrame);
+  setReadStoreCodedBlockPattern (mb, activeSps->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
-  if (slice->sliceType != eSliceI) {
-    if (slice->sliceType != eSliceB)
+  if (sliceType != eSliceI) {
+    if (sliceType != eSliceB)
       memset ((*mb)->mvd[0][0][0], 0, MB_BLOCK_dpS * 2 * sizeof(int16_t));
     else
       memset ((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(int16_t));
@@ -4551,24 +4554,24 @@ void startMacroblock (cSlice* slice, sMacroBlock** mb) {
 
   memset ((*mb)->codedBlockPatterns, 0, 3 * sizeof(sCodedBlockPattern));
 
-  // initialize slice->mbRess
-  if (slice->isResetCoef == false) {
-    memset (slice->mbRess[0][0], 0, MB_PIXELS * sizeof(int));
-    memset (slice->mbRess[1][0], 0, decoder->mbCrSize * sizeof(int));
-    memset (slice->mbRess[2][0], 0, decoder->mbCrSize * sizeof(int));
-    if (slice->isResetCoefCr == false) {
-      memset (slice->cof[0][0], 0, 3 * MB_PIXELS * sizeof(int));
-      slice->isResetCoefCr = true;
+  // initialize mbRess
+  if (isResetCoef == false) {
+    memset (mbRess[0][0], 0, MB_PIXELS * sizeof(int));
+    memset (mbRess[1][0], 0, decoder->mbCrSize * sizeof(int));
+    memset (mbRess[2][0], 0, decoder->mbCrSize * sizeof(int));
+    if (isResetCoefCr == false) {
+      memset (cof[0][0], 0, 3 * MB_PIXELS * sizeof(int));
+      isResetCoefCr = true;
       }
     else
-      memset (slice->cof[0][0], 0, MB_PIXELS * sizeof(int));
-    slice->isResetCoef = true;
+      memset (cof[0][0], 0, MB_PIXELS * sizeof(int));
+    isResetCoef = true;
     }
 
   // store filtering parameters for this MB
-  (*mb)->deblockFilterDisableIdc = slice->deblockFilterDisableIdc;
-  (*mb)->deblockFilterC0Offset = slice->deblockFilterC0Offset;
-  (*mb)->deblockFilterBetaOffset = slice->deblockFilterBetaOffset;
+  (*mb)->deblockFilterDisableIdc = deblockFilterDisableIdc;
+  (*mb)->deblockFilterC0Offset = deblockFilterC0Offset;
+  (*mb)->deblockFilterBetaOffset = deblockFilterBetaOffset;
   (*mb)->listOffset = 0;
   (*mb)->mixedModeEdgeFlag = 0;
   }
@@ -4603,33 +4606,32 @@ int decodeMacroblock (sMacroBlock* mb, sPicture* picture) {
   }
 //}}}
 //{{{
-bool exitMacroblock (cSlice* slice, int eos_bit) {
+bool cSlice::endMacroblockDecode (int eos_bit) {
 
   // The if() statement below resembles the original code, which tested
   // decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense
   // In an error prone environment, one can only be sure to have a new
   // picture by checking the tr of the next slice header!
-  ++(slice->numDecodedMbs);
+  ++(numDecodedMbs);
 
-  if (slice->mbIndex == slice->decoder->picSizeInMbs - 1)
+  if (mbIndex == decoder->picSizeInMbs - 1)
     return true;
   else {
-    cDecoder264* decoder = slice->decoder;
-    slice->mbIndex = FmoGetNextMBNr (decoder, slice->mbIndex);
-    if (slice->mbIndex == -1) {
+    mbIndex = FmoGetNextMBNr (decoder, mbIndex);
+    if (mbIndex == -1) {
       // End of cSlice group, MUST be end of slice
       return true;
       }
 
-    if (slice->nalStartCode (slice, eos_bit) == false)
+    if (nalStartCode (this, eos_bit) == false)
       return false;
 
-    if ((slice->sliceType == eSliceI)  ||
-        (slice->sliceType == eSliceSI) ||
+    if ((sliceType == eSliceI)  ||
+        (sliceType == eSliceSI) ||
         (decoder->activePps->entropyCoding == eCabac))
       return true;
 
-    if (slice->codCount <= 0)
+    if (codCount <= 0)
       return true;
 
     return false;

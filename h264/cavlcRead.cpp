@@ -441,6 +441,7 @@ namespace {
 
     int (*InvLevelScale4x4)[4] = NULL;
     int (*InvLevelScale8x8)[8] = NULL;
+
     // select scan type
     const uint8_t (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
     const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
@@ -1026,12 +1027,10 @@ namespace {
     int temp[4];
 
     int b4;
-    //sPicture* picture = slice->picture;
-
     int need_transform_sizeFlag;
-
     int (*InvLevelScale4x4)[4] = NULL;
     int (*InvLevelScale8x8)[8] = NULL;
+
     // select scan type
     const uint8_t (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
     const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
@@ -1066,15 +1065,13 @@ namespace {
       // Delta quant only if nonzero coeffs
       if (codedBlockPattern != 0) {
         readDeltaQuant (&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == false)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
-
         if (slice->dataPartitionMode) {
           if ((mb->isIntraBlock == false) && slice->noDataPartitionC )
             mb->dplFlag = 1;
-
           if (intra && slice->noDataPartitionB) {
             mb->errorFlag = 1;
             mb->dplFlag = 1;
-          }
+            }
 
           // check for prediction from neighbours
           checkDpNeighbours (mb);
@@ -1122,10 +1119,10 @@ namespace {
     qp_rem = decoder->qpRemMatrix[ mb->qpScaled[slice->colourPlaneId] ];
 
     // init quant parameters for chroma
-    for(i=0; i < 2; ++i) {
+    for (i = 0; i < 2; ++i) {
       qp_per_uv[i] = decoder->qpPerMatrix[ mb->qpScaled[i + 1] ];
       qp_rem_uv[i] = decoder->qpRemMatrix[ mb->qpScaled[i + 1] ];
-    }
+      }
 
     InvLevelScale4x4 = intra? slice->InvLevelScale4x4_Intra[slice->colourPlaneId][qp_rem] : slice->InvLevelScale4x4_Inter[slice->colourPlaneId][qp_rem];
     InvLevelScale8x8 = intra? slice->InvLevelScale8x8_Intra[slice->colourPlaneId][qp_rem] : slice->InvLevelScale8x8_Inter[slice->colourPlaneId][qp_rem];
@@ -1234,7 +1231,7 @@ namespace {
   }
 
 //{{{
-void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
+void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
                        int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
 
   cSlice* slice = mb->slice;
@@ -1365,7 +1362,6 @@ void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
       //}}}
 
     if (numcoeff < max_coeff_num) {
-
       //{{{  decode total run
       vlcnum = numcoeff - 1;
       se.value1 = vlcnum;
@@ -1380,6 +1376,7 @@ void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
       //}}}
     else
       totzeros = 0;
+
     //{{{  decode run before each coefficient
     zerosleft = totzeros;
     i = numcoeff - 1;
@@ -1404,7 +1401,7 @@ void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
 //}}}
 //{{{
 void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
-                               int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
+                          int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
 
   static const int incVlc[] = {0, 3, 6, 12, 24, 48, 32768};    // maximum vlc = 6
 

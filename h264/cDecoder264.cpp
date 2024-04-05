@@ -3105,7 +3105,7 @@ int cDecoder264::readSlice (cSlice* slice) {
           curHeader = eSOS;
 
         useQuantParams (slice);
-        setSliceFunctions (slice);
+        slice->setSliceFunctions();
 
         if (slice->mbAffFrame)
           slice->mbIndex = slice->startMbNum << 1;
@@ -3188,7 +3188,7 @@ int cDecoder264::readSlice (cSlice* slice) {
           curHeader = eSOS;
 
         useQuantParams (slice);
-        setSliceFunctions (slice);
+        slice->setSliceFunctions ();
         if (slice->mbAffFrame)
           slice->mbIndex = slice->startMbNum << 1;
         else
@@ -3313,7 +3313,7 @@ void cDecoder264::decodeSlice (cSlice* slice) {
   // loop over macroblocks
   while (!endOfSlice) {
     sMacroBlock* mb;
-    startMacroblock (slice, &mb);
+    slice->startMacroblockDecode (&mb);
     slice->readMacroblock (mb);
     decodeMacroblock (mb, slice->picture);
 
@@ -3323,7 +3323,7 @@ void cDecoder264::decodeSlice (cSlice* slice) {
       }
 
     ercWriteMbModeMv (mb);
-    endOfSlice = exitMacroblock (slice, !slice->mbAffFrame || (slice->mbIndex % 2));
+    endOfSlice = slice->endMacroblockDecode (!slice->mbAffFrame || (slice->mbIndex % 2));
     }
   }
 //}}}
