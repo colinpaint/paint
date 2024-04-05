@@ -10,7 +10,7 @@
 //}}}
 namespace {
   //{{{
-  int predict_nnz (sMacroBlock* mb, int block_type, int i,int j) {
+  int predictNnz (sMacroBlock* mb, int block_type, int i,int j) {
 
     cDecoder264* decoder = mb->decoder;
 
@@ -103,7 +103,7 @@ namespace {
     }
   //}}}
   //{{{
-  int predict_nnz_chroma (sMacroBlock* mb, int i,int j) {
+  int predictNnzChroma (sMacroBlock* mb, int i,int j) {
 
     sPicture* picture = mb->slice->picture;
     if (picture->chromaFormatIdc != YUV444) {
@@ -420,7 +420,7 @@ namespace {
   //}}}
 
   //{{{
-  void read_CBP_and_coeffs_from_NAL_CAVLC_400 (sMacroBlock* mb) {
+  void readCbpCoefsfromNalCavlc400 (sMacroBlock* mb) {
 
     int k;
     int mb_nr = mb->mbIndexX;
@@ -548,7 +548,7 @@ namespace {
     }
   //}}}
   //{{{
-  void read_CBP_and_coeffs_from_NAL_CAVLC_422 (sMacroBlock* mb) {
+  void readCbpCoefsfromNalCavlc422 (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -822,7 +822,7 @@ namespace {
     }
   //}}}
   //{{{
-  void read_CBP_and_coeffs_from_NAL_CAVLC_444 (sMacroBlock* mb) {
+  void readCbpCoefsfromNalCavlc444 (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -998,7 +998,7 @@ namespace {
     }
   //}}}
   //{{{
-  void read_CBP_and_coeffs_from_NAL_CAVLC_420 (sMacroBlock* mb) {
+  void readCbpCoefsfromNalCavlc420 (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -1304,7 +1304,7 @@ void readCoef4x4cavlc (sMacroBlock* mb, int block_type,
 
   if (!cdc) {
     //{{{  luma or chroma AC
-    nnz = (!cac) ? predict_nnz(mb, LUMA, i<<2, j<<2) : predict_nnz_chroma(mb, i, ((j-4)<<2));
+    nnz = (!cac) ? predictNnz (mb, LUMA, i<<2, j<<2) : predictNnzChroma (mb, i, ((j-4)<<2));
     se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
     readsSyntaxElement_NumCoeffTrailingOnes(&se, s, type);
     numcoeff        =  se.value1;
@@ -1516,30 +1516,30 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
 
   if (!cdc) {
     //{{{  luma or chroma AC
-    if(block_type==LUMA || block_type==LUMA_INTRA16x16DC || block_type==LUMA_INTRA16x16AC ||block_type==CHROMA_AC)
-      nnz = (!cac) ? predict_nnz(mb, LUMA, i<<2, j<<2) : predict_nnz_chroma(mb, i, ((j-4)<<2));
-    else if (block_type==CB || block_type==CB_INTRA16x16DC || block_type==CB_INTRA16x16AC)
-      nnz = predict_nnz(mb, CB, i<<2, j<<2);
+    if(block_type == LUMA || block_type == LUMA_INTRA16x16DC || block_type == LUMA_INTRA16x16AC || block_type == CHROMA_AC)
+      nnz = (!cac) ? predictNnz (mb, LUMA, i<<2, j<<2) : predictNnzChroma(mb, i, ((j-4)<<2));
+    else if (block_type == CB || block_type == CB_INTRA16x16DC || block_type == CB_INTRA16x16AC)
+      nnz = predictNnz (mb, CB, i<<2, j<<2);
     else
-      nnz = predict_nnz(mb, CR, i<<2, j<<2);
+      nnz = predictNnz (mb, CR, i<<2, j<<2);
 
     se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-    readsSyntaxElement_NumCoeffTrailingOnes(&se, s, type);
-    numcoeff        =  se.value1;
-    numtrailingones =  se.value2;
-    if  (block_type==LUMA || block_type==LUMA_INTRA16x16DC || block_type==LUMA_INTRA16x16AC ||block_type==CHROMA_AC)
-      decoder->nzCoeff[mb_nr][0][j][i] = (uint8_t) numcoeff;
-    else if (block_type==CB || block_type==CB_INTRA16x16DC || block_type==CB_INTRA16x16AC)
-      decoder->nzCoeff[mb_nr][1][j][i] = (uint8_t) numcoeff;
+    readsSyntaxElement_NumCoeffTrailingOnes (&se, s, type);
+    numcoeff =  se.value1;
+    numtrailingones = se.value2;
+    if  (block_type == LUMA || block_type == LUMA_INTRA16x16DC || block_type == LUMA_INTRA16x16AC || block_type == CHROMA_AC)
+      decoder->nzCoeff[mb_nr][0][j][i] = (uint8_t)numcoeff;
+    else if (block_type == CB || block_type == CB_INTRA16x16DC || block_type == CB_INTRA16x16AC)
+      decoder->nzCoeff[mb_nr][1][j][i] = (uint8_t)numcoeff;
     else
-      decoder->nzCoeff[mb_nr][2][j][i] = (uint8_t) numcoeff;
+      decoder->nzCoeff[mb_nr][2][j][i] = (uint8_t)numcoeff;
     }
     //}}}
   else {
     //{{{  chroma DC
-    readsSyntaxElement_NumCoeffTrailingOnesChromaDC(decoder, &se, s);
-    numcoeff        =  se.value1;
-    numtrailingones =  se.value2;
+    readsSyntaxElement_NumCoeffTrailingOnesChromaDC (decoder, &se, s);
+    numcoeff = se.value1;
+    numtrailingones = se.value2;
     }
     //}}}
   memset (levarr, 0, max_coeff_num * sizeof(int));
@@ -1565,9 +1565,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
       //{{{  decode level
       if (vlcnum == 0)
-        readsSyntaxElement_Level_VLC0(&se, s);
+        readsSyntaxElement_Level_VLC0 (&se, s);
       else
-        readsSyntaxElement_Level_VLCN(&se, vlcnum, s);
+        readsSyntaxElement_Level_VLCN (&se, vlcnum, s);
 
       if (level_two_or_higher) {
         se.inf += (se.inf > 0) ? 1 : -1;
@@ -1594,9 +1594,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
       se.value1 = vlcnum;
 
       if (cdc)
-        readsSyntaxElement_TotalZerosChromaDC(decoder, &se, s);
+        readsSyntaxElement_TotalZerosChromaDC (decoder, &se, s);
       else
-        readsSyntaxElement_TotalZeros(&se, s);
+        readsSyntaxElement_TotalZeros (&se, s);
 
       totzeros = se.value1;
       }
@@ -1610,9 +1610,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
     if (zerosleft > 0 && i > 0) {
       do {
         // select VLC for runbefore
-        vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
+        vlcnum = imin (zerosleft - 1, RUNBEFORE_NUM_M1);
         se.value1 = vlcnum;
-        readsSyntaxElement_Run(&se, s);
+        readsSyntaxElement_Run (&se, s);
         runarr[i] = se.value1;
         zerosleft -= runarr[i];
         i --;
@@ -1642,21 +1642,21 @@ void cSlice::setReadCbpCoefCavlc() {
   switch (decoder->activeSps->chromaFormatIdc) {
     case YUV444:
       if (decoder->coding.isSeperateColourPlane == 0)
-        readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_444;
+        readCBPcoeffs = readCbpCoefsfromNalCavlc444;
       else
-        readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_400;
+        readCBPcoeffs = readCbpCoefsfromNalCavlc400;
       break;
 
     case YUV422:
-      readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_422;
+      readCBPcoeffs = readCbpCoefsfromNalCavlc422;
       break;
 
     case YUV420:
-      readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_420;
+      readCBPcoeffs = readCbpCoefsfromNalCavlc420;
       break;
 
     case YUV400:
-      readCBPcoeffs = read_CBP_and_coeffs_from_NAL_CAVLC_400;
+      readCBPcoeffs = readCbpCoefsfromNalCavlc400;
       break;
 
     default:
