@@ -62,7 +62,7 @@ int cBitStream::readUeV (const string& label) {
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
 
-  readsSyntaxElement_VLC (&symbol);
+  readSyntaxElement_VLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
     cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.value1));
@@ -77,7 +77,7 @@ int cBitStream::readSeV (const string& label) {
   symbol.value1 = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_se;
-  readsSyntaxElement_VLC (&symbol);
+  readSyntaxElement_VLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
    cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.value1));
@@ -94,7 +94,7 @@ int cBitStream::readUv (int LenInBits, const string& label) {
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readsSyntaxElement_FLC (&symbol);
+  readSyntaxElement_FLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
     cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.inf));
@@ -111,7 +111,7 @@ int cBitStream::readIv (int LenInBits, const string& label) {
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readsSyntaxElement_FLC (&symbol);
+  readSyntaxElement_FLC (&symbol);
 
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
@@ -224,7 +224,7 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //}}}
 
 //{{{
-int cBitStream::readsSyntaxElement_VLC (sSyntaxElement* se) {
+int cBitStream::readSyntaxElement_VLC (sSyntaxElement* se) {
 
   se->len = GetVLCSymbol (bitStreamBuffer, bitStreamOffset, &(se->inf), bitStreamLen);
   if (se->len == -1)
@@ -237,21 +237,161 @@ int cBitStream::readsSyntaxElement_VLC (sSyntaxElement* se) {
   }
 //}}}
 //{{{
-int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
-  return dataPartition->stream->readsSyntaxElement_VLC (se);
-  }
-//}}}
-//{{{
-int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, cBitStream* s) {
+int cBitStream::readSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se) {
 
-  se->len = GetVLCSymbol_IntraMode (s->bitStreamBuffer, s->bitStreamOffset, &(se->inf), s->bitStreamLen);
+  se->len = GetVLCSymbol_IntraMode (bitStreamBuffer, bitStreamOffset, &(se->inf), bitStreamLen);
   if (se->len == -1)
     return -1;
 
-  s->bitStreamOffset += se->len;
-  se->value1       = (se->len == 1) ? -1 : se->inf;
+  bitStreamOffset += se->len;
+  se->value1 = (se->len == 1) ? -1 : se->inf;
 
   return 1;
+  }
+//}}}
+//{{{
+int cBitStream::readSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se, char *type) {
+
+  //{{{
+  static const uint8_t lentab[3][4][17] =
+  {
+    {   // 0702
+      { 1, 6, 8, 9,10,11,13,13,13,14,14,15,15,16,16,16,16},
+      { 0, 2, 6, 8, 9,10,11,13,13,14,14,15,15,15,16,16,16},
+      { 0, 0, 3, 7, 8, 9,10,11,13,13,14,14,15,15,16,16,16},
+      { 0, 0, 0, 5, 6, 7, 8, 9,10,11,13,14,14,15,15,16,16},
+    },
+    {
+      { 2, 6, 6, 7, 8, 8, 9,11,11,12,12,12,13,13,13,14,14},
+      { 0, 2, 5, 6, 6, 7, 8, 9,11,11,12,12,13,13,14,14,14},
+      { 0, 0, 3, 6, 6, 7, 8, 9,11,11,12,12,13,13,13,14,14},
+      { 0, 0, 0, 4, 4, 5, 6, 6, 7, 9,11,11,12,13,13,13,14},
+    },
+    {
+      { 4, 6, 6, 6, 7, 7, 7, 7, 8, 8, 9, 9, 9,10,10,10,10},
+      { 0, 4, 5, 5, 5, 5, 6, 6, 7, 8, 8, 9, 9, 9,10,10,10},
+      { 0, 0, 4, 5, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9,10,10,10},
+      { 0, 0, 0, 4, 4, 4, 4, 4, 5, 6, 7, 8, 8, 9,10,10,10},
+    },
+  };
+  //}}}
+  //{{{
+  static const uint8_t codtab[3][4][17] =
+  {
+    {
+      { 1, 5, 7, 7, 7, 7,15,11, 8,15,11,15,11,15,11, 7,4},
+      { 0, 1, 4, 6, 6, 6, 6,14,10,14,10,14,10, 1,14,10,6},
+      { 0, 0, 1, 5, 5, 5, 5, 5,13, 9,13, 9,13, 9,13, 9,5},
+      { 0, 0, 0, 3, 3, 4, 4, 4, 4, 4,12,12, 8,12, 8,12,8},
+    },
+    {
+      { 3,11, 7, 7, 7, 4, 7,15,11,15,11, 8,15,11, 7, 9,7},
+      { 0, 2, 7,10, 6, 6, 6, 6,14,10,14,10,14,10,11, 8,6},
+      { 0, 0, 3, 9, 5, 5, 5, 5,13, 9,13, 9,13, 9, 6,10,5},
+      { 0, 0, 0, 5, 4, 6, 8, 4, 4, 4,12, 8,12,12, 8, 1,4},
+    },
+    {
+      {15,15,11, 8,15,11, 9, 8,15,11,15,11, 8,13, 9, 5,1},
+      { 0,14,15,12,10, 8,14,10,14,14,10,14,10, 7,12, 8,4},
+      { 0, 0,13,14,11, 9,13, 9,13,10,13, 9,13, 9,11, 7,3},
+      { 0, 0, 0,12,11,10, 9, 8,13,12,12,12, 8,12,10, 6,2},
+    },
+  };
+  //}}}
+
+  int offset = bitStreamOffset;
+  int BitstreamLengthInBytes = bitStreamLen;
+  int BitstreamLengthInBits = (BitstreamLengthInBytes << 3) + 7;
+  uint8_t* buf = bitStreamBuffer;
+
+  int retval = 0, code;
+  int vlcnum = se->value1;
+
+  // vlcnum is the index of Table used to code coeff_token
+  // vlcnum==3 means (8<=nC) which uses 6bit FLC
+  if (vlcnum == 3) {
+    // read 6 bit FLC
+    code = ShowBits (buf, offset, BitstreamLengthInBits, 6);
+    offset += 6;
+    se->value2 = (code & 3);
+    se->value1 = (code >> 2);
+
+    if (!se->value1 && se->value2 == 3)
+      // #c = 0, #t1 = 3 =>  #c = 0
+      se->value2 = 0;
+    else
+      se->value1++;
+
+    se->len = 6;
+    }
+  else {
+    retval = code_from_bitstream_2d (se, this, lentab[vlcnum][0], codtab[vlcnum][0], 17, 4, &code);
+    if (retval)
+      cDecoder264::error ("ERROR: failed to find NumCoeff/TrailingOnes\n");
+    }
+
+  return retval;
+  }
+//}}}
+//{{{
+int cBitStream::readSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se) {
+
+  //{{{
+  static const uint8_t lentab[3][4][17] =
+  {
+    //YUV420
+    {{ 2, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 1, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 0, 3, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 0, 0, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+    //YUV422
+    {{ 1, 7, 7, 9, 9,10,11,12,13, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 2, 7, 7, 9,10,11,12,12, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 0, 3, 7, 7, 9,10,11,12, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 0, 0, 5, 6, 7, 7,10,11, 0, 0, 0, 0, 0, 0, 0, 0}},
+    //YUV444
+    {{ 1, 6, 8, 9,10,11,13,13,13,14,14,15,15,16,16,16,16},
+    { 0, 2, 6, 8, 9,10,11,13,13,14,14,15,15,15,16,16,16},
+    { 0, 0, 3, 7, 8, 9,10,11,13,13,14,14,15,15,16,16,16},
+    { 0, 0, 0, 5, 6, 7, 8, 9,10,11,13,14,14,15,15,16,16}}
+  };
+  //}}}
+  //{{{
+  static const uint8_t codtab[3][4][17] =
+  {
+    //YUV420
+    {{ 1, 7, 4, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 1, 6, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+    //YUV422
+    {{ 1,15,14, 7, 6, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 1,13,12, 5, 6, 6, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 0, 1,11,10, 4, 5, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 0, 0, 1, 1, 9, 8, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0}},
+    //YUV444
+    {{ 1, 5, 7, 7, 7, 7,15,11, 8,15,11,15,11,15,11, 7, 4},
+    { 0, 1, 4, 6, 6, 6, 6,14,10,14,10,14,10, 1,14,10, 6},
+    { 0, 0, 1, 5, 5, 5, 5, 5,13, 9,13, 9,13, 9,13, 9, 5},
+    { 0, 0, 0, 3, 3, 4, 4, 4, 4, 4,12,12, 8,12, 8,12, 8}}
+
+  };
+  //}}}
+
+  int code;
+  int yuv = decoder->activeSps->chromaFormatIdc - 1;
+  int retval = code_from_bitstream_2d (se, this, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
+
+  if (retval)
+    cDecoder264::error ("ERROR: failed to find NumCoeff/TrailingOnes ChromaDC\n");
+
+  return retval;
+  }
+//}}}
+
+//{{{
+int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
+  return dataPartition->stream->readSyntaxElement_VLC (se);
   }
 //}}}
 //{{{
@@ -357,7 +497,7 @@ int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount
 //}}}
 
 //{{{
-int cBitStream::readsSyntaxElement_FLC (sSyntaxElement* se) {
+int cBitStream::readSyntaxElement_FLC (sSyntaxElement* se) {
 
   int BitstreamLengthInBits  = (bitStreamLen << 3) + 7;
   if (getBits(bitStreamBuffer, bitStreamOffset, &(se->inf), BitstreamLengthInBits, se->len) < 0)
@@ -370,154 +510,7 @@ int cBitStream::readsSyntaxElement_FLC (sSyntaxElement* se) {
   }
 //}}}
 //{{{
-int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,
-                                           cBitStream *s,
-                                           char *type)
-{
-  int bitStreamOffset        = s->bitStreamOffset;
-  int BitstreamLengthInBytes = s->bitStreamLen;
-  int BitstreamLengthInBits  = (BitstreamLengthInBytes << 3) + 7;
-  uint8_t *buf                  = s->bitStreamBuffer;
-
-  static const uint8_t lentab[3][4][17] =
-  {
-    {   // 0702
-      { 1, 6, 8, 9,10,11,13,13,13,14,14,15,15,16,16,16,16},
-      { 0, 2, 6, 8, 9,10,11,13,13,14,14,15,15,15,16,16,16},
-      { 0, 0, 3, 7, 8, 9,10,11,13,13,14,14,15,15,16,16,16},
-      { 0, 0, 0, 5, 6, 7, 8, 9,10,11,13,14,14,15,15,16,16},
-    },
-    {
-      { 2, 6, 6, 7, 8, 8, 9,11,11,12,12,12,13,13,13,14,14},
-      { 0, 2, 5, 6, 6, 7, 8, 9,11,11,12,12,13,13,14,14,14},
-      { 0, 0, 3, 6, 6, 7, 8, 9,11,11,12,12,13,13,13,14,14},
-      { 0, 0, 0, 4, 4, 5, 6, 6, 7, 9,11,11,12,13,13,13,14},
-    },
-    {
-      { 4, 6, 6, 6, 7, 7, 7, 7, 8, 8, 9, 9, 9,10,10,10,10},
-      { 0, 4, 5, 5, 5, 5, 6, 6, 7, 8, 8, 9, 9, 9,10,10,10},
-      { 0, 0, 4, 5, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9,10,10,10},
-      { 0, 0, 0, 4, 4, 4, 4, 4, 5, 6, 7, 8, 8, 9,10,10,10},
-    },
-  };
-
-  static const uint8_t codtab[3][4][17] =
-  {
-    {
-      { 1, 5, 7, 7, 7, 7,15,11, 8,15,11,15,11,15,11, 7,4},
-      { 0, 1, 4, 6, 6, 6, 6,14,10,14,10,14,10, 1,14,10,6},
-      { 0, 0, 1, 5, 5, 5, 5, 5,13, 9,13, 9,13, 9,13, 9,5},
-      { 0, 0, 0, 3, 3, 4, 4, 4, 4, 4,12,12, 8,12, 8,12,8},
-    },
-    {
-      { 3,11, 7, 7, 7, 4, 7,15,11,15,11, 8,15,11, 7, 9,7},
-      { 0, 2, 7,10, 6, 6, 6, 6,14,10,14,10,14,10,11, 8,6},
-      { 0, 0, 3, 9, 5, 5, 5, 5,13, 9,13, 9,13, 9, 6,10,5},
-      { 0, 0, 0, 5, 4, 6, 8, 4, 4, 4,12, 8,12,12, 8, 1,4},
-    },
-    {
-      {15,15,11, 8,15,11, 9, 8,15,11,15,11, 8,13, 9, 5,1},
-      { 0,14,15,12,10, 8,14,10,14,14,10,14,10, 7,12, 8,4},
-      { 0, 0,13,14,11, 9,13, 9,13,10,13, 9,13, 9,11, 7,3},
-      { 0, 0, 0,12,11,10, 9, 8,13,12,12,12, 8,12,10, 6,2},
-    },
-  };
-
-  int retval = 0, code;
-  int vlcnum = se->value1;
-  // vlcnum is the index of Table used to code coeff_token
-  // vlcnum==3 means (8<=nC) which uses 6bit FLC
-
-  if (vlcnum == 3)
-  {
-    // read 6 bit FLC
-    //code = ShowBits(buf, bitStreamOffset, BitstreamLengthInBytes, 6);
-    code = ShowBits(buf, bitStreamOffset, BitstreamLengthInBits, 6);
-    s->bitStreamOffset += 6;
-    se->value2 = (code & 3);
-    se->value1 = (code >> 2);
-
-    if (!se->value1 && se->value2 == 3)
-    {
-      // #c = 0, #t1 = 3 =>  #c = 0
-      se->value2 = 0;
-    }
-    else
-      se->value1++;
-
-    se->len = 6;
-  }
-  else
-  {
-    //retval = code_from_bitstream_2d(se, s, &lentab[vlcnum][0][0], &codtab[vlcnum][0][0], 17, 4, &code);
-    retval = code_from_bitstream_2d(se, s, lentab[vlcnum][0], codtab[vlcnum][0], 17, 4, &code);
-    if (retval)
-    {
-      printf("ERROR: failed to find NumCoeff/TrailingOnes\n");
-      exit(-1);
-    }
-  }
-
-  return retval;
-}
-//}}}
-//{{{
-int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se, cBitStream* s)
-{
-  static const uint8_t lentab[3][4][17] =
-  {
-    //YUV420
-    {{ 2, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 1, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 0, 3, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 0, 0, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-    //YUV422
-    {{ 1, 7, 7, 9, 9,10,11,12,13, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 2, 7, 7, 9,10,11,12,12, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 0, 3, 7, 7, 9,10,11,12, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 0, 0, 5, 6, 7, 7,10,11, 0, 0, 0, 0, 0, 0, 0, 0}},
-    //YUV444
-    {{ 1, 6, 8, 9,10,11,13,13,13,14,14,15,15,16,16,16,16},
-    { 0, 2, 6, 8, 9,10,11,13,13,14,14,15,15,15,16,16,16},
-    { 0, 0, 3, 7, 8, 9,10,11,13,13,14,14,15,15,16,16,16},
-    { 0, 0, 0, 5, 6, 7, 8, 9,10,11,13,14,14,15,15,16,16}}
-  };
-
-  static const uint8_t codtab[3][4][17] =
-  {
-    //YUV420
-    {{ 1, 7, 4, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 1, 6, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-    //YUV422
-    {{ 1,15,14, 7, 6, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 1,13,12, 5, 6, 6, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 0, 1,11,10, 4, 5, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0},
-    { 0, 0, 0, 1, 1, 9, 8, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0}},
-    //YUV444
-    {{ 1, 5, 7, 7, 7, 7,15,11, 8,15,11,15,11,15,11, 7, 4},
-    { 0, 1, 4, 6, 6, 6, 6,14,10,14,10,14,10, 1,14,10, 6},
-    { 0, 0, 1, 5, 5, 5, 5, 5,13, 9,13, 9,13, 9,13, 9, 5},
-    { 0, 0, 0, 3, 3, 4, 4, 4, 4, 4,12,12, 8,12, 8,12, 8}}
-
-  };
-
-  int code;
-  int yuv = decoder->activeSps->chromaFormatIdc - 1;
-  int retval = code_from_bitstream_2d(se, s, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
-
-  if (retval)
-  {
-    printf("ERROR: failed to find NumCoeff/TrailingOnes ChromaDC\n");
-    exit(-1);
-  }
-
-  return retval;
-}
-//}}}
-//{{{
-int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, cBitStream* s)
+int readSyntaxElement_Level_VLC0 (sSyntaxElement* se, cBitStream* s)
 {
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
@@ -566,7 +559,7 @@ int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, cBitStream* s)
 }
 //}}}
 //{{{
-int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, cBitStream* s)
+int readSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, cBitStream* s)
 {
   int bitStreamOffset        = s->bitStreamOffset;
   int BitstreamLengthInBytes = s->bitStreamLen;
@@ -629,7 +622,7 @@ int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, cBitStream* s)
 }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  cBitStream* s) {
+int readSyntaxElement_TotalZeros (sSyntaxElement* se,  cBitStream* s) {
 
   //{{{
   static const uint8_t lentab[TOTRUN_NUM][16] =
@@ -686,7 +679,7 @@ int readsSyntaxElement_TotalZeros (sSyntaxElement* se,  cBitStream* s) {
   }
 //}}}
 //{{{
-int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, cBitStream* s) {
+int readSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, cBitStream* s) {
 
   //{{{
   static const uint8_t lentab[3][TOTRUN_NUM][16] =
@@ -769,7 +762,7 @@ int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement*
   }
 //}}}
 //{{{
-int readsSyntaxElement_Run (sSyntaxElement* se, cBitStream* s)
+int readSyntaxElement_Run (sSyntaxElement* se, cBitStream* s)
 {
   //{{{
   static const uint8_t lentab[TOTRUN_NUM][16] =

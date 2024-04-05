@@ -362,8 +362,11 @@ public:
   int readUv (int LenInBits, const std::string& label);
   int readIv (int LenInBits, const std::string& label);
 
-  int readsSyntaxElement_VLC (sSyntaxElement* se);
-  int readsSyntaxElement_FLC (sSyntaxElement* se);
+  int readSyntaxElement_VLC (sSyntaxElement* se);
+  int readSyntaxElement_FLC (sSyntaxElement* se);
+  int readSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se);
+  int readSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se, char* type);
+  int readSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se);
 
   // cavlc Decoding
   uint8_t* bitStreamBuffer; // codebuffer for read bytes

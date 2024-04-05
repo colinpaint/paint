@@ -371,7 +371,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->stream->errorFlag) {
           se.len = 1;
-          dataPartition->stream->readsSyntaxElement_FLC (&se);
+          dataPartition->stream->readSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -532,7 +532,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->stream->errorFlag) {
           se.len = 1;
-          dataPartition->stream->readsSyntaxElement_FLC (&se);
+          dataPartition->stream->readSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -761,7 +761,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->stream->errorFlag) {
           se.len = 1;
-          dataPartition->stream->readsSyntaxElement_FLC (&se);
+          dataPartition->stream->readSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -1082,7 +1082,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->stream->errorFlag) {
           se.len = 1;
-          dataPartition->stream->readsSyntaxElement_FLC (&se);
+          dataPartition->stream->readSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
