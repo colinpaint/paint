@@ -353,32 +353,7 @@ struct sCodedBlockPattern {
   };
 //}}}
 struct sSyntaxElement;
-//{{{
-class cBitStream {
-public:
-  int readSeV (const std::string& label);
-  int readUeV (const std::string& label);
-  bool readU1 (const std::string& label);
-  int readUv (int LenInBits, const std::string& label);
-  int readIv (int LenInBits, const std::string& label);
-
-  int readSyntaxElement_VLC (sSyntaxElement* se);
-  int readSyntaxElement_FLC (sSyntaxElement* se);
-  int readSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se);
-  int readSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se, char* type);
-  int readSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se);
-
-  // cavlc Decoding
-  uint8_t* bitStreamBuffer; // codebuffer for read bytes
-  int   bitStreamOffset; // position in the codebuffer, bit-oriented
-  int   bitStreamLen;    // over codebuffer length, uint8_t oriented
-  int   errorFlag;       // error, 0: no error, else unspecified error
-
-  // cabac Decoding
-  int   readLen;         // position in the codebuffer
-  int   codeLen;         // overall codebuffer length
-  };
-//}}}
+#include "cBitStream.h"
 //{{{
 struct sCabacDecodeEnv {
   uint32_t range;
@@ -406,7 +381,6 @@ struct sSyntaxElement {
   void (*reading) (sMacroBlock*, sSyntaxElement*, sCabacDecodeEnv*);
   };
 //}}}
-#include "cBitStream.h"
 //{{{
 struct sDataPartition {
   cBitStream*     stream;

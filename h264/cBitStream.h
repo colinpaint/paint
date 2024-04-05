@@ -1,4 +1,35 @@
 #pragma once
+
+class cBitStream {
+public:
+  int readSeV (const std::string& label);
+  int readUeV (const std::string& label);
+  bool readU1 (const std::string& label);
+  int readUv (int LenInBits, const std::string& label);
+  int readIv (int LenInBits, const std::string& label);
+
+  int readSyntaxElement_VLC (sSyntaxElement* se);
+  int readSyntaxElement_FLC (sSyntaxElement* se);
+  int readSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se);
+  int readSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se, char* type);
+  int readSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se);
+  int readSyntaxElement_Level_VLC0 (sSyntaxElement* se);
+  int readSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc);
+  int readSyntaxElement_TotalZeros (sSyntaxElement* se);
+  int readSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se);
+  int readSyntaxElement_Run (sSyntaxElement* se);
+
+  // cavlc Decoding
+  uint8_t* bitStreamBuffer; // codebuffer for read bytes
+  int   bitStreamOffset; // position in the codebuffer, bit-oriented
+  int   bitStreamLen;    // over codebuffer length, uint8_t oriented
+  int   errorFlag;       // error, 0: no error, else unspecified error
+
+  // cabac Decoding
+  int   readLen;         // position in the codebuffer
+  int   codeLen;         // overall codebuffer length
+  };
+
 //{{{
 //! gives CBP value from codeword number, both for intra and inter
 static const uint8_t NCBP[2][48][2]=
@@ -72,11 +103,6 @@ int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
 int vlcStartCode (cSlice* slice, int dummy);
 int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
 
-int readSyntaxElement_Level_VLC0 (sSyntaxElement* se, cBitStream* s);
-int readSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, cBitStream* s);
-int readSyntaxElement_TotalZeros (sSyntaxElement* se, cBitStream* s);
-int readSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, cBitStream* s);
-int readSyntaxElement_Run (sSyntaxElement* se, cBitStream* s);
 
 int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
 int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);

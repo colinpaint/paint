@@ -1749,7 +1749,7 @@ namespace {
   //}}}
   //{{{
   void prepareListforRefIndex (sMacroBlock* mb, sSyntaxElement* se,
-                                    sDataPartition *dataPartition, int numRefIndexActive, int refidx_present) {
+                               sDataPartition* dataPartition, int numRefIndexActive, int refidx_present) {
 
     if (numRefIndexActive > 1) {
       if (mb->decoder->activePps->entropyCoding == eCavlc || dataPartition->stream->errorFlag) {
@@ -1761,7 +1761,7 @@ namespace {
         }
       else {
         se->reading = readRefFrame_CABAC;
-        mb->readRefPictureIndex = (refidx_present) ? readRefPictureIdxVLC : readRefPictureIdxNull;
+        mb->readRefPictureIndex = refidx_present ? readRefPictureIdxVLC : readRefPictureIdxNull;
         }
       }
     else

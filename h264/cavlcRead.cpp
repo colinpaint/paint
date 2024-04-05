@@ -1337,9 +1337,9 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
       //{{{  decode level
       if (vlcnum == 0)
-        readSyntaxElement_Level_VLC0(&se, s);
+        s->readSyntaxElement_Level_VLC0 (&se);
       else
-        readSyntaxElement_Level_VLCN(&se, vlcnum, s);
+        s->readSyntaxElement_Level_VLCN (&se, vlcnum);
 
       if (level_two_or_higher) {
         se.inf += (se.inf > 0) ? 1 : -1;
@@ -1365,9 +1365,9 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
       se.value1 = vlcnum;
 
       if (cdc)
-        readSyntaxElement_TotalZerosChromaDC (decoder, &se, s);
+        s->readSyntaxElement_TotalZerosChromaDC (decoder, &se);
       else
-        readSyntaxElement_TotalZeros(&se, s);
+        s->readSyntaxElement_TotalZeros (&se);
 
       totzeros = se.value1;
       }
@@ -1385,7 +1385,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
         se.value1 = vlcnum;
-        readSyntaxElement_Run(&se, s);
+        s->readSyntaxElement_Run (&se);
         runarr[i] = se.value1;
 
         zerosleft -= runarr[i];
@@ -1560,9 +1560,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
       //{{{  decode level
       if (vlcnum == 0)
-        readSyntaxElement_Level_VLC0 (&se, s);
+        s->readSyntaxElement_Level_VLC0 (&se);
       else
-        readSyntaxElement_Level_VLCN (&se, vlcnum, s);
+        s->readSyntaxElement_Level_VLCN (&se, vlcnum);
 
       if (level_two_or_higher) {
         se.inf += (se.inf > 0) ? 1 : -1;
@@ -1589,9 +1589,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
       se.value1 = vlcnum;
 
       if (cdc)
-        readSyntaxElement_TotalZerosChromaDC (decoder, &se, s);
+        s->readSyntaxElement_TotalZerosChromaDC (decoder, &se);
       else
-        readSyntaxElement_TotalZeros (&se, s);
+        s->readSyntaxElement_TotalZeros (&se);
 
       totzeros = se.value1;
       }
@@ -1607,7 +1607,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
         // select VLC for runbefore
         vlcnum = imin (zerosleft - 1, RUNBEFORE_NUM_M1);
         se.value1 = vlcnum;
-        readSyntaxElement_Run (&se, s);
+        s->readSyntaxElement_Run (&se);
         runarr[i] = se.value1;
         zerosleft -= runarr[i];
         i --;
