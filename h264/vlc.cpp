@@ -62,7 +62,7 @@ int cBitStream::readUeV (const string& label) {
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
 
-  readsSyntaxElement_VLC (&symbol, this);
+  readsSyntaxElement_VLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
     cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.value1));
@@ -77,7 +77,7 @@ int cBitStream::readSeV (const string& label) {
   symbol.value1 = 0;
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_se;
-  readsSyntaxElement_VLC (&symbol, this);
+  readsSyntaxElement_VLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
    cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.value1));
@@ -94,7 +94,7 @@ int cBitStream::readUv (int LenInBits, const string& label) {
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readsSyntaxElement_FLC (&symbol, this);
+  readsSyntaxElement_FLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
     cLog::log (LOGINFO, fmt::format ("{} {}", label, symbol.inf));
@@ -111,7 +111,7 @@ int cBitStream::readIv (int LenInBits, const string& label) {
   symbol.type = SE_HEADER;
   symbol.mapping = linfo_ue;
   symbol.len = LenInBits;
-  readsSyntaxElement_FLC (&symbol, this);
+  readsSyntaxElement_FLC (&symbol);
 
   // can be negative
   symbol.inf = -( symbol.inf & (1 << (LenInBits - 1)) ) | symbol.inf;
@@ -224,22 +224,21 @@ void linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 //}}}
 
 //{{{
-int readsSyntaxElement_VLC (sSyntaxElement* se, cBitStream* s) {
+int cBitStream::readsSyntaxElement_VLC (sSyntaxElement* se) {
 
-  se->len =  GetVLCSymbol (s->bitStreamBuffer, s->bitStreamOffset,
-                            &(se->inf), s->bitStreamLen);
+  se->len = GetVLCSymbol (bitStreamBuffer, bitStreamOffset, &(se->inf), bitStreamLen);
   if (se->len == -1)
     return -1;
 
-  s->bitStreamOffset += se->len;
+  bitStreamOffset += se->len;
   se->mapping (se->len, se->inf, &(se->value1), &(se->value2));
 
   return 1;
-}
+  }
 //}}}
 //{{{
 int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
-  return (readsSyntaxElement_VLC(se, dataPartition->stream));
+  return dataPartition->stream->readsSyntaxElement_VLC (se);
   }
 //}}}
 //{{{
@@ -358,18 +357,17 @@ int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount
 //}}}
 
 //{{{
-int readsSyntaxElement_FLC (sSyntaxElement* se, cBitStream* s)
-{
-  int BitstreamLengthInBits  = (s->bitStreamLen << 3) + 7;
+int cBitStream::readsSyntaxElement_FLC (sSyntaxElement* se) {
 
-  if ((getBits(s->bitStreamBuffer, s->bitStreamOffset, &(se->inf), BitstreamLengthInBits, se->len)) < 0)
+  int BitstreamLengthInBits  = (bitStreamLen << 3) + 7;
+  if (getBits(bitStreamBuffer, bitStreamOffset, &(se->inf), BitstreamLengthInBits, se->len) < 0)
     return -1;
 
   se->value1 = se->inf;
-  s->bitStreamOffset += se->len; // move s pointer
+  bitStreamOffset += se->len; // move s pointer
 
   return 1;
-}
+  }
 //}}}
 //{{{
 int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,

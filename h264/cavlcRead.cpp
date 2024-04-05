@@ -466,7 +466,7 @@ namespace {
         se.type   =  SE_HEADER;
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
         se.len = 1;
-        readsSyntaxElement_FLC (&se, dataPartition->stream);
+        dataPartition->stream->readsSyntaxElement_FLC (&se);
         mb->lumaTransformSize8x8flag = (bool) se.value1;
         }
         //}}}
@@ -607,7 +607,7 @@ namespace {
 
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
-        readsSyntaxElement_FLC(&se, dataPartition->stream);
+        dataPartition->stream->readsSyntaxElement_FLC (&se);
         mb->lumaTransformSize8x8flag = (bool) se.value1;
         }
         //}}}
@@ -874,7 +874,7 @@ namespace {
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
-        readsSyntaxElement_FLC (&se, dataPartition->stream);
+        dataPartition->stream->readsSyntaxElement_FLC (&se);
         mb->lumaTransformSize8x8flag = (bool)se.value1;
         }
 
@@ -1055,7 +1055,7 @@ namespace {
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
-        readsSyntaxElement_FLC (&se, dataPartition->stream);
+        dataPartition->stream->readsSyntaxElement_FLC (&se);
         mb->lumaTransformSize8x8flag = (bool)se.value1;
         }
         //}}}
@@ -1074,7 +1074,7 @@ namespace {
           // check for prediction from neighbours
           checkDpNeighbours (mb);
           if (mb->dplFlag) {
-            codedBlockPattern = 0;
+            codedBlockPattern = 0;         
             mb->codedBlockPattern = codedBlockPattern;
             }
           }
@@ -1322,7 +1322,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
   if (numcoeff) {
     if (numtrailingones) {
       se.len = numtrailingones;
-      readsSyntaxElement_FLC (&se, s);
+      s->readsSyntaxElement_FLC (&se);
       code = se.inf;
       ntr = numtrailingones;
       for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
@@ -1545,7 +1545,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
   if (numcoeff) {
     if (numtrailingones) {
       se.len = numtrailingones;
-      readsSyntaxElement_FLC (&se, s);
+      s->readsSyntaxElement_FLC (&se);
       code = se.inf;
       ntr = numtrailingones;
       for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {

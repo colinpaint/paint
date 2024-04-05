@@ -371,7 +371,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->stream->errorFlag) {
           se.len = 1;
-          readsSyntaxElement_FLC(&se, dataPartition->stream);
+          dataPartition->stream->readsSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -379,7 +379,7 @@ namespace {
         }
 
       // Delta quant only if nonzero coeffs
-      if (codedBlockPattern !=0 ) {
+      if (codedBlockPattern != 0) {
         readDeltaQuant (&se, dataPartition, mb, dpMap, ((mb->isIntraBlock == false)) ? SE_DELTA_QUANT_INTER : SE_DELTA_QUANT_INTRA);
         if (slice->dataPartitionMode)  {
           if ((mb->isIntraBlock == false) && slice->noDataPartitionC )
@@ -532,7 +532,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->stream->errorFlag) {
           se.len = 1;
-          readsSyntaxElement_FLC (&se, dataPartition->stream);
+          dataPartition->stream->readsSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -761,7 +761,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->stream->errorFlag) {
           se.len = 1;
-          readsSyntaxElement_FLC (&se, dataPartition->stream);
+          dataPartition->stream->readsSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -1082,7 +1082,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->stream->errorFlag) {
           se.len = 1;
-          readsSyntaxElement_FLC (&se, dataPartition->stream);
+          dataPartition->stream->readsSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);

@@ -352,6 +352,7 @@ struct sCodedBlockPattern {
   int64_t bits8x8;
   };
 //}}}
+struct sSyntaxElement;
 //{{{
 class cBitStream {
 public:
@@ -360,6 +361,9 @@ public:
   bool readU1 (const std::string& label);
   int readUv (int LenInBits, const std::string& label);
   int readIv (int LenInBits, const std::string& label);
+
+  int readsSyntaxElement_VLC (sSyntaxElement* se);
+  int readsSyntaxElement_FLC (sSyntaxElement* se);
 
   // cavlc Decoding
   uint8_t* bitStreamBuffer; // codebuffer for read bytes

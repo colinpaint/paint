@@ -66,7 +66,6 @@ void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int* dumm
 void linfo_levrun_inter (int len, int info, int* level, int* irun);
 void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
 
-int readsSyntaxElement_VLC (sSyntaxElement* se, cBitStream* s);
 int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
 int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, cBitStream* s);
 int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
@@ -74,7 +73,6 @@ int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
 int vlcStartCode (cSlice* slice, int dummy);
 int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
 
-int readsSyntaxElement_FLC (sSyntaxElement* se, cBitStream* s);
 int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,  cBitStream* s, char* type);
 int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se, cBitStream* s);
 int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, cBitStream* s);
