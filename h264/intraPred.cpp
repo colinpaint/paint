@@ -585,7 +585,7 @@ namespace {
   //}}}
 
   //{{{
-  int intra_pred_4x4_normal (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
+  int intraPred4x4Normal (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
                             int img_block_x, int img_block_y) {
 
     cDecoder264* decoder = mb->decoder;
@@ -1153,7 +1153,7 @@ namespace {
   //}}}
 
   //{{{
-  int intra_pred_4x4MbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
+  int intraPred4x4MbAff (sMacroBlock* mb, eColorPlane plane, int ioff, int joff,
                             int img_block_x, int img_block_y) {
 
     cDecoder264* decoder = mb->decoder;
@@ -2278,7 +2278,7 @@ namespace {
   //}}}
 
   //{{{
-  int intra_pred_8x8_normal (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
+  int intraPred8x8Normal (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
     int blockX = (mb->blockX) + (ioff >> 2);
     int blockY = (mb->blockY) + (joff >> 2);
@@ -3337,7 +3337,7 @@ namespace {
   //}}}
 
   //{{{
-  int intra_pred_8x8MbAff (sMacroBlock* mb,
+  int intraPred8x8MbAff (sMacroBlock* mb,
                      eColorPlane plane,         //!< Current color plane
                      int ioff,              //!< ioff
                      int joff)              //!< joff
@@ -4406,7 +4406,7 @@ namespace {
     }
   //}}}
   //{{{
-  void intraPredChroma (sMacroBlock* mb) {
+  void intraPredChromaNormal (sMacroBlock* mb) {
 
     switch (mb->chromaPredMode) {
       case DC_PRED_8:
@@ -4434,19 +4434,19 @@ namespace {
   }
 
 //{{{
-void setIntraPredFunctions (cSlice *slice) {
+void cSlice::setIntraPredFunctions() {
 
-  if (slice->mbAffFrame) {
-    slice->intraPred4x4 = intra_pred_4x4MbAff;
-    slice->intraPred8x8 = intra_pred_8x8MbAff;
-    slice->intraPred16x16 = intraPred16x16MbAff;
-    slice->intraPredChroma = intraPredChromaMbAff;
+  if (mbAffFrame) {
+    intraPred4x4 = intraPred4x4MbAff;
+    intraPred8x8 = intraPred8x8MbAff;
+    intraPred16x16 = intraPred16x16MbAff;
+    intraPredChroma = intraPredChromaMbAff;
     }
   else {
-    slice->intraPred4x4 = intra_pred_4x4_normal;
-    slice->intraPred8x8 = intra_pred_8x8_normal;
-    slice->intraPred16x16 = intraPred16x16Normal;
-    slice->intraPredChroma = intraPredChroma;
+    intraPred4x4 = intraPred4x4Normal;
+    intraPred8x8 = intraPred8x8Normal;
+    intraPred16x16 = intraPred16x16Normal;
+    intraPredChroma = intraPredChromaNormal;
     }
   }
 //}}}

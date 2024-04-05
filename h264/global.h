@@ -577,6 +577,8 @@ public:
   void allocRefPicListReordeBuffer();
   void freeRefPicListReorderBuffer();
 
+  void setIntraPredFunctions();
+
   // vars
   cDecoder264* decoder;
 
