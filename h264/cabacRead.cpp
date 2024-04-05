@@ -2,10 +2,10 @@
 #include "global.h"
 #include "syntaxElement.h"
 
-#include "macroBlock.h"
 #include "cabac.h"
-#include "vlc.h"
+#include "macroBlock.h"
 #include "transform.h"
+#include "vlc.h"
 //}}}
 
 namespace {

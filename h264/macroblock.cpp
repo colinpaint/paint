@@ -3940,6 +3940,18 @@ void getMbPos (cDecoder264* decoder, int mbIndex, int mbSize[2], int16_t* x, int
 //}}}
 
 //{{{
+bool checkVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
+
+  cDecoder264* decoder = mb->decoder;
+  sPicture* picture = mb->slice->picture;
+
+  int y_pos = vec1_y>>2;
+  int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
+
+  return y_pos < (-decoder->coding.lumaPadY + 2) || y_pos > (maxold_y + decoder->coding.lumaPadY - blockSizeY - 2);
+  }
+//}}}
+//{{{
 void checkNeighbours (sMacroBlock* mb) {
 
   cSlice* slice = mb->slice;
@@ -4364,22 +4376,6 @@ void get4x4NeighbourBase (sMacroBlock* mb, int blockX, int blockY, int mbSize[2]
     pixelPos->x >>= 2;
     pixelPos->y >>= 2;
     }
-  }
-//}}}
-
-//{{{
-int checkVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
-
-  cDecoder264* decoder = mb->decoder;
-  sPicture* picture = mb->slice->picture;
-
-  int y_pos = vec1_y>>2;
-  int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
-
-  if (y_pos < (-decoder->coding.lumaPadY + 2) || y_pos > (maxold_y + decoder->coding.lumaPadY - blockSizeY - 2))
-    return 1;
-  else
-    return 0;
   }
 //}}}
 

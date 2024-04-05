@@ -33,7 +33,12 @@ cSlice* cSlice::allocSlice() {
   getMem3Dpel (&slice->mbRec, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   getMem3Dint (&slice->mbRess, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   getMem3Dint (&slice->cof, MAX_PLANE, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
-  allocPred (slice);
+
+  getMem2Dpel(&slice->tempBlockL0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dpel(&slice->tempBlockL1, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dpel(&slice->tempBlockL2, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dpel(&slice->tempBlockL3, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  getMem2Dint(&slice->tempRes, MB_BLOCK_SIZE + 5, MB_BLOCK_SIZE + 5);
 
   // reference flag initialization
   for (int i = 0; i < 17; ++i)
@@ -60,7 +65,12 @@ cSlice::~cSlice() {
   if (sliceType != eSliceI && sliceType != eSliceSI)
     freeRefPicListReorderBuffer();
 
-  freePred (this);
+  freeMem2Dint (tempRes);
+  freeMem2Dpel (tempBlockL0);
+  freeMem2Dpel (tempBlockL1);
+  freeMem2Dpel (tempBlockL2);
+  freeMem2Dpel (tempBlockL3);
+
   freeMem3Dint (cof);
   freeMem3Dint (mbRess);
   freeMem3Dpel (mbRec);
