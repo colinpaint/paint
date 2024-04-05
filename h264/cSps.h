@@ -123,7 +123,7 @@ public:
     }
   //}}}
 
-  void readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int len);
+  void readFromStream (cDecoder264* decoder, sDataPartition* dataPartition);
 
   //{{{  vars
   bool     ok = false;

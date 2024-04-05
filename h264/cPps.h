@@ -67,5 +67,5 @@ public:
   int      chromaQpOffset2 = 0;              // se(v)
 
 private:
-  void readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int naluLen);
+  void readFromStream (cDecoder264* decoder, sDataPartition* dataPartition);
   };

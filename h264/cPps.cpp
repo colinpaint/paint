@@ -157,7 +157,7 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
   cPps pps = { 0 };
   pps.naluLen = nalu->len;
-  pps.readFromStream (decoder, dataPartition, nalu->len);
+  pps.readFromStream (decoder, dataPartition);
   freeDataPartitions (dataPartition, 1);
 
   if (decoder->pps[pps.id].ok)
@@ -177,7 +177,7 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
 // private
 //{{{
-void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int naluLen) {
+void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) {
 // read PPS from NALU
 
   sBitStream* s = dataPartition->stream;

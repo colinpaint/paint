@@ -94,7 +94,8 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen = nalu->RBSPtoSODB (dataPartition->stream->bitStreamBuffer);
 
   cSps sps;
-  sps.readFromStream (decoder, dataPartition, nalu->len);
+  sps.naluLen = nalu->len;
+  sps.readFromStream (decoder, dataPartition);
   freeDataPartitions (dataPartition, 1);
 
   if (!decoder->sps[sps.id].isEqual (sps))
@@ -107,9 +108,7 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 //}}}
 
 //{{{
-void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int len) {
-
-  naluLen = len;
+void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) {
 
   sBitStream* s = dataPartition->stream;
 
