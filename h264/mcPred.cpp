@@ -4,7 +4,7 @@
 
 #include "mcPred.h"
 #include "buffer.h"
-#include "macroBlock.h"
+#include "macroblock.h"
 //}}}
 namespace {
   const sMotionVec kZeroMv = {0, 0};

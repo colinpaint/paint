@@ -123,7 +123,7 @@ public:
     }
   //}}}
 
-  void readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int naluLen);
+  void readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int len);
 
   //{{{  vars
   bool     ok = false;
@@ -147,9 +147,9 @@ public:
 
   bool     hasSeqScalingMatrix = false;  // u(1)
   //{{{  optional scalingMatrix fields
-  int hasSeqScalingList[12] = {0};      // u(1)
-  int scalingList4x4[6][16] = {0};      // se(v)
-  int scalingList8x8[6][64] = {0};      // se(v)
+  int hasSeqScalingList[12] = {};      // u(1)
+  int scalingList4x4[6][16] = {};      // se(v)
+  int scalingList8x8[6][64] = {};      // se(v)
 
   bool useDefaultScalingMatrix4x4[6] = {false};
   bool useDefaultScalingMatrix8x8[6] = {false};

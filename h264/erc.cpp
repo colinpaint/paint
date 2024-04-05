@@ -4,7 +4,7 @@
 
 #include "buffer.h"
 #include "mcPred.h"
-#include "macroBlock.h"
+#include "macroblock.h"
 #include "erc.h"
 //}}}
 //{{{  defines
@@ -919,25 +919,18 @@ static void copyBetweenFrames (frame *recfr, int currYBlockNum, int picSizeX, in
   ymin = (yPosYBlock(currYBlockNum,picSizeX)<<3);
 
   for (j = ymin; j < ymin + regionSize; j++)
-    for (k = xmin; k < xmin + regionSize; k++)
-    {
+    for (k = xmin; k < xmin + regionSize; k++) {
       location = j * picSizeX + k;
-//th      recfr->yptr[location] = picture->imgY[j][k];
       recfr->yptr[location] = refPic->imgY[j][k];
-    }
-
-    for (j = ymin >> uv_div[1][picture->chromaFormatIdc]; j < (ymin + regionSize) >> uv_div[1][picture->chromaFormatIdc]; j++)
-      for (k = xmin >> uv_div[0][picture->chromaFormatIdc]; k < (xmin + regionSize) >> uv_div[0][picture->chromaFormatIdc]; k++)
-      {
-//        location = j * picSizeX / 2 + k;
-        location = ((j * picSizeX) >> uv_div[0][picture->chromaFormatIdc]) + k;
-
-//th        recfr->uptr[location] = picture->imgUV[0][j][k];
-//th        recfr->vptr[location] = picture->imgUV[1][j][k];
-        recfr->uptr[location] = refPic->imgUV[0][j][k];
-        recfr->vptr[location] = refPic->imgUV[1][j][k];
       }
-}
+
+  for (j = ymin >> uv_div[1][picture->chromaFormatIdc]; j < (ymin + regionSize) >> uv_div[1][picture->chromaFormatIdc]; j++)
+    for (k = xmin >> uv_div[0][picture->chromaFormatIdc]; k < (xmin + regionSize) >> uv_div[0][picture->chromaFormatIdc]; k++) {
+      location = ((j * picSizeX) >> uv_div[0][picture->chromaFormatIdc]) + k;
+      recfr->uptr[location] = refPic->imgUV[0][j][k];
+      recfr->vptr[location] = refPic->imgUV[1][j][k];
+      }
+  }
 //}}}
 //{{{
 /*!
@@ -1010,8 +1003,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
 
   int predMBNum = 0, numMBPerLine,
       compSplit1 = 0, compSplit2 = 0, compLeft = 1, comp = 0, compPred, order = 1,
-      fInterNeighborExists, numIntraNeighbours,
-      fZeroMotionChecked, predSplitted = 0,
+      fInterNeighborExists, numIntraNeighbours, fZeroMotionChecked, predSplitted = 0,
       threshold = ERC_BLOCK_OK,
       minDist, currDist, i, k;
   int regionSize;
@@ -1023,8 +1015,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
   comp = 0;
   regionSize = 16;
 
-  do
-  { /* 4 blocks loop */
+  do { /* 4 blocks loop */
 
     currRegion = object_list+(currMBNum<<2)+comp;
 
@@ -1033,8 +1024,7 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
     currRegion->xMin = (xPosYBlock(MBNum2YBlock(currMBNum,comp,picSizeX),picSizeX)<<3);
     currRegion->yMin = (yPosYBlock(MBNum2YBlock(currMBNum,comp,picSizeX),picSizeX)<<3);
 
-    do
-    { /* reliability loop */
+    do { /* reliability loop */
 
       minDist = 0;
       fInterNeighborExists = 0;
@@ -1042,14 +1032,11 @@ static int concealByTrial (frame *recfr, sPixel *predMB,
       fZeroMotionChecked = 0;
 
       /* loop the 4 neighbours */
-      for (i = 4; i < 8; i++)
-      {
+      for (i = 4; i < 8; i++) {
 
         /* if reliable, try it */
-        if (predBlocks[i] >= threshold)
-        {
-          switch (i)
-          {
+        if (predBlocks[i] >= threshold) {
+          switch (i) {
           case 4:
             predMBNum = currMBNum-numMBPerLine;
             compSplit1 = 2;

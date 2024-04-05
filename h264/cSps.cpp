@@ -107,9 +107,9 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 //}}}
 
 //{{{
-void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int naluLen) {
+void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition, int len) {
 
-  naluLen = naluLen;
+  naluLen = len;
 
   sBitStream* s = dataPartition->stream;
 

@@ -880,8 +880,8 @@ public:
   static inline cDecoder264* gDecoder = nullptr;
 
   // vars
-  sParam       param = {0};
-  sDebug       debug = {0};
+  sParam       param = {};
+  sDebug       debug = {};
 
   // nalu
   int          gotLastNalu = 0;
@@ -946,9 +946,9 @@ public:
   int          mbCrSizeXblock = 0;
   int          mbCrSizeYblock = 0;
   int          mbCrSize = 0;
-  int          mbSize[3][2] = {0};
-  int          mbSizeBlock[3][2] = {0};
-  int          mbSizeShift[3][2] = {0};
+  int          mbSize[3][2] = {};
+  int          mbSizeBlock[3][2] = {};
+  int          mbSizeShift[3][2] = {};
   int16_t      bitDepthLuma = 0;
   int16_t      bitDepthChroma = 0;
 

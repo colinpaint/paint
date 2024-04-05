@@ -5,7 +5,7 @@
 #include "buffer.h"
 #include "cabac.h"
 #include "fmo.h"
-#include "macroBlock.h"
+#include "macroblock.h"
 #include "mcPred.h"
 
 #include "../common/cLog.h"

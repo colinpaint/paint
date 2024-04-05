@@ -9,7 +9,7 @@
 #include "cavlcRead.h"
 #include "fmo.h"
 #include "intraPred.h"
-#include "macroBlock.h"
+#include "macroblock.h"
 #include "mcPred.h"
 #include "syntaxElement.h"
 #include "transform.h"

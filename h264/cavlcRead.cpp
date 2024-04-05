@@ -2,7 +2,7 @@
 #include "global.h"
 #include "syntaxElement.h"
 
-#include "macroBlock.h"
+#include "macroblock.h"
 #include "cabac.h"
 #include "vlc.h"
 #include "transform.h"

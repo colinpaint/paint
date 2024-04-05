@@ -2,7 +2,7 @@
 #include "global.h"
 
 #include "intraPred.h"
-#include "macroBlock.h"
+#include "macroblock.h"
 //}}}
 //{{{
 // Notation for comments regarding prediction and predictors.
@@ -740,7 +740,7 @@ namespace {
 
     int blockLeftOk = 1;
     if (decoder->activePps->hasConstrainedIntraPred)
-      for (int i = 0, blockLeftOk = 1; i < 4; ++i)
+      for (int i = 0; i < 4; ++i)
         blockLeftOk &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
     else
       blockLeftOk = pix_a[0].ok;
@@ -779,10 +779,10 @@ namespace {
     getAffNeighbour (mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
     int blockUpOk;
-    int blockLeftOk;
+    int blockLeftOk = 1;
     int blockUpOk_left;
     if (decoder->activePps->hasConstrainedIntraPred) {
-      for (int i = 0, blockLeftOk = 1; i < 4; ++i)
+      for (int i = 0; i < 4; ++i)
         blockLeftOk &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
       blockUpOk = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
       blockUpOk_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
@@ -909,10 +909,10 @@ namespace {
     getAffNeighbour (mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
     int blockUpOk;
-    int blockLeftOk;
+    int blockLeftOk = 1;
     int blockUpOk_left;
     if (decoder->activePps->hasConstrainedIntraPred) {
-      for (int i = 0, blockLeftOk = 1; i < 4;++i)
+      for (int i = 0; i < 4;++i)
         blockLeftOk &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
       blockUpOk = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
       blockUpOk_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;
@@ -928,7 +928,7 @@ namespace {
     else {
       sPixel predPixel[10];
       sPixel predPel[13];
-      sPixel *pred_pel = &imgY[pix_b.posY][pix_b.posX];
+      sPixel* pred_pel = &imgY[pix_b.posY][pix_b.posX];
       // form predictor pels
       // P_A through P_D
       memcpy (&predPel[1], pred_pel, BLOCK_SIZE * sizeof(sPixel));
@@ -1040,7 +1040,7 @@ namespace {
 
     int blockLeftOk = 1;
     if (decoder->activePps->hasConstrainedIntraPred)
-      for (int i = 0, blockLeftOk = 1; i < 4; ++i)
+      for (int i = 0; i < 4; ++i)
         blockLeftOk &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
     else
       blockLeftOk = pix_a[0].ok;
@@ -1097,10 +1097,10 @@ namespace {
     getAffNeighbour (mb, ioff -1 , joff -1 , decoder->mbSize[eLuma], &pix_d);
 
     int blockUpOk;
-    int blockLeftOk;
+    int blockLeftOk = 1;
     int blockUpOk_left;
     if (decoder->activePps->hasConstrainedIntraPred) {
-      for (int i = 0, blockLeftOk = 1; i < 4;++i)
+      for (int i = 0; i < 4;++i)
         blockLeftOk &= pix_a[i].ok ? slice->intraBlock[pix_a[i].mbIndex]: 0;
       blockUpOk = pix_b.ok ? slice->intraBlock [pix_b.mbIndex] : 0;
       blockUpOk_left = pix_d.ok ? slice->intraBlock [pix_d.mbIndex] : 0;

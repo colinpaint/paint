@@ -9,7 +9,7 @@
 #include "errorConceal.h"
 #include "fmo.h"
 #include "loopfilter.h"
-#include "macroBlock.h"
+#include "macroblock.h"
 #include "mcPred.h"
 #include "nalu.h"
 #include "output.h"
@@ -1844,7 +1844,7 @@ void cDecoder264::clearDecodedPics() {
 //{{{
 void cDecoder264::initPictureDecode() {
 
-  int deblockMode = 1;
+  deblockMode = 1;
 
   if (picSliceIndex >= MAX_NUM_SLICES)
     cDecoder264::error ("initPictureDecode - MAX_NUM_SLICES exceeded");
@@ -1867,8 +1867,6 @@ void cDecoder264::initPictureDecode() {
   for (int j = 0; j < picSliceIndex; j++)
     if (sliceList[j]->deblockFilterDisableIdc != 1)
       deblockMode = 0;
-
-  deblockMode = deblockMode;
   }
 //}}}
 //{{{
@@ -3547,7 +3545,6 @@ void cDecoder264::endDecodeFrame() {
   int qp = picture->qp;
   int picNum = picture->picNum;
   int isIdr = picture->isIDR;
-  int chromaFormatIdc = picture->chromaFormatIdc;
   storePictureDpb (dpb, picture);
   picture = NULL;
 
