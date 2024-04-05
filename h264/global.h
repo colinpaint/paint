@@ -577,6 +577,8 @@ public:
   void allocRefPicListReordeBuffer();
   void freeRefPicListReorderBuffer();
 
+  void setReadCbpCoefsCabac();
+  void setReadCbpCoefCavlc();
   void setIntraPredFunctions();
 
   // vars
