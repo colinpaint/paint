@@ -1815,7 +1815,7 @@ bool getColocatedInfo4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     return true;
 
   else {
-    sPicMotion *fs = &list1->mvInfo[j][i];
+    sPicMotion* fs = &list1->mvInfo[j][i];
     int moving = !((((fs->refIndex[LIST_0] == 0) &&
                      (iabs(fs->mv[LIST_0].mvX)>>1 == 0) &&
                      (iabs(fs->mv[LIST_0].mvY)>>1 == 0))) ||
@@ -1838,12 +1838,10 @@ bool getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     if ((slice->mbAffFrame) ||
         (!decoder->activeSps->frameMbOnly &&
         ((!slice->picStructure && list1->codingType == eFieldCoding) ||
-        (slice->picStructure!=list1->picStructure && list1->codedFrame)))) {
+         (slice->picStructure!=list1->picStructure && list1->codedFrame)))) {
       int jj = RSD(j);
       int ii = RSD(i);
-      int jdiv = (jj>>1);
-      bool moving;
-
+      int jdiv = jj >> 1;
       sPicMotion* fs = &list1->mvInfo[jj][ii];
 
       if (slice->fieldPic && slice->picStructure!=list1->picStructure && list1->codedFrame) {
@@ -1862,30 +1860,20 @@ bool getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
             fs = list1->botField->mvInfo[jdiv] + ii;
           }
         }
-
-      moving = !((((fs->refIndex[LIST_0] == 0)
-        &&  (iabs(fs->mv[LIST_0].mvX)>>1 == 0)
-        &&  (iabs(fs->mv[LIST_0].mvY)>>1 == 0)))
-        || ((fs->refIndex[LIST_0] == -1)
-        &&  (fs->refIndex[LIST_1] == 0)
-        &&  (iabs(fs->mv[LIST_1].mvX)>>1 == 0)
-        &&  (iabs(fs->mv[LIST_1].mvY)>>1 == 0)));
+      bool moving = !((((fs->refIndex[LIST_0] == 0) && 
+                        (iabs(fs->mv[LIST_0].mvX) >> 1 == 0) && (iabs(fs->mv[LIST_0].mvY) >> 1 == 0))) ||
+                       ((fs->refIndex[LIST_0] == -1) && (fs->refIndex[LIST_1] == 0) && 
+                        (iabs(fs->mv[LIST_1].mvX) >> 1 == 0) && (iabs(fs->mv[LIST_1].mvY) >> 1 == 0)));
       return moving;
       }
     else {
       sPicMotion *fs = &list1->mvInfo[RSD(j)][RSD(i)];
-
-      bool moving;
-      if (mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat==YUV444)
+      if (mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat == YUV444)
         fs = &list1->mvInfoJV[mb->slice->colourPlaneId][RSD(j)][RSD(i)];
-
-      moving = !((((fs->refIndex[LIST_0] == 0)
-        &&  (iabs(fs->mv[LIST_0].mvX)>>1 == 0)
-        &&  (iabs(fs->mv[LIST_0].mvY)>>1 == 0)))
-        || ((fs->refIndex[LIST_0] == -1)
-        &&  (fs->refIndex[LIST_1] == 0)
-        &&  (iabs(fs->mv[LIST_1].mvX)>>1 == 0)
-        &&  (iabs(fs->mv[LIST_1].mvY)>>1 == 0)));
+      bool moving = !((((fs->refIndex[LIST_0] == 0) && 
+                        (iabs(fs->mv[LIST_0].mvX) >> 1 == 0) && (iabs(fs->mv[LIST_0].mvY) >> 1 == 0))) ||
+                       ((fs->refIndex[LIST_0] == -1) && (fs->refIndex[LIST_1] == 0) && 
+                        (iabs(fs->mv[LIST_1].mvX) >> 1 == 0) && (iabs(fs->mv[LIST_1].mvY) >> 1 == 0)));
 
       return moving;
       }

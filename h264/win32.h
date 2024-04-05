@@ -59,7 +59,7 @@
   //}}}
 #endif
 
-extern void getTime (TIME_T* time);
-extern void initTime();
-extern int64_t timeDiff (TIME_T* start, TIME_T* end);
-extern int64_t timeNorm (int64_t cur_time);
+void getTime (TIME_T* time);
+void initTime();
+int64_t timeDiff (TIME_T* start, TIME_T* end);
+int64_t timeNorm (int64_t cur_time);

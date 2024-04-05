@@ -57,37 +57,37 @@ static const uint8_t NTAB3[2][2][2] =
 };
 //}}}
 
-extern int readSeV (const std::string& label, sBitStream* s);
-extern int readUeV (const std::string& label, sBitStream* s);
-extern bool readU1 (const std::string& label, sBitStream* s);
-extern int readUv (int LenInBits, const std::string& label, sBitStream* s);
-extern int readIv (int LenInBits, const std::string& label, sBitStream* s);
+int readSeV (const std::string& label, sBitStream* s);
+int readUeV (const std::string& label, sBitStream* s);
+bool readU1 (const std::string& label, sBitStream* s);
+int readUv (int LenInBits, const std::string& label, sBitStream* s);
+int readIv (int LenInBits, const std::string& label, sBitStream* s);
 
-extern void linfo_ue (int len, int info, int* value1, int* dummy);
-extern void linfo_se (int len, int info, int* value1, int* dummy);
-extern void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy);
-extern void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy);
-extern void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy);
-extern void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int* dummy);
-extern void linfo_levrun_inter (int len, int info, int* level, int* irun);
-extern void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
+void linfo_ue (int len, int info, int* value1, int* dummy);
+void linfo_se (int len, int info, int* value1, int* dummy);
+void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy);
+void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy);
+void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy);
+void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int* dummy);
+void linfo_levrun_inter (int len, int info, int* level, int* irun);
+void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
 
-extern int readsSyntaxElement_VLC (sSyntaxElement* se, sBitStream* s);
-extern int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
-extern int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitStream* s);
-extern int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
-extern int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
-extern int vlcStartCode (cSlice* slice, int dummy);
-extern int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
+int readsSyntaxElement_VLC (sSyntaxElement* se, sBitStream* s);
+int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
+int readsSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se, sBitStream* s);
+int GetVLCSymbol_IntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
+int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
+int vlcStartCode (cSlice* slice, int dummy);
+int GetVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
 
-extern int readsSyntaxElement_FLC (sSyntaxElement* se, sBitStream* s);
-extern int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,  sBitStream* s, char* type);
-extern int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s);
-extern int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, sBitStream* s);
-extern int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, sBitStream* s);
-extern int readsSyntaxElement_TotalZeros (sSyntaxElement* se, sBitStream* s);
-extern int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s);
-extern int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s);
+int readsSyntaxElement_FLC (sSyntaxElement* se, sBitStream* s);
+int readsSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se,  sBitStream* s, char* type);
+int readsSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s);
+int readsSyntaxElement_Level_VLC0 (sSyntaxElement* se, sBitStream* s);
+int readsSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc, sBitStream* s);
+int readsSyntaxElement_TotalZeros (sSyntaxElement* se, sBitStream* s);
+int readsSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se, sBitStream* s);
+int readsSyntaxElement_Run (sSyntaxElement* se, sBitStream* s);
 
-extern int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
-extern int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);
+int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
+int ShowBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);

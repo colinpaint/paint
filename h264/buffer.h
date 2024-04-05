@@ -265,37 +265,37 @@ static inline int comparefsByPocdesc (const void* arg1, const void* arg2) {
 static inline int isLongRef (sPicture* picture) { return picture->usedForReference && picture->isLongTerm; }
 static inline int isShortRef (sPicture* picture) { return picture->usedForReference && !picture->isLongTerm; }
 
-extern sFrameStore* allocFrameStore();
-extern void freeFrameStore (sFrameStore* frameStore);
-extern void unmarkForRef( sFrameStore* frameStore);
-extern void unmarkForLongTermRef (sFrameStore* frameStore);
+sFrameStore* allocFrameStore();
+void freeFrameStore (sFrameStore* frameStore);
+void unmarkForRef( sFrameStore* frameStore);
+void unmarkForLongTermRef (sFrameStore* frameStore);
 
-extern sPicture* allocPicture (cDecoder264* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
-extern void freePicture (sPicture* picture);
-extern void fillFrameNumGap (cDecoder264* decoder, cSlice *slice);
+sPicture* allocPicture (cDecoder264* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
+void freePicture (sPicture* picture);
+void fillFrameNumGap (cDecoder264* decoder, cSlice *slice);
 
-extern void updateRefList (sDpb* dpb);
-extern void updateLongTermRefList (sDpb* dpb);
-extern void getSmallestPoc (sDpb* dpb, int* poc, int* pos);
+void updateRefList (sDpb* dpb);
+void updateLongTermRefList (sDpb* dpb);
+void getSmallestPoc (sDpb* dpb, int* poc, int* pos);
 
-extern void initDpb (cDecoder264* decoder, sDpb* dpb, int type);
-extern void reInitDpb (cDecoder264* decoder, sDpb* dpb, int type);
-extern void flushDpb (sDpb* dpb);
-extern int removeUnusedDpb (sDpb* dpb);
-extern void storePictureDpb (sDpb* dpb, sPicture* picture);
-extern void removeFrameDpb (sDpb* dpb, int pos);
-extern void freeDpb (sDpb* dpb);
+void initDpb (cDecoder264* decoder, sDpb* dpb, int type);
+void reInitDpb (cDecoder264* decoder, sDpb* dpb, int type);
+void flushDpb (sDpb* dpb);
+int removeUnusedDpb (sDpb* dpb);
+void storePictureDpb (sDpb* dpb, sPicture* picture);
+void removeFrameDpb (sDpb* dpb, int pos);
+void freeDpb (sDpb* dpb);
 
-extern void initImage (cDecoder264* decoder, sImage* image, cSps *sps);
-extern void freeImage (cDecoder264* decoder, sImage* image);
+void initImage (cDecoder264* decoder, sImage* image, cSps *sps);
+void freeImage (cDecoder264* decoder, sImage* image);
 
-extern void initListsSliceI (cSlice* slice);
-extern void initListsSliceP (cSlice* slice);
-extern void initListsSliceB (cSlice* slice);
-extern void updatePicNum (cSlice* slice);
+void initListsSliceI (cSlice* slice);
+void initListsSliceP (cSlice* slice);
+void initListsSliceB (cSlice* slice);
+void updatePicNum (cSlice* slice);
 
-extern void dpbCombineField (cDecoder264* decoder, sFrameStore* frameStore);
-extern void reorderRefPicList (cSlice* slice, int curList);
-extern sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum);
+void dpbCombineField (cDecoder264* decoder, sFrameStore* frameStore);
+void reorderRefPicList (cSlice* slice, int curList);
+sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum);
 
-extern void computeColocated (cSlice* slice, sPicture** listX[6]);
+void computeColocated (cSlice* slice, sPicture** listX[6]);

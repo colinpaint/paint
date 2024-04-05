@@ -83,13 +83,13 @@ int ercConcealIntraFrame (cDecoder264* decoder, frame *recfr,
 int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
                           int picSizeX, int picSizeY, sErcVariables *errorVar, int chromaFormatIdc );
 
-extern struct sConcealNode* init_node (sPicture* , int );
-extern void init_lists_for_non_reference_loss (sDpb* dpb, int , ePicStructure );
-extern void concealLostFrames (sDpb* dpb, cSlice *slice);
-extern void conceal_non_ref_pics (sDpb* dpb, int diff);
-extern void sliding_window_poc_management (sDpb* dpb, sPicture *p);
-extern void write_lost_non_ref_pic (sDpb* dpb, int poc);
-extern void write_lost_ref_after_idr (sDpb* dpb, int pos);
+struct sConcealNode* init_node (sPicture* , int );
+void init_lists_for_non_reference_loss (sDpb* dpb, int , ePicStructure );
+void concealLostFrames (sDpb* dpb, cSlice *slice);
+void conceal_non_ref_pics (sDpb* dpb, int diff);
+void sliding_window_poc_management (sDpb* dpb, sPicture *p);
+void write_lost_non_ref_pic (sDpb* dpb, int poc);
+void write_lost_ref_after_idr (sDpb* dpb, int pos);
 
 void ercInit (cDecoder264* decoder, int pic_sizex, int pic_sizey, int flag);
 sErcVariables* ercOpen();
