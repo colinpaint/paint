@@ -1,5 +1,6 @@
 #pragma once
 struct sPicture;
+class cDecoder;
 
 class cFrameStore {
 public:
@@ -12,6 +13,8 @@ public:
 
   void unmarkForRef();
   void unmarkForLongTermRef();
+
+  void dpbCombineField (cDecoder264* decoder);
 
   // vars
   int       isUsed = 0;          // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)

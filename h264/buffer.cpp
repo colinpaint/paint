@@ -301,7 +301,7 @@ namespace {
   //{{{
   void dpb_combine_field (cDecoder264* decoder, cFrameStore* frameStore) {
 
-    dpbCombineField (decoder, frameStore);
+    frameStore->dpbCombineField (decoder);
 
     frameStore->frame->codingType = frameStore->topField->codingType; //eFieldCoding;
      //! Use inference flag to remap mvs/references
@@ -1103,82 +1103,22 @@ namespace {
           refPicListX[nIdx++] = refPicListX[cIdx];
     }
   //}}}
-  }
 
-// picMotion
-//{{{
-void allocPicMotion (sPicMotionOld* motion, int sizeY, int sizeX) {
-  motion->mbField = (uint8_t*)calloc (sizeY * sizeX, sizeof(uint8_t));
-  }
-//}}}
-//{{{
-void freePicMotion (sPicMotionOld* motion) {
+  //{{{
+  void allocPicMotion (sPicMotionOld* motion, int sizeY, int sizeX) {
+    motion->mbField = (uint8_t*)calloc (sizeY * sizeX, sizeof(uint8_t));
+    }
+  //}}}
+  //{{{
+  void freePicMotion (sPicMotionOld* motion) {
 
-  free (motion->mbField);
-  motion->mbField = NULL;
+    free (motion->mbField);
+    motion->mbField = NULL;
+    }
+  //}}}
   }
-//}}}
 
 // frameStore
-//{{{
-void dpbCombineField (cDecoder264* decoder, cFrameStore* frameStore) {
-
-  if (!frameStore->frame)
-    frameStore->frame = allocPicture (decoder, eFrame,
-                                      frameStore->topField->sizeX, frameStore->topField->sizeY*2,
-                                      frameStore->topField->sizeXcr, frameStore->topField->sizeYcr*2, 1);
-
-  for (int i = 0; i < frameStore->topField->sizeY; i++) {
-    memcpy (frameStore->frame->imgY[i*2], frameStore->topField->imgY[i]   ,
-            frameStore->topField->sizeX * sizeof(sPixel));     // top field
-    memcpy (frameStore->frame->imgY[i*2 + 1], frameStore->botField->imgY[i],
-            frameStore->botField->sizeX * sizeof(sPixel)); // bottom field
-    }
-
-  for (int j = 0; j < 2; j++)
-    for (int i = 0; i < frameStore->topField->sizeYcr; i++) {
-      memcpy (frameStore->frame->imgUV[j][i*2], frameStore->topField->imgUV[j][i],
-              frameStore->topField->sizeXcr*sizeof(sPixel));
-      memcpy (frameStore->frame->imgUV[j][i*2 + 1], frameStore->botField->imgUV[j][i],
-              frameStore->botField->sizeXcr*sizeof(sPixel));
-      }
-
-  frameStore->poc = frameStore->frame->poc = frameStore->frame->framePoc
-                                           = imin (frameStore->topField->poc, frameStore->botField->poc);
-
-  frameStore->botField->framePoc = frameStore->topField->framePoc = frameStore->frame->poc;
-  frameStore->botField->topPoc = frameStore->frame->topPoc = frameStore->topField->poc;
-  frameStore->topField->botPoc = frameStore->frame->botPoc = frameStore->botField->poc;
-
-  frameStore->frame->usedForReference = (frameStore->topField->usedForReference && frameStore->botField->usedForReference );
-  frameStore->frame->isLongTerm = (frameStore->topField->isLongTerm && frameStore->botField->isLongTerm );
-
-  if (frameStore->frame->isLongTerm)
-    frameStore->frame->longTermFrameIndex = frameStore->longTermFrameIndex;
-
-  frameStore->frame->topField = frameStore->topField;
-  frameStore->frame->botField = frameStore->botField;
-  frameStore->frame->frame = frameStore->frame;
-  frameStore->frame->codedFrame = 0;
-
-  frameStore->frame->chromaFormatIdc = frameStore->topField->chromaFormatIdc;
-  frameStore->frame->hasCrop = frameStore->topField->hasCrop;
-  if (frameStore->frame->hasCrop) {
-    frameStore->frame->cropTop = frameStore->topField->cropTop;
-    frameStore->frame->cropBot = frameStore->topField->cropBot;
-    frameStore->frame->cropLeft = frameStore->topField->cropLeft;
-    frameStore->frame->cropRight = frameStore->topField->cropRight;
-    }
-
-  frameStore->topField->frame = frameStore->botField->frame = frameStore->frame;
-  frameStore->topField->topField = frameStore->topField;
-  frameStore->topField->botField = frameStore->botField;
-  frameStore->botField->topField = frameStore->topField;
-  frameStore->botField->botField = frameStore->botField;
-  if (frameStore->topField->usedForReference || frameStore->botField->usedForReference)
-    decoder->padPicture (frameStore->frame);
-  }
-//}}}
 
 // picture
 //{{{

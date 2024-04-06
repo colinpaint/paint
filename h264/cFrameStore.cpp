@@ -161,3 +161,57 @@ void cFrameStore::unmarkForLongTermRef() {
   isLongTerm = 0;
   }
 //}}}
+
+//{{{
+void cFrameStore::dpbCombineField (cDecoder264* decoder) {
+
+  if (!frame)
+    frame = allocPicture (decoder, eFrame, 
+                          topField->sizeX, topField->sizeY*2,
+                          topField->sizeXcr, topField->sizeYcr*2, 1);
+
+  for (int i = 0; i < topField->sizeY; i++) {
+    memcpy (frame->imgY[i*2], topField->imgY[i], topField->sizeX * sizeof(sPixel)); // top field
+    memcpy (frame->imgY[i*2 + 1], botField->imgY[i], botField->sizeX * sizeof(sPixel)); // bottom field
+    }
+
+  for (int j = 0; j < 2; j++)
+    for (int i = 0; i < topField->sizeYcr; i++) {
+      memcpy (frame->imgUV[j][i*2], topField->imgUV[j][i], topField->sizeXcr*sizeof(sPixel));
+      memcpy (frame->imgUV[j][i*2 + 1], botField->imgUV[j][i], botField->sizeXcr*sizeof(sPixel));
+      }
+
+  poc = frame->poc = frame->framePoc = imin (topField->poc, botField->poc);
+  botField->framePoc = topField->framePoc = frame->poc;
+  botField->topPoc = frame->topPoc = topField->poc;
+  topField->botPoc = frame->botPoc = botField->poc;
+
+  frame->usedForReference = (topField->usedForReference && botField->usedForReference );
+  frame->isLongTerm = (topField->isLongTerm && botField->isLongTerm );
+
+  if (frame->isLongTerm)
+    frame->longTermFrameIndex = longTermFrameIndex;
+
+  frame->topField = topField;
+  frame->botField = botField;
+  frame->frame = frame;
+  frame->codedFrame = 0;
+
+  frame->chromaFormatIdc = topField->chromaFormatIdc;
+  frame->hasCrop = topField->hasCrop;
+  if (frame->hasCrop) {
+    frame->cropTop = topField->cropTop;
+    frame->cropBot = topField->cropBot;
+    frame->cropLeft = topField->cropLeft;
+    frame->cropRight = topField->cropRight;
+    }
+
+  topField->frame = botField->frame = frame;
+  topField->topField = topField;
+  topField->botField = botField;
+  botField->topField = topField;
+  botField->botField = botField;
+  if (topField->usedForReference || botField->usedForReference)
+    decoder->padPicture (frame);
+  }
+//}}}

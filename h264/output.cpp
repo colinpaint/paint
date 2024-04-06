@@ -232,7 +232,7 @@ static void writeUnpairedField (cDecoder264* decoder, cFrameStore* frameStore) {
     frameStore->botField->chromaFormatIdc = picture->chromaFormatIdc;
 
     clearPicture (decoder, frameStore->botField);
-    dpbCombineField (decoder, frameStore);
+    frameStore->dpbCombineField (decoder);
     writePicture (decoder, frameStore->frame, eTopField);
     }
 
@@ -252,7 +252,7 @@ static void writeUnpairedField (cDecoder264* decoder, cFrameStore* frameStore) {
       frameStore->topField->cropRight = frameStore->botField->cropRight;
       }
 
-    dpbCombineField (decoder, frameStore);
+    frameStore->dpbCombineField (decoder);
     writePicture (decoder, frameStore->frame, eBotField);
     }
 
@@ -323,7 +323,7 @@ void directOutput (cDecoder264* decoder, sPicture* picture) {
 
   if (decoder->outBuffer->isUsed == 3) {
     // we have both fields, so output them
-    dpbCombineField (decoder, decoder->outBuffer);
+    decoder->outBuffer->dpbCombineField (decoder);
     writePicture (decoder, decoder->outBuffer->frame, eFrame);
     freePicture (decoder->outBuffer->frame);
 
