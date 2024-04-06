@@ -148,11 +148,11 @@ bool cPps::isEqual (cPps& pps) {
 int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
-  dataPartition->stream.errorFlag = 0;
-  dataPartition->stream.readLen = dataPartition->stream.bitStreamOffset = 0;
-  memcpy (dataPartition->stream.bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
-  dataPartition->stream.bitStreamLen = nalu->RBSPtoSODB (dataPartition->stream.bitStreamBuffer);
-  dataPartition->stream.codeLen = dataPartition->stream.bitStreamLen;
+  dataPartition->bitStream.errorFlag = 0;
+  dataPartition->bitStream.readLen = dataPartition->bitStream.bitStreamOffset = 0;
+  memcpy (dataPartition->bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
+  dataPartition->bitStream.bitStreamLen = nalu->RBSPtoSODB (dataPartition->bitStream.bitStreamBuffer);
+  dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
 
   cPps pps = { 0 };
   pps.naluLen = nalu->len;
@@ -179,7 +179,7 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) {
 // read PPS from NALU
 
-  cBitStream& s = dataPartition->stream;
+  cBitStream& s = dataPartition->bitStream;
 
   id = s.readUeV ("PPS ppsId");
   spsId = s.readUeV ("PPS spsId");

@@ -1451,7 +1451,7 @@ sDataPartition* allocDataPartitions (int numPartitions) {
 
   sDataPartition* dataPartitions = (sDataPartition*)malloc (numPartitions * sizeof(sDataPartition));
   for (int i = 0; i < numPartitions; ++i)
-    dataPartitions[i].stream.bitStreamBuffer = (uint8_t*)malloc (MAX_CODED_FRAME_SIZE);
+    dataPartitions[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (MAX_CODED_FRAME_SIZE);
 
   return dataPartitions;
   }
@@ -1460,7 +1460,7 @@ sDataPartition* allocDataPartitions (int numPartitions) {
 void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions) {
 
   for (int i = 0; i < numPartitions; ++i) {
-    free (dataPartitions[i].stream.bitStreamBuffer);
+    free (dataPartitions[i].bitStream.bitStreamBuffer);
     }
 
   free (dataPartitions);
@@ -3092,7 +3092,7 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
 // - read the rest of the slice header
 
   uint32_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_HEADER];
-  cBitStream& s = slice->dataPartitions[partitionIndex].stream;
+  cBitStream& s = slice->dataPartitions[partitionIndex].bitStream;
 
   slice->startMbNum = s.readUeV ("SLC first_mb_in_slice");
 
@@ -3411,7 +3411,7 @@ int cDecoder264::readSlice (cSlice* slice) {
         slice->refId = nalu->refId;
         slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
-        cBitStream& s = slice->dataPartitions[0].stream;
+        cBitStream& s = slice->dataPartitions[0].bitStream;
         s.readLen = 0;
         s.errorFlag = 0;
         s.bitStreamOffset = 0;
@@ -3499,7 +3499,7 @@ int cDecoder264::readSlice (cSlice* slice) {
         slice->noDataPartitionC = 1;
         slice->dataPartitionMode = eDataPartition3;
         slice->maxDataPartitions = 3;
-        cBitStream& s = slice->dataPartitions[0].stream;
+        cBitStream& s = slice->dataPartitions[0].bitStream;
         s.errorFlag = 0;
         s.bitStreamOffset = s.readLen = 0;
         memcpy (&s.bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
@@ -3532,7 +3532,7 @@ int cDecoder264::readSlice (cSlice* slice) {
 
         if (cNalu::NALU_TYPE_DPB == nalu->unitType) {
           //{{{  got nalu dataPartitionB
-          s = slice->dataPartitions[1].stream;
+          s = slice->dataPartitions[1].bitStream;
            s.errorFlag = 0;
            s.bitStreamOffset = s.readLen = 0;
           memcpy (&s.bitStreamBuffer, &nalu->buf[1], nalu->len-1);
@@ -3560,7 +3560,7 @@ int cDecoder264::readSlice (cSlice* slice) {
 
         if (cNalu::NALU_TYPE_DPC == nalu->unitType) {
           //{{{  got nalu dataPartitionC
-          s = slice->dataPartitions[2].stream;
+          s = slice->dataPartitions[2].bitStream;
           s.errorFlag = 0;
           s.bitStreamOffset = s.readLen = 0;
           memcpy (&s.bitStreamBuffer, &nalu->buf[1], nalu->len-1);

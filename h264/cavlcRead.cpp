@@ -465,7 +465,7 @@ namespace {
         se.type =  SE_HEADER;
         dataPartition = &slice->dataPartitions[dpMap[SE_HEADER]];
         se.len = 1;
-        dataPartition->stream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElement_FLC (&se);
         mb->lumaTransformSize8x8flag = (bool) se.value1;
         }
         //}}}
@@ -606,7 +606,7 @@ namespace {
 
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
-        dataPartition->stream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElement_FLC (&se);
         mb->lumaTransformSize8x8flag = (bool) se.value1;
         }
         //}}}
@@ -873,7 +873,7 @@ namespace {
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
-        dataPartition->stream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElement_FLC (&se);
         mb->lumaTransformSize8x8flag = (bool)se.value1;
         }
 
@@ -1054,7 +1054,7 @@ namespace {
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
-        dataPartition->stream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElement_FLC (&se);
         mb->lumaTransformSize8x8flag = (bool)se.value1;
         }
         //}}}
@@ -1294,7 +1294,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
   se.type = dptype;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
-  cBitStream& s = dataPartition->stream;
+  cBitStream& s = dataPartition->bitStream;
 
   if (!cdc) {
     //{{{  luma or chroma AC
@@ -1506,7 +1506,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
   se.type = dptype;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
   sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
-  cBitStream& s = dataPartition->stream;
+  cBitStream& s = dataPartition->bitStream;
 
   if (!cdc) {
     //{{{  luma or chroma AC

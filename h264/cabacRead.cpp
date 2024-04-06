@@ -96,7 +96,7 @@ namespace {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
           dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
-          if (dataPartition->stream.errorFlag)
+          if (dataPartition->bitStream.errorFlag)
             se->mapping = cBitStream::linfo_levrun_inter;
           else
             se->reading = readRunLevel_CABAC;
@@ -116,7 +116,7 @@ namespace {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
           dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
-          if (dataPartition->stream.errorFlag)
+          if (dataPartition->bitStream.errorFlag)
             se->mapping = cBitStream::linfo_levrun_inter;
           else
             se->reading = readRunLevel_CABAC;
@@ -343,7 +343,7 @@ namespace {
 
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
 
-      if (dataPartition->stream.errorFlag) {
+      if (dataPartition->bitStream.errorFlag) {
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
           ? slice->linfoCbpIntra
           : slice->linfoCbpInter;
@@ -368,9 +368,9 @@ namespace {
         se.reading = readMB_transform_sizeFlag_CABAC;
 
         // read eCavlc transform_size_8x8Flag
-        if (dataPartition->stream.errorFlag) {
+        if (dataPartition->bitStream.errorFlag) {
           se.len = 1;
-          dataPartition->stream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -423,7 +423,7 @@ namespace {
           se.context      = LUMA_16DC;
           se.type         = SE_LUM_DC_INTRA;
 
-          if (dataPartition->stream.errorFlag)
+          if (dataPartition->bitStream.errorFlag)
             se.mapping = cBitStream::linfo_levrun_inter;
           else
             se.reading = readRunLevel_CABAC;
@@ -504,7 +504,7 @@ namespace {
 
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
 
-      if (dataPartition->stream.errorFlag) {
+      if (dataPartition->bitStream.errorFlag) {
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
           ? slice->linfoCbpIntra
           : slice->linfoCbpInter;
@@ -529,9 +529,9 @@ namespace {
         se.reading = readMB_transform_sizeFlag_CABAC;
 
         // read eCavlc transform_size_8x8Flag
-        if (dataPartition->stream.errorFlag) {
+        if (dataPartition->bitStream.errorFlag) {
           se.len = 1;
-          dataPartition->stream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -583,7 +583,7 @@ namespace {
           se.context = LUMA_16DC;
           se.type = SE_LUM_DC_INTRA;
 
-          if (dataPartition->stream.errorFlag)
+          if (dataPartition->bitStream.errorFlag)
             se.mapping = cBitStream::linfo_levrun_inter;
           else
             se.reading = readRunLevel_CABAC;
@@ -643,7 +643,7 @@ namespace {
           else
             se.context = (uv==0) ? CB_16DC : CR_16DC;
 
-          if (dataPartition->stream.errorFlag)
+          if (dataPartition->bitStream.errorFlag)
             se.mapping = cBitStream::linfo_levrun_inter;
           else
             se.reading = readRunLevel_CABAC;
@@ -734,7 +734,7 @@ namespace {
                   ? SE_CBP_INTRA
                   : SE_CBP_INTER;
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-      if (dataPartition->stream.errorFlag) {
+      if (dataPartition->bitStream.errorFlag) {
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
                        ? slice->linfoCbpIntra
                        : slice->linfoCbpInter;
@@ -758,9 +758,9 @@ namespace {
         se.reading = readMB_transform_sizeFlag_CABAC;
 
         // read eCavlc transform_size_8x8Flag
-        if (dataPartition->stream.errorFlag) {
+        if (dataPartition->bitStream.errorFlag) {
           se.len = 1;
-          dataPartition->stream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -811,7 +811,7 @@ namespace {
           se.context = LUMA_16DC;
           se.type = SE_LUM_DC_INTRA;
 
-          if (dataPartition->stream.errorFlag)
+          if (dataPartition->bitStream.errorFlag)
             se.mapping = cBitStream::linfo_levrun_inter;
           else
             se.reading = readRunLevel_CABAC;
@@ -885,7 +885,7 @@ namespace {
               mb->isVblock = ll;
 
               dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-              if (dataPartition->stream.errorFlag)
+              if (dataPartition->bitStream.errorFlag)
                 se.mapping = cBitStream::linfo_levrun_c2x2;
               else
                 se.reading = readRunLevel_CABAC;
@@ -948,7 +948,7 @@ namespace {
         se.context = CHROMA_AC;
         se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
         dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-        if (dataPartition->stream.errorFlag)
+        if (dataPartition->bitStream.errorFlag)
           se.mapping = cBitStream::linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -1055,7 +1055,7 @@ namespace {
         : SE_CBP_INTER;
 
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-      if (dataPartition->stream.errorFlag) {
+      if (dataPartition->bitStream.errorFlag) {
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
           ? slice->linfoCbpIntra
           : slice->linfoCbpInter;
@@ -1079,9 +1079,9 @@ namespace {
         se.reading = readMB_transform_sizeFlag_CABAC;
 
         // read eCavlc transform_size_8x8Flag
-        if (dataPartition->stream.errorFlag) {
+        if (dataPartition->bitStream.errorFlag) {
           se.len = 1;
-          dataPartition->stream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElement_FLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -1132,7 +1132,7 @@ namespace {
         dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
         se.context = LUMA_16DC;
         se.type = SE_LUM_DC_INTRA;
-        if (dataPartition->stream.errorFlag)
+        if (dataPartition->bitStream.errorFlag)
           se.mapping = cBitStream::linfo_levrun_inter;
         else
           se.reading = readRunLevel_CABAC;
@@ -1190,7 +1190,7 @@ namespace {
         se.context = CHROMA_DC;
         se.type = (intra ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
         dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-        if (dataPartition->stream.errorFlag)
+        if (dataPartition->bitStream.errorFlag)
           se.mapping = cBitStream::linfo_levrun_c2x2;
         else
           se.reading = readRunLevel_CABAC;
@@ -1237,7 +1237,7 @@ namespace {
       se.context = CHROMA_AC;
       se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-      if (dataPartition->stream.errorFlag)
+      if (dataPartition->bitStream.errorFlag)
         se.mapping = cBitStream::linfo_levrun_inter;
       else
         se.reading = readRunLevel_CABAC;

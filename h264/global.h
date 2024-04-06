@@ -326,7 +326,7 @@ struct sCodedBlockPattern {
 //}}}
 //{{{
 struct sDataPartition {
-  cBitStream   stream;
+  cBitStream   bitStream;
   sCabacDecode cabacDecode;
 
   int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);

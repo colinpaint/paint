@@ -78,7 +78,7 @@ enum eSyntaxElementType {
  *          The Sliceheader contains the PSYNC information. \par
  *
  *          Elements inside a dataPartition are not ordered. They are
- *          ordered by occurence in the stream.
+ *          ordered by occurence in the bitStream.
  *          Assumption: Only dplosses are considered. \par
  *
  *          The texture elements luminance and chrominance are

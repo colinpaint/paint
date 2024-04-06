@@ -1791,10 +1791,10 @@ void readIPCMcabac (cSlice* slice, sDataPartition* dataPartition) {
   cDecoder264* decoder = slice->decoder;
   sPicture* picture = slice->picture;
 
-  cBitStream* s = &dataPartition->stream;
+  cBitStream* s = &dataPartition->bitStream;
   sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
   uint8_t* buf = s->bitStreamBuffer;
-  int bitStreamLengthInBits = (dataPartition->stream.bitStreamLen << 3) + 7;
+  int bitStreamLengthInBits = (dataPartition->bitStream.bitStreamLen << 3) + 7;
 
   int val = 0;
   int bitsRead = 0;
