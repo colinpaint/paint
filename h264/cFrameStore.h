@@ -15,6 +15,9 @@ public:
   void unmarkForLongTermRef();
 
   void dpbCombineField (cDecoder264* decoder);
+  void dpbCombineField1 (cDecoder264* decoder);
+  void dpbSplitField (cDecoder264* decoder);
+  void insertPictureDpb (cDecoder264* decoder, sPicture* p);
 
   // vars
   int       isUsed = 0;          // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)

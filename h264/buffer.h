@@ -266,7 +266,6 @@ void initListsSliceP (cSlice* slice);
 void initListsSliceB (cSlice* slice);
 void updatePicNum (cSlice* slice);
 
-void dpbCombineField (cDecoder264* decoder, cFrameStore* frameStore);
 void reorderRefPicList (cSlice* slice, int curList);
 sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum);
 

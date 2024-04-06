@@ -12,26 +12,6 @@
 //#define DUMP_DPB
 namespace {
   //{{{
-  void genFieldRefIds (cDecoder264* decoder, sPicture* p) {
-  // Generate Frame parameters from field information.
-
-    // copy the list;
-    for (int j = 0; j < decoder->picSliceIndex; j++) {
-      if (p->listX[j][LIST_0]) {
-        p->listXsize[j][LIST_0] = decoder->sliceList[j]->listXsize[LIST_0];
-        for (int i = 0; i < p->listXsize[j][LIST_0]; i++)
-          p->listX[j][LIST_0][i] = decoder->sliceList[j]->listX[LIST_0][i];
-        }
-
-      if(p->listX[j][LIST_1]) {
-        p->listXsize[j][LIST_1] = decoder->sliceList[j]->listXsize[LIST_1];
-        for(int i = 0; i < p->listXsize[j][LIST_1]; i++)
-          p->listX[j][LIST_1][i] = decoder->sliceList[j]->listX[LIST_1][i];
-        }
-      }
-    }
-  //}}}
-  //{{{
   void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStructure, int longTermFrameIndex,
                                                 int mark_current, uint32_t curr_frame_num, int curr_pic_num) {
 
@@ -147,273 +127,6 @@ namespace {
   //}}}
 
   //{{{
-  void dpbSplitField (cDecoder264* decoder, cFrameStore* frameStore) {
-
-    int twosz16 = 2 * (frameStore->frame->sizeX >> 4);
-    sPicture* fsTop = NULL;
-    sPicture* fsBot = NULL;
-    sPicture* frame = frameStore->frame;
-
-    frameStore->poc = frame->poc;
-    if (!frame->frameMbOnly) {
-      fsTop = frameStore->topField = allocPicture (decoder, eTopField,
-                                                   frame->sizeX, frame->sizeY, frame->sizeXcr,
-                                                   frame->sizeYcr, 1);
-      fsBot = frameStore->botField = allocPicture (decoder, eBotField,
-                                                   frame->sizeX, frame->sizeY,
-                                                   frame->sizeXcr, frame->sizeYcr, 1);
-      for (int i = 0; i < (frame->sizeY >> 1); i++)
-        memcpy (fsTop->imgY[i], frame->imgY[i*2], frame->sizeX*sizeof(sPixel));
-
-      for (int i = 0; i< (frame->sizeYcr >> 1); i++) {
-        memcpy (fsTop->imgUV[0][i], frame->imgUV[0][i*2], frame->sizeXcr*sizeof(sPixel));
-        memcpy (fsTop->imgUV[1][i], frame->imgUV[1][i*2], frame->sizeXcr*sizeof(sPixel));
-        }
-
-      for (int i = 0; i < (frame->sizeY>>1); i++)
-        memcpy (fsBot->imgY[i], frame->imgY[i*2 + 1], frame->sizeX*sizeof(sPixel));
-
-      for (int i = 0; i < (frame->sizeYcr>>1); i++) {
-        memcpy (fsBot->imgUV[0][i], frame->imgUV[0][i*2 + 1], frame->sizeXcr*sizeof(sPixel));
-        memcpy (fsBot->imgUV[1][i], frame->imgUV[1][i*2 + 1], frame->sizeXcr*sizeof(sPixel));
-        }
-
-      fsTop->poc = frame->topPoc;
-      fsBot->poc = frame->botPoc;
-      fsTop->framePoc = frame->framePoc;
-      fsTop->botPoc = fsBot->botPoc =  frame->botPoc;
-      fsTop->topPoc = fsBot->topPoc =  frame->topPoc;
-      fsBot->framePoc = frame->framePoc;
-
-      fsTop->usedForReference = fsBot->usedForReference = frame->usedForReference;
-      fsTop->isLongTerm = fsBot->isLongTerm = frame->isLongTerm;
-      frameStore->longTermFrameIndex = fsTop->longTermFrameIndex
-                                     = fsBot->longTermFrameIndex
-                                     = frame->longTermFrameIndex;
-
-      fsTop->codedFrame = fsBot->codedFrame = 1;
-      fsTop->mbAffFrame = fsBot->mbAffFrame = frame->mbAffFrame;
-
-      frame->topField = fsTop;
-      frame->botField = fsBot;
-      frame->frame = frame;
-      fsTop->botField = fsBot;
-      fsTop->frame = frame;
-      fsTop->topField = fsTop;
-      fsBot->topField = fsTop;
-      fsBot->frame = frame;
-      fsBot->botField = fsBot;
-
-      fsTop->chromaFormatIdc = fsBot->chromaFormatIdc = frame->chromaFormatIdc;
-      fsTop->codingType = fsBot->codingType = frame->codingType;
-      if (frame->usedForReference)  {
-        decoder->padPicture (fsTop);
-        decoder->padPicture (fsBot);
-        }
-      }
-    else {
-      frameStore->topField = NULL;
-      frameStore->botField = NULL;
-      frame->topField = NULL;
-      frame->botField = NULL;
-      frame->frame = frame;
-      }
-
-    if (!frame->frameMbOnly) {
-      if (frame->mbAffFrame) {
-        sPicMotionOld* frm_motion = &frame->motion;
-        for (int j = 0 ; j < (frame->sizeY >> 3); j++) {
-          int jj = (j >> 2)*8 + (j & 0x03);
-          int jj4 = jj + 4;
-          int jdiv = (j >> 1);
-          for (int i = 0 ; i < (frame->sizeX>>2); i++) {
-            int idiv = (i >> 2);
-
-            int currentmb = twosz16*(jdiv >> 1)+ (idiv)*2 + (jdiv & 0x01);
-            // Assign field mvs attached to MB-Frame buffer to the proper buffer
-            if (frm_motion->mbField[currentmb]) {
-              fsBot->mvInfo[j][i].mv[LIST_0] = frame->mvInfo[jj4][i].mv[LIST_0];
-              fsBot->mvInfo[j][i].mv[LIST_1] = frame->mvInfo[jj4][i].mv[LIST_1];
-              fsBot->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj4][i].refIndex[LIST_0];
-              if (fsBot->mvInfo[j][i].refIndex[LIST_0] >=0)
-                fsBot->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[4][(int16_t) fsBot->mvInfo[j][i].refIndex[LIST_0]];
-              else
-                fsBot->mvInfo[j][i].refPic[LIST_0] = NULL;
-              fsBot->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj4][i].refIndex[LIST_1];
-              if (fsBot->mvInfo[j][i].refIndex[LIST_1] >=0)
-                fsBot->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[5][(int16_t) fsBot->mvInfo[j][i].refIndex[LIST_1]];
-              else
-                fsBot->mvInfo[j][i].refPic[LIST_1] = NULL;
-
-              fsTop->mvInfo[j][i].mv[LIST_0] = frame->mvInfo[jj][i].mv[LIST_0];
-              fsTop->mvInfo[j][i].mv[LIST_1] = frame->mvInfo[jj][i].mv[LIST_1];
-              fsTop->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj][i].refIndex[LIST_0];
-              if (fsTop->mvInfo[j][i].refIndex[LIST_0] >=0)
-                fsTop->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[2][(int16_t) fsTop->mvInfo[j][i].refIndex[LIST_0]];
-              else
-                fsTop->mvInfo[j][i].refPic[LIST_0] = NULL;
-              fsTop->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj][i].refIndex[LIST_1];
-              if (fsTop->mvInfo[j][i].refIndex[LIST_1] >=0)
-                fsTop->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[3][(int16_t) fsTop->mvInfo[j][i].refIndex[LIST_1]];
-              else
-                fsTop->mvInfo[j][i].refPic[LIST_1] = NULL;
-              }
-            }
-          }
-        }
-
-        //! Generate field MVs from Frame MVs
-      for (int j = 0 ; j < (frame->sizeY >> 3) ; j++) {
-        int jj = 2 * RSD(j);
-        int jdiv = (j >> 1);
-        for (int i = 0 ; i < (frame->sizeX >> 2) ; i++) {
-          int ii = RSD(i);
-          int idiv = (i >> 2);
-          int currentmb = twosz16 * (jdiv >> 1)+ (idiv)*2 + (jdiv & 0x01);
-          if (!frame->mbAffFrame  || !frame->motion.mbField[currentmb]) {
-            fsTop->mvInfo[j][i].mv[LIST_0] = fsBot->mvInfo[j][i].mv[LIST_0] = frame->mvInfo[jj][ii].mv[LIST_0];
-            fsTop->mvInfo[j][i].mv[LIST_1] = fsBot->mvInfo[j][i].mv[LIST_1] = frame->mvInfo[jj][ii].mv[LIST_1];
-
-            // Scaling of references is done here since it will not affect spatial direct (2*0 =0)
-            if (frame->mvInfo[jj][ii].refIndex[LIST_0] == -1) {
-              fsTop->mvInfo[j][i].refIndex[LIST_0] = fsBot->mvInfo[j][i].refIndex[LIST_0] = - 1;
-              fsTop->mvInfo[j][i].refPic[LIST_0] = fsBot->mvInfo[j][i].refPic[LIST_0] = NULL;
-              }
-            else {
-              fsTop->mvInfo[j][i].refIndex[LIST_0] = fsBot->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj][ii].refIndex[LIST_0];
-              fsTop->mvInfo[j][i].refPic[LIST_0] = fsBot->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_0][(int16_t) frame->mvInfo[jj][ii].refIndex[LIST_0]];
-              }
-
-            if (frame->mvInfo[jj][ii].refIndex[LIST_1] == -1) {
-              fsTop->mvInfo[j][i].refIndex[LIST_1] = fsBot->mvInfo[j][i].refIndex[LIST_1] = - 1;
-              fsTop->mvInfo[j][i].refPic[LIST_1] = fsBot->mvInfo[j][i].refPic[LIST_1] = NULL;
-              }
-            else {
-              fsTop->mvInfo[j][i].refIndex[LIST_1] = fsBot->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj][ii].refIndex[LIST_1];
-              fsTop->mvInfo[j][i].refPic[LIST_1] = fsBot->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj][ii].slice_no]->listX[LIST_1][(int16_t) frame->mvInfo[jj][ii].refIndex[LIST_1]];
-              }
-            }
-          }
-        }
-      }
-    }
-  //}}}
-  //{{{
-  void dpb_combine_field (cDecoder264* decoder, cFrameStore* frameStore) {
-
-    frameStore->dpbCombineField (decoder);
-
-    frameStore->frame->codingType = frameStore->topField->codingType; //eFieldCoding;
-     //! Use inference flag to remap mvs/references
-
-    //! Generate Frame parameters from field information.
-    for (int j = 0 ; j < (frameStore->topField->sizeY >> 2); j++) {
-      int jj = (j << 1);
-      int jj4 = jj + 1;
-      for (int i = 0 ; i < (frameStore->topField->sizeX >> 2); i++) {
-        frameStore->frame->mvInfo[jj][i].mv[LIST_0] = frameStore->topField->mvInfo[j][i].mv[LIST_0];
-        frameStore->frame->mvInfo[jj][i].mv[LIST_1] = frameStore->topField->mvInfo[j][i].mv[LIST_1];
-
-        frameStore->frame->mvInfo[jj][i].refIndex[LIST_0] = frameStore->topField->mvInfo[j][i].refIndex[LIST_0];
-        frameStore->frame->mvInfo[jj][i].refIndex[LIST_1] = frameStore->topField->mvInfo[j][i].refIndex[LIST_1];
-
-        // bug: top field list doesnot exist.*/
-        int l = frameStore->topField->mvInfo[j][i].slice_no;
-        int k = frameStore->topField->mvInfo[j][i].refIndex[LIST_0];
-        frameStore->frame->mvInfo[jj][i].refPic[LIST_0] = k>=0? frameStore->topField->listX[l][LIST_0][k]: NULL;
-        k = frameStore->topField->mvInfo[j][i].refIndex[LIST_1];
-        frameStore->frame->mvInfo[jj][i].refPic[LIST_1] = k>=0? frameStore->topField->listX[l][LIST_1][k]: NULL;
-
-        // association with id already known for fields.
-        frameStore->frame->mvInfo[jj4][i].mv[LIST_0] = frameStore->botField->mvInfo[j][i].mv[LIST_0];
-        frameStore->frame->mvInfo[jj4][i].mv[LIST_1] = frameStore->botField->mvInfo[j][i].mv[LIST_1];
-
-        frameStore->frame->mvInfo[jj4][i].refIndex[LIST_0] = frameStore->botField->mvInfo[j][i].refIndex[LIST_0];
-        frameStore->frame->mvInfo[jj4][i].refIndex[LIST_1] = frameStore->botField->mvInfo[j][i].refIndex[LIST_1];
-        l = frameStore->botField->mvInfo[j][i].slice_no;
-
-        k = frameStore->botField->mvInfo[j][i].refIndex[LIST_0];
-        frameStore->frame->mvInfo[jj4][i].refPic[LIST_0] = k >= 0 ? frameStore->botField->listX[l][LIST_0][k]: NULL;
-        k = frameStore->botField->mvInfo[j][i].refIndex[LIST_1];
-        frameStore->frame->mvInfo[jj4][i].refPic[LIST_1] = k >= 0 ? frameStore->botField->listX[l][LIST_1][k]: NULL;
-      }
-    }
-  }
-  //}}}
-  //{{{
-  void insertPictureDpb (cDecoder264* decoder, cFrameStore* fs, sPicture* p) {
-
-    switch (p->picStructure) {
-      //{{{
-      case eFrame:
-        fs->frame = p;
-        fs->isUsed = 3;
-        if (p->usedForReference) {
-          fs->mIsReference = 3;
-          fs->isOrigReference = 3;
-          if (p->isLongTerm) {
-            fs->isLongTerm = 3;
-            fs->longTermFrameIndex = p->longTermFrameIndex;
-            }
-          }
-
-        // generate field views
-        dpbSplitField (decoder, fs);
-        break;
-      //}}}
-      //{{{
-      case eTopField:
-        fs->topField = p;
-        fs->isUsed |= 1;
-
-        if (p->usedForReference) {
-          fs->mIsReference |= 1;
-          fs->isOrigReference |= 1;
-          if (p->isLongTerm) {
-            fs->isLongTerm |= 1;
-            fs->longTermFrameIndex = p->longTermFrameIndex;
-            }
-          }
-        if (fs->isUsed == 3)
-          // generate frame view
-          dpb_combine_field(decoder, fs);
-        else
-          fs->poc = p->poc;
-
-        genFieldRefIds(decoder, p);
-        break;
-      //}}}
-      //{{{
-      case eBotField:
-        fs->botField = p;
-        fs->isUsed |= 2;
-
-        if (p->usedForReference) {
-          fs->mIsReference |= 2;
-          fs->isOrigReference |= 2;
-          if (p->isLongTerm) {
-            fs->isLongTerm |= 2;
-            fs->longTermFrameIndex = p->longTermFrameIndex;
-            }
-          }
-
-        if (fs->isUsed == 3)
-          // generate frame view
-          dpb_combine_field(decoder, fs);
-        else
-          fs->poc = p->poc;
-
-        genFieldRefIds(decoder, p);
-        break;
-      //}}}
-      }
-
-    fs->frameNum = p->picNum;
-    fs->recoveryFrame = p->recoveryFrame;
-    fs->isOutput = p->isOutput;
-    }
-  //}}}
-  //{{{
   void dumpDpb (sDpb* dpb) {
 
   #ifdef DUMP_DPB
@@ -461,7 +174,7 @@ namespace {
     }
   //}}}
   //{{{
-  int getDpbSize (cDecoder264* decoder, cSps *activeSps) {
+  int getDpbSize (cDecoder264* decoder, cSps* activeSps) {
 
     int pic_size_mb = (activeSps->picWidthMbsMinus1 + 1) * (activeSps->picHeightMapUnitsMinus1 + 1) * (activeSps->frameMbOnly?1:2);
     int size = 0;
@@ -1118,8 +831,6 @@ namespace {
   //}}}
   }
 
-// frameStore
-
 // picture
 //{{{
 sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
@@ -1472,7 +1183,7 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
             ((picture->picStructure == eBotField) && (dpb->lastPicture->isUsed == 1))) {
           if ((picture->usedForReference && (dpb->lastPicture->isOrigReference != 0)) ||
               (!picture->usedForReference && (dpb->lastPicture->isOrigReference == 0))) {
-            insertPictureDpb (decoder, dpb->lastPicture, picture);
+            dpb->lastPicture->insertPictureDpb (decoder, picture);
             updateRefList (dpb);
             updateLongTermRefList (dpb);
             dumpDpb (dpb);
@@ -1528,7 +1239,7 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
         cDecoder264::error ("duplicate frameNum in int16_t-term reference picture buffer");
 
   // store at end of buffer
-  insertPictureDpb (decoder, dpb->fs[dpb->usedSize], picture);
+  dpb->fs[dpb->usedSize]->insertPictureDpb (decoder,  picture);
 
   // picture error conceal
   if (picture->isIDR)
