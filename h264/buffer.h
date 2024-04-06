@@ -95,35 +95,12 @@ struct sPicture {
   };
 //}}}
 //{{{
-struct sFrameStore {
-  int       isUsed;          // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
-  int       isReference;     // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isLongTerm;      // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isOrigReference; // original marking by nalRefIdc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isNonExistent;
-
-  uint32_t  frameNum;
-  uint32_t  recoveryFrame;
-
-  int       frameNumWrap;
-  int       longTermFrameIndex;
-  int       isOutput;
-  int       poc;
-
-  int       concealRef;
-
-  sPicture* frame;
-  sPicture* topField;
-  sPicture* botField;
-  };
-//}}}
-//{{{
 struct sDpb {
   cDecoder264*    decoder;
 
-  sFrameStore** fs;
-  sFrameStore** fsRef;
-  sFrameStore** fsLongTermRef;
+  cFrameStore** fs;
+  cFrameStore** fsRef;
+  cFrameStore** fsLongTermRef;
 
   uint32_t size;
   uint32_t usedSize;
@@ -135,7 +112,7 @@ struct sDpb {
   int initDone;
   int numRefFrames;
 
-  sFrameStore* lastPicture;
+  cFrameStore* lastPicture;
   };
 //}}}
 
@@ -175,8 +152,8 @@ static inline int comparePicByLtPicNumAscending (const void* arg1, const void* a
 // compares two frame stores by picNum for qsort in descending order
 static inline int compareFsByFrameNumDescending (const void* arg1, const void* arg2) {
 
-  int frame_num_wrap1 = (*(sFrameStore**)arg1)->frameNumWrap;
-  int frame_num_wrap2 = (*(sFrameStore**)arg2)->frameNumWrap;
+  int frame_num_wrap1 = (*(cFrameStore**)arg1)->frameNumWrap;
+  int frame_num_wrap2 = (*(cFrameStore**)arg2)->frameNumWrap;
 
   if ( frame_num_wrap1 < frame_num_wrap2)
     return 1;
@@ -191,8 +168,8 @@ static inline int compareFsByFrameNumDescending (const void* arg1, const void* a
 // compares two frame stores by lt_pic_num for qsort in descending order
 static inline int compareFsbyLtPicIndexAscending (const void* arg1, const void* arg2) {
 
-  int long_term_frame_idx1 = (*(sFrameStore**)arg1)->longTermFrameIndex;
-  int long_term_frame_idx2 = (*(sFrameStore**)arg2)->longTermFrameIndex;
+  int long_term_frame_idx1 = (*(cFrameStore**)arg1)->longTermFrameIndex;
+  int long_term_frame_idx2 = (*(cFrameStore**)arg2)->longTermFrameIndex;
 
   if ( long_term_frame_idx1 < long_term_frame_idx2)
     return -1;
@@ -236,8 +213,8 @@ static inline int comparePicByPocdesc (const void* arg1, const void* arg2) {
 // compares two frame stores by poc for qsort in ascending order
 static inline int compareFsByPocAscending (const void* arg1, const void* arg2) {
 
-  int poc1 = (*(sFrameStore**)arg1)->poc;
-  int poc2 = (*(sFrameStore**)arg2)->poc;
+  int poc1 = (*(cFrameStore**)arg1)->poc;
+  int poc2 = (*(cFrameStore**)arg2)->poc;
 
   if (poc1 < poc2)
     return -1;
@@ -251,8 +228,8 @@ static inline int compareFsByPocAscending (const void* arg1, const void* arg2) {
 // compares two frame stores by poc for qsort in descending order
 static inline int comparefsByPocdesc (const void* arg1, const void* arg2) {
 
-  int poc1 = (*(sFrameStore**)arg1)->poc;
-  int poc2 = (*(sFrameStore**)arg2)->poc;
+  int poc1 = (*(cFrameStore**)arg1)->poc;
+  int poc2 = (*(cFrameStore**)arg2)->poc;
 
   if (poc1 < poc2)
     return 1;
@@ -264,11 +241,6 @@ static inline int comparefsByPocdesc (const void* arg1, const void* arg2) {
 //}}}
 static inline int isLongRef (sPicture* picture) { return picture->usedForReference && picture->isLongTerm; }
 static inline int isShortRef (sPicture* picture) { return picture->usedForReference && !picture->isLongTerm; }
-
-sFrameStore* allocFrameStore();
-void freeFrameStore (sFrameStore* frameStore);
-void unmarkForRef( sFrameStore* frameStore);
-void unmarkForLongTermRef (sFrameStore* frameStore);
 
 sPicture* allocPicture (cDecoder264* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
 void freePicture (sPicture* picture);
@@ -294,7 +266,7 @@ void initListsSliceP (cSlice* slice);
 void initListsSliceB (cSlice* slice);
 void updatePicNum (cSlice* slice);
 
-void dpbCombineField (cDecoder264* decoder, sFrameStore* frameStore);
+void dpbCombineField (cDecoder264* decoder, cFrameStore* frameStore);
 void reorderRefPicList (cSlice* slice, int curList);
 sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum);
 

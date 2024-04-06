@@ -2035,12 +2035,12 @@ void sliding_window_poc_management (sDpb* dpb, sPicture *p)
 void write_lost_non_ref_pic (sDpb* dpb, int poc) {
 
   cDecoder264* decoder = dpb->decoder;
-  sFrameStore concealment_fs;
+  cFrameStore concealment_fs;
   if (poc > 0) {
     if ((poc - dpb->lastOutputPoc) > decoder->param.pocGap) {
       concealment_fs.frame = decoder->concealHead->picture;
       concealment_fs.isOutput = 0;
-      concealment_fs.isReference = 0;
+      concealment_fs.mIsReference = 0;
       concealment_fs.isUsed = 3;
 
       writeStoredFrame (decoder, &concealment_fs);

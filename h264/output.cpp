@@ -221,7 +221,7 @@ static void writePicture (cDecoder264* decoder, sPicture* p, int realStructure) 
   }
 //}}}
 //{{{
-static void writeUnpairedField (cDecoder264* decoder, sFrameStore* frameStore) {
+static void writeUnpairedField (cDecoder264* decoder, cFrameStore* frameStore) {
 
   if (frameStore->isUsed & 0x01) {
     // we have a top field, construct an empty bottom field
@@ -279,7 +279,7 @@ static void flushDirectOutput (cDecoder264* decoder) {
 //{{{
 void allocOutput (cDecoder264* decoder) {
 
-  decoder->outBuffer = allocFrameStore();
+  decoder->outBuffer = cFrameStore::allocFrameStore();
   decoder->pendingOut = (sPicture*)calloc (sizeof(sPicture), 1);
   decoder->pendingOut->imgUV = NULL;
   decoder->pendingOut->imgY = NULL;
@@ -288,7 +288,7 @@ void allocOutput (cDecoder264* decoder) {
 //{{{
 void freeOutput (cDecoder264* decoder) {
 
-  freeFrameStore (decoder->outBuffer);
+  decoder->outBuffer->freeFrameStore ();
   decoder->outBuffer = NULL;
 
   flushPendingOut (decoder);
@@ -339,7 +339,7 @@ void directOutput (cDecoder264* decoder, sPicture* picture) {
   }
 //}}}
 //{{{
-void writeStoredFrame (cDecoder264* decoder, sFrameStore* frameStore) {
+void writeStoredFrame (cDecoder264* decoder, cFrameStore* frameStore) {
 
   // make sure no direct output field is pending
   flushDirectOutput (decoder);
