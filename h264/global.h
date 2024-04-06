@@ -13,7 +13,6 @@
 //}}}
 //{{{  defines
 #define MAX_NUM_SLICES       8
-#define MAX_CODED_FRAME_SIZE 8000000  // bytes for one frame
 #define MAX_NUM_DECSLICES    16
 #define MCBUF_LUMA_PAD_X     32
 #define MCBUF_LUMA_PAD_Y     12
@@ -614,17 +613,15 @@ public:
 
   void decodePOC (cSlice* slice);
   void padPicture (sPicture* picture);
+  void changePlaneJV (int nplane, cSlice* slice);
 
   void directOutput (sPicture* picture);
   void writeStoredFrame (cFrameStore* frameStore);
 
-  void makeFramePictureJV();
-  void changePlaneJV (int nplane, cSlice* slice);
-
   // static var
   static inline cDecoder264* gDecoder = nullptr;
 
-  // vars
+  //{{{  vars
   sParam       param = {};
   sDebug       debug = {};
 
@@ -765,8 +762,8 @@ public:
   char*         intraBlockJV[MAX_PLANE] = {nullptr};
   uint8_t**     predModeJV[MAX_PLANE] = {nullptr};
   int**         siBlockJV[MAX_PLANE] = {nullptr};
-
-  // C style virtual functions
+  //}}}
+  //{{{  C style virtual functions
   void (*getNeighbour) (sMacroBlock*, int, int, int[2], sPixelPos*);
   void (*getMbBlockPos) (sBlockPos*, int, int16_t*, int16_t*);
   void (*getStrengthV) (sMacroBlock*, int, int, sPicture*);
@@ -775,6 +772,7 @@ public:
   void (*edgeLoopLumaH) (eColorPlane, sPixel**, uint8_t*, sMacroBlock*, int, sPicture*);
   void (*edgeLoopChromaV) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
   void (*edgeLoopChromaH) (sPixel**, uint8_t*, sMacroBlock*, int, int, sPicture*);
+  //}}}
 
 private:
   void clearDecodedPics();
@@ -808,6 +806,8 @@ private:
   void copySliceInfo (cSlice* slice, sOldSlice* oldSlice);
   void useParameterSet (cSlice* slice);
 
+  void makeFramePictureJV();
+
   void readSliceHeader (cSlice* slice);
   int readSlice (cSlice* slice);
   void decodeSlice (cSlice* slice);
@@ -818,6 +818,3 @@ private:
 
 sDataPartition* allocDataPartitions (int numPartitions);
 void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions);
-
-sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic);
-void freeDecodedPictures (sDecodedPic* decodedPic);

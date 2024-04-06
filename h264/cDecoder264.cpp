@@ -1407,24 +1407,52 @@ namespace {
       }
     }
   //}}}
+
+  //{{{
+  sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic) {
+
+    sDecodedPic* prevDecodedPicture = NULL;
+    while (decodedPic && (decodedPic->ok)) {
+      prevDecodedPicture = decodedPic;
+      decodedPic = decodedPic->next;
+      }
+
+    if (!decodedPic) {
+      decodedPic = (sDecodedPic*)calloc (1, sizeof(*decodedPic));
+      prevDecodedPicture->next = decodedPic;
+      }
+
+    return decodedPic;
+    }
+  //}}}
+  //{{{
+  void freeDecodedPictures (sDecodedPic* decodedPic) {
+
+    while (decodedPic) {
+      sDecodedPic* nextDecodedPic = decodedPic->next;
+      if (decodedPic->yBuf) {
+        free (decodedPic->yBuf);
+        decodedPic->yBuf = NULL;
+        decodedPic->uBuf = NULL;
+        decodedPic->vBuf = NULL;
+        }
+
+      free (decodedPic);
+      decodedPic = nextDecodedPic;
+     }
+    }
+  //}}}
   }
 
 // sDataPartition
+ constexpr int MAX_CODED_FRAME_SIZE = 2000000;  // bytes for one frame
 //{{{
 sDataPartition* allocDataPartitions (int numPartitions) {
 
   sDataPartition* dataPartitions = (sDataPartition*)calloc (numPartitions, sizeof(sDataPartition));
-
   for (int i = 0; i < numPartitions; ++i) {
-    // loop over all dataPartitions
-    sDataPartition* dataPartition = &dataPartitions[i];
-    dataPartition->stream = (cBitStream*)calloc(1, sizeof(cBitStream));
-    if (dataPartition->stream == NULL)
-      cDecoder264::error ("allocDataPartitions: Memory allocation for cBitStream failed");
-
-    dataPartition->stream->bitStreamBuffer = (uint8_t*)calloc(MAX_CODED_FRAME_SIZE, sizeof(uint8_t));
-    if (dataPartition->stream->bitStreamBuffer == NULL)
-      cDecoder264::error ("allocDataPartitions: Memory allocation for bitStreamBuffer failed");
+    dataPartitions[i].stream = (cBitStream*)calloc (1, sizeof(cBitStream));
+    dataPartitions[i].stream->bitStreamBuffer = (uint8_t*)calloc (MAX_CODED_FRAME_SIZE, sizeof(uint8_t));
     }
 
   return dataPartitions;
@@ -1439,42 +1467,6 @@ void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions) {
     }
 
   free (dataPartitions);
-  }
-//}}}
-
-// sDecodedPic
-//{{{
-sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic) {
-
-  sDecodedPic* prevDecodedPicture = NULL;
-  while (decodedPic && (decodedPic->ok)) {
-    prevDecodedPicture = decodedPic;
-    decodedPic = decodedPic->next;
-    }
-
-  if (!decodedPic) {
-    decodedPic = (sDecodedPic*)calloc (1, sizeof(*decodedPic));
-    prevDecodedPicture->next = decodedPic;
-    }
-
-  return decodedPic;
-  }
-//}}}
-//{{{
-void freeDecodedPictures (sDecodedPic* decodedPic) {
-
-  while (decodedPic) {
-    sDecodedPic* nextDecodedPicture = decodedPic->next;
-    if (decodedPic->yBuf) {
-      free (decodedPic->yBuf);
-      decodedPic->yBuf = NULL;
-      decodedPic->uBuf = NULL;
-      decodedPic->vBuf = NULL;
-      }
-
-    free (decodedPic);
-    decodedPic = nextDecodedPicture;
-   }
   }
 //}}}
 
@@ -1555,64 +1547,6 @@ cDecoder264::~cDecoder264() {
   free (nalu);
 
   freeDecodedPictures (outDecodedPics);
-  }
-//}}}
-
-//{{{
-int cDecoder264::decodeOneFrame (sDecodedPic** decPicList) {
-
-  int result = 0;
-
-  clearDecodedPics();
-
-  int decodeFrameResult = decodeFrame();
-  if (decodeFrameResult == eSOP)
-    result = DEC_SUCCEED;
-  else if (decodeFrameResult == eEOS)
-    result = DEC_EOS;
-  else
-    result |= DEC_ERRMASK;
-
-  *decPicList = outDecodedPics;
-  return result;
-  }
-//}}}
-//{{{
-void cDecoder264::finish (sDecodedPic** decPicList) {
-
-  clearDecodedPics();
-  flushDpb (dpb);
-
-  annexB->reset();
-
-  newFrame = 0;
-  prevFrameNum = 0;
-  *decPicList = outDecodedPics;
-  }
-//}}}
-//{{{
-void cDecoder264::close() {
-
-  closeFmo (this);
-  freeLayerBuffers();
-  freeGlobalBuffers();
-
-  ercClose (this, ercErrorVar);
-
-  for (uint32_t i = 0; i < kMaxPps; i++) {
-    if (pps[i].ok && pps[i].sliceGroupId)
-      free (pps[i].sliceGroupId);
-    pps[i].ok = false;
-    }
-
-  freeDpb (dpb);
-
-  // free output
-  delete outBuffer;
-  flushPendingOut();
-  free (pendingOut);
-
-  gDecoder = NULL;
   }
 //}}}
 
@@ -1797,7 +1731,6 @@ void cDecoder264::decodePOC (cSlice* slice) {
     }
   }
 //}}}
-
 //{{{
 void cDecoder264::changePlaneJV (int nplane, cSlice* slice) {
 
@@ -1816,31 +1749,7 @@ void cDecoder264::changePlaneJV (int nplane, cSlice* slice) {
     }
   }
 //}}}
-//{{{
-void cDecoder264::makeFramePictureJV() {
 
-  picture = decPictureJV[0];
-
-  // copy;
-  if (picture->usedForReference) {
-    int nsize = (picture->sizeY/BLOCK_SIZE)*(picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotion);
-    memcpy (&(picture->mvInfoJV[PLANE_Y][0][0]), &(decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
-    memcpy (&(picture->mvInfoJV[PLANE_U][0][0]), &(decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
-    memcpy (&(picture->mvInfoJV[PLANE_V][0][0]), &(decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
-    }
-
-  // This could be done with pointers and seems not necessary
-  for (int uv = 0; uv < 2; uv++) {
-    for (int line = 0; line < coding.height; line++) {
-      int nsize = sizeof(sPixel) * coding.width;
-      memcpy (picture->imgUV[uv][line], decPictureJV[uv+1]->imgY[line], nsize );
-      }
-    freePicture (decPictureJV[uv+1]);
-    }
-  }
-//}}}
-
-// output
 //{{{
 void cDecoder264::directOutput (sPicture* picture) {
 
@@ -1899,6 +1808,64 @@ void cDecoder264::writeStoredFrame (cFrameStore* frameStore) {
     }
 
   frameStore->isOutput = 1;
+  }
+//}}}
+
+//{{{
+int cDecoder264::decodeOneFrame (sDecodedPic** decPicList) {
+
+  int result = 0;
+
+  clearDecodedPics();
+
+  int decodeFrameResult = decodeFrame();
+  if (decodeFrameResult == eSOP)
+    result = DEC_SUCCEED;
+  else if (decodeFrameResult == eEOS)
+    result = DEC_EOS;
+  else
+    result |= DEC_ERRMASK;
+
+  *decPicList = outDecodedPics;
+  return result;
+  }
+//}}}
+//{{{
+void cDecoder264::finish (sDecodedPic** decPicList) {
+
+  clearDecodedPics();
+  flushDpb (dpb);
+
+  annexB->reset();
+
+  newFrame = 0;
+  prevFrameNum = 0;
+  *decPicList = outDecodedPics;
+  }
+//}}}
+//{{{
+void cDecoder264::close() {
+
+  closeFmo (this);
+  freeLayerBuffers();
+  freeGlobalBuffers();
+
+  ercClose (this, ercErrorVar);
+
+  for (uint32_t i = 0; i < kMaxPps; i++) {
+    if (pps[i].ok && pps[i].sliceGroupId)
+      free (pps[i].sliceGroupId);
+    pps[i].ok = false;
+    }
+
+  freeDpb (dpb);
+
+  // free output
+  delete outBuffer;
+  flushPendingOut();
+  free (pendingOut);
+
+  gDecoder = NULL;
   }
 //}}}
 
@@ -2389,251 +2356,6 @@ void cDecoder264::setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* outp
 //}}}
 
 //{{{
-void cDecoder264::allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* p,
-                                          int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
-                                          int chromaSizeX, int chromaSizeY) {
-
-  if (decodedPic->bufSize != frameSize) {
-    memFree (decodedPic->yBuf);
-
-    decodedPic->bufSize = frameSize;
-    decodedPic->yBuf = (uint8_t*)memAlloc (decodedPic->bufSize);
-    decodedPic->uBuf = decodedPic->yBuf + lumaSize;
-    decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
-
-    decodedPic->yuvFormat = p->chromaFormatIdc;
-    decodedPic->bitDepth = coding.picUnitBitSizeDisk;
-    decodedPic->width = lumaSizeX;
-    decodedPic->height = lumaSizeY;
-
-    int symbolSizeInBytes = (coding.picUnitBitSizeDisk + 7) >> 3;
-    decodedPic->yStride = lumaSizeX * symbolSizeInBytes;
-    decodedPic->uvStride = chromaSizeX * symbolSizeInBytes;
-    }
-  }
-//}}}
-//{{{
-void cDecoder264::clearPicture (sPicture* p) {
-
-  printf ("-------- clearPicture\n");
-
-  for (int i = 0; i < p->sizeY; i++)
-    for (int j = 0; j < p->sizeX; j++)
-      p->imgY[i][j] = (sPixel)coding.dcPredValueComp[0];
-
-  for (int i = 0; i < p->sizeYcr;i++)
-    for (int j = 0; j < p->sizeXcr; j++)
-      p->imgUV[0][i][j] = (sPixel)coding.dcPredValueComp[1];
-
-  for (int i = 0; i < p->sizeYcr;i++)
-    for (int j = 0; j < p->sizeXcr; j++)
-      p->imgUV[1][i][j] = (sPixel)coding.dcPredValueComp[2];
-  }
-//}}}
-//{{{
-void cDecoder264::writeOutPicture (sPicture* p) {
-
-  static const int SubWidthC [4]= { 1, 2, 2, 1 };
-  static const int SubHeightC [4]= { 1, 2, 1, 1 };
-
-  if (p->nonExisting)
-    return;
-
-  int cropLeft;
-  int cropRight;
-  int cropTop;
-  int cropBottom;
-  if (p->hasCrop) {
-    cropLeft = SubWidthC [p->chromaFormatIdc] * p->cropLeft;
-    cropRight = SubWidthC [p->chromaFormatIdc] * p->cropRight;
-    cropTop = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnly ) * p->cropTop;
-    cropBottom = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnly ) * p->cropBot;
-    }
-  else
-    cropLeft = cropRight = cropTop = cropBottom = 0;
-
-  int symbolSizeInBytes = (coding.picUnitBitSizeDisk+7) >> 3;
-  int chromaSizeX =  p->sizeXcr- p->cropLeft -p->cropRight;
-  int chromaSizeY = p->sizeYcr - ( 2 - p->frameMbOnly ) * p->cropTop -( 2 - p->frameMbOnly ) * p->cropBot;
-  int lumaSizeX = p->sizeX - cropLeft - cropRight;
-  int lumaSizeY = p->sizeY - cropTop - cropBottom;
-  int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
-  int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
-
-  sDecodedPic* decodedPic = allocDecodedPicture (outDecodedPics);
-  if (!decodedPic->yBuf || (decodedPic->bufSize < frameSize))
-    allocDecodedPicBuffers (decodedPic, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
-  decodedPic->ok = 1;
-  decodedPic->poc = p->framePoc;
-
-  cropImg2buf (decodedPic->ok ? decodedPic->yBuf : decodedPic->yBuf + lumaSizeX * symbolSizeInBytes,
-               p->imgY, p->sizeX, p->sizeY, symbolSizeInBytes,
-               cropLeft, cropRight, cropTop, cropBottom, decodedPic->yStride);
-
-  cropLeft = p->cropLeft;
-  cropRight = p->cropRight;
-  cropTop = (2 - p->frameMbOnly) * p->cropTop;
-  cropBottom = (2 - p->frameMbOnly) * p->cropBot;
-
-  cropImg2buf (decodedPic->ok ? decodedPic->uBuf : decodedPic->uBuf + chromaSizeX * symbolSizeInBytes,
-               p->imgUV[0], p->sizeXcr, p->sizeYcr, symbolSizeInBytes,
-               cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
-
-  cropImg2buf (decodedPic->ok ? decodedPic->vBuf : decodedPic->vBuf + chromaSizeX * symbolSizeInBytes,
-               p->imgUV[1], p->sizeXcr, p->sizeYcr, symbolSizeInBytes,
-               cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
-  }
-//}}}
-//{{{
-void cDecoder264::flushPendingOut() {
-
-  if (pendingOutState != eFrame)
-    writeOutPicture (pendingOut);
-
-  if (pendingOut->imgY) {
-    freeMem2Dpel (pendingOut->imgY);
-    pendingOut->imgY = NULL;
-    }
-
-  if (pendingOut->imgUV) {
-    freeMem3Dpel (pendingOut->imgUV);
-    pendingOut->imgUV = NULL;
-    }
-
-  pendingOutState = eFrame;
-  }
-//}}}
-//{{{
-void cDecoder264::writePicture (sPicture* p, int realStructure) {
-
-  if (realStructure == eFrame) {
-    flushPendingOut();
-    writeOutPicture(p);
-    return;
-    }
-
-  if (realStructure == pendingOutState) {
-    flushPendingOut();
-    writePicture (p, realStructure);
-    return;
-    }
-
-  if (pendingOutState == eFrame) {
-    //{{{  output frame
-    pendingOut->sizeX = p->sizeX;
-    pendingOut->sizeY = p->sizeY;
-    pendingOut->sizeXcr = p->sizeXcr;
-    pendingOut->sizeYcr = p->sizeYcr;
-    pendingOut->chromaFormatIdc = p->chromaFormatIdc;
-
-    pendingOut->frameMbOnly = p->frameMbOnly;
-    pendingOut->hasCrop = p->hasCrop;
-    if (pendingOut->hasCrop) {
-      pendingOut->cropLeft = p->cropLeft;
-      pendingOut->cropRight = p->cropRight;
-      pendingOut->cropTop = p->cropTop;
-      pendingOut->cropBot = p->cropBot;
-      }
-
-    getMem2Dpel (&pendingOut->imgY, pendingOut->sizeY, pendingOut->sizeX);
-    getMem3Dpel (&pendingOut->imgUV, 2, pendingOut->sizeYcr, pendingOut->sizeXcr);
-    clearPicture (pendingOut);
-
-    // copy first field
-    int add = (realStructure == eTopField) ? 0 : 1;
-    for (int i = 0; i < pendingOut->sizeY; i += 2)
-      memcpy (pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
-    for (int i = 0; i < pendingOut->sizeYcr; i += 2) {
-      memcpy (pendingOut->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->sizeXcr * sizeof(sPixel));
-      memcpy (pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
-      }
-
-    pendingOutState = realStructure;
-    }
-    //}}}
-  else {
-    if ((pendingOut->sizeX != p->sizeX) || (pendingOut->sizeY != p->sizeY) ||
-        (pendingOut->frameMbOnly != p->frameMbOnly) ||
-        (pendingOut->hasCrop != p->hasCrop) ||
-        (pendingOut->hasCrop &&
-         ((pendingOut->cropLeft != p->cropLeft) || (pendingOut->cropRight != p->cropRight) ||
-          (pendingOut->cropTop != p->cropTop) || (pendingOut->cropBot != p->cropBot)))) {
-      flushPendingOut();
-      writePicture (p, realStructure);
-      return;
-      }
-
-    // copy second field
-    int add = (realStructure == eTopField) ? 0 : 1;
-    for (int i = 0; i < pendingOut->sizeY; i+=2)
-      memcpy (pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
-
-    for (int i = 0; i < pendingOut->sizeYcr; i+=2) {
-      memcpy (pendingOut->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->sizeXcr * sizeof(sPixel));
-      memcpy (pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
-      }
-
-    flushPendingOut();
-    }
-  }
-//}}}
-//{{{
-void cDecoder264::writeUnpairedField (cFrameStore* frameStore) {
-
-  if (frameStore->isUsed & 0x01) {
-    // we have a top field, construct an empty bottom field
-    sPicture* picture = frameStore->topField;
-    frameStore->botField = allocPicture (this, eBotField,
-                                         picture->sizeX, 2 * picture->sizeY,
-                                         picture->sizeXcr, 2 * picture->sizeYcr, 1);
-    frameStore->botField->chromaFormatIdc = picture->chromaFormatIdc;
-
-    clearPicture (frameStore->botField);
-    frameStore->dpbCombineField (this);
-    writePicture (frameStore->frame, eTopField);
-    }
-
-  if (frameStore->isUsed & 0x02) {
-    // we have a bottom field, construct an empty top field
-    sPicture* picture = frameStore->botField;
-    frameStore->topField = allocPicture (this, eTopField, picture->sizeX, 2*picture->sizeY,
-                                         picture->sizeXcr, 2*picture->sizeYcr, 1);
-    frameStore->topField->chromaFormatIdc = picture->chromaFormatIdc;
-    clearPicture (frameStore->topField);
-
-    frameStore->topField->hasCrop = frameStore->botField->hasCrop;
-    if (frameStore->topField->hasCrop) {
-      frameStore->topField->cropTop = frameStore->botField->cropTop;
-      frameStore->topField->cropBot = frameStore->botField->cropBot;
-      frameStore->topField->cropLeft = frameStore->botField->cropLeft;
-      frameStore->topField->cropRight = frameStore->botField->cropRight;
-      }
-
-    frameStore->dpbCombineField (this);
-    writePicture (frameStore->frame, eBotField);
-    }
-
-  frameStore->isUsed = 3;
-  }
-//}}}
-//{{{
-void cDecoder264::flushDirectOutput() {
-
-  writeUnpairedField (outBuffer);
-  freePicture (outBuffer->frame);
-
-  outBuffer->frame = NULL;
-  freePicture (outBuffer->topField);
-
-  outBuffer->topField = NULL;
-  freePicture (outBuffer->botField);
-
-  outBuffer->botField = NULL;
-  outBuffer->isUsed = 0;
-  }
-//}}}
-
-//{{{
 bool cDecoder264::isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice) {
 
   bool result = (NULL == picture);
@@ -3094,6 +2816,277 @@ void cDecoder264::useParameterSet (cSlice* slice) {
   }
 //}}}
 
+// output
+//{{{
+void cDecoder264::allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* p,
+                                          int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
+                                          int chromaSizeX, int chromaSizeY) {
+
+  if (decodedPic->bufSize != frameSize) {
+    memFree (decodedPic->yBuf);
+
+    decodedPic->bufSize = frameSize;
+    decodedPic->yBuf = (uint8_t*)memAlloc (decodedPic->bufSize);
+    decodedPic->uBuf = decodedPic->yBuf + lumaSize;
+    decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
+
+    decodedPic->yuvFormat = p->chromaFormatIdc;
+    decodedPic->bitDepth = coding.picUnitBitSizeDisk;
+    decodedPic->width = lumaSizeX;
+    decodedPic->height = lumaSizeY;
+
+    int symbolSizeInBytes = (coding.picUnitBitSizeDisk + 7) >> 3;
+    decodedPic->yStride = lumaSizeX * symbolSizeInBytes;
+    decodedPic->uvStride = chromaSizeX * symbolSizeInBytes;
+    }
+  }
+//}}}
+//{{{
+void cDecoder264::clearPicture (sPicture* p) {
+
+  printf ("-------- clearPicture\n");
+
+  for (int i = 0; i < p->sizeY; i++)
+    for (int j = 0; j < p->sizeX; j++)
+      p->imgY[i][j] = (sPixel)coding.dcPredValueComp[0];
+
+  for (int i = 0; i < p->sizeYcr;i++)
+    for (int j = 0; j < p->sizeXcr; j++)
+      p->imgUV[0][i][j] = (sPixel)coding.dcPredValueComp[1];
+
+  for (int i = 0; i < p->sizeYcr;i++)
+    for (int j = 0; j < p->sizeXcr; j++)
+      p->imgUV[1][i][j] = (sPixel)coding.dcPredValueComp[2];
+  }
+//}}}
+//{{{
+void cDecoder264::writeOutPicture (sPicture* p) {
+
+  static const int SubWidthC [4]= { 1, 2, 2, 1 };
+  static const int SubHeightC [4]= { 1, 2, 1, 1 };
+
+  if (p->nonExisting)
+    return;
+
+  int cropLeft;
+  int cropRight;
+  int cropTop;
+  int cropBottom;
+  if (p->hasCrop) {
+    cropLeft = SubWidthC [p->chromaFormatIdc] * p->cropLeft;
+    cropRight = SubWidthC [p->chromaFormatIdc] * p->cropRight;
+    cropTop = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnly ) * p->cropTop;
+    cropBottom = SubHeightC[p->chromaFormatIdc] * ( 2 - p->frameMbOnly ) * p->cropBot;
+    }
+  else
+    cropLeft = cropRight = cropTop = cropBottom = 0;
+
+  int symbolSizeInBytes = (coding.picUnitBitSizeDisk+7) >> 3;
+  int chromaSizeX =  p->sizeXcr- p->cropLeft -p->cropRight;
+  int chromaSizeY = p->sizeYcr - ( 2 - p->frameMbOnly ) * p->cropTop -( 2 - p->frameMbOnly ) * p->cropBot;
+  int lumaSizeX = p->sizeX - cropLeft - cropRight;
+  int lumaSizeY = p->sizeY - cropTop - cropBottom;
+  int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
+  int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
+
+  sDecodedPic* decodedPic = allocDecodedPicture (outDecodedPics);
+  if (!decodedPic->yBuf || (decodedPic->bufSize < frameSize))
+    allocDecodedPicBuffers (decodedPic, p, lumaSize, frameSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
+  decodedPic->ok = 1;
+  decodedPic->poc = p->framePoc;
+
+  cropImg2buf (decodedPic->ok ? decodedPic->yBuf : decodedPic->yBuf + lumaSizeX * symbolSizeInBytes,
+               p->imgY, p->sizeX, p->sizeY, symbolSizeInBytes,
+               cropLeft, cropRight, cropTop, cropBottom, decodedPic->yStride);
+
+  cropLeft = p->cropLeft;
+  cropRight = p->cropRight;
+  cropTop = (2 - p->frameMbOnly) * p->cropTop;
+  cropBottom = (2 - p->frameMbOnly) * p->cropBot;
+
+  cropImg2buf (decodedPic->ok ? decodedPic->uBuf : decodedPic->uBuf + chromaSizeX * symbolSizeInBytes,
+               p->imgUV[0], p->sizeXcr, p->sizeYcr, symbolSizeInBytes,
+               cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
+
+  cropImg2buf (decodedPic->ok ? decodedPic->vBuf : decodedPic->vBuf + chromaSizeX * symbolSizeInBytes,
+               p->imgUV[1], p->sizeXcr, p->sizeYcr, symbolSizeInBytes,
+               cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
+  }
+//}}}
+//{{{
+void cDecoder264::flushPendingOut() {
+
+  if (pendingOutState != eFrame)
+    writeOutPicture (pendingOut);
+
+  if (pendingOut->imgY) {
+    freeMem2Dpel (pendingOut->imgY);
+    pendingOut->imgY = NULL;
+    }
+
+  if (pendingOut->imgUV) {
+    freeMem3Dpel (pendingOut->imgUV);
+    pendingOut->imgUV = NULL;
+    }
+
+  pendingOutState = eFrame;
+  }
+//}}}
+//{{{
+void cDecoder264::writePicture (sPicture* p, int realStructure) {
+
+  if (realStructure == eFrame) {
+    flushPendingOut();
+    writeOutPicture(p);
+    return;
+    }
+
+  if (realStructure == pendingOutState) {
+    flushPendingOut();
+    writePicture (p, realStructure);
+    return;
+    }
+
+  if (pendingOutState == eFrame) {
+    //{{{  output frame
+    pendingOut->sizeX = p->sizeX;
+    pendingOut->sizeY = p->sizeY;
+    pendingOut->sizeXcr = p->sizeXcr;
+    pendingOut->sizeYcr = p->sizeYcr;
+    pendingOut->chromaFormatIdc = p->chromaFormatIdc;
+
+    pendingOut->frameMbOnly = p->frameMbOnly;
+    pendingOut->hasCrop = p->hasCrop;
+    if (pendingOut->hasCrop) {
+      pendingOut->cropLeft = p->cropLeft;
+      pendingOut->cropRight = p->cropRight;
+      pendingOut->cropTop = p->cropTop;
+      pendingOut->cropBot = p->cropBot;
+      }
+
+    getMem2Dpel (&pendingOut->imgY, pendingOut->sizeY, pendingOut->sizeX);
+    getMem3Dpel (&pendingOut->imgUV, 2, pendingOut->sizeYcr, pendingOut->sizeXcr);
+    clearPicture (pendingOut);
+
+    // copy first field
+    int add = (realStructure == eTopField) ? 0 : 1;
+    for (int i = 0; i < pendingOut->sizeY; i += 2)
+      memcpy (pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
+    for (int i = 0; i < pendingOut->sizeYcr; i += 2) {
+      memcpy (pendingOut->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->sizeXcr * sizeof(sPixel));
+      memcpy (pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
+      }
+
+    pendingOutState = realStructure;
+    }
+    //}}}
+  else {
+    if ((pendingOut->sizeX != p->sizeX) || (pendingOut->sizeY != p->sizeY) ||
+        (pendingOut->frameMbOnly != p->frameMbOnly) ||
+        (pendingOut->hasCrop != p->hasCrop) ||
+        (pendingOut->hasCrop &&
+         ((pendingOut->cropLeft != p->cropLeft) || (pendingOut->cropRight != p->cropRight) ||
+          (pendingOut->cropTop != p->cropTop) || (pendingOut->cropBot != p->cropBot)))) {
+      flushPendingOut();
+      writePicture (p, realStructure);
+      return;
+      }
+
+    // copy second field
+    int add = (realStructure == eTopField) ? 0 : 1;
+    for (int i = 0; i < pendingOut->sizeY; i+=2)
+      memcpy (pendingOut->imgY[(i+add)], p->imgY[(i+add)], p->sizeX * sizeof(sPixel));
+
+    for (int i = 0; i < pendingOut->sizeYcr; i+=2) {
+      memcpy (pendingOut->imgUV[0][(i+add)], p->imgUV[0][(i+add)], p->sizeXcr * sizeof(sPixel));
+      memcpy (pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
+      }
+
+    flushPendingOut();
+    }
+  }
+//}}}
+//{{{
+void cDecoder264::writeUnpairedField (cFrameStore* frameStore) {
+
+  if (frameStore->isUsed & 0x01) {
+    // we have a top field, construct an empty bottom field
+    sPicture* picture = frameStore->topField;
+    frameStore->botField = allocPicture (this, eBotField,
+                                         picture->sizeX, 2 * picture->sizeY,
+                                         picture->sizeXcr, 2 * picture->sizeYcr, 1);
+    frameStore->botField->chromaFormatIdc = picture->chromaFormatIdc;
+
+    clearPicture (frameStore->botField);
+    frameStore->dpbCombineField (this);
+    writePicture (frameStore->frame, eTopField);
+    }
+
+  if (frameStore->isUsed & 0x02) {
+    // we have a bottom field, construct an empty top field
+    sPicture* picture = frameStore->botField;
+    frameStore->topField = allocPicture (this, eTopField, picture->sizeX, 2*picture->sizeY,
+                                         picture->sizeXcr, 2*picture->sizeYcr, 1);
+    frameStore->topField->chromaFormatIdc = picture->chromaFormatIdc;
+    clearPicture (frameStore->topField);
+
+    frameStore->topField->hasCrop = frameStore->botField->hasCrop;
+    if (frameStore->topField->hasCrop) {
+      frameStore->topField->cropTop = frameStore->botField->cropTop;
+      frameStore->topField->cropBot = frameStore->botField->cropBot;
+      frameStore->topField->cropLeft = frameStore->botField->cropLeft;
+      frameStore->topField->cropRight = frameStore->botField->cropRight;
+      }
+
+    frameStore->dpbCombineField (this);
+    writePicture (frameStore->frame, eBotField);
+    }
+
+  frameStore->isUsed = 3;
+  }
+//}}}
+//{{{
+void cDecoder264::flushDirectOutput() {
+
+  writeUnpairedField (outBuffer);
+  freePicture (outBuffer->frame);
+
+  outBuffer->frame = NULL;
+  freePicture (outBuffer->topField);
+
+  outBuffer->topField = NULL;
+  freePicture (outBuffer->botField);
+
+  outBuffer->botField = NULL;
+  outBuffer->isUsed = 0;
+  }
+//}}}
+
+//{{{
+void cDecoder264::makeFramePictureJV() {
+
+  picture = decPictureJV[0];
+
+  // copy;
+  if (picture->usedForReference) {
+    int nsize = (picture->sizeY/BLOCK_SIZE)*(picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotion);
+    memcpy (&(picture->mvInfoJV[PLANE_Y][0][0]), &(decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
+    memcpy (&(picture->mvInfoJV[PLANE_U][0][0]), &(decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
+    memcpy (&(picture->mvInfoJV[PLANE_V][0][0]), &(decPictureJV[PLANE_V]->mvInfo[0][0]), nsize);
+    }
+
+  // This could be done with pointers and seems not necessary
+  for (int uv = 0; uv < 2; uv++) {
+    for (int line = 0; line < coding.height; line++) {
+      int nsize = sizeof(sPixel) * coding.width;
+      memcpy (picture->imgUV[uv][line], decPictureJV[uv+1]->imgY[line], nsize );
+      }
+    freePicture (decPictureJV[uv+1]);
+    }
+  }
+//}}}
+
+// slice
 //{{{
 void cDecoder264::readSliceHeader (cSlice* slice) {
 // Some slice syntax depends on parameterSet depends on parameterSetID of the slice header
