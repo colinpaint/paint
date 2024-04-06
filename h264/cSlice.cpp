@@ -22,7 +22,7 @@ cSlice* cSlice::allocSlice() {
   // create all context models
   slice->motionInfoContexts = createMotionInfoContexts();
   slice->textureInfoContexts = createTextureInfoContexts();
-
+  
   slice->maxDataPartitions = 3;
   slice->dataPartitions = allocDataPartitions (slice->maxDataPartitions);
 

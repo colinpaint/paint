@@ -261,9 +261,6 @@ void storePictureDpb (sDpb* dpb, sPicture* picture);
 void removeFrameDpb (sDpb* dpb, int pos);
 void freeDpb (sDpb* dpb);
 
-void initImage (cDecoder264* decoder, sImage* image, cSps *sps);
-void freeImage (cDecoder264* decoder, sImage* image);
-
 void initListsSliceI (cSlice* slice);
 void initListsSliceP (cSlice* slice);
 void initListsSliceB (cSlice* slice);
