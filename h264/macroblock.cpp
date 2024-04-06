@@ -2,7 +2,7 @@
 #include "global.h"
 #include "memory.h"
 
-#include "binaryArithmeticDecode.h"
+#include "sCabacDecode.h"
 #include "cabac.h"
 #include "cabacRead.h"
 #include "cavlcRead.h"
@@ -11,7 +11,6 @@
 #include "macroblock.h"
 #include "mcPred.h"
 #include "transform.h"
-#include "quant.h"
 
 #include <math.h>
 //}}}
@@ -2387,7 +2386,7 @@ namespace {
     for (int i = 0; i < dpNum;++i) {
       cBitStream* stream = slice->dataPartitions[i].stream;
       int byteStartPosition = stream->readLen;
-      arithmeticDecodeStartDecoding (&slice->dataPartitions[i].cabacDecodeEnv, stream->bitStreamBuffer, byteStartPosition, &stream->readLen);
+      arithmeticDecodeStartDecoding (&slice->dataPartitions[i].cabacDecode, stream->bitStreamBuffer, byteStartPosition, &stream->readLen);
       }
     }
   //}}}

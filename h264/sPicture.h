@@ -1,7 +1,17 @@
 #pragma once
-#include "global.h"
-
 struct sPicture;
+class cDecoder;
+
+//{{{
+enum eYuvFormat {
+  CF_UNKNOWN = -1, // Unknown color format
+  YUV400     =  0, // Monochrome
+  YUV420     =  1, // 4:2:0
+  YUV422     =  2, // 4:2:2
+  YUV444     =  3  // 4:4:4
+  };
+//}}}
+
 //{{{
 struct sMotionVec {
   int16_t mvX;
@@ -227,9 +237,18 @@ static inline int comparefsByPocdesc (const void* arg1, const void* arg2) {
     return 0;
   }
 //}}}
-static inline int isLongRef (sPicture* picture) { return picture->usedForReference && picture->usedLongTerm; }
-static inline int isShortRef (sPicture* picture) { return picture->usedForReference && !picture->usedLongTerm; }
+//{{{
+static inline int isLongRef (sPicture* picture) { 
+  return picture->usedForReference && picture->usedLongTerm; 
+  }
+//}}}
+//{{{
+static inline int isShortRef (sPicture* picture) { 
+  return picture->usedForReference && !picture->usedLongTerm; 
+  }
+//}}}
 
 sPicture* allocPicture (cDecoder264* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
 void freePicture (sPicture* picture);
+
 void fillFrameNumGap (cDecoder264* decoder, cSlice *slice);

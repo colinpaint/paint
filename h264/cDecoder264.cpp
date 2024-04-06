@@ -2,7 +2,7 @@
 #include "global.h"
 #include "memory.h"
 
-#include "binaryArithmeticDecode.h"
+#include "sCabacDecode.h"
 #include "cabac.h"
 #include "erc.h"
 #include "errorConceal.h"
@@ -12,7 +12,6 @@
 #include "mcPred.h"
 #include "nalu.h"
 #include "sei.h"
-#include "quant.h"
 
 #include "../common/cLog.h"
 
@@ -2165,6 +2164,35 @@ void writeStoredFrame (cDecoder264* decoder, cFrameStore* frameStore) {
   }
 //}}}
 
+//{{{
+void allocQuant (cDecoder264* decoder) {
+// alloc quant matrices
+
+  int bitDepth_qp_scale = imax (decoder->coding.bitDepthLumaQpScale, decoder->coding.bitDepthChromaQpScale);
+
+  if (!decoder->qpPerMatrix)
+    decoder->qpPerMatrix = (int*)malloc ((MAX_QP + 1 + bitDepth_qp_scale) * sizeof(int));
+
+  if (!decoder->qpRemMatrix)
+    decoder->qpRemMatrix = (int*)malloc ((MAX_QP + 1 + bitDepth_qp_scale) * sizeof(int));
+
+  for (int i = 0; i < MAX_QP + bitDepth_qp_scale + 1; i++) {
+    decoder->qpPerMatrix[i] = i / 6;
+    decoder->qpRemMatrix[i] = i % 6;
+    }
+  }
+//}}}
+//{{{
+void freeQuant (cDecoder264* decoder) {
+
+  free (decoder->qpPerMatrix);
+  decoder->qpPerMatrix = NULL;
+
+  free (decoder->qpRemMatrix);
+  decoder->qpRemMatrix = NULL;
+  }
+//}}}
+
 // private
 //{{{
 void cDecoder264::clearDecodedPics() {
@@ -3461,7 +3489,7 @@ int cDecoder264::readSlice (cSlice* slice) {
           int byteStartPosition = s->bitStreamOffset / 8;
           if (s->bitStreamOffset % 8)
             ++byteStartPosition;
-          arithmeticDecodeStartDecoding (&slice->dataPartitions[0].cabacDecodeEnv, s->bitStreamBuffer,
+          arithmeticDecodeStartDecoding (&slice->dataPartitions[0].cabacDecode, s->bitStreamBuffer,
                                          byteStartPosition, &s->readLen);
           }
 

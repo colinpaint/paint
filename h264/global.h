@@ -7,15 +7,9 @@
 #include <string>
 
 #include <string.h> // for memset
-//#include <stdlib.h>
 
 #include "win32.h"
 #include "functions.h"
-
-#include "frame.h"
-#include "nalu.h"
-#include "cSps.h"
-#include "cPps.h"
 //}}}
 //{{{  defines
 #define MAX_NUM_SLICES       8
@@ -66,13 +60,35 @@
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
 #define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
 //}}}
-
+#include "nalu.h"
+#include "cSps.h"
+#include "cPps.h"
+#include "sCabacDecode.h"
 #include "cBitStream.h"
 #include "cSlice.h"
 #include "cFrameStore.h"
 #include "sPicture.h"
 #include "sDpb.h"
 
+//{{{
+enum ePixelFormat {
+  PF_UNKNOWN = -1, // Unknown color ordering
+  UYVY       =  0, // UYVY
+  YUY2       =  1, // YUY2
+  YUYV       =  1, // YUYV
+  YVYU       =  2, // YVYU
+  BGR        =  3, // BGR
+  V210       =  4  // Video Clarity 422 format (10 bits)
+  };
+//}}}
+//{{{
+enum eColorModel {
+  CM_UNKNOWN = -1,
+  CM_YUV     =  0,
+  CM_RGB     =  1,
+  CM_XYZ     =  2
+  };
+//}}}
 //{{{
 enum eStartEnd {
   eEOS = 1, // End Of Sequence
@@ -232,7 +248,6 @@ enum eMvPredType {
 //}}}
 
 struct sMacroBlock;
-class cDecoder264;
 //{{{
 struct sConcealNode {
   sPicture* picture;
@@ -311,18 +326,9 @@ struct sCodedBlockPattern {
   };
 //}}}
 //{{{
-struct sCabacDecodeEnv {
-  uint32_t range;
-  uint32_t value;
-  int      bitsLeft;
-  uint8_t* codeStream;
-  int*     codeStreamLen;
-  };
-//}}}
-//{{{
 struct sDataPartition {
-  cBitStream*     stream;
-  sCabacDecodeEnv cabacDecodeEnv;
+  cBitStream*  stream;
+  sCabacDecode cabacDecode;
 
   int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
   };
@@ -408,7 +414,7 @@ struct sMacroBlock {
   void (*iTrans4x4) (sMacroBlock*, eColorPlane, int, int);
   void (*iTrans8x8) (sMacroBlock*, eColorPlane, int, int);
   void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, int16_t, sPicMotion**, int, int, int, int, int);
-  int  (*readStoreCBPblockBit) (sMacroBlock*, sCabacDecodeEnv*, int);
+  int  (*readStoreCBPblockBit) (sMacroBlock*, sCabacDecode*, int);
   char (*readRefPictureIndex) (sMacroBlock*, sSyntaxElement*, sDataPartition*, char, int);
   void (*readCompCoef4x4cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane);
@@ -526,6 +532,22 @@ struct sCoding {
   int shiftpelX;
   int shiftpelY;
   int totalScale;
+  };
+//}}}
+//{{{
+struct sFrameFormat {
+  eYuvFormat   yuvFormat;       // YUV format (0=4:0:0, 1=4:2:0, 2=4:2:2, 3=4:4:4)
+  eColorModel  colourModel;     // 4:4:4 format (0: YUV, 1: RGB, 2: XYZ)
+  ePixelFormat pixelFormat;     // pixel format support for certain interleaved yuv sources
+
+  int          width[3];        // component frame width
+  int          height[3];       // component frame height
+
+  int          mbWidth;         // luma component frame width
+  int          mbHeight;        // luma component frame height
+
+  int          sizeCmp[3];      // component sizes (width * height)
+  int          bitDepth[3];     // component bit depth
   };
 //}}}
 //{{{
@@ -784,6 +806,8 @@ void allocOutput (cDecoder264* decoder);
 void freeOutput (cDecoder264* decoder);
 void directOutput (cDecoder264* decoder, sPicture* picture);
 void writeStoredFrame (cDecoder264* decoder, cFrameStore* frameStore);
+void allocQuant (cDecoder264* decoder);
+void freeQuant (cDecoder264* decoder);
 
 sDataPartition* allocDataPartitions (int numPartitions);
 void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions);
