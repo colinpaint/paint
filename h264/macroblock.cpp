@@ -1733,7 +1733,6 @@ namespace {
     se->len = 1;
     dataPartition->bitStream.readSyntaxElement_FLC (se);
     se->value1 = 1 - se->value1;
-
     return (char)se->value1;
     }
   //}}}
@@ -2386,7 +2385,7 @@ namespace {
     for (int i = 0; i < dpNum;++i) {
       cBitStream& bitStream = slice->dataPartitions[i].bitStream;
       int byteStartPosition = bitStream.readLen;
-      arithmeticDecodeStartDecoding (&slice->dataPartitions[i].cabacDecode, 
+      arithmeticDecodeStartDecoding (&slice->dataPartitions[i].cabacDecode,
                                      bitStream.bitStreamBuffer, byteStartPosition, &bitStream.readLen);
       }
     }
@@ -2650,7 +2649,6 @@ namespace {
       // read eCavlc transform_size_8x8Flag
       se.len = (int64_t)1;
       dataPartition->bitStream.readSyntaxElement_FLC (&se);
-
       mb->lumaTransformSize8x8flag = (bool)se.value1;
       if (mb->lumaTransformSize8x8flag) {
         mb->mbType = I8MB;
@@ -2677,7 +2675,6 @@ namespace {
       sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.type = SE_HEADER;
       se.reading = readMB_transform_sizeFlag_CABAC;
-
       // read eCavlc transform_size_8x8Flag
       if (dataPartition->bitStream.errorFlag) {
         se.len = (int64_t) 1;
@@ -2789,7 +2786,6 @@ namespace {
     // read MB mode
     sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
     se.mapping = cBitStream::linfo_ue;
-
     // read MB aff
     if (slice->mbAffFrame && (mbNum & 0x01) == 0) {
       se.len = (int64_t) 1;
@@ -2799,8 +2795,7 @@ namespace {
 
     // read MB type
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
-
-    mb->mbType = (int16_t) se.value1;
+    mb->mbType = (int16_t)se.value1;
     if (!dataPartition->bitStream.errorFlag)
       mb->errorFlag = 0;
 
@@ -2869,6 +2864,7 @@ namespace {
       slice->siBlock[mb->mb.y][mb->mb.x] = 0;
       slice->interpretMbMode (mb);
       }
+
     else {
       cDecoder264* decoder = mb->decoder;
       sMacroBlock* topMB = NULL;
@@ -2914,6 +2910,7 @@ namespace {
         slice->codCount--;
         mb->skipFlag = 0;
         }
+
       else {
         slice->codCount--;
         mb->mbType = 0;
@@ -2927,6 +2924,7 @@ namespace {
           dataPartition->bitStream.bitStreamOffset--;
           mb->mbField = (bool)se.value1;
           }
+
         else if (slice->codCount > 0 && ((mbNum & 0x01) == 0)) {
           // check left macroBlock pair first
           if (isMbAvailable (mbNum - 2, mb) && ((mbNum % (decoder->coding.picWidthMbs * 2))!=0))
@@ -2992,11 +2990,10 @@ namespace {
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       se.mapping = cBitStream::linfo_ue;
 
-      if(slice->codCount == -1) {
+      if (slice->codCount == -1) {
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         slice->codCount = se.value1;
         }
-
       if (slice->codCount==0) {
         // read MB type
         dataPartition->readSyntaxElement (mb, &se, dataPartition);

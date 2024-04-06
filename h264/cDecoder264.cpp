@@ -59,6 +59,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_B8_TYPE_I[1][2][9][2] =
   {
@@ -89,6 +90,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_MV_RES_I[1][2][10][2] =
   {
@@ -119,6 +121,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_REF_NO_I[1][2][6][2] =
   {
@@ -149,6 +152,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_TRANSFORM_SIZE_I[1][1][3][2]=
   {
@@ -179,6 +183,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_DELTA_QP_I[1][1][4][2]=
   {
@@ -205,6 +210,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_MB_AFF_I[1][1][4][2] =
   {
@@ -231,6 +237,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_IPR_I[1][1][2][2] =
   {
@@ -283,6 +290,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_CBP_I[1][3][4][2] =
   {
@@ -317,6 +325,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_BCBP_I[1][22][4][2] =
   {
@@ -435,6 +444,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_MAP_I[1][22][15][2] =
   {
@@ -553,6 +563,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_LAST_I[1][22][15][2] =
   {
@@ -671,6 +682,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_ONE_I[1][22][5][2] =
   {
@@ -789,6 +801,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_ABS_I[1][22][5][2] =
   {
@@ -1026,6 +1039,7 @@ namespace {
     }
   };
   //}}}
+
   //{{{
   const char INIT_FLD_LAST_I[1][22][15][2] =
   {
