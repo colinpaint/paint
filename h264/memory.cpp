@@ -7,7 +7,7 @@
 /*!
 ** **********************************************************************
  * \brief
- *    Exit program if memory allocation failed (using cDecoder264::error ())
+ *    Exit program if memory allocation failed (using cDecoder264::error())
  * \param where
  *    string indicating which memory allocation failed
 ** **********************************************************************

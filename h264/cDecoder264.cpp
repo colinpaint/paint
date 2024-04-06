@@ -3183,7 +3183,7 @@ int cDecoder264::readSlice (cSlice* slice) {
           curHeader = eSOS;
 
         useQuantParams (slice);
-        slice->setSliceFunctions ();
+        slice->setSliceFunctions();
         if (slice->mbAffFrame)
           slice->mbIndex = slice->startMbNum << 1;
         else

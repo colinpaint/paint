@@ -27,7 +27,7 @@ namespace {
             dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
           else {
             if (dpb->frameStoreLongTermRef[i]->isLongTerm == 1)
-              dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef ();
+              dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
             else {
               if (mark_current) {
                 if (dpb->lastPictureFrameStore) {
@@ -48,23 +48,23 @@ namespace {
 
         if (picStructure == eBotField) {
           if (dpb->frameStoreLongTermRef[i]->isLongTerm == 3)
-            dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef ();
+            dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
           else {
             if (dpb->frameStoreLongTermRef[i]->isLongTerm == 2)
-              dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef ();
+              dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
             else {
               if (mark_current) {
                 if (dpb->lastPictureFrameStore) {
                   if ((dpb->lastPictureFrameStore != dpb->frameStoreLongTermRef[i]) ||
                       dpb->lastPictureFrameStore->frameNum != curr_frame_num)
-                    dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef ();
+                    dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
                   }
                 else
-                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef ();
+                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
                 }
               else {
                 if ((dpb->frameStoreLongTermRef[i]->frameNum) != (uint32_t)(curr_pic_num >> 1))
-                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef ();
+                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
                 }
               }
             }
@@ -119,7 +119,7 @@ namespace {
     dpb->lastOutputPoc = poc;
 
     // free frame store and move empty store to end of buffer
-    if (!dpb->frameStore[pos]->isReference ())
+    if (!dpb->frameStore[pos]->isReference())
       removeFrameDpb (dpb, pos);
 
     return 1;
@@ -397,7 +397,7 @@ namespace {
 
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
       if (dpb->frameStoreLongTermRef[i]->longTermFrameIndex == longTermFrameIndex)
-        dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef ();
+        dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
     }
   //}}}
   //{{{
@@ -407,7 +407,7 @@ namespace {
       if (p->picStructure == eFrame) {
         if ((dpb->frameStoreLongTermRef[i]->mIsReference == 3) && (dpb->frameStoreLongTermRef[i]->isLongTerm == 3))
           if (dpb->frameStoreLongTermRef[i]->frame->longTermPicNum == longTermPicNum)
-            dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef ();
+            dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
         }
       else {
         if ((dpb->frameStoreLongTermRef[i]->mIsReference & 1) && ((dpb->frameStoreLongTermRef[i]->isLongTerm & 1)))
@@ -533,7 +533,7 @@ namespace {
   void unmarkAllShortTermForRef (sDpb* dpb) {
 
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-      dpb->frameStoreRef[i]->unmarkForRef ();
+      dpb->frameStoreRef[i]->unmarkForRef();
     updateRefList (dpb);
     }
   //}}}
@@ -647,7 +647,7 @@ namespace {
     if (dpb->refFramesInBuffer == imax (1, dpb->numRefFrames) - dpb->longTermRefFramesInBuffer) {
       for (uint32_t i = 0; i < dpb->usedSize; i++) {
         if (dpb->frameStore[i]->mIsReference && (!(dpb->frameStore[i]->isLongTerm))) {
-          dpb->frameStore[i]->unmarkForRef ();
+          dpb->frameStore[i]->unmarkForRef();
           updateRefList (dpb);
           break;
           }
@@ -1004,7 +1004,7 @@ void updateRefList (sDpb* dpb) {
 
   uint32_t i, j;
   for (i = 0, j = 0; i < dpb->usedSize; i++)
-    if (dpb->frameStore[i]->isShortTermReference ())
+    if (dpb->frameStore[i]->isShortTermReference())
       dpb->frameStoreRef[j++]=dpb->frameStore[i];
 
   dpb->refFramesInBuffer = j;
@@ -1018,7 +1018,7 @@ void updateLongTermRefList (sDpb* dpb) {
 
   uint32_t i, j;
   for (i = 0, j = 0; i < dpb->usedSize; i++)
-    if (dpb->frameStore[i]->isLongTermReference ())
+    if (dpb->frameStore[i]->isLongTermReference())
       dpb->frameStoreLongTermRef[j++] = dpb->frameStore[i];
 
   dpb->longTermRefFramesInBuffer = j;
@@ -1129,7 +1129,7 @@ void flushDpb (sDpb* dpb) {
 
   // mark all frames unused
   for (uint32_t i = 0; i < dpb->usedSize; i++)
-    dpb->frameStore[i]->unmarkForRef ();
+    dpb->frameStore[i]->unmarkForRef();
 
   while (removeUnusedDpb (dpb));
 
