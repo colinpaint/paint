@@ -12,68 +12,6 @@
 //#define DUMP_DPB
 namespace {
   //{{{
-  void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStructure, int longTermFrameIndex,
-                                                int mark_current, uint32_t curr_frame_num, int curr_pic_num) {
-
-    cDecoder264* decoder = dpb->decoder;
-
-    if (curr_pic_num < 0)
-      curr_pic_num += (2 * decoder->coding.maxFrameNum);
-
-    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-      if (dpb->frameStoreLongTermRef[i]->longTermFrameIndex == longTermFrameIndex) {
-        if (picStructure == eTopField) {
-          if (dpb->frameStoreLongTermRef[i]->isLongTerm == 3)
-            dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-          else {
-            if (dpb->frameStoreLongTermRef[i]->isLongTerm == 1)
-              dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-            else {
-              if (mark_current) {
-                if (dpb->lastPictureFrameStore) {
-                  if ((dpb->lastPictureFrameStore != dpb->frameStoreLongTermRef[i]) ||
-                      dpb->lastPictureFrameStore->frameNum != curr_frame_num)
-                    dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-                  }
-                else
-                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-              }
-              else {
-                if ((dpb->frameStoreLongTermRef[i]->frameNum) != (uint32_t)(curr_pic_num >> 1))
-                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-                }
-              }
-            }
-          }
-
-        if (picStructure == eBotField) {
-          if (dpb->frameStoreLongTermRef[i]->isLongTerm == 3)
-            dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-          else {
-            if (dpb->frameStoreLongTermRef[i]->isLongTerm == 2)
-              dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-            else {
-              if (mark_current) {
-                if (dpb->lastPictureFrameStore) {
-                  if ((dpb->lastPictureFrameStore != dpb->frameStoreLongTermRef[i]) ||
-                      dpb->lastPictureFrameStore->frameNum != curr_frame_num)
-                    dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-                  }
-                else
-                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-                }
-              else {
-                if ((dpb->frameStoreLongTermRef[i]->frameNum) != (uint32_t)(curr_pic_num >> 1))
-                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  //}}}
-  //{{{
   int getPicNumX (sPicture* p, int diffPicNumMinus1) {
 
     int currPicNum;
@@ -85,6 +23,7 @@ namespace {
     return currPicNum - (diffPicNumMinus1 + 1);
     }
   //}}}
+
   //{{{
   int outputDpbFrame (sDpb* dpb) {
 
@@ -93,13 +32,11 @@ namespace {
       cDecoder264::error ("Cannot output frame, DPB empty");
 
     // find smallest POC
-    int poc, pos;
+    int poc;
+    int pos;
     getSmallestPoc (dpb, &poc, &pos);
     if (pos == -1)
       return 0;
-
-    // call the output function
-    //printf ("output frame with frameNum #%d, poc %d (dpb. dpb->size=%d, dpb->usedSize=%d)\n", dpb->frameStore[pos]->frameNum, dpb->frameStore[pos]->frame->poc, dpb->size, dpb->usedSize);
 
     // picture error conceal
     cDecoder264* decoder = dpb->decoder;
@@ -308,87 +245,102 @@ namespace {
   //}}}
 
   //{{{
-  void markPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex, int picNumX) {
+  sPicture* getLongTermPic (cSlice* slice, sDpb* dpb, int longtermPicNum) {
 
-    int addTop, addBot;
-
-    if (p->picStructure == eFrame) {
-      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
-        if (dpb->frameStoreRef[i]->mIsReference == 3) {
-          if ((!dpb->frameStoreRef[i]->frame->isLongTerm)&&(dpb->frameStoreRef[i]->frame->picNum == picNumX)) {
-            dpb->frameStoreRef[i]->longTermFrameIndex = dpb->frameStoreRef[i]->frame->longTermFrameIndex
-                                               = longTermFrameIndex;
-            dpb->frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
-            dpb->frameStoreRef[i]->frame->isLongTerm = 1;
-
-            if (dpb->frameStoreRef[i]->topField && dpb->frameStoreRef[i]->botField) {
-              dpb->frameStoreRef[i]->topField->longTermFrameIndex = dpb->frameStoreRef[i]->botField->longTermFrameIndex
-                                                            = longTermFrameIndex;
-              dpb->frameStoreRef[i]->topField->longTermPicNum = longTermFrameIndex;
-              dpb->frameStoreRef[i]->botField->longTermPicNum = longTermFrameIndex;
-
-              dpb->frameStoreRef[i]->topField->isLongTerm = dpb->frameStoreRef[i]->botField->isLongTerm = 1;
-              }
-            dpb->frameStoreRef[i]->isLongTerm = 3;
-            return;
-            }
-          }
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+      if (slice->picStructure == eFrame) {
+        if (dpb->frameStoreLongTermRef[i]->mIsReference == 3)
+          if ((dpb->frameStoreLongTermRef[i]->frame->isLongTerm) && 
+              (dpb->frameStoreLongTermRef[i]->frame->longTermPicNum == longtermPicNum))
+            return dpb->frameStoreLongTermRef[i]->frame;
         }
-      printf ("Warning: reference frame for long term marking not found\n");
+
+      else {
+        if (dpb->frameStoreLongTermRef[i]->mIsReference & 1)
+          if ((dpb->frameStoreLongTermRef[i]->topField->isLongTerm) &&
+              (dpb->frameStoreLongTermRef[i]->topField->longTermPicNum == longtermPicNum))
+            return dpb->frameStoreLongTermRef[i]->topField;
+
+        if (dpb->frameStoreLongTermRef[i]->mIsReference & 2)
+          if ((dpb->frameStoreLongTermRef[i]->botField->isLongTerm) && 
+              (dpb->frameStoreLongTermRef[i]->botField->longTermPicNum == longtermPicNum))
+            return dpb->frameStoreLongTermRef[i]->botField;
+        }
       }
 
-    else {
-      if (p->picStructure == eTopField) {
-        addTop = 1;
-        addBot = 0;
-        }
-      else {
-        addTop = 0;
-        addBot = 1;
-        }
+    return NULL;
+    }
+  //}}}
+  //{{{
+  void updateMaxLongTermFrameIndex (sDpb* dpb, int maxLongTermFrameIndexPlus1) {
 
-      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
-        if (dpb->frameStoreRef[i]->mIsReference & 1) {
-          if ((!dpb->frameStoreRef[i]->topField->isLongTerm) &&
-              (dpb->frameStoreRef[i]->topField->picNum == picNumX)) {
-            if ((dpb->frameStoreRef[i]->isLongTerm) &&
-                (dpb->frameStoreRef[i]->longTermFrameIndex != longTermFrameIndex)) {
-              printf ("Warning: assigning longTermFrameIndex different from other field\n");
-              }
+    dpb->maxLongTermPicIndex = maxLongTermFrameIndexPlus1 - 1;
 
-            dpb->frameStoreRef[i]->longTermFrameIndex = dpb->frameStoreRef[i]->topField->longTermFrameIndex = longTermFrameIndex;
-            dpb->frameStoreRef[i]->topField->longTermPicNum = 2 * longTermFrameIndex + addTop;
-            dpb->frameStoreRef[i]->topField->isLongTerm = 1;
-            dpb->frameStoreRef[i]->isLongTerm |= 1;
-            if (dpb->frameStoreRef[i]->isLongTerm == 3) {
-              dpb->frameStoreRef[i]->frame->isLongTerm = 1;
-              dpb->frameStoreRef[i]->frame->longTermFrameIndex = dpb->frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
+    // check for invalid frames
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+      if (dpb->frameStoreLongTermRef[i]->longTermFrameIndex > dpb->maxLongTermPicIndex)
+        dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+    }
+  //}}}
+  //{{{
+  void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStructure, int longTermFrameIndex,
+                                                int mark_current, uint32_t curr_frame_num, int curr_pic_num) {
+
+    cDecoder264* decoder = dpb->decoder;
+
+    if (curr_pic_num < 0)
+      curr_pic_num += (2 * decoder->coding.maxFrameNum);
+
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+      if (dpb->frameStoreLongTermRef[i]->longTermFrameIndex == longTermFrameIndex) {
+        if (picStructure == eTopField) {
+          if (dpb->frameStoreLongTermRef[i]->isLongTerm == 3)
+            dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+          else {
+            if (dpb->frameStoreLongTermRef[i]->isLongTerm == 1)
+              dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+            else {
+              if (mark_current) {
+                if (dpb->lastPictureFrameStore) {
+                  if ((dpb->lastPictureFrameStore != dpb->frameStoreLongTermRef[i]) ||
+                      dpb->lastPictureFrameStore->frameNum != curr_frame_num)
+                    dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+                  }
+                else
+                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
               }
-            return;
+              else {
+                if ((dpb->frameStoreLongTermRef[i]->frameNum) != (uint32_t)(curr_pic_num >> 1))
+                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+                }
+              }
             }
           }
 
-        if (dpb->frameStoreRef[i]->mIsReference & 2) {
-          if ((!dpb->frameStoreRef[i]->botField->isLongTerm) &&
-              (dpb->frameStoreRef[i]->botField->picNum == picNumX)) {
-            if ((dpb->frameStoreRef[i]->isLongTerm) &&
-                (dpb->frameStoreRef[i]->longTermFrameIndex != longTermFrameIndex))
-              printf ("Warning: assigning longTermFrameIndex different from other field\n");
-
-            dpb->frameStoreRef[i]->longTermFrameIndex = dpb->frameStoreRef[i]->botField->longTermFrameIndex
-                                                = longTermFrameIndex;
-            dpb->frameStoreRef[i]->botField->longTermPicNum = 2 * longTermFrameIndex + addBot;
-            dpb->frameStoreRef[i]->botField->isLongTerm = 1;
-            dpb->frameStoreRef[i]->isLongTerm |= 2;
-            if (dpb->frameStoreRef[i]->isLongTerm == 3) {
-              dpb->frameStoreRef[i]->frame->isLongTerm = 1;
-              dpb->frameStoreRef[i]->frame->longTermFrameIndex = dpb->frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
+        if (picStructure == eBotField) {
+          if (dpb->frameStoreLongTermRef[i]->isLongTerm == 3)
+            dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+          else {
+            if (dpb->frameStoreLongTermRef[i]->isLongTerm == 2)
+              dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+            else {
+              if (mark_current) {
+                if (dpb->lastPictureFrameStore) {
+                  if ((dpb->lastPictureFrameStore != dpb->frameStoreLongTermRef[i]) ||
+                      dpb->lastPictureFrameStore->frameNum != curr_frame_num)
+                    dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+                  }
+                else
+                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+                }
+              else {
+                if ((dpb->frameStoreLongTermRef[i]->frameNum) != (uint32_t)(curr_pic_num >> 1))
+                  dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
+                }
               }
-            return;
             }
           }
         }
-      printf ("Warning: reference field for long term marking not found\n");
       }
     }
   //}}}
@@ -478,6 +430,117 @@ namespace {
     }
   //}}}
   //{{{
+  void unmarkAllLongTermForRef (sDpb* dpb) {
+    updateMaxLongTermFrameIndex (dpb, 0);
+    }
+  //}}}
+  //{{{
+  void unmarkAllShortTermForRef (sDpb* dpb) {
+
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
+      dpb->frameStoreRef[i]->unmarkForRef();
+    updateRefList (dpb);
+    }
+  //}}}
+  //{{{
+  void markPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex, int picNumX) {
+
+    int addTop, addBot;
+
+    if (p->picStructure == eFrame) {
+      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
+        if (dpb->frameStoreRef[i]->mIsReference == 3) {
+          if ((!dpb->frameStoreRef[i]->frame->isLongTerm)&&(dpb->frameStoreRef[i]->frame->picNum == picNumX)) {
+            dpb->frameStoreRef[i]->longTermFrameIndex = dpb->frameStoreRef[i]->frame->longTermFrameIndex
+                                               = longTermFrameIndex;
+            dpb->frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
+            dpb->frameStoreRef[i]->frame->isLongTerm = 1;
+
+            if (dpb->frameStoreRef[i]->topField && dpb->frameStoreRef[i]->botField) {
+              dpb->frameStoreRef[i]->topField->longTermFrameIndex = dpb->frameStoreRef[i]->botField->longTermFrameIndex
+                                                            = longTermFrameIndex;
+              dpb->frameStoreRef[i]->topField->longTermPicNum = longTermFrameIndex;
+              dpb->frameStoreRef[i]->botField->longTermPicNum = longTermFrameIndex;
+
+              dpb->frameStoreRef[i]->topField->isLongTerm = dpb->frameStoreRef[i]->botField->isLongTerm = 1;
+              }
+            dpb->frameStoreRef[i]->isLongTerm = 3;
+            return;
+            }
+          }
+        }
+      printf ("Warning: reference frame for long term marking not found\n");
+      }
+
+    else {
+      if (p->picStructure == eTopField) {
+        addTop = 1;
+        addBot = 0;
+        }
+      else {
+        addTop = 0;
+        addBot = 1;
+        }
+
+      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
+        if (dpb->frameStoreRef[i]->mIsReference & 1) {
+          if ((!dpb->frameStoreRef[i]->topField->isLongTerm) &&
+              (dpb->frameStoreRef[i]->topField->picNum == picNumX)) {
+            if ((dpb->frameStoreRef[i]->isLongTerm) &&
+                (dpb->frameStoreRef[i]->longTermFrameIndex != longTermFrameIndex)) {
+              printf ("Warning: assigning longTermFrameIndex different from other field\n");
+              }
+
+            dpb->frameStoreRef[i]->longTermFrameIndex = dpb->frameStoreRef[i]->topField->longTermFrameIndex = longTermFrameIndex;
+            dpb->frameStoreRef[i]->topField->longTermPicNum = 2 * longTermFrameIndex + addTop;
+            dpb->frameStoreRef[i]->topField->isLongTerm = 1;
+            dpb->frameStoreRef[i]->isLongTerm |= 1;
+            if (dpb->frameStoreRef[i]->isLongTerm == 3) {
+              dpb->frameStoreRef[i]->frame->isLongTerm = 1;
+              dpb->frameStoreRef[i]->frame->longTermFrameIndex = dpb->frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
+              }
+            return;
+            }
+          }
+
+        if (dpb->frameStoreRef[i]->mIsReference & 2) {
+          if ((!dpb->frameStoreRef[i]->botField->isLongTerm) &&
+              (dpb->frameStoreRef[i]->botField->picNum == picNumX)) {
+            if ((dpb->frameStoreRef[i]->isLongTerm) &&
+                (dpb->frameStoreRef[i]->longTermFrameIndex != longTermFrameIndex))
+              printf ("Warning: assigning longTermFrameIndex different from other field\n");
+
+            dpb->frameStoreRef[i]->longTermFrameIndex = dpb->frameStoreRef[i]->botField->longTermFrameIndex
+                                                = longTermFrameIndex;
+            dpb->frameStoreRef[i]->botField->longTermPicNum = 2 * longTermFrameIndex + addBot;
+            dpb->frameStoreRef[i]->botField->isLongTerm = 1;
+            dpb->frameStoreRef[i]->isLongTerm |= 2;
+            if (dpb->frameStoreRef[i]->isLongTerm == 3) {
+              dpb->frameStoreRef[i]->frame->isLongTerm = 1;
+              dpb->frameStoreRef[i]->frame->longTermFrameIndex = dpb->frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
+              }
+            return;
+            }
+          }
+        }
+      printf ("Warning: reference field for long term marking not found\n");
+      }
+    }
+  //}}}
+  //{{{
+  void markCurPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex) {
+
+    // remove long term pictures with same longTermFrameIndex
+    if (p->picStructure == eFrame)
+      unmarkLongTermFrameForRefByFrameIndex (dpb, longTermFrameIndex);
+    else
+      unmarkLongTermFieldRefFrameIndex (dpb, p->picStructure, longTermFrameIndex, 1, p->picNum, 0);
+
+    p->isLongTerm = 1;
+    p->longTermFrameIndex = longTermFrameIndex;
+    }
+  //}}}
+  //{{{
   void assignLongTermFrameIndex (sDpb* dpb, sPicture* p, int diffPicNumMinus1, int longTermFrameIndex) {
 
     int picNumX = getPicNumX(p, diffPicNumMinus1);
@@ -513,43 +576,7 @@ namespace {
     markPicLongTerm (dpb, p, longTermFrameIndex, picNumX);
     }
   //}}}
-  //{{{
-  void updateMaxLongTermFrameIndex (sDpb* dpb, int maxLongTermFrameIndexPlus1) {
 
-    dpb->maxLongTermPicIndex = maxLongTermFrameIndexPlus1 - 1;
-
-    // check for invalid frames
-    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
-      if (dpb->frameStoreLongTermRef[i]->longTermFrameIndex > dpb->maxLongTermPicIndex)
-        dpb->frameStoreLongTermRef[i]->unmarkForLongTermRef();
-    }
-  //}}}
-  //{{{
-  void unmarkAllLongTermForRef (sDpb* dpb) {
-    updateMaxLongTermFrameIndex (dpb, 0);
-    }
-  //}}}
-  //{{{
-  void unmarkAllShortTermForRef (sDpb* dpb) {
-
-    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-      dpb->frameStoreRef[i]->unmarkForRef();
-    updateRefList (dpb);
-    }
-  //}}}
-  //{{{
-  void markCurPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex) {
-
-    // remove long term pictures with same longTermFrameIndex
-    if (p->picStructure == eFrame)
-      unmarkLongTermFrameForRefByFrameIndex(dpb, longTermFrameIndex);
-    else
-      unmarkLongTermFieldRefFrameIndex(dpb, p->picStructure, longTermFrameIndex, 1, p->picNum, 0);
-
-    p->isLongTerm = 1;
-    p->longTermFrameIndex = longTermFrameIndex;
-    }
-  //}}}
   //{{{
   void adaptiveMemoryManagement (sDpb* dpb, sPicture* p) {
 
@@ -693,28 +720,7 @@ namespace {
       }
     }
   //}}}
-  //{{{
-  sPicture* getLongTermPic (cSlice* slice, sDpb* dpb, int LongtermPicNum) {
 
-    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-      if (slice->picStructure == eFrame) {
-        if (dpb->frameStoreLongTermRef[i]->mIsReference == 3)
-          if ((dpb->frameStoreLongTermRef[i]->frame->isLongTerm)&&(dpb->frameStoreLongTermRef[i]->frame->longTermPicNum == LongtermPicNum))
-            return dpb->frameStoreLongTermRef[i]->frame;
-        }
-      else {
-        if (dpb->frameStoreLongTermRef[i]->mIsReference & 1)
-          if ((dpb->frameStoreLongTermRef[i]->topField->isLongTerm)&&(dpb->frameStoreLongTermRef[i]->topField->longTermPicNum == LongtermPicNum))
-            return dpb->frameStoreLongTermRef[i]->topField;
-        if (dpb->frameStoreLongTermRef[i]->mIsReference & 2)
-          if ((dpb->frameStoreLongTermRef[i]->botField->isLongTerm)&&(dpb->frameStoreLongTermRef[i]->botField->longTermPicNum == LongtermPicNum))
-            return dpb->frameStoreLongTermRef[i]->botField;
-        }
-      }
-
-    return NULL;
-    }
-  //}}}
   //{{{
   void genPicListFromFrameList (ePicStructure currStructure, cFrameStore** frameStoreList,
                                 int list_idx, sPicture** list, char *list_size, int long_term) {
@@ -728,7 +734,7 @@ namespace {
       while ((top_idx<list_idx)||(bot_idx<list_idx)) {
         for ( ; top_idx<list_idx; top_idx++) {
           if (frameStoreList[top_idx]->isUsed & 1) {
-            if (is_ref(frameStoreList[top_idx]->topField)) {
+            if (is_ref (frameStoreList[top_idx]->topField)) {
               // int16_t term ref pic
               list[(int16_t) *list_size] = frameStoreList[top_idx]->topField;
               (*list_size)++;
@@ -740,7 +746,7 @@ namespace {
 
         for ( ; bot_idx<list_idx; bot_idx++) {
           if (frameStoreList[bot_idx]->isUsed & 2) {
-            if (is_ref(frameStoreList[bot_idx]->botField)) {
+            if (is_ref (frameStoreList[bot_idx]->botField)) {
               // int16_t term ref pic
               list[(int16_t) *list_size] = frameStoreList[bot_idx]->botField;
               (*list_size)++;
@@ -756,7 +762,7 @@ namespace {
       while ((top_idx<list_idx)||(bot_idx<list_idx)) {
         for ( ; bot_idx<list_idx; bot_idx++) {
           if (frameStoreList[bot_idx]->isUsed & 2) {
-            if (is_ref(frameStoreList[bot_idx]->botField)) {
+            if (is_ref (frameStoreList[bot_idx]->botField)) {
               // int16_t term ref pic
               list[(int16_t) *list_size] = frameStoreList[bot_idx]->botField;
               (*list_size)++;
@@ -768,7 +774,7 @@ namespace {
 
         for ( ; top_idx<list_idx; top_idx++) {
           if (frameStoreList[top_idx]->isUsed & 1) {
-            if (is_ref(frameStoreList[top_idx]->topField)) {
+            if (is_ref (frameStoreList[top_idx]->topField)) {
               // int16_t term ref pic
               list[(int16_t) *list_size] = frameStoreList[top_idx]->topField;
               (*list_size)++;
@@ -781,7 +787,6 @@ namespace {
       }
     }
   //}}}
-
   //{{{
   void reorderShortTerm (cSlice* slice, int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
 
@@ -880,7 +885,6 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   s->nonExisting = 0;
   s->isOutput = 0;
   s->maxSliceId = 0;
-
   s->picStructure = picStructure;
 
   s->sizeX = sizeX;
@@ -903,11 +907,8 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
 
   if (!decoder->activeSps->frameMbOnly && picStructure != eFrame)
     for (int j = 0; j < MAX_NUM_SLICES; j++)
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 2; i++) 
         s->listX[j][i] = (sPicture**)calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
-        if (!s->listX[j][i])
-          noMemoryExit ("allocPicture: s->listX[i]");
-        }
 
   return s;
   }
@@ -1000,6 +1001,23 @@ void fillFrameNumGap (cDecoder264* decoder, cSlice* slice) {
 
 // dpb
 //{{{
+void getSmallestPoc (sDpb* dpb, int* poc, int* pos) {
+
+  if (dpb->usedSize<1)
+    cDecoder264::error ("Cannot determine smallest POC, DPB empty");
+
+  *pos = -1;
+  *poc = INT_MAX;
+  for (uint32_t i = 0; i < dpb->usedSize; i++) {
+    if ((*poc > dpb->frameStore[i]->poc)&&(!dpb->frameStore[i]->isOutput)) {
+      *poc = dpb->frameStore[i]->poc;
+      *pos = i;
+      }
+    }
+  }
+//}}}
+
+//{{{
 void updateRefList (sDpb* dpb) {
 
   uint32_t i, j;
@@ -1025,22 +1043,6 @@ void updateLongTermRefList (sDpb* dpb) {
 
   while (j < dpb->size)
     dpb->frameStoreLongTermRef[j++] = NULL;
-  }
-//}}}
-//{{{
-void getSmallestPoc (sDpb* dpb, int* poc, int* pos) {
-
-  if (dpb->usedSize<1)
-    cDecoder264::error ("Cannot determine smallest POC, DPB empty");
-
-  *pos = -1;
-  *poc = INT_MAX;
-  for (uint32_t i = 0; i < dpb->usedSize; i++) {
-    if ((*poc > dpb->frameStore[i]->poc)&&(!dpb->frameStore[i]->isOutput)) {
-      *poc = dpb->frameStore[i]->poc;
-      *pos = i;
-      }
-    }
   }
 //}}}
 
@@ -1341,13 +1343,13 @@ void initImage (cDecoder264* decoder, sImage* image, cSps* sps) {
 
   // allocate memory for reference frame buffers: image->frm_data
   image->format = decoder->param.output;
-  image->format.width[0]  = decoder->coding.width;
-  image->format.width[1]  = decoder->widthCr;
-  image->format.width[2]  = decoder->widthCr;
+  image->format.width[0] = decoder->coding.width;
+  image->format.width[1] = decoder->widthCr;
+  image->format.width[2] = decoder->widthCr;
   image->format.height[0] = decoder->coding.height;
   image->format.height[1] = decoder->heightCr;
   image->format.height[2] = decoder->heightCr;
-  image->format.yuvFormat  = (eYuvFormat)sps->chromaFormatIdc;
+  image->format.yuvFormat = (eYuvFormat)sps->chromaFormatIdc;
   image->frm_stride[0] = decoder->coding.width;
   image->frm_stride[1] = image->frm_stride[2] = decoder->widthCr;
   image->top_stride[0] = image->bot_stride[0] = image->frm_stride[0] << 1;
@@ -1355,7 +1357,7 @@ void initImage (cDecoder264* decoder, sImage* image, cSps* sps) {
 
   if (sps->isSeperateColourPlane) {
     for (int nplane = 0; nplane < MAX_PLANE; nplane++ )
-      getMem2Dpel (&(image->frm_data[nplane]), decoder->coding.height, decoder->coding.width);
+      getMem2Dpel (&image->frm_data[nplane], decoder->coding.height, decoder->coding.width);
     }
   else {
     getMem2Dpel (&image->frm_data[0], decoder->coding.height, decoder->coding.width);
