@@ -5,8 +5,6 @@
 #include "memory.h"
 
 #include "erc.h"
-#include "buffer.h"
-#include "output.h"
 //}}}
 namespace {
   //{{{

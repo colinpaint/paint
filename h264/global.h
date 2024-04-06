@@ -70,6 +70,8 @@
 #include "cBitStream.h"
 #include "cFrameStore.h"
 #include "cSlice.h"
+#include "sPicture.h"
+#include "sDpb.h"
 
 //{{{
 enum eStartEnd {
@@ -229,7 +231,6 @@ enum eMvPredType {
   };
 //}}}
 
-struct sPicture;
 struct sMacroBlock;
 class cDecoder264;
 //{{{
@@ -237,128 +238,6 @@ struct sConcealNode {
   sPicture* picture;
   int       missingpocs;
   sConcealNode* next;
-  };
-//}}}
-//{{{
-struct sMotionVec {
-  int16_t mvX;
-  int16_t mvY;
-  };
-//}}}
-//{{{
-struct sPicMotionOld {
-  uint8_t* mbField; // field macroBlock indicator
-  };
-//}}}
-//{{{
-struct sPicMotion {
-  sPicture*  refPic[2];   // referrence picture pointer
-  sMotionVec mv[2];       // motion vector
-  char       refIndex[2]; // reference picture   [list][subblockY][subblockX]
-  uint8_t    slice_no;
-  };
-//}}}
-//{{{
-struct sPicture {
-  ePicStructure picStructure;
-
-  int           poc;
-  int           topPoc;
-  int           botPoc;
-  int           framePoc;
-  uint32_t      frameNum;
-  uint32_t      recoveryFrame;
-
-  int           picNum;
-  int           longTermPicNum;
-  int           longTermFrameIndex;
-
-  uint8_t       usedLongTerm;
-  int           usedForReference;
-  int           isOutput;
-  int           nonExisting;
-  int           isSeperateColourPlane;
-
-  int16_t       maxSliceId;
-
-  int           sizeX;
-  int           sizeY;
-  int           sizeXcr;
-  int           sizeYcr;
-  int           size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
-  int           codedFrame;
-  int           mbAffFrame;
-  uint32_t      picWidthMbs;
-  uint32_t      picSizeInMbs;
-  int           lumaPadX;
-  int           lumaPadY;
-  int           chromaPadX;
-  int           chromaPadY;
-
-  sPixel**      imgY;
-  sPixel***     imgUV;
-  sPicMotion**  mvInfo;
-  sPicMotionOld motion;
-  sPicture*     topField;  // for mb aff, if frame for referencing the top field
-  sPicture*     botField;  // for mb aff, if frame for referencing the bottom field
-  sPicture*     frame;     // for mb aff, if field for referencing the combined frame
-
-  int           isIDR;
-  int           sliceType;
-  int           longTermRefFlag;
-  int           adaptRefPicBufFlag;
-  int           noOutputPriorPicFlag;
-
-  eYuvFormat    chromaFormatIdc;
-  int           frameMbOnly;
-
-  int           hasCrop;
-  int           cropLeft;
-  int           cropRight;
-  int           cropTop;
-  int           cropBot;
-
-  int           qp;
-  int           chromaQpOffset[2];
-  int           sliceQpDelta;
-  sDecodedRefPicMark* decRefPicMarkBuffer;  // stores the memory management control operations
-
-  // picture error conceal
-  int           lumaStride;
-  int           chromaStride;
-  int           lumaExpandedHeight;
-  int           chromaExpandedHeight;
-  sPixel**      curPixelY;               // for more efficient get_block_luma
-  int           noRef;
-  int           codingType;
-
-  char          listXsize[MAX_NUM_SLICES][2];
-  sPicture**    listX[MAX_NUM_SLICES][2];
-
-  // Motion info for 4:4:4 independent mode decoding
-  sPicMotion**  mvInfoJV[MAX_PLANE];
-  sPicMotionOld motionJV[MAX_PLANE];
-  };
-//}}}
-//{{{
-struct sDpb {
-  cDecoder264*  decoder;
-
-  cFrameStore** frameStore;
-  cFrameStore** frameStoreRef;
-  cFrameStore** frameStoreLongTermRef;
-
-  uint32_t      size;
-  uint32_t      usedSize;
-  uint32_t      refFramesInBuffer;
-  uint32_t      longTermRefFramesInBuffer;
-
-  int           lastOutputPoc;
-  int           maxLongTermPicIndex;
-  int           initDone;
-  int           numRefFrames;
-
-  cFrameStore*  lastPictureFrameStore;
   };
 //}}}
 //{{{
@@ -901,6 +780,10 @@ private:
   void endDecodeFrame();
   };
 //}}}
+void allocOutput (cDecoder264* decoder);
+void freeOutput (cDecoder264* decoder);
+void directOutput (cDecoder264* decoder, sPicture* picture);
+void writeStoredFrame (cDecoder264* decoder, cFrameStore* frameStore);
 
 sDataPartition* allocDataPartitions (int numPartitions);
 void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions);

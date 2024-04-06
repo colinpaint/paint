@@ -1,6 +1,5 @@
 #pragma once
 #include "global.h"
-#include "buffer.h"
 
 //{{{
 static const uint8_t SNGL_SCAN[16][2] = {

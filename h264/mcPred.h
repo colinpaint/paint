@@ -1,6 +1,5 @@
 #pragma once
 #include "global.h"
-#include "buffer.h"
 
 void getBlockLuma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int blockSizeY, sPixel** block,
                    int shift_x, int maxold_x, int maxold_y, int** tempRes, int max_imgpel_value,

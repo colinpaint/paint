@@ -2,7 +2,6 @@
 #include "global.h"
 #include "memory.h"
 
-#include "buffer.h"
 #include "mcPred.h"
 #include "macroblock.h"
 #include "erc.h"

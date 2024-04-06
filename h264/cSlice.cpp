@@ -2,7 +2,6 @@
 #include "global.h"
 #include "memory.h"
 
-#include "buffer.h"
 #include "cabac.h"
 #include "fmo.h"
 #include "macroblock.h"

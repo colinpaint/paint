@@ -5,7 +5,6 @@
 #include "memory.h"
 
 #include "sei.h"
-#include "buffer.h"
 //}}}
 
 #define MAX_FN  256

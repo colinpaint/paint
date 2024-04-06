@@ -1,6 +1,109 @@
 #pragma once
 #include "global.h"
 
+struct sPicture;
+//{{{
+struct sMotionVec {
+  int16_t mvX;
+  int16_t mvY;
+  };
+//}}}
+//{{{
+struct sPicMotionOld {
+  uint8_t* mbField; // field macroBlock indicator
+  };
+//}}}
+//{{{
+struct sPicMotion {
+  sPicture*  refPic[2];   // referrence picture pointer
+  sMotionVec mv[2];       // motion vector
+  char       refIndex[2]; // reference picture   [list][subblockY][subblockX]
+  uint8_t    slice_no;
+  };
+//}}}
+//{{{
+struct sPicture {
+  ePicStructure picStructure;
+
+  int           poc;
+  int           topPoc;
+  int           botPoc;
+  int           framePoc;
+  uint32_t      frameNum;
+  uint32_t      recoveryFrame;
+
+  int           picNum;
+  int           longTermPicNum;
+  int           longTermFrameIndex;
+
+  uint8_t       usedLongTerm;
+  int           usedForReference;
+  int           isOutput;
+  int           nonExisting;
+  int           isSeperateColourPlane;
+
+  int16_t       maxSliceId;
+
+  int           sizeX;
+  int           sizeY;
+  int           sizeXcr;
+  int           sizeYcr;
+  int           size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
+  int           codedFrame;
+  int           mbAffFrame;
+  uint32_t      picWidthMbs;
+  uint32_t      picSizeInMbs;
+  int           lumaPadX;
+  int           lumaPadY;
+  int           chromaPadX;
+  int           chromaPadY;
+
+  sPixel**      imgY;
+  sPixel***     imgUV;
+  sPicMotion**  mvInfo;
+  sPicMotionOld motion;
+  sPicture*     topField;  // for mb aff, if frame for referencing the top field
+  sPicture*     botField;  // for mb aff, if frame for referencing the bottom field
+  sPicture*     frame;     // for mb aff, if field for referencing the combined frame
+
+  int           isIDR;
+  int           sliceType;
+  int           longTermRefFlag;
+  int           adaptRefPicBufFlag;
+  int           noOutputPriorPicFlag;
+
+  eYuvFormat    chromaFormatIdc;
+  int           frameMbOnly;
+
+  int           hasCrop;
+  int           cropLeft;
+  int           cropRight;
+  int           cropTop;
+  int           cropBot;
+
+  int           qp;
+  int           chromaQpOffset[2];
+  int           sliceQpDelta;
+  sDecodedRefPicMark* decRefPicMarkBuffer;  // stores the memory management control operations
+
+  // picture error conceal
+  int           lumaStride;
+  int           chromaStride;
+  int           lumaExpandedHeight;
+  int           chromaExpandedHeight;
+  sPixel**      curPixelY;               // for more efficient get_block_luma
+  int           noRef;
+  int           codingType;
+
+  char          listXsize[MAX_NUM_SLICES][2];
+  sPicture**    listX[MAX_NUM_SLICES][2];
+
+  // Motion info for 4:4:4 independent mode decoding
+  sPicMotion**  mvInfoJV[MAX_PLANE];
+  sPicMotionOld motionJV[MAX_PLANE];
+  };
+//}}}
+
 //{{{
 // compares two stored pictures by picture number for qsort in descending order
 static inline int comparePicByPicNumDescending (const void* arg1, const void* arg2) {
@@ -130,25 +233,3 @@ static inline int isShortRef (sPicture* picture) { return picture->usedForRefere
 sPicture* allocPicture (cDecoder264* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
 void freePicture (sPicture* picture);
 void fillFrameNumGap (cDecoder264* decoder, cSlice *slice);
-
-void updateRefList (sDpb* dpb);
-void updateLongTermRefList (sDpb* dpb);
-void getSmallestPoc (sDpb* dpb, int* poc, int* pos);
-
-void initDpb (cDecoder264* decoder, sDpb* dpb, int type);
-void reInitDpb (cDecoder264* decoder, sDpb* dpb, int type);
-void flushDpb (sDpb* dpb);
-int removeUnusedDpb (sDpb* dpb);
-void storePictureDpb (sDpb* dpb, sPicture* picture);
-void removeFrameDpb (sDpb* dpb, int pos);
-void freeDpb (sDpb* dpb);
-
-void initListsSliceI (cSlice* slice);
-void initListsSliceP (cSlice* slice);
-void initListsSliceB (cSlice* slice);
-void updatePicNum (cSlice* slice);
-
-void reorderRefPicList (cSlice* slice, int curList);
-sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum);
-
-void computeColocated (cSlice* slice, sPicture** listX[6]);

@@ -1,6 +1,5 @@
 #pragma once
 #include "global.h"
-#include "buffer.h"
 
  void noMemoryExit (const char* where);
 //{{{

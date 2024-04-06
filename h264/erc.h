@@ -1,6 +1,4 @@
 #pragma once
-#include "buffer.h"
-#include "output.h"
 
 /* "block" means an 8x8 pixel area */
 /* Region modes */

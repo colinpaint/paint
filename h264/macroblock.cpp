@@ -3,7 +3,6 @@
 #include "memory.h"
 
 #include "binaryArithmeticDecode.h"
-#include "buffer.h"
 #include "cabac.h"
 #include "cabacRead.h"
 #include "cavlcRead.h"

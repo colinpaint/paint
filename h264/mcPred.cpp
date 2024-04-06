@@ -3,7 +3,6 @@
 #include "memory.h"
 
 #include "mcPred.h"
-#include "buffer.h"
 #include "macroblock.h"
 //}}}
 namespace {
