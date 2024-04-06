@@ -68,8 +68,8 @@
 //}}}
 
 #include "cBitStream.h"
-#include "cFrameStore.h"
 #include "cSlice.h"
+#include "cFrameStore.h"
 #include "sPicture.h"
 #include "sDpb.h"
 
