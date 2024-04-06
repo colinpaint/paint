@@ -1445,14 +1445,14 @@ namespace {
   }
 
 // sDataPartition
- constexpr int MAX_CODED_FRAME_SIZE = 2000000;  // bytes for one frame
+constexpr int MAX_CODED_FRAME_SIZE = 2000000;  // bytes for one frame
 //{{{
 sDataPartition* allocDataPartitions (int numPartitions) {
 
-  sDataPartition* dataPartitions = (sDataPartition*)calloc (numPartitions, sizeof(sDataPartition));
+  sDataPartition* dataPartitions = (sDataPartition*)malloc (numPartitions, sizeof(sDataPartition));
   for (int i = 0; i < numPartitions; ++i) {
-    dataPartitions[i].stream = (cBitStream*)calloc (1, sizeof(cBitStream));
-    dataPartitions[i].stream->bitStreamBuffer = (uint8_t*)calloc (MAX_CODED_FRAME_SIZE, sizeof(uint8_t));
+    dataPartitions[i].stream = (cBitStream*)malloc (1, sizeof(cBitStream));
+    dataPartitions[i].stream->bitStreamBuffer = (uint8_t*)malloc (MAX_CODED_FRAME_SIZE, sizeof(uint8_t));
     }
 
   return dataPartitions;
