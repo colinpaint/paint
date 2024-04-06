@@ -11,7 +11,7 @@ using namespace std;
 
 namespace {
   //{{{
-  static void scalingList (int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix, cBitStream& s) {
+  static void scalingList (cBitStream& s, int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix) {
   // syntax for scaling list matrix values
 
     //{{{
@@ -263,9 +263,9 @@ void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
         picScalingListPresentFlag[i]= s.readU1 ("PPS picScalingListPresentFlag");
         if (picScalingListPresentFlag[i]) {
           if (i < 6)
-            scalingList (scalingList4x4[i], 16, &useDefaultScalingMatrix4x4Flag[i], s);
+            scalingList (s, scalingList4x4[i], 16, &useDefaultScalingMatrix4x4Flag[i]);
           else
-            scalingList (scalingList8x8[i-6], 64, &useDefaultScalingMatrix8x8Flag[i-6], s);
+            scalingList (s, scalingList8x8[i-6], 64, &useDefaultScalingMatrix8x8Flag[i-6]);
           }
         }
       }
