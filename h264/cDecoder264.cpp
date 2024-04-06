@@ -1410,6 +1410,7 @@ namespace {
     }
   //}}}
 
+  // !!!! convert to members !!!
   //{{{
   void allocDecodedPicBuffers (cDecoder264* decoder, sDecodedPic* decodedPic, sPicture* p,
                                int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
@@ -1767,7 +1768,12 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->dpb->initDone = 0;
 
   decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
-  allocOutput (decoder);
+
+  // alloc output
+  decoder->outBuffer = new cFrameStore();
+  decoder->pendingOut = (sPicture*)calloc (sizeof(sPicture), 1);
+  decoder->pendingOut->imgUV = NULL;
+  decoder->pendingOut->imgY = NULL;
 
   // global only for vlc
   gDecoder = decoder;
@@ -1853,7 +1859,11 @@ void cDecoder264::close() {
     }
 
   freeDpb (dpb);
-  freeOutput (this);
+
+  // free output
+  delete outBuffer;
+  flushPendingOut (this);
+  free (pendingOut);
 
   gDecoder = NULL;
   }
@@ -2085,15 +2095,6 @@ void cDecoder264::makeFramePictureJV() {
 
 // output
 //{{{
-void allocOutput (cDecoder264* decoder) {
-
-  decoder->outBuffer = new cFrameStore();
-  decoder->pendingOut = (sPicture*)calloc (sizeof(sPicture), 1);
-  decoder->pendingOut->imgUV = NULL;
-  decoder->pendingOut->imgY = NULL;
-  }
-//}}}
-//{{{
 void freeOutput (cDecoder264* decoder) {
 
   delete decoder->outBuffer;
@@ -2161,35 +2162,6 @@ void writeStoredFrame (cDecoder264* decoder, cFrameStore* frameStore) {
     }
 
   frameStore->isOutput = 1;
-  }
-//}}}
-
-//{{{
-void allocQuant (cDecoder264* decoder) {
-// alloc quant matrices
-
-  int bitDepth_qp_scale = imax (decoder->coding.bitDepthLumaQpScale, decoder->coding.bitDepthChromaQpScale);
-
-  if (!decoder->qpPerMatrix)
-    decoder->qpPerMatrix = (int*)malloc ((MAX_QP + 1 + bitDepth_qp_scale) * sizeof(int));
-
-  if (!decoder->qpRemMatrix)
-    decoder->qpRemMatrix = (int*)malloc ((MAX_QP + 1 + bitDepth_qp_scale) * sizeof(int));
-
-  for (int i = 0; i < MAX_QP + bitDepth_qp_scale + 1; i++) {
-    decoder->qpPerMatrix[i] = i / 6;
-    decoder->qpRemMatrix[i] = i % 6;
-    }
-  }
-//}}}
-//{{{
-void freeQuant (cDecoder264* decoder) {
-
-  free (decoder->qpPerMatrix);
-  decoder->qpPerMatrix = NULL;
-
-  free (decoder->qpRemMatrix);
-  decoder->qpRemMatrix = NULL;
   }
 //}}}
 
@@ -2290,7 +2262,18 @@ void cDecoder264::initGlobalBuffers() {
     getMem4D (&nzCoeff, coding.frameSizeMbs, 3, BLOCK_SIZE, BLOCK_SIZE);
 
   // alloc quant
-  allocQuant (this);
+  int bitDepth_qp_scale = imax (coding.bitDepthLumaQpScale, coding.bitDepthChromaQpScale);
+
+  if (!qpPerMatrix)
+    qpPerMatrix = (int*)malloc ((MAX_QP + 1 + bitDepth_qp_scale) * sizeof(int));
+
+  if (!qpRemMatrix)
+    qpRemMatrix = (int*)malloc ((MAX_QP + 1 + bitDepth_qp_scale) * sizeof(int));
+
+  for (int i = 0; i < MAX_QP + bitDepth_qp_scale + 1; i++) {
+    qpPerMatrix[i] = i / 6;
+    qpRemMatrix[i] = i % 6;
+    }
   }
 //}}}
 //{{{
@@ -2342,7 +2325,8 @@ void cDecoder264::freeLayerBuffers() {
   nzCoeff = NULL;
 
   // free quant
-  freeQuant (this);
+  free (qpPerMatrix);
+  free (qpRemMatrix);
   }
 //}}}
 //{{{

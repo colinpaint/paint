@@ -802,12 +802,8 @@ private:
   void endDecodeFrame();
   };
 //}}}
-void allocOutput (cDecoder264* decoder);
-void freeOutput (cDecoder264* decoder);
 void directOutput (cDecoder264* decoder, sPicture* picture);
 void writeStoredFrame (cDecoder264* decoder, cFrameStore* frameStore);
-void allocQuant (cDecoder264* decoder);
-void freeQuant (cDecoder264* decoder);
 
 sDataPartition* allocDataPartitions (int numPartitions);
 void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions);
