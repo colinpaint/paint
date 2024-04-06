@@ -958,7 +958,7 @@ namespace {
               mvY /= 2;
 
             // In such case, an array is needed for each different reference.
-            if (mv_scale == 9999 || slice->listX[LIST_0 + listOffset][mapped_idx]->isLongTerm) {
+            if (mv_scale == 9999 || slice->listX[LIST_0 + listOffset][mapped_idx]->usedLongTerm) {
               mvInfo->mv[LIST_0].mvX = colocated->mv[refList].mvX;
               mvInfo->mv[LIST_0].mvY = (int16_t) mvY;
               mvInfo->mv[LIST_1] = kZeroMv;
@@ -1064,7 +1064,7 @@ namespace {
             int mv_scale = slice->mvscale[LIST_0 + listOffset][mapped_idx];
 
             //! In such case, an array is needed for each different reference.
-            if (mv_scale == 9999 || slice->listX[LIST_0+listOffset][mapped_idx]->isLongTerm) {
+            if (mv_scale == 9999 || slice->listX[LIST_0+listOffset][mapped_idx]->usedLongTerm) {
               mvInfo->mv[LIST_0] = colocated->mv[refList];
               mvInfo->mv[LIST_1] = kZeroMv;
               }

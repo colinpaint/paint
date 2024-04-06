@@ -18,7 +18,7 @@ namespace {
   //}}}
   //{{{
   void genFieldRefIds (cDecoder264* decoder, sPicture* p) {
-  // Generate Frame parameters from field information.
+  // generate frame parameters from field information
 
     // copy the list;
     for (int j = 0; j < decoder->picSliceIndex; j++) {
@@ -28,9 +28,9 @@ namespace {
           p->listX[j][LIST_0][i] = decoder->sliceList[j]->listX[LIST_0][i];
         }
 
-      if(p->listX[j][LIST_1]) {
+      if (p->listX[j][LIST_1]) {
         p->listXsize[j][LIST_1] = decoder->sliceList[j]->listXsize[LIST_1];
-        for(int i = 0; i < p->listXsize[j][LIST_1]; i++)
+        for (int i = 0; i < p->listXsize[j][LIST_1]; i++)
           p->listX[j][LIST_1][i] = decoder->sliceList[j]->listX[LIST_1][i];
         }
       }
@@ -50,7 +50,7 @@ cFrameStore::~cFrameStore() {
 //{{{
 int cFrameStore::isReference() {
 
-  if (mIsReference)
+  if (usedReference)
     return 1;
 
   if (isUsed == 3) // frame
@@ -74,17 +74,17 @@ int cFrameStore::isReference() {
 int cFrameStore::isShortTermReference() {
 
   if (isUsed == 3) // frame
-    if ((frame->usedForReference) && (!frame->isLongTerm))
+    if ((frame->usedForReference) && (!frame->usedLongTerm))
       return 1;
 
   if (isUsed & 1) // topField
     if (topField)
-      if ((topField->usedForReference) && (!topField->isLongTerm))
+      if ((topField->usedForReference) && (!topField->usedLongTerm))
         return 1;
 
   if (isUsed & 2) // botField
     if (botField)
-      if ((botField->usedForReference) && (!botField->isLongTerm))
+      if ((botField->usedForReference) && (!botField->usedLongTerm))
         return 1;
 
   return 0;
@@ -94,17 +94,17 @@ int cFrameStore::isShortTermReference() {
 int cFrameStore::isLongTermReference() {
 
   if (isUsed == 3) // frame
-    if ((frame->usedForReference) && (frame->isLongTerm))
+    if ((frame->usedForReference) && (frame->usedLongTerm))
       return 1;
 
   if (isUsed & 1) // topField
     if (topField)
-      if ((topField->usedForReference) && (topField->isLongTerm))
+      if ((topField->usedForReference) && (topField->usedLongTerm))
         return 1;
 
   if (isUsed & 2) // botField
     if (botField)
-      if ((botField->usedForReference) && (botField->isLongTerm))
+      if ((botField->usedForReference) && (botField->usedLongTerm))
         return 1;
 
   return 0;
@@ -130,7 +130,7 @@ void cFrameStore::unmarkForRef() {
     frame->usedForReference = 0;
     }
 
-  mIsReference = 0;
+  usedReference = 0;
 
   if (frame)
     freePicMotion (&frame->motion);
@@ -148,30 +148,30 @@ void cFrameStore::unmarkForLongTermRef() {
   if (isUsed & 1) {
     if (topField) {
       topField->usedForReference = 0;
-      topField->isLongTerm = 0;
+      topField->usedLongTerm = 0;
       }
     }
 
   if (isUsed & 2) {
     if (botField) {
       botField->usedForReference = 0;
-      botField->isLongTerm = 0;
+      botField->usedLongTerm = 0;
       }
     }
 
   if (isUsed == 3) {
     if (topField && botField) {
       topField->usedForReference = 0;
-      topField->isLongTerm = 0;
+      topField->usedLongTerm = 0;
       botField->usedForReference = 0;
-      botField->isLongTerm = 0;
+      botField->usedLongTerm = 0;
       }
     frame->usedForReference = 0;
-    frame->isLongTerm = 0;
+    frame->usedLongTerm = 0;
     }
 
-  mIsReference = 0;
-  isLongTerm = 0;
+  usedReference = 0;
+  usedLongTerm = 0;
   }
 //}}}
 
@@ -200,9 +200,9 @@ void cFrameStore::dpbCombineField (cDecoder264* decoder) {
   topField->botPoc = frame->botPoc = botField->poc;
 
   frame->usedForReference = (topField->usedForReference && botField->usedForReference );
-  frame->isLongTerm = (topField->isLongTerm && botField->isLongTerm );
+  frame->usedLongTerm = (topField->usedLongTerm && botField->usedLongTerm );
 
-  if (frame->isLongTerm)
+  if (frame->usedLongTerm)
     frame->longTermFrameIndex = longTermFrameIndex;
 
   frame->topField = topField;
@@ -309,7 +309,7 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
     fsBot->framePoc = frame->framePoc;
 
     fsTop->usedForReference = fsBot->usedForReference = frame->usedForReference;
-    fsTop->isLongTerm = fsBot->isLongTerm = frame->isLongTerm;
+    fsTop->usedLongTerm = fsBot->usedLongTerm = frame->usedLongTerm;
     longTermFrameIndex = fsTop->longTermFrameIndex
                                    = fsBot->longTermFrameIndex
                                    = frame->longTermFrameIndex;
@@ -429,10 +429,10 @@ void cFrameStore::insertPictureDpb (cDecoder264* decoder, sPicture* picture) {
       frame = picture;
       isUsed = 3;
       if (picture->usedForReference) {
-        mIsReference = 3;
-        isOrigReference = 3;
-        if (picture->isLongTerm) {
-          isLongTerm = 3;
+        usedReference = 3;
+        usedOrigReference = 3;
+        if (picture->usedLongTerm) {
+          usedLongTerm = 3;
           longTermFrameIndex = picture->longTermFrameIndex;
           }
         }
@@ -444,10 +444,10 @@ void cFrameStore::insertPictureDpb (cDecoder264* decoder, sPicture* picture) {
       isUsed |= 1;
 
       if (picture->usedForReference) {
-        mIsReference |= 1;
-        isOrigReference |= 1;
-        if (picture->isLongTerm) {
-          isLongTerm |= 1;
+        usedReference |= 1;
+        usedOrigReference |= 1;
+        if (picture->usedLongTerm) {
+          usedLongTerm |= 1;
           longTermFrameIndex = picture->longTermFrameIndex;
           }
         }
@@ -462,10 +462,10 @@ void cFrameStore::insertPictureDpb (cDecoder264* decoder, sPicture* picture) {
       botField = picture;
       isUsed |= 2;
       if (picture->usedForReference) {
-        mIsReference |= 2;
-        isOrigReference |= 2;
-        if (picture->isLongTerm) {
-          isLongTerm |= 2;
+        usedReference |= 2;
+        usedOrigReference |= 2;
+        if (picture->usedLongTerm) {
+          usedLongTerm |= 2;
           longTermFrameIndex = picture->longTermFrameIndex;
           }
         }

@@ -17,39 +17,35 @@
 #include "cSps.h"
 #include "cPps.h"
 //}}}
-#include "cBitStream.h"
-#include "cFrameStore.h"
-#include "cSlice.h"
-
 //{{{  defines
-#define MAX_NUM_SLICES          8
-#define MAX_CODED_FRAME_SIZE    8000000  // bytes for one frame
-#define MAX_NUM_DECSLICES       16
-#define MCBUF_LUMA_PAD_X        32
-#define MCBUF_LUMA_PAD_Y        12
-#define MCBUF_CHROMA_PAD_X      16
-#define MCBUF_CHROMA_PAD_Y      8
+#define MAX_NUM_SLICES       8
+#define MAX_CODED_FRAME_SIZE 8000000  // bytes for one frame
+#define MAX_NUM_DECSLICES    16
+#define MCBUF_LUMA_PAD_X     32
+#define MCBUF_LUMA_PAD_Y     12
+#define MCBUF_CHROMA_PAD_X   16
+#define MCBUF_CHROMA_PAD_Y   8
 
-#define NUM_BLOCK_TYPES         22
-#define BLOCK_SHIFT            2
-#define BLOCK_SIZE             4
-#define BLOCK_SIZE_8x8         8
-#define SMB_BLOCK_SIZE         8
-#define BLOCK_PIXELS          16
-#define MB_BLOCK_SIZE         16
-#define MB_PIXELS            256  // MB_BLOCK_SIZE * MB_BLOCK_SIZE
-#define MB_PIXELS_SHIFT        8  // log2(MB_BLOCK_SIZE * MB_BLOCK_SIZE)
-#define MB_BLOCK_SHIFT         4
-#define BLOCK_MULTIPLE         4  // (MB_BLOCK_SIZE/BLOCK_SIZE)
-#define MB_BLOCK_dpS          16  // (BLOCK_MULTIPLE * BLOCK_MULTIPLE)
-#define BLOCK_CONTEXT         64  // (4 * MB_BLOCK_dpS)
+#define NUM_BLOCK_TYPES      22
+#define BLOCK_SHIFT          2
+#define BLOCK_SIZE           4
+#define BLOCK_SIZE_8x8       8
+#define SMB_BLOCK_SIZE       8
+#define BLOCK_PIXELS         16
+#define MB_BLOCK_SIZE        16
+#define MB_PIXELS            256 // MB_BLOCK_SIZE * MB_BLOCK_SIZE
+#define MB_PIXELS_SHIFT      8   // log2(MB_BLOCK_SIZE * MB_BLOCK_SIZE)
+#define MB_BLOCK_SHIFT       4
+#define BLOCK_MULTIPLE       4   // (MB_BLOCK_SIZE/BLOCK_SIZE)
+#define MB_BLOCK_dpS         16  // (BLOCK_MULTIPLE * BLOCK_MULTIPLE)
+#define BLOCK_CONTEXT        64  // (4 * MB_BLOCK_dpS)
 
 // These variables relate to the subpel accuracy supported by the software (1/4)
-#define BLOCK_SIZE_SP         16  // BLOCK_SIZE << 2
-#define BLOCK_SIZE_8x8_SP     32  // BLOCK_SIZE8x8 << 2
+#define BLOCK_SIZE_SP        16  // BLOCK_SIZE << 2
+#define BLOCK_SIZE_8x8_SP    32  // BLOCK_SIZE8x8 << 2
 
-// number of intra prediction modes
-#define NO_INTRA_PMODE   9
+// number intra prediction modes
+#define NO_INTRA_PMODE       9
 
 // Macro defines
 #define Q_BITS           15
@@ -57,18 +53,24 @@
 #define Q_BITS_8         16
 #define DQ_BITS_8        6
 
-#define TOTRUN_NUM       15
-#define RUNBEFORE_NUM    7
-#define RUNBEFORE_NUM_M1 6
-
 // Quantization parameter range
 #define MAX_QP           51
 #define MAX_PLANE        3
 #define INVALIDINDEX     (-135792468)
 
+#define TOTRUN_NUM       15
+#define RUNBEFORE_NUM_M1 6
+
+#define MAX_LIST_SIZE 33
+
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
 #define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
 //}}}
+
+#include "cBitStream.h"
+#include "cFrameStore.h"
+#include "cSlice.h"
+
 //{{{
 enum eStartEnd {
   eEOS = 1, // End Of Sequence
@@ -227,12 +229,138 @@ enum eMvPredType {
   };
 //}}}
 
-struct sConcealNode;
 struct sPicture;
-struct sDpb;
-struct sPicMotion;
 struct sMacroBlock;
 class cDecoder264;
+//{{{
+struct sConcealNode {
+  sPicture* picture;
+  int       missingpocs;
+  sConcealNode* next;
+  };
+//}}}
+//{{{
+struct sMotionVec {
+  int16_t mvX;
+  int16_t mvY;
+  };
+//}}}
+//{{{
+struct sPicMotionOld {
+  uint8_t* mbField; // field macroBlock indicator
+  };
+//}}}
+//{{{
+struct sPicMotion {
+  sPicture*  refPic[2];   // referrence picture pointer
+  sMotionVec mv[2];       // motion vector
+  char       refIndex[2]; // reference picture   [list][subblockY][subblockX]
+  uint8_t    slice_no;
+  };
+//}}}
+//{{{
+struct sPicture {
+  ePicStructure picStructure;
+
+  int           poc;
+  int           topPoc;
+  int           botPoc;
+  int           framePoc;
+  uint32_t      frameNum;
+  uint32_t      recoveryFrame;
+
+  int           picNum;
+  int           longTermPicNum;
+  int           longTermFrameIndex;
+
+  uint8_t       usedLongTerm;
+  int           usedForReference;
+  int           isOutput;
+  int           nonExisting;
+  int           isSeperateColourPlane;
+
+  int16_t       maxSliceId;
+
+  int           sizeX;
+  int           sizeY;
+  int           sizeXcr;
+  int           sizeYcr;
+  int           size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
+  int           codedFrame;
+  int           mbAffFrame;
+  uint32_t      picWidthMbs;
+  uint32_t      picSizeInMbs;
+  int           lumaPadX;
+  int           lumaPadY;
+  int           chromaPadX;
+  int           chromaPadY;
+
+  sPixel**      imgY;
+  sPixel***     imgUV;
+  sPicMotion**  mvInfo;
+  sPicMotionOld motion;
+  sPicture*     topField;  // for mb aff, if frame for referencing the top field
+  sPicture*     botField;  // for mb aff, if frame for referencing the bottom field
+  sPicture*     frame;     // for mb aff, if field for referencing the combined frame
+
+  int           isIDR;
+  int           sliceType;
+  int           longTermRefFlag;
+  int           adaptRefPicBufFlag;
+  int           noOutputPriorPicFlag;
+
+  eYuvFormat    chromaFormatIdc;
+  int           frameMbOnly;
+
+  int           hasCrop;
+  int           cropLeft;
+  int           cropRight;
+  int           cropTop;
+  int           cropBot;
+
+  int           qp;
+  int           chromaQpOffset[2];
+  int           sliceQpDelta;
+  sDecodedRefPicMark* decRefPicMarkBuffer;  // stores the memory management control operations
+
+  // picture error conceal
+  int           lumaStride;
+  int           chromaStride;
+  int           lumaExpandedHeight;
+  int           chromaExpandedHeight;
+  sPixel**      curPixelY;               // for more efficient get_block_luma
+  int           noRef;
+  int           codingType;
+
+  char          listXsize[MAX_NUM_SLICES][2];
+  sPicture**    listX[MAX_NUM_SLICES][2];
+
+  // Motion info for 4:4:4 independent mode decoding
+  sPicMotion**  mvInfoJV[MAX_PLANE];
+  sPicMotionOld motionJV[MAX_PLANE];
+  };
+//}}}
+//{{{
+struct sDpb {
+  cDecoder264*  decoder;
+
+  cFrameStore** frameStore;
+  cFrameStore** frameStoreRef;
+  cFrameStore** frameStoreLongTermRef;
+
+  uint32_t      size;
+  uint32_t      usedSize;
+  uint32_t      refFramesInBuffer;
+  uint32_t      longTermRefFramesInBuffer;
+
+  int           lastOutputPoc;
+  int           maxLongTermPicIndex;
+  int           initDone;
+  int           numRefFrames;
+
+  cFrameStore*  lastPictureFrameStore;
+  };
+//}}}
 //{{{
 struct sBiContext {
   uint16_t        state; // index into state-table CP
@@ -321,12 +449,6 @@ struct sDataPartition {
   };
 //}}}
 //{{{
-struct sMotionVec {
-  int16_t mvX;
-  int16_t mvY;
-  };
-//}}}
-//{{{
 struct sMacroBlock {
   cDecoder264* decoder;
   cSlice*   slice;
@@ -337,10 +459,10 @@ struct sMacroBlock {
   int     mbIndexC;
   int     mbIndexD;
 
-  bool mbAvailA;
-  bool mbAvailB;
-  bool mbAvailC;
-  bool mbAvailD;
+  bool    mbAvailA;
+  bool    mbAvailB;
+  bool    mbAvailC;
+  bool    mbAvailD;
 
   sBlockPos mb;
   int     blockX;
@@ -358,16 +480,16 @@ struct sMacroBlock {
   int     qpc[2];               // QP chroma
   int     qpScaled[MAX_PLANE];  // QP scaled for all comps.
 
-  bool isLossless;
-  bool isIntraBlock;
-  bool isVblock;
+  bool    isLossless;
+  bool    isIntraBlock;
+  bool    isVblock;
   int     DeblockCall;
 
-  int16_t   sliceNum;
+  int16_t sliceNum;
   char    errorFlag;            // error indicator flag that enables conceal
   char    dplFlag;           // error indicator flag that signals a missing data dataPartition
-  int16_t   deltaQuant;        // for rate control
-  int16_t   listOffset;
+  int16_t deltaQuant;        // for rate control
+  int16_t listOffset;
 
   sMacroBlock* mbCabacUp;   // pointer to neighboring MB (eCabac)
   sMacroBlock* mbCabacLeft; // pointer to neighboring MB (eCabac)
@@ -376,32 +498,32 @@ struct sMacroBlock {
   sMacroBlock* mbLeft;  // neighbors for loopfilter
 
   // some storage of macroBlock syntax elements for global access
-  int16_t   mbType;
-  int16_t   mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][blockY][blockX][x,y]
+  int16_t mbType;
+  int16_t mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][blockY][blockX][x,y]
   int     codedBlockPattern;
   sCodedBlockPattern codedBlockPatterns[3];
 
-  int   i16mode;
-  char  b8mode[4];
-  char  b8pdir[4];
-  char  dpcmMode;
-  char  chromaPredMode;       // chroma intra prediction mode
-  char  skipFlag;
+  int     i16mode;
+  char    b8mode[4];
+  char    b8pdir[4];
+  char    dpcmMode;
+  char    chromaPredMode;       // chroma intra prediction mode
+  char    skipFlag;
   int16_t deblockFilterDisableIdc;
   int16_t deblockFilterC0Offset;
   int16_t deblockFilterBetaOffset;
 
-  bool mbField;
+  bool    mbField;
 
   // Flag for MBAFF deblocking;
-  uint8_t  mixedModeEdgeFlag;
+  uint8_t mixedModeEdgeFlag;
 
   // deblocking strength indices
   uint8_t strengthV[4][4];
   uint8_t strengthH[4][16];
 
-  bool lumaTransformSize8x8flag;
-  bool noMbPartLessThan8x8Flag;
+  bool    lumaTransformSize8x8flag;
+  bool    noMbPartLessThan8x8Flag;
 
   // virtual methods
   void (*iTrans4x4) (sMacroBlock*, eColorPlane, int, int);

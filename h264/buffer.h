@@ -1,124 +1,6 @@
 #pragma once
 #include "global.h"
 
-#define MAX_LIST_SIZE 33
-//{{{
-struct sPicMotionOld {
-  uint8_t* mbField; // field macroBlock indicator
-  };
-//}}}
-//{{{
-struct sPicMotion {
-  sPicture*  refPic[2];   // referrence picture pointer
-  sMotionVec mv[2];       // motion vector
-  char       refIndex[2]; // reference picture   [list][subblockY][subblockX]
-  uint8_t       slice_no;
-  };
-//}}}
-//{{{
-struct sPicture {
-  ePicStructure picStructure;
-
-  int           poc;
-  int           topPoc;
-  int           botPoc;
-  int           framePoc;
-  uint32_t      frameNum;
-  uint32_t      recoveryFrame;
-
-  int           picNum;
-  int           longTermPicNum;
-  int           longTermFrameIndex;
-
-  uint8_t       isLongTerm;
-  int           usedForReference;
-  int           isOutput;
-  int           nonExisting;
-  int           isSeperateColourPlane;
-
-  int16_t       maxSliceId;
-
-  int           sizeX;
-  int           sizeY;
-  int           sizeXcr;
-  int           sizeYcr;
-  int           size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
-  int           codedFrame;
-  int           mbAffFrame;
-  uint32_t      picWidthMbs;
-  uint32_t      picSizeInMbs;
-  int           lumaPadX;
-  int           lumaPadY;
-  int           chromaPadX;
-  int           chromaPadY;
-
-  sPixel**      imgY;
-  sPixel***     imgUV;
-  sPicMotion**  mvInfo;
-  sPicMotionOld motion;
-  sPicture*     topField;  // for mb aff, if frame for referencing the top field
-  sPicture*     botField;  // for mb aff, if frame for referencing the bottom field
-  sPicture*     frame;     // for mb aff, if field for referencing the combined frame
-
-  int           isIDR;
-  int           sliceType;
-  int           longTermRefFlag;
-  int           adaptRefPicBufFlag;
-  int           noOutputPriorPicFlag;
-
-  eYuvFormat    chromaFormatIdc;
-  int           frameMbOnly;
-
-  int           hasCrop;
-  int           cropLeft;
-  int           cropRight;
-  int           cropTop;
-  int           cropBot;
-
-  int           qp;
-  int           chromaQpOffset[2];
-  int           sliceQpDelta;
-  sDecodedRefPicMark* decRefPicMarkBuffer;  // stores the memory management control operations
-
-  // picture error conceal
-  int           lumaStride;
-  int           chromaStride;
-  int           lumaExpandedHeight;
-  int           chromaExpandedHeight;
-  sPixel**      curPixelY;               // for more efficient get_block_luma
-  int           noRef;
-  int           codingType;
-
-  char          listXsize[MAX_NUM_SLICES][2];
-  sPicture**    listX[MAX_NUM_SLICES][2];
-
-  // Motion info for 4:4:4 independent mode decoding
-  sPicMotion**  mvInfoJV[MAX_PLANE];
-  sPicMotionOld motionJV[MAX_PLANE];
-  };
-//}}}
-//{{{
-struct sDpb {
-  cDecoder264*  decoder;
-
-  cFrameStore** frameStore;
-  cFrameStore** frameStoreRef;
-  cFrameStore** frameStoreLongTermRef;
-
-  uint32_t      size;
-  uint32_t      usedSize;
-  uint32_t      refFramesInBuffer;
-  uint32_t      longTermRefFramesInBuffer;
-
-  int           lastOutputPoc;
-  int           maxLongTermPicIndex;
-  int           initDone;
-  int           numRefFrames;
-
-  cFrameStore*  lastPictureFrameStore;
-  };
-//}}}
-
 //{{{
 // compares two stored pictures by picture number for qsort in descending order
 static inline int comparePicByPicNumDescending (const void* arg1, const void* arg2) {
@@ -242,8 +124,8 @@ static inline int comparefsByPocdesc (const void* arg1, const void* arg2) {
     return 0;
   }
 //}}}
-static inline int isLongRef (sPicture* picture) { return picture->usedForReference && picture->isLongTerm; }
-static inline int isShortRef (sPicture* picture) { return picture->usedForReference && !picture->isLongTerm; }
+static inline int isLongRef (sPicture* picture) { return picture->usedForReference && picture->usedLongTerm; }
+static inline int isShortRef (sPicture* picture) { return picture->usedForReference && !picture->usedLongTerm; }
 
 sPicture* allocPicture (cDecoder264* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
 void freePicture (sPicture* picture);

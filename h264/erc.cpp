@@ -1493,7 +1493,7 @@ static sPicture* get_last_ref_pic_from_dpb (sDpb* dpb)
     if (dpb->frameStore[i]->isUsed==3)
     {
       if (((dpb->frameStore[i]->frame->usedForReference) &&
-        (!dpb->frameStore[i]->frame->isLongTerm)) /*||  ((dpb->frameStore[i]->frame->usedForReference==0)
+        (!dpb->frameStore[i]->frame->usedLongTerm)) /*||  ((dpb->frameStore[i]->frame->usedForReference==0)
                                            && (dpb->frameStore[i]->frame->sliceType == eSliceP))*/ )
       {
         return dpb->frameStore[i]->frame;
@@ -2040,7 +2040,7 @@ void write_lost_non_ref_pic (sDpb* dpb, int poc) {
     if ((poc - dpb->lastOutputPoc) > decoder->param.pocGap) {
       concealment_fs.frame = decoder->concealHead->picture;
       concealment_fs.isOutput = 0;
-      concealment_fs.mIsReference = 0;
+      concealment_fs.usedReference = 0;
       concealment_fs.isUsed = 3;
 
       writeStoredFrame (decoder, &concealment_fs);

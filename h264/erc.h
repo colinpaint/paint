@@ -68,26 +68,19 @@ typedef struct ErcVariables {
   int conceal;
   } sErcVariables;
 //}}}
-//{{{
-struct sConcealNode {
-  sPicture* picture;
-  int       missingpocs;
-  sConcealNode* next;
-  };
-//}}}
 #define xPosMB(currMBNum,picSizeX) ((currMBNum)%((picSizeX)>>4))
 #define yPosMB(currMBNum,picSizeX) ((currMBNum)/((picSizeX)>>4))
 
-int ercConcealIntraFrame (cDecoder264* decoder, frame *recfr,
+int ercConcealIntraFrame (cDecoder264* decoder, frame* recfr,
                           int picSizeX, int picSizeY, sErcVariables *errorVar );
-int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
+int ercConcealInterFrame (frame *recfr, sObjectBuffer* object_list,
                           int picSizeX, int picSizeY, sErcVariables *errorVar, int chromaFormatIdc );
 
-struct sConcealNode* init_node (sPicture* , int );
+struct sConcealNode* init_node (sPicture* , int);
 void init_lists_for_non_reference_loss (sDpb* dpb, int , ePicStructure );
 void concealLostFrames (sDpb* dpb, cSlice *slice);
 void conceal_non_ref_pics (sDpb* dpb, int diff);
-void sliding_window_poc_management (sDpb* dpb, sPicture *p);
+void sliding_window_poc_management (sDpb* dpb, sPicture* p);
 void write_lost_non_ref_pic (sDpb* dpb, int poc);
 void write_lost_ref_after_idr (sDpb* dpb, int pos);
 

@@ -19,11 +19,10 @@ public:
   void insertPictureDpb (cDecoder264* decoder, sPicture* picture);
 
   // vars
-  int       isUsed = 0;          // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
-  int       mIsReference = 0;    // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isLongTerm = 0;      // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isOrigReference = 0; // original marking by nalRefIdc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
-  int       isNonExistent = 0;
+  int       isUsed = 0;            // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)
+  int       usedReference = 0;     // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       usedLongTerm = 0;      // 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
+  int       usedOrigReference = 0; // original marking by nalRefIdc: 0=not used for ref; 1=top used; 2=bottom used; 3=both fields (or frame) used
 
   uint32_t  frameNum = 0;
   uint32_t  recoveryFrame = 0;

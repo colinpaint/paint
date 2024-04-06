@@ -128,7 +128,7 @@ void cSlice::fillWeightedPredParam() {
             }
           else if (activePps->weightedBiPredIdc == 2) {
             int td = iClip3(-128,127,listX[LIST_1][j]->poc - listX[LIST_0][i]->poc);
-            if (!td || listX[LIST_1][j]->isLongTerm || listX[LIST_0][i]->isLongTerm) {
+            if (!td || listX[LIST_1][j]->usedLongTerm || listX[LIST_0][i]->usedLongTerm) {
               weightedBiPredWeight[0][i][j][comp] = 32;
               weightedBiPredWeight[1][i][j][comp] = 32;
               }
@@ -163,7 +163,7 @@ void cSlice::fillWeightedPredParam() {
                 }
               else if (activePps->weightedBiPredIdc == 2) {
                 int td = iClip3 (-128, 127, listX[k+LIST_1][j]->poc - listX[k+LIST_0][i]->poc);
-                if (!td || listX[k+LIST_1][j]->isLongTerm || listX[k+LIST_0][i]->isLongTerm) {
+                if (!td || listX[k+LIST_1][j]->usedLongTerm || listX[k+LIST_0][i]->usedLongTerm) {
                   weightedBiPredWeight[k+0][i][j][comp] = 32;
                   weightedBiPredWeight[k+1][i][j][comp] = 32;
                   }
