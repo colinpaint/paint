@@ -99,7 +99,7 @@ namespace {
       return 0;
 
     // call the output function
-    //printf ("output frame with frameNum #%d, poc %d (dpb. dpb->size=%d, dpb->usedSize=%d)\n", dpb->fs[pos]->frameNum, dpb->fs[pos]->frame->poc, dpb->size, dpb->usedSize);
+    //printf ("output frame with frameNum #%d, poc %d (dpb. dpb->size=%d, dpb->usedSize=%d)\n", dpb->frameStore[pos]->frameNum, dpb->frameStore[pos]->frame->poc, dpb->size, dpb->usedSize);
 
     // picture error conceal
     cDecoder264* decoder = dpb->decoder;
@@ -109,7 +109,7 @@ namespace {
       write_lost_non_ref_pic (dpb, poc);
       }
 
-    writeStoredFrame (decoder, dpb->fs[pos]);
+    writeStoredFrame (decoder, dpb->frameStore[pos]);
 
     // picture error conceal
     if(decoder->concealMode == 0)
@@ -119,7 +119,7 @@ namespace {
     dpb->lastOutputPoc = poc;
 
     // free frame store and move empty store to end of buffer
-    if (!dpb->fs[pos]->isReference ())
+    if (!dpb->frameStore[pos]->isReference ())
       removeFrameDpb (dpb, pos);
 
     return 1;
@@ -132,33 +132,33 @@ namespace {
   #ifdef DUMP_DPB
     for (uint32_t i = 0; i < dpb->usedSize; i++) {
       printf ("(");
-      printf ("fn=%d  ", dpb->fs[i]->frameNum);
-      if (dpb->fs[i]->isUsed & 1) {
-        if (dpb->fs[i]->topField)
-          printf ("T: poc=%d  ", dpb->fs[i]->topField->poc);
+      printf ("fn=%d  ", dpb->frameStore[i]->frameNum);
+      if (dpb->frameStore[i]->isUsed & 1) {
+        if (dpb->frameStore[i]->topField)
+          printf ("T: poc=%d  ", dpb->frameStore[i]->topField->poc);
         else
-          printf ("T: poc=%d  ", dpb->fs[i]->frame->topPoc);
+          printf ("T: poc=%d  ", dpb->frameStore[i]->frame->topPoc);
         }
 
-      if (dpb->fs[i]->isUsed & 2) {
-        if (dpb->fs[i]->botField)
-          printf ("B: poc=%d  ", dpb->fs[i]->botField->poc);
+      if (dpb->frameStore[i]->isUsed & 2) {
+        if (dpb->frameStore[i]->botField)
+          printf ("B: poc=%d  ", dpb->frameStore[i]->botField->poc);
         else
-          printf ("B: poc=%d  ", dpb->fs[i]->frame->botPoc);
+          printf ("B: poc=%d  ", dpb->frameStore[i]->frame->botPoc);
         }
 
-      if (dpb->fs[i]->isUsed == 3)
-        printf ("F: poc=%d  ", dpb->fs[i]->frame->poc);
-      printf ("G: poc=%d)  ", dpb->fs[i]->poc);
+      if (dpb->frameStore[i]->isUsed == 3)
+        printf ("F: poc=%d  ", dpb->frameStore[i]->frame->poc);
+      printf ("G: poc=%d)  ", dpb->frameStore[i]->poc);
 
-      if (dpb->fs[i]->isReference)
-        printf ("ref (%d) ", dpb->fs[i]->isReference);
-      if (dpb->fs[i]->isLongTerm)
-        printf ("lt_ref (%d) ", dpb->fs[i]->isReference);
-      if (dpb->fs[i]->isOutput)
+      if (dpb->frameStore[i]->isReference)
+        printf ("ref (%d) ", dpb->frameStore[i]->isReference);
+      if (dpb->frameStore[i]->isLongTerm)
+        printf ("lt_ref (%d) ", dpb->frameStore[i]->isReference);
+      if (dpb->frameStore[i]->isOutput)
         printf ("out  ");
-      if (dpb->fs[i]->isUsed == 3)
-        if (dpb->fs[i]->frame->nonExisting)
+      if (dpb->frameStore[i]->isUsed == 3)
+        if (dpb->frameStore[i]->frame->nonExisting)
           printf ("ne  ");
 
       printf ("\n");
@@ -646,8 +646,8 @@ namespace {
     // if this is a reference pic with sliding window, unmark first ref frame
     if (dpb->refFramesInBuffer == imax (1, dpb->numRefFrames) - dpb->longTermRefFramesInBuffer) {
       for (uint32_t i = 0; i < dpb->usedSize; i++) {
-        if (dpb->fs[i]->mIsReference && (!(dpb->fs[i]->isLongTerm))) {
-          dpb->fs[i]->unmarkForRef ();
+        if (dpb->frameStore[i]->mIsReference && (!(dpb->frameStore[i]->isLongTerm))) {
+          dpb->frameStore[i]->unmarkForRef ();
           updateRefList (dpb);
           break;
           }
@@ -664,8 +664,8 @@ namespace {
       // free all stored pictures
       for (uint32_t i = 0; i < dpb->usedSize; i++) {
         // reset all reference settings
-        dpb->fs[i]->freeFrameStore ();
-        dpb->fs[i] = cFrameStore::allocFrameStore();
+        delete dpb->frameStore[i];
+        dpb->frameStore[i] = new cFrameStore();
         }
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
         dpb->fsRef[i]=NULL;
@@ -717,7 +717,7 @@ namespace {
   //}}}
   //{{{
   void genPicListFromFrameList (ePicStructure currStructure, cFrameStore** fs_list,
-                                            int list_idx, sPicture** list, char *list_size, int long_term) {
+                                int list_idx, sPicture** list, char *list_size, int long_term) {
 
     int top_idx = 0;
     int bot_idx = 0;
@@ -1004,8 +1004,8 @@ void updateRefList (sDpb* dpb) {
 
   uint32_t i, j;
   for (i = 0, j = 0; i < dpb->usedSize; i++)
-    if (dpb->fs[i]->isShortTermReference ())
-      dpb->fsRef[j++]=dpb->fs[i];
+    if (dpb->frameStore[i]->isShortTermReference ())
+      dpb->fsRef[j++]=dpb->frameStore[i];
 
   dpb->refFramesInBuffer = j;
 
@@ -1018,8 +1018,8 @@ void updateLongTermRefList (sDpb* dpb) {
 
   uint32_t i, j;
   for (i = 0, j = 0; i < dpb->usedSize; i++)
-    if (dpb->fs[i]->isLongTermReference ())
-      dpb->fsLongTermRef[j++] = dpb->fs[i];
+    if (dpb->frameStore[i]->isLongTermReference ())
+      dpb->fsLongTermRef[j++] = dpb->frameStore[i];
 
   dpb->longTermRefFramesInBuffer = j;
 
@@ -1036,8 +1036,8 @@ void getSmallestPoc (sDpb* dpb, int* poc, int* pos) {
   *pos = -1;
   *poc = INT_MAX;
   for (uint32_t i = 0; i < dpb->usedSize; i++) {
-    if ((*poc > dpb->fs[i]->poc)&&(!dpb->fs[i]->isOutput)) {
-      *poc = dpb->fs[i]->poc;
+    if ((*poc > dpb->frameStore[i]->poc)&&(!dpb->frameStore[i]->isOutput)) {
+      *poc = dpb->frameStore[i]->poc;
       *pos = i;
       }
     }
@@ -1064,12 +1064,12 @@ void initDpb (cDecoder264* decoder, sDpb* dpb, int type) {
   dpb->refFramesInBuffer = 0;
   dpb->longTermRefFramesInBuffer = 0;
 
-  dpb->fs = (cFrameStore**)calloc (dpb->size, sizeof (cFrameStore*));
+  dpb->frameStore = (cFrameStore**)calloc (dpb->size, sizeof (cFrameStore*));
   dpb->fsRef = (cFrameStore**)calloc (dpb->size, sizeof (cFrameStore*));
   dpb->fsLongTermRef = (cFrameStore**)calloc (dpb->size, sizeof (cFrameStore*));
 
   for (uint32_t i = 0; i < dpb->size; i++) {
-    dpb->fs[i] = cFrameStore::allocFrameStore();
+    dpb->frameStore[i] = new cFrameStore();
     dpb->fsRef[i] = NULL;
     dpb->fsLongTermRef[i] = NULL;
     }
@@ -1087,7 +1087,7 @@ void initDpb (cDecoder264* decoder, sDpb* dpb, int type) {
 
   // picture error conceal
   if ((decoder->concealMode != 0) && !decoder->lastOutFramestore)
-    decoder->lastOutFramestore = cFrameStore::allocFrameStore();
+    decoder->lastOutFramestore = new cFrameStore();
   }
 //}}}
 //{{{
@@ -1101,12 +1101,12 @@ void reInitDpb (cDecoder264* decoder, sDpb* dpb, int type) {
     if (dpb->size < activeSps->numRefFrames)
       cDecoder264::error ("DPB size at specified level is smaller than the specified number of reference frames\n");
 
-    dpb->fs = (cFrameStore**)realloc (dpb->fs, dpbSize * sizeof (cFrameStore*));
+    dpb->frameStore = (cFrameStore**)realloc (dpb->frameStore, dpbSize * sizeof (cFrameStore*));
     dpb->fsRef = (cFrameStore**)realloc(dpb->fsRef, dpbSize * sizeof (cFrameStore*));
     dpb->fsLongTermRef = (cFrameStore**)realloc(dpb->fsLongTermRef, dpbSize * sizeof (cFrameStore*));
 
     for (int i = dpb->size; i < dpbSize; i++) {
-      dpb->fs[i] = cFrameStore::allocFrameStore();
+      dpb->frameStore[i] = new cFrameStore();
       dpb->fsRef[i] = NULL;
       dpb->fsLongTermRef[i] = NULL;
       }
@@ -1129,7 +1129,7 @@ void flushDpb (sDpb* dpb) {
 
   // mark all frames unused
   for (uint32_t i = 0; i < dpb->usedSize; i++)
-    dpb->fs[i]->unmarkForRef ();
+    dpb->frameStore[i]->unmarkForRef ();
 
   while (removeUnusedDpb (dpb));
 
@@ -1144,7 +1144,7 @@ int removeUnusedDpb (sDpb* dpb) {
 
   // check for frames that were already output and no longer used for reference
   for (uint32_t i = 0; i < dpb->usedSize; i++) {
-    if (dpb->fs[i]->isOutput && (!dpb->fs[i]->isReference())) {
+    if (dpb->frameStore[i]->isOutput && (!dpb->frameStore[i]->isReference())) {
       removeFrameDpb(dpb, i);
       return 1;
       }
@@ -1202,8 +1202,8 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
   // picture error conceal
   if (decoder->concealMode != 0)
     for (uint32_t i = 0; i < dpb->size; i++)
-      if (dpb->fs[i]->mIsReference)
-        dpb->fs[i]->concealRef = 1;
+      if (dpb->frameStore[i]->mIsReference)
+        dpb->frameStore[i]->concealRef = 1;
 
   // first try to remove unused frames
   if (dpb->usedSize == dpb->size) {
@@ -1239,14 +1239,14 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
         cDecoder264::error ("duplicate frameNum in int16_t-term reference picture buffer");
 
   // store at end of buffer
-  dpb->fs[dpb->usedSize]->insertPictureDpb (decoder,  picture);
+  dpb->frameStore[dpb->usedSize]->insertPictureDpb (decoder,  picture);
 
   // picture error conceal
   if (picture->isIDR)
     decoder->earlierMissingPoc = 0;
 
   if (picture->picStructure != eFrame)
-    dpb->lastPicture = dpb->fs[dpb->usedSize];
+    dpb->lastPicture = dpb->frameStore[dpb->usedSize];
   else
     dpb->lastPicture = NULL;
 
@@ -1264,26 +1264,25 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
 //{{{
 void removeFrameDpb (sDpb* dpb, int pos) {
 
-  //printf ("remove frame with frameNum #%d\n", fs->frameNum);
-  cFrameStore* fs = dpb->fs[pos];
-  switch (fs->isUsed) {
+  cFrameStore* frameStore = dpb->frameStore[pos];
+  switch (frameStore->isUsed) {
     case 3:
-      freePicture (fs->frame);
-      freePicture (fs->topField);
-      freePicture (fs->botField);
-      fs->frame = NULL;
-      fs->topField = NULL;
-      fs->botField = NULL;
+      freePicture (frameStore->frame);
+      freePicture (frameStore->topField);
+      freePicture (frameStore->botField);
+      frameStore->frame = NULL;
+      frameStore->topField = NULL;
+      frameStore->botField = NULL;
       break;
 
     case 2:
-      freePicture (fs->botField);
-      fs->botField = NULL;
+      freePicture (frameStore->botField);
+      frameStore->botField = NULL;
       break;
 
     case 1:
-      freePicture (fs->topField);
-      fs->topField = NULL;
+      freePicture (frameStore->topField);
+      frameStore->topField = NULL;
       break;
 
     case 0:
@@ -1292,18 +1291,16 @@ void removeFrameDpb (sDpb* dpb, int pos) {
     default:
       cDecoder264::error ("invalid frame store type");
     }
-  fs->isUsed = 0;
-  fs->isLongTerm = 0;
-  fs->mIsReference = 0;
-  fs->isOrigReference = 0;
+  frameStore->isUsed = 0;
+  frameStore->isLongTerm = 0;
+  frameStore->mIsReference = 0;
+  frameStore->isOrigReference = 0;
 
   // move empty framestore to end of buffer
-  cFrameStore* tmp = dpb->fs[pos];
-
+  cFrameStore* tmp = dpb->frameStore[pos];
   for (uint32_t i = pos; i < dpb->usedSize-1; i++)
-    dpb->fs[i] = dpb->fs[i+1];
-
-  dpb->fs[dpb->usedSize-1] = tmp;
+    dpb->frameStore[i] = dpb->frameStore[i+1];
+  dpb->frameStore[dpb->usedSize-1] = tmp;
   dpb->usedSize--;
   }
 //}}}
@@ -1311,11 +1308,11 @@ void removeFrameDpb (sDpb* dpb, int pos) {
 void freeDpb (sDpb* dpb) {
 
   cDecoder264* decoder = dpb->decoder;
-  if (dpb->fs) {
+  if (dpb->frameStore) {
     for (uint32_t i = 0; i < dpb->size; i++)
-      dpb->fs[i]->freeFrameStore ();
-    free (dpb->fs);
-    dpb->fs = NULL;
+      delete dpb->frameStore[i];
+    free (dpb->frameStore);
+    dpb->frameStore = NULL;
     }
 
   if (dpb->fsRef)
@@ -1329,7 +1326,7 @@ void freeDpb (sDpb* dpb) {
 
   // picture error conceal
   if (decoder->concealMode != 0 || decoder->lastOutFramestore)
-    decoder->lastOutFramestore->freeFrameStore ();
+    delete decoder->lastOutFramestore;
 
   if (decoder->noReferencePicture) {
     freePicture (decoder->noReferencePicture);
@@ -1594,7 +1591,7 @@ void initListsSliceP (cSlice* slice) {
 
   int list0idx = 0;
   int listLtIndex = 0;
-  cFrameStore** fsList0;
+  cFrameStore** frameStoreList0;
   cFrameStore** fsListLongTerm;
 
   if (slice->picStructure == eFrame) {
@@ -1617,19 +1614,14 @@ void initListsSliceP (cSlice* slice) {
     slice->listXsize[0] = (char) list0idx;
     }
   else {
-    fsList0 = (cFrameStore**)calloc (dpb->size, sizeof(cFrameStore*));
-    if (!fsList0)
-      noMemoryExit ("initLists: fsList0");
+    frameStoreList0 = (cFrameStore**)calloc (dpb->size, sizeof(cFrameStore*));
     fsListLongTerm = (cFrameStore**)calloc (dpb->size, sizeof(cFrameStore*));
-    if (!fsListLongTerm)
-      noMemoryExit ("initLists: fsListLongTerm");
-
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->mIsReference)
-        fsList0[list0idx++] = dpb->fsRef[i];
-    qsort ((void*)fsList0, list0idx, sizeof(cFrameStore*), compareFsByFrameNumDescending);
+        frameStoreList0[list0idx++] = dpb->fsRef[i];
+    qsort ((void*)frameStoreList0, list0idx, sizeof(cFrameStore*), compareFsByFrameNumDescending);
     slice->listXsize[0] = 0;
-    genPicListFromFrameList(slice->picStructure, fsList0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
+    genPicListFromFrameList(slice->picStructure, frameStoreList0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
 
     // long term handling
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
@@ -1637,7 +1629,7 @@ void initListsSliceP (cSlice* slice) {
     qsort ((void*)fsListLongTerm, listLtIndex, sizeof(cFrameStore*), compareFsbyLtPicIndexAscending);
     genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
 
-    free (fsList0);
+    free (frameStoreList0);
     free (fsListLongTerm);
     }
   slice->listXsize[1] = 0;
@@ -1666,8 +1658,8 @@ void initListsSliceB (cSlice* slice) {
   int list0index1 = 0;
   int listLtIndex = 0;
 
-  cFrameStore** fsList0;
-  cFrameStore** fs_list1;
+  cFrameStore** frameStoreList0;
+  cFrameStore** frameStoreList1;
   cFrameStore** fsListLongTerm;
 
   // B Slice
@@ -1713,8 +1705,8 @@ void initListsSliceB (cSlice* slice) {
     //}}}
   else {
     //{{{  field
-    fsList0 = (cFrameStore**)calloc(dpb->size, sizeof (cFrameStore*));
-    fs_list1 = (cFrameStore**)calloc(dpb->size, sizeof (cFrameStore*));
+    frameStoreList0 = (cFrameStore**)calloc(dpb->size, sizeof (cFrameStore*));
+    frameStoreList1 = (cFrameStore**)calloc(dpb->size, sizeof (cFrameStore*));
     fsListLongTerm = (cFrameStore**)calloc(dpb->size, sizeof (cFrameStore*));
     slice->listXsize[0] = 0;
     slice->listXsize[1] = 1;
@@ -1722,25 +1714,25 @@ void initListsSliceB (cSlice* slice) {
     for (i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isUsed)
         if (slice->thisPoc >= dpb->fsRef[i]->poc)
-          fsList0[list0idx++] = dpb->fsRef[i];
-    qsort ((void*)fsList0, list0idx, sizeof(cFrameStore*), comparefsByPocdesc);
+          frameStoreList0[list0idx++] = dpb->fsRef[i];
+    qsort ((void*)frameStoreList0, list0idx, sizeof(cFrameStore*), comparefsByPocdesc);
 
     list0index1 = list0idx;
     for (i = 0; i < dpb->refFramesInBuffer; i++)
       if (dpb->fsRef[i]->isUsed)
         if (slice->thisPoc < dpb->fsRef[i]->poc)
-          fsList0[list0idx++] = dpb->fsRef[i];
-    qsort ((void*)&fsList0[list0index1], list0idx-list0index1, sizeof(cFrameStore*), compareFsByPocAscending);
+          frameStoreList0[list0idx++] = dpb->fsRef[i];
+    qsort ((void*)&frameStoreList0[list0index1], list0idx-list0index1, sizeof(cFrameStore*), compareFsByPocAscending);
 
     for (j = 0; j < list0index1; j++)
-      fs_list1[list0idx-list0index1+j]=fsList0[j];
+      frameStoreList1[list0idx-list0index1+j]=frameStoreList0[j];
     for (j = list0index1; j < list0idx; j++)
-      fs_list1[j-list0index1]=fsList0[j];
+      frameStoreList1[j-list0index1]=frameStoreList0[j];
 
     slice->listXsize[0] = 0;
     slice->listXsize[1] = 0;
-    genPicListFromFrameList (slice->picStructure, fsList0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
-    genPicListFromFrameList (slice->picStructure, fs_list1, list0idx, slice->listX[1], &slice->listXsize[1], 0);
+    genPicListFromFrameList (slice->picStructure, frameStoreList0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
+    genPicListFromFrameList (slice->picStructure, frameStoreList1, list0idx, slice->listX[1], &slice->listXsize[1], 0);
 
     // long term handling
     for (i = 0; i < dpb->longTermRefFramesInBuffer; i++)
@@ -1750,8 +1742,8 @@ void initListsSliceB (cSlice* slice) {
     genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
     genPicListFromFrameList (slice->picStructure, fsListLongTerm, listLtIndex, slice->listX[1], &slice->listXsize[1], 1);
 
-    free (fsList0);
-    free (fs_list1);
+    free (frameStoreList0);
+    free (frameStoreList1);
     free (fsListLongTerm);
     }
     //}}}

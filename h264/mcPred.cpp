@@ -1815,14 +1815,14 @@ bool getColocatedInfo4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     return true;
 
   else {
-    sPicMotion* fs = &list1->mvInfo[j][i];
-    int moving = !((((fs->refIndex[LIST_0] == 0) &&
-                     (iabs(fs->mv[LIST_0].mvX)>>1 == 0) &&
-                     (iabs(fs->mv[LIST_0].mvY)>>1 == 0))) ||
-                   ((fs->refIndex[LIST_0] == -1) &&
-                    (fs->refIndex[LIST_1] == 0) &&
-                    (iabs(fs->mv[LIST_1].mvX)>>1 == 0) &&
-                    (iabs(fs->mv[LIST_1].mvY)>>1 == 0)));
+    sPicMotion* frameStore = &list1->mvInfo[j][i];
+    int moving = !((((frameStore->refIndex[LIST_0] == 0) &&
+                     (iabs(frameStore->mv[LIST_0].mvX)>>1 == 0) &&
+                     (iabs(frameStore->mv[LIST_0].mvY)>>1 == 0))) ||
+                   ((frameStore->refIndex[LIST_0] == -1) &&
+                    (frameStore->refIndex[LIST_1] == 0) &&
+                    (iabs(frameStore->mv[LIST_1].mvX)>>1 == 0) &&
+                    (iabs(frameStore->mv[LIST_1].mvY)>>1 == 0)));
     return moving;
     }
   }
@@ -1842,38 +1842,38 @@ bool getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
       int jj = RSD(j);
       int ii = RSD(i);
       int jdiv = jj >> 1;
-      sPicMotion* fs = &list1->mvInfo[jj][ii];
+      sPicMotion* frameStore = &list1->mvInfo[jj][ii];
 
       if (slice->fieldPic && slice->picStructure!=list1->picStructure && list1->codedFrame) {
          if (slice->picStructure == eTopField)
-           fs = list1->topField->mvInfo[jj] + ii;
+           frameStore = list1->topField->mvInfo[jj] + ii;
          else
-           fs = list1->botField->mvInfo[jj] + ii;
+           frameStore = list1->botField->mvInfo[jj] + ii;
         }
       else {
         if( (slice->mbAffFrame && ((!mb->mbField && list1->motion.mbField[mb->mbIndexX]) ||
           (!mb->mbField && list1->codingType == eFieldCoding)))
           || (!slice->mbAffFrame)) {
           if (iabs(slice->picture->poc - list1->botField->poc)> iabs(slice->picture->poc -list1->topField->poc) )
-            fs = list1->topField->mvInfo[jdiv] + ii;
+            frameStore = list1->topField->mvInfo[jdiv] + ii;
           else
-            fs = list1->botField->mvInfo[jdiv] + ii;
+            frameStore = list1->botField->mvInfo[jdiv] + ii;
           }
         }
-      bool moving = !((((fs->refIndex[LIST_0] == 0) && 
-                        (iabs(fs->mv[LIST_0].mvX) >> 1 == 0) && (iabs(fs->mv[LIST_0].mvY) >> 1 == 0))) ||
-                       ((fs->refIndex[LIST_0] == -1) && (fs->refIndex[LIST_1] == 0) && 
-                        (iabs(fs->mv[LIST_1].mvX) >> 1 == 0) && (iabs(fs->mv[LIST_1].mvY) >> 1 == 0)));
+      bool moving = !((((frameStore->refIndex[LIST_0] == 0) && 
+                        (iabs(frameStore->mv[LIST_0].mvX) >> 1 == 0) && (iabs(frameStore->mv[LIST_0].mvY) >> 1 == 0))) ||
+                       ((frameStore->refIndex[LIST_0] == -1) && (frameStore->refIndex[LIST_1] == 0) && 
+                        (iabs(frameStore->mv[LIST_1].mvX) >> 1 == 0) && (iabs(frameStore->mv[LIST_1].mvY) >> 1 == 0)));
       return moving;
       }
     else {
-      sPicMotion *fs = &list1->mvInfo[RSD(j)][RSD(i)];
+      sPicMotion *frameStore = &list1->mvInfo[RSD(j)][RSD(i)];
       if (mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat == YUV444)
-        fs = &list1->mvInfoJV[mb->slice->colourPlaneId][RSD(j)][RSD(i)];
-      bool moving = !((((fs->refIndex[LIST_0] == 0) && 
-                        (iabs(fs->mv[LIST_0].mvX) >> 1 == 0) && (iabs(fs->mv[LIST_0].mvY) >> 1 == 0))) ||
-                       ((fs->refIndex[LIST_0] == -1) && (fs->refIndex[LIST_1] == 0) && 
-                        (iabs(fs->mv[LIST_1].mvX) >> 1 == 0) && (iabs(fs->mv[LIST_1].mvY) >> 1 == 0)));
+        frameStore = &list1->mvInfoJV[mb->slice->colourPlaneId][RSD(j)][RSD(i)];
+      bool moving = !((((frameStore->refIndex[LIST_0] == 0) && 
+                        (iabs(frameStore->mv[LIST_0].mvX) >> 1 == 0) && (iabs(frameStore->mv[LIST_0].mvY) >> 1 == 0))) ||
+                       ((frameStore->refIndex[LIST_0] == -1) && (frameStore->refIndex[LIST_1] == 0) && 
+                        (iabs(frameStore->mv[LIST_1].mvX) >> 1 == 0) && (iabs(frameStore->mv[LIST_1].mvY) >> 1 == 0)));
 
       return moving;
       }

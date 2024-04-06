@@ -4,8 +4,7 @@ class cDecoder;
 
 class cFrameStore {
 public:
-  static cFrameStore* cFrameStore::allocFrameStore();
-  void freeFrameStore();
+  ~cFrameStore();
 
   int isReference();
   int isShortTermReference();
@@ -17,7 +16,7 @@ public:
   void dpbCombineField (cDecoder264* decoder);
   void dpbCombineField1 (cDecoder264* decoder);
   void dpbSplitField (cDecoder264* decoder);
-  void insertPictureDpb (cDecoder264* decoder, sPicture* p);
+  void insertPictureDpb (cDecoder264* decoder, sPicture* picture);
 
   // vars
   int       isUsed = 0;          // 0=empty; 1=top; 2=bottom; 3=both fields (or frame)

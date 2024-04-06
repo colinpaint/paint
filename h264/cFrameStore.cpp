@@ -39,14 +39,7 @@ namespace {
   }
 
 //{{{
-cFrameStore* cFrameStore::allocFrameStore() {
-
-  cFrameStore* fs = new cFrameStore();
-  return fs;
-  }
-//}}}
-//{{{
-void cFrameStore::freeFrameStore() {
+cFrameStore::~cFrameStore() {
 
   freePicture (frame);
   freePicture (topField);
@@ -429,75 +422,63 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
   }
 //}}}
 //{{{
-void cFrameStore::insertPictureDpb (cDecoder264* decoder, sPicture* p) {
+void cFrameStore::insertPictureDpb (cDecoder264* decoder, sPicture* picture) {
 
-  switch (p->picStructure) {
-    //{{{
+  switch (picture->picStructure) {
     case eFrame:
-      frame = p;
+      frame = picture;
       isUsed = 3;
-      if (p->usedForReference) {
+      if (picture->usedForReference) {
         mIsReference = 3;
         isOrigReference = 3;
-        if (p->isLongTerm) {
+        if (picture->isLongTerm) {
           isLongTerm = 3;
-          longTermFrameIndex = p->longTermFrameIndex;
+          longTermFrameIndex = picture->longTermFrameIndex;
           }
         }
-
-      // generate field views
       dpbSplitField (decoder);
       break;
-    //}}}
-    //{{{
+
     case eTopField:
-      topField = p;
+      topField = picture;
       isUsed |= 1;
 
-      if (p->usedForReference) {
+      if (picture->usedForReference) {
         mIsReference |= 1;
         isOrigReference |= 1;
-        if (p->isLongTerm) {
+        if (picture->isLongTerm) {
           isLongTerm |= 1;
-          longTermFrameIndex = p->longTermFrameIndex;
+          longTermFrameIndex = picture->longTermFrameIndex;
           }
         }
       if (isUsed == 3)
-        // generate frame view
         dpbCombineField1 (decoder);
       else
-        poc = p->poc;
-
-      genFieldRefIds (decoder, p);
+        poc = picture->poc;
+      genFieldRefIds (decoder, picture);
       break;
-    //}}}
-    //{{{
-    case eBotField:
-      botField = p;
-      isUsed |= 2;
 
-      if (p->usedForReference) {
+    case eBotField:
+      botField = picture;
+      isUsed |= 2;
+      if (picture->usedForReference) {
         mIsReference |= 2;
         isOrigReference |= 2;
-        if (p->isLongTerm) {
+        if (picture->isLongTerm) {
           isLongTerm |= 2;
-          longTermFrameIndex = p->longTermFrameIndex;
+          longTermFrameIndex = picture->longTermFrameIndex;
           }
         }
-
       if (isUsed == 3)
-        // generate frame view
         dpbCombineField1 (decoder);
       else
-        poc = p->poc;
-
-      genFieldRefIds (decoder, p);
+        poc = picture->poc;
+      genFieldRefIds (decoder, picture);
       break;
-    //}}}
     }
 
-  frameNum = p->picNum;
-  recoveryFrame = p->recoveryFrame;
-  isOutput = p->isOutput;
+  frameNum = picture->picNum;
+  recoveryFrame = picture->recoveryFrame;
+  isOutput = picture->isOutput;
   }
 //}}}

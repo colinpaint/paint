@@ -279,7 +279,7 @@ static void flushDirectOutput (cDecoder264* decoder) {
 //{{{
 void allocOutput (cDecoder264* decoder) {
 
-  decoder->outBuffer = cFrameStore::allocFrameStore();
+  decoder->outBuffer = new cFrameStore();
   decoder->pendingOut = (sPicture*)calloc (sizeof(sPicture), 1);
   decoder->pendingOut->imgUV = NULL;
   decoder->pendingOut->imgY = NULL;
@@ -288,7 +288,7 @@ void allocOutput (cDecoder264* decoder) {
 //{{{
 void freeOutput (cDecoder264* decoder) {
 
-  decoder->outBuffer->freeFrameStore ();
+  delete decoder->outBuffer;
   decoder->outBuffer = NULL;
 
   flushPendingOut (decoder);

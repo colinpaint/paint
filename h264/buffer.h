@@ -98,7 +98,7 @@ struct sPicture {
 struct sDpb {
   cDecoder264*    decoder;
 
-  cFrameStore** fs;
+  cFrameStore** frameStore;
   cFrameStore** fsRef;
   cFrameStore** fsLongTermRef;
 
