@@ -326,7 +326,7 @@ struct sCodedBlockPattern {
 //}}}
 //{{{
 struct sDataPartition {
-  cBitStream*  stream;
+  cBitStream   stream;
   sCabacDecode cabacDecode;
 
   int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
@@ -798,7 +798,7 @@ private:
   void flushDirectOutput();
 
   bool isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice);
-  void readDecRefPicMarking (cBitStream* s, cSlice* slice);
+  void readDecRefPicMarking (cBitStream& s, cSlice* slice);
   void initPicture (cSlice* slice);
   void initRefPicture (cSlice* slice);
   void initSlice (cSlice* slice);

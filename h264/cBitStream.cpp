@@ -153,14 +153,14 @@ void cBitStream::linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
 int cBitStream::vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
-  sDataPartition* dataPartition = &slice->dataPartitions[partitionIndex];
-  cBitStream* s = dataPartition->stream;
-  return !moreRbspData (s->bitStreamBuffer, s->bitStreamOffset,s->bitStreamLen);
+  sDataPartition& dataPartition = slice->dataPartitions[partitionIndex];
+  cBitStream& s = dataPartition.stream;
+  return !moreRbspData (s.bitStreamBuffer, s.bitStreamOffset, s.bitStreamLen);
   }
 //}}}
 //{{{
 int cBitStream::readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
-  return dataPartition->stream->readSyntaxElement_VLC (se);
+  return dataPartition->stream.readSyntaxElement_VLC (se);
   }
 //}}}
 

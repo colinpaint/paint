@@ -14,27 +14,27 @@ namespace {
   //{{{
   void readHrdFromStream (sDataPartition* dataPartition, cHrd* hrd) {
 
-    cBitStream *s = dataPartition->stream;
-    hrd->cpb_cnt_minus1 = s->readUeV ("VUI cpb_cnt_minus1");
-    hrd->bit_rate_scale = s->readUv (4, "VUI bit_rate_scale");
-    hrd->cpb_size_scale = s->readUv (4, "VUI cpb_size_scale");
+    cBitStream& s = dataPartition->stream;
+    hrd->cpb_cnt_minus1 = s.readUeV ("VUI cpb_cnt_minus1");
+    hrd->bit_rate_scale = s.readUv (4, "VUI bit_rate_scale");
+    hrd->cpb_size_scale = s.readUv (4, "VUI cpb_size_scale");
 
     uint32_t SchedSelIdx;
     for (SchedSelIdx = 0; SchedSelIdx <= hrd->cpb_cnt_minus1; SchedSelIdx++) {
-      hrd->bit_rate_value_minus1[ SchedSelIdx] = s->readUeV ("VUI bit_rate_value_minus1");
-      hrd->cpb_size_value_minus1[ SchedSelIdx] = s->readUeV ("VUI cpb_size_value_minus1");
-      hrd->cbrFlag[ SchedSelIdx ] = s->readU1 ("VUI cbrFlag");
+      hrd->bit_rate_value_minus1[ SchedSelIdx] = s.readUeV ("VUI bit_rate_value_minus1");
+      hrd->cpb_size_value_minus1[ SchedSelIdx] = s.readUeV ("VUI cpb_size_value_minus1");
+      hrd->cbrFlag[ SchedSelIdx ] = s.readU1 ("VUI cbrFlag");
       }
 
     hrd->initial_cpb_removal_delay_length_minus1 =
-      s->readUv (5, "VUI initial_cpb_removal_delay_length_minus1");
-    hrd->cpb_removal_delay_length_minus1 = s->readUv (5, "VUI cpb_removal_delay_length_minus1");
-    hrd->dpb_output_delay_length_minus1 = s->readUv (5, "VUI dpb_output_delay_length_minus1");
-    hrd->time_offset_length = s->readUv (5, "VUI time_offset_length");
+      s.readUv (5, "VUI initial_cpb_removal_delay_length_minus1");
+    hrd->cpb_removal_delay_length_minus1 = s.readUv (5, "VUI cpb_removal_delay_length_minus1");
+    hrd->dpb_output_delay_length_minus1 = s.readUv (5, "VUI dpb_output_delay_length_minus1");
+    hrd->time_offset_length = s.readUv (5, "VUI time_offset_length");
     }
   //}}}
   //{{{
-  void scalingList (cBitStream* s, int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix) {
+  void scalingList (cBitStream& s, int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix) {
 
     //{{{
     static const uint8_t ZZ_SCAN[16] = {
@@ -55,7 +55,7 @@ namespace {
     for (int j = 0; j < scalingListSize; j++) {
       int scanj = (scalingListSize == 16) ? ZZ_SCAN[j] : ZZ_SCAN8[j];
       if (nextScale != 0) {
-        int delta_scale = s->readSeV ("   : delta_sl");
+        int delta_scale = s.readSeV ("   : delta_sl");
         nextScale = (lastScale + delta_scale + 256) % 256;
         *useDefaultScalingMatrix = (bool)(scanj == 0 && nextScale == 0);
         }
@@ -86,10 +86,10 @@ string cSps::getString() {
 int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
   sDataPartition* dataPartition = allocDataPartitions (1);
-  dataPartition->stream->errorFlag = 0;
-  dataPartition->stream->readLen = dataPartition->stream->bitStreamOffset = 0;
-  memcpy (dataPartition->stream->bitStreamBuffer, &nalu->buf[1], nalu->len-1);
-  dataPartition->stream->codeLen = dataPartition->stream->bitStreamLen = nalu->RBSPtoSODB (dataPartition->stream->bitStreamBuffer);
+  dataPartition->stream.errorFlag = 0;
+  dataPartition->stream.readLen = dataPartition->stream.bitStreamOffset = 0;
+  memcpy (dataPartition->stream.bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+  dataPartition->stream.codeLen = dataPartition->stream.bitStreamLen = nalu->RBSPtoSODB (dataPartition->stream.bitStreamBuffer);
 
   cSps sps;
   sps.naluLen = nalu->len;
@@ -108,23 +108,23 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 //{{{
 void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) {
 
-  cBitStream* s = dataPartition->stream;
+  cBitStream& s = dataPartition->stream;
 
-  profileIdc = (eProfileIDC)s->readUv (8, "SPS profileIdc");
+  profileIdc = (eProfileIDC)s.readUv (8, "SPS profileIdc");
   if ((profileIdc != BASELINE) && (profileIdc != MAIN) && (profileIdc != EXTENDED) &&
       (profileIdc != FREXT_HP) && (profileIdc != FREXT_Hi10P) &&
       (profileIdc != FREXT_Hi422) && (profileIdc != FREXT_Hi444) &&
       (profileIdc != FREXT_CAVLC444))
     printf ("IDC - invalid %d\n", profileIdc);
 
-  constrainedSet0Flag = s->readU1 ("SPS constrainedSet0Flag");
-  constrainedSet1Flag = s->readU1 ("SPS constrainedSet1Flag");
-  constrainedSet2Flag = s->readU1 ("SPS constrainedSet2Flag");
-  constrainedSet3flag = s->readU1 ("SPS constrainedSet3flag");
-  int reservedZero = s->readUv (4, "SPS reservedZero4bits");
+  constrainedSet0Flag = s.readU1 ("SPS constrainedSet0Flag");
+  constrainedSet1Flag = s.readU1 ("SPS constrainedSet1Flag");
+  constrainedSet2Flag = s.readU1 ("SPS constrainedSet2Flag");
+  constrainedSet3flag = s.readU1 ("SPS constrainedSet3flag");
+  int reservedZero = s.readUv (4, "SPS reservedZero4bits");
 
-  levelIdc = s->readUv (8, "SPS levelIdc");
-  id = s->readUeV ("SPS spsId");
+  levelIdc = s.readUv (8, "SPS levelIdc");
+  id = s.readUeV ("SPS spsId");
 
   // Fidelity Range Extensions stuff
   chromaFormatIdc = 1;
@@ -140,22 +140,22 @@ void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
       (profileIdc == FREXT_Hi444) ||
       (profileIdc == FREXT_CAVLC444)) {
     // read fidelity range
-    chromaFormatIdc = s->readUeV ("SPS chromaFormatIdc");
+    chromaFormatIdc = s.readUeV ("SPS chromaFormatIdc");
     if (chromaFormatIdc == YUV444)
-      isSeperateColourPlane = s->readU1 ("SPS isSeperateColourPlane");
-    bit_depth_luma_minus8 = s->readUeV ("SPS bit_depth_luma_minus8");
-    bit_depth_chroma_minus8 = s->readUeV ("SPS bit_depth_chroma_minus8");
+      isSeperateColourPlane = s.readU1 ("SPS isSeperateColourPlane");
+    bit_depth_luma_minus8 = s.readUeV ("SPS bit_depth_luma_minus8");
+    bit_depth_chroma_minus8 = s.readUeV ("SPS bit_depth_chroma_minus8");
     if ((bit_depth_luma_minus8+8 > sizeof(sPixel)*8) ||
         (bit_depth_chroma_minus8+8> sizeof(sPixel)*8))
       cDecoder264::error ("Source picture has higher bit depth than sPixel data type");
 
-    useLosslessQpPrime = s->readU1 ("SPS losslessQpPrimeYzero");
+    useLosslessQpPrime = s.readU1 ("SPS losslessQpPrimeYzero");
 
-    hasSeqScalingMatrix = s->readU1 ("SPS hasSeqScalingMatrix");
+    hasSeqScalingMatrix = s.readU1 ("SPS hasSeqScalingMatrix");
     if (hasSeqScalingMatrix) {
       uint32_t n_ScalingList = (chromaFormatIdc != YUV444) ? 8 : 12;
       for (uint32_t i = 0; i < n_ScalingList; i++) {
-        hasSeqScalingList[i] = s->readU1 ("SPS hasSeqScalingList");
+        hasSeqScalingList[i] = s.readU1 ("SPS hasSeqScalingList");
         if (hasSeqScalingList[i]) {
           if (i < 6)
             scalingList (s, scalingList4x4[i], 16, &useDefaultScalingMatrix4x4[i]);
@@ -166,45 +166,45 @@ void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
       }
     }
   //}}}
-  log2maxFrameNumMinus4 = s->readUeV ("SPS log2maxFrameNumMinus4");
+  log2maxFrameNumMinus4 = s.readUeV ("SPS log2maxFrameNumMinus4");
   //{{{  read POC
-  pocType = s->readUeV ("SPS pocType");
+  pocType = s.readUeV ("SPS pocType");
 
   if (pocType == 0)
-    log2maxPocLsbMinus4 = s->readUeV ("SPS log2maxPocLsbMinus4");
+    log2maxPocLsbMinus4 = s.readUeV ("SPS log2maxPocLsbMinus4");
 
   else if (pocType == 1) {
-    deltaPicOrderAlwaysZero = s->readU1 ("SPS deltaPicOrderAlwaysZero");
-    offsetNonRefPic = s->readSeV ("SPS offsetNonRefPic");
-    offsetTopBotField = s->readSeV ("SPS offsetTopBotField");
-    numRefFramesPocCycle = s->readUeV ("SPS numRefFramesPocCycle");
+    deltaPicOrderAlwaysZero = s.readU1 ("SPS deltaPicOrderAlwaysZero");
+    offsetNonRefPic = s.readSeV ("SPS offsetNonRefPic");
+    offsetTopBotField = s.readSeV ("SPS offsetTopBotField");
+    numRefFramesPocCycle = s.readUeV ("SPS numRefFramesPocCycle");
     for (uint32_t i = 0; i < numRefFramesPocCycle; i++)
-      offsetForRefFrame[i] = s->readSeV ("SPS offsetRefFrame[i]");
+      offsetForRefFrame[i] = s.readSeV ("SPS offsetRefFrame[i]");
     }
   //}}}
 
-  numRefFrames = s->readUeV ("SPS numRefFrames");
-  allowGapsFrameNum = s->readU1 ("SPS allowGapsFrameNum");
+  numRefFrames = s.readUeV ("SPS numRefFrames");
+  allowGapsFrameNum = s.readU1 ("SPS allowGapsFrameNum");
 
-  picWidthMbsMinus1 = s->readUeV ("SPS picWidthMbsMinus1");
-  picHeightMapUnitsMinus1 = s->readUeV ("SPS picHeightMapUnitsMinus1");
+  picWidthMbsMinus1 = s.readUeV ("SPS picWidthMbsMinus1");
+  picHeightMapUnitsMinus1 = s.readUeV ("SPS picHeightMapUnitsMinus1");
 
-  frameMbOnly = s->readU1 ("SPS frameMbOnly");
+  frameMbOnly = s.readU1 ("SPS frameMbOnly");
   if (!frameMbOnly)
-    mbAffFlag = s->readU1 ("SPS mbAffFlag");
+    mbAffFlag = s.readU1 ("SPS mbAffFlag");
 
-  isDirect8x8inference = s->readU1 ("SPS isDirect8x8inference");
+  isDirect8x8inference = s.readU1 ("SPS isDirect8x8inference");
 
   //{{{  read crop
-  hasCrop = s->readU1 ("SPS hasCrop");
+  hasCrop = s.readU1 ("SPS hasCrop");
   if (hasCrop) {
-    cropLeft = s->readUeV ("SPS cropLeft");
-    cropRight = s->readUeV ("SPS cropRight");
-    cropTop = s->readUeV ("SPS cropTop");
-    cropBot = s->readUeV ("SPS cropBot");
+    cropLeft = s.readUeV ("SPS cropLeft");
+    cropRight = s.readUeV ("SPS cropRight");
+    cropTop = s.readUeV ("SPS cropTop");
+    cropBot = s.readUeV ("SPS cropBot");
     }
   //}}}
-  hasVui = (bool)s->readU1 ("SPS hasVui");
+  hasVui = (bool)s.readU1 ("SPS hasVui");
 
   vuiSeqParams.matrix_coefficients = 2;
   readVuiFromStream (dataPartition);
@@ -277,70 +277,70 @@ bool cSps::isEqual (cSps& sps) {
 //{{{
 void cSps::readVuiFromStream (sDataPartition* dataPartition) {
 
-  cBitStream* s = dataPartition->stream;
+  cBitStream& s = dataPartition->stream;
   if (hasVui) {
-    vuiSeqParams.aspect_ratio_info_presentFlag = s->readU1 ("VUI aspect_ratio_info_presentFlag");
+    vuiSeqParams.aspect_ratio_info_presentFlag = s.readU1 ("VUI aspect_ratio_info_presentFlag");
     if (vuiSeqParams.aspect_ratio_info_presentFlag) {
-      vuiSeqParams.aspect_ratio_idc = s->readUv ( 8, "VUI aspect_ratio_idc");
+      vuiSeqParams.aspect_ratio_idc = s.readUv ( 8, "VUI aspect_ratio_idc");
       if (255 == vuiSeqParams.aspect_ratio_idc) {
-        vuiSeqParams.sar_width = (uint16_t)s->readUv (16, "VUI sar_width");
-        vuiSeqParams.sar_height = (uint16_t)s->readUv (16, "VUI sar_height");
+        vuiSeqParams.sar_width = (uint16_t)s.readUv (16, "VUI sar_width");
+        vuiSeqParams.sar_height = (uint16_t)s.readUv (16, "VUI sar_height");
         }
       }
 
-    vuiSeqParams.overscan_info_presentFlag = s->readU1 ("VUI overscan_info_presentFlag");
+    vuiSeqParams.overscan_info_presentFlag = s.readU1 ("VUI overscan_info_presentFlag");
     if (vuiSeqParams.overscan_info_presentFlag)
-      vuiSeqParams.overscan_appropriateFlag = s->readU1 ("VUI overscan_appropriateFlag");
+      vuiSeqParams.overscan_appropriateFlag = s.readU1 ("VUI overscan_appropriateFlag");
 
-    vuiSeqParams.video_signal_type_presentFlag = s->readU1 ("VUI video_signal_type_presentFlag");
+    vuiSeqParams.video_signal_type_presentFlag = s.readU1 ("VUI video_signal_type_presentFlag");
     if (vuiSeqParams.video_signal_type_presentFlag) {
-      vuiSeqParams.video_format = s->readUv (3, "VUI video_format");
-      vuiSeqParams.video_full_rangeFlag = s->readU1 ("VUI video_full_rangeFlag");
-      vuiSeqParams.colour_description_presentFlag = s->readU1 ("VUI color_description_presentFlag");
+      vuiSeqParams.video_format = s.readUv (3, "VUI video_format");
+      vuiSeqParams.video_full_rangeFlag = s.readU1 ("VUI video_full_rangeFlag");
+      vuiSeqParams.colour_description_presentFlag = s.readU1 ("VUI color_description_presentFlag");
       if (vuiSeqParams.colour_description_presentFlag) {
-        vuiSeqParams.colour_primaries = s->readUv (8, "VUI colour_primaries");
-        vuiSeqParams.transfer_characteristics = s->readUv (8, "VUI transfer_characteristics");
-        vuiSeqParams.matrix_coefficients = s->readUv (8, "VUI matrix_coefficients");
+        vuiSeqParams.colour_primaries = s.readUv (8, "VUI colour_primaries");
+        vuiSeqParams.transfer_characteristics = s.readUv (8, "VUI transfer_characteristics");
+        vuiSeqParams.matrix_coefficients = s.readUv (8, "VUI matrix_coefficients");
         }
       }
 
-    vuiSeqParams.chroma_location_info_presentFlag = s->readU1 ("VUI chroma_loc_info_presentFlag");
+    vuiSeqParams.chroma_location_info_presentFlag = s.readU1 ("VUI chroma_loc_info_presentFlag");
     if (vuiSeqParams.chroma_location_info_presentFlag) {
-      vuiSeqParams.chroma_sample_loc_type_top_field = s->readUeV ("VUI chroma_sample_loc_type_top_field");
-      vuiSeqParams.chroma_sample_loc_type_bottom_field = s->readUeV ("VUI chroma_sample_loc_type_bottom_field");
+      vuiSeqParams.chroma_sample_loc_type_top_field = s.readUeV ("VUI chroma_sample_loc_type_top_field");
+      vuiSeqParams.chroma_sample_loc_type_bottom_field = s.readUeV ("VUI chroma_sample_loc_type_bottom_field");
       }
 
-    vuiSeqParams.timing_info_presentFlag = s->readU1 ("VUI timing_info_presentFlag");
+    vuiSeqParams.timing_info_presentFlag = s.readU1 ("VUI timing_info_presentFlag");
     if (vuiSeqParams.timing_info_presentFlag) {
-      vuiSeqParams.num_units_in_tick = s->readUv (32, "VUI num_units_in_tick");
-      vuiSeqParams.time_scale = s->readUv (32,"VUI time_scale");
-      vuiSeqParams.fixed_frame_rateFlag = s->readU1 ("VUI fixed_frame_rateFlag");
+      vuiSeqParams.num_units_in_tick = s.readUv (32, "VUI num_units_in_tick");
+      vuiSeqParams.time_scale = s.readUv (32,"VUI time_scale");
+      vuiSeqParams.fixed_frame_rateFlag = s.readU1 ("VUI fixed_frame_rateFlag");
       }
 
-    vuiSeqParams.nal_hrd_parameters_presentFlag = s->readU1 ("VUI nal_hrd_parameters_presentFlag");
+    vuiSeqParams.nal_hrd_parameters_presentFlag = s.readU1 ("VUI nal_hrd_parameters_presentFlag");
     if (vuiSeqParams.nal_hrd_parameters_presentFlag)
       readHrdFromStream (dataPartition, &(vuiSeqParams.nal_hrd_parameters));
 
-    vuiSeqParams.vcl_hrd_parameters_presentFlag = s->readU1 ("VUI vcl_hrd_parameters_presentFlag");
+    vuiSeqParams.vcl_hrd_parameters_presentFlag = s.readU1 ("VUI vcl_hrd_parameters_presentFlag");
 
     if (vuiSeqParams.vcl_hrd_parameters_presentFlag)
       readHrdFromStream (dataPartition, &(vuiSeqParams.vcl_hrd_parameters));
 
     if (vuiSeqParams.nal_hrd_parameters_presentFlag ||
         vuiSeqParams.vcl_hrd_parameters_presentFlag)
-      vuiSeqParams.low_delay_hrdFlag = s->readU1 ("VUI low_delay_hrdFlag");
+      vuiSeqParams.low_delay_hrdFlag = s.readU1 ("VUI low_delay_hrdFlag");
 
-    vuiSeqParams.pic_struct_presentFlag = s->readU1 ("VUI pic_struct_presentFlag   ");
-    vuiSeqParams.bitstream_restrictionFlag = s->readU1 ("VUI bitstream_restrictionFlag");
+    vuiSeqParams.pic_struct_presentFlag = s.readU1 ("VUI pic_struct_presentFlag   ");
+    vuiSeqParams.bitstream_restrictionFlag = s.readU1 ("VUI bitstream_restrictionFlag");
 
     if (vuiSeqParams.bitstream_restrictionFlag) {
-      vuiSeqParams.motion_vectors_over_pic_boundariesFlag = s->readU1 ("VUI motion_vectors_over_pic_boundariesFlag");
-      vuiSeqParams.max_bytes_per_pic_denom = s->readUeV ("VUI max_bytes_per_pic_denom");
-      vuiSeqParams.max_bits_per_mb_denom = s->readUeV ("VUI max_bits_per_mb_denom");
-      vuiSeqParams.log2_max_mv_length_horizontal = s->readUeV ("VUI log2_max_mv_length_horizontal");
-      vuiSeqParams.log2_max_mv_length_vertical = s->readUeV ("VUI log2_max_mv_length_vertical");
-      vuiSeqParams.num_reorder_frames = s->readUeV ("VUI num_reorder_frames");
-      vuiSeqParams.max_dec_frame_buffering = s->readUeV ("VUI max_dec_frame_buffering");
+      vuiSeqParams.motion_vectors_over_pic_boundariesFlag = s.readU1 ("VUI motion_vectors_over_pic_boundariesFlag");
+      vuiSeqParams.max_bytes_per_pic_denom = s.readUeV ("VUI max_bytes_per_pic_denom");
+      vuiSeqParams.max_bits_per_mb_denom = s.readUeV ("VUI max_bits_per_mb_denom");
+      vuiSeqParams.log2_max_mv_length_horizontal = s.readUeV ("VUI log2_max_mv_length_horizontal");
+      vuiSeqParams.log2_max_mv_length_vertical = s.readUeV ("VUI log2_max_mv_length_vertical");
+      vuiSeqParams.num_reorder_frames = s.readUeV ("VUI num_reorder_frames");
+      vuiSeqParams.max_dec_frame_buffering = s.readUeV ("VUI max_dec_frame_buffering");
       }
     }
   }
