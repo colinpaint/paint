@@ -416,22 +416,6 @@ struct sMacroBlock {
   };
 //}}}
 //{{{
-struct sImage {
-  sFrameFormat format;                 // image format
-
-  sPixel** frm_data[MAX_PLANE];        // Frame Data
-  sPixel** top_data[MAX_PLANE];        // pointers to top field data
-  sPixel** bot_data[MAX_PLANE];        // pointers to bottom field data
-  sPixel** frm_data_buf[2][MAX_PLANE]; // Frame Data
-  sPixel** top_data_buf[2][MAX_PLANE]; // pointers to top field data
-  sPixel** bot_data_buf[2][MAX_PLANE]; // pointers to bottom field data
-
-  int frm_stride[MAX_PLANE];
-  int top_stride[MAX_PLANE];
-  int bot_stride[MAX_PLANE];
-  };
-//}}}
-//{{{
 struct sDecodedPic {
   int ok;
 
