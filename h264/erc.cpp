@@ -2042,7 +2042,7 @@ void write_lost_non_ref_pic (sDpb* dpb, int poc) {
       concealment_fs.usedReference = 0;
       concealment_fs.isUsed = 3;
 
-      writeStoredFrame (decoder, &concealment_fs);
+      decoder->writeStoredFrame (&concealment_fs);
       delete_node (decoder, decoder->concealHead);
       }
     }

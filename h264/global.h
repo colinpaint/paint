@@ -615,6 +615,9 @@ public:
   void decodePOC (cSlice* slice);
   void padPicture (sPicture* picture);
 
+  void directOutput (sPicture* picture);
+  void writeStoredFrame (cFrameStore* frameStore);
+
   void makeFramePictureJV();
   void changePlaneJV (int nplane, cSlice* slice);
 
@@ -786,6 +789,16 @@ private:
   void setCodingParam (cSps* sps);
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
 
+  void allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* p,
+                               int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
+                               int chromaSizeX, int chromaSizeY);
+  void clearPicture (sPicture* p);
+  void writeOutPicture (sPicture* p);
+  void flushPendingOut();
+  void writePicture (sPicture* p, int realStructure);
+  void writeUnpairedField (cFrameStore* frameStore);
+  void flushDirectOutput();
+
   bool isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice);
   void readDecRefPicMarking (cBitStream* s, cSlice* slice);
   void initPicture (cSlice* slice);
@@ -802,8 +815,6 @@ private:
   void endDecodeFrame();
   };
 //}}}
-void directOutput (cDecoder264* decoder, sPicture* picture);
-void writeStoredFrame (cDecoder264* decoder, cFrameStore* frameStore);
 
 sDataPartition* allocDataPartitions (int numPartitions);
 void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions);

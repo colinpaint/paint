@@ -43,7 +43,7 @@ namespace {
       write_lost_non_ref_pic (dpb, poc);
       }
 
-    writeStoredFrame (decoder, dpb->frameStore[pos]);
+    decoder->writeStoredFrame (dpb->frameStore[pos]);
 
     // picture error conceal
     if(decoder->concealMode == 0)
@@ -1059,7 +1059,7 @@ void storePictureDpb (sDpb* dpb, sPicture* picture) {
     if (!picture->usedForReference) {
       getSmallestPoc (dpb, &poc, &pos);
       if ((-1 == pos) || (picture->poc < poc)) {
-        directOutput (decoder, picture);
+        decoder->directOutput (picture);
         return;
         }
       }
