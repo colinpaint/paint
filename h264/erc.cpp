@@ -1718,7 +1718,7 @@ static void update_ref_list_for_concealment (sDpb* dpb) {
   uint32_t j = 0;
   for (uint32_t i = 0; i < dpb->usedSize; i++)
     if (dpb->frameStore[i]->concealRef)
-      dpb->fsRef[j++] = dpb->frameStore[i];
+      dpb->frameStoreRef[j++] = dpb->frameStore[i];
 
   dpb->refFramesInBuffer = decoder->activePps->numRefIndexL0defaultActiveMinus1;
   }
@@ -1765,10 +1765,10 @@ void init_lists_for_non_reference_loss (sDpb* dpb, int currSliceType, ePicStruct
     for (i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->frameStore[i]->concealRef == 1) {
         if (dpb->frameStore[i]->frameNum > decoder->concealFrame)
-          dpb->fsRef[i]->frameNumWrap = dpb->frameStore[i]->frameNum - maxFrameNum;
+          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStore[i]->frameNum - maxFrameNum;
         else
-          dpb->fsRef[i]->frameNumWrap = dpb->frameStore[i]->frameNum;
-        dpb->fsRef[i]->frame->picNum = dpb->fsRef[i]->frameNumWrap;
+          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStore[i]->frameNum;
+        dpb->frameStoreRef[i]->frame->picNum = dpb->frameStoreRef[i]->frameNumWrap;
         }
       }
     }

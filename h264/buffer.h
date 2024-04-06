@@ -23,22 +23,25 @@ struct sPicture {
   int           topPoc;
   int           botPoc;
   int           framePoc;
-  uint32_t  frameNum;
-  uint32_t  recoveryFrame;
+  uint32_t      frameNum;
+  uint32_t      recoveryFrame;
 
   int           picNum;
   int           longTermPicNum;
   int           longTermFrameIndex;
 
-  uint8_t          isLongTerm;
+  uint8_t       isLongTerm;
   int           usedForReference;
   int           isOutput;
   int           nonExisting;
   int           isSeperateColourPlane;
 
-  int16_t         maxSliceId;
+  int16_t       maxSliceId;
 
-  int           sizeX, sizeY, sizeXcr, sizeYcr;
+  int           sizeX;
+  int           sizeY;
+  int           sizeXcr;
+  int           sizeYcr;
   int           size_x_m1, size_y_m1, size_x_cr_m1, size_y_cr_m1;
   int           codedFrame;
   int           mbAffFrame;
@@ -53,41 +56,41 @@ struct sPicture {
   sPixel***     imgUV;
   sPicMotion**  mvInfo;
   sPicMotionOld motion;
-  sPicture*  topField;  // for mb aff, if frame for referencing the top field
-  sPicture*  botField;  // for mb aff, if frame for referencing the bottom field
-  sPicture*  frame;     // for mb aff, if field for referencing the combined frame
+  sPicture*     topField;  // for mb aff, if frame for referencing the top field
+  sPicture*     botField;  // for mb aff, if frame for referencing the bottom field
+  sPicture*     frame;     // for mb aff, if field for referencing the combined frame
 
-  int        isIDR;
-  int        sliceType;
-  int        longTermRefFlag;
-  int        adaptRefPicBufFlag;
-  int        noOutputPriorPicFlag;
+  int           isIDR;
+  int           sliceType;
+  int           longTermRefFlag;
+  int           adaptRefPicBufFlag;
+  int           noOutputPriorPicFlag;
 
-  eYuvFormat chromaFormatIdc;
-  int        frameMbOnly;
+  eYuvFormat    chromaFormatIdc;
+  int           frameMbOnly;
 
-  int        hasCrop;
-  int        cropLeft;
-  int        cropRight;
-  int        cropTop;
-  int        cropBot;
+  int           hasCrop;
+  int           cropLeft;
+  int           cropRight;
+  int           cropTop;
+  int           cropBot;
 
-  int        qp;
-  int        chromaQpOffset[2];
-  int        sliceQpDelta;
+  int           qp;
+  int           chromaQpOffset[2];
+  int           sliceQpDelta;
   sDecodedRefPicMark* decRefPicMarkBuffer;  // stores the memory management control operations
 
   // picture error conceal
-  int        lumaStride;
-  int        chromaStride;
-  int        lumaExpandedHeight;
-  int        chromaExpandedHeight;
-  sPixel**   curPixelY;               // for more efficient get_block_luma
-  int        noRef;
-  int        codingType;
+  int           lumaStride;
+  int           chromaStride;
+  int           lumaExpandedHeight;
+  int           chromaExpandedHeight;
+  sPixel**      curPixelY;               // for more efficient get_block_luma
+  int           noRef;
+  int           codingType;
 
-  char       listXsize[MAX_NUM_SLICES][2];
-  sPicture** listX[MAX_NUM_SLICES][2];
+  char          listXsize[MAX_NUM_SLICES][2];
+  sPicture**    listX[MAX_NUM_SLICES][2];
 
   // Motion info for 4:4:4 independent mode decoding
   sPicMotion**  mvInfoJV[MAX_PLANE];
@@ -96,23 +99,23 @@ struct sPicture {
 //}}}
 //{{{
 struct sDpb {
-  cDecoder264*    decoder;
+  cDecoder264*  decoder;
 
   cFrameStore** frameStore;
-  cFrameStore** fsRef;
-  cFrameStore** fsLongTermRef;
+  cFrameStore** frameStoreRef;
+  cFrameStore** frameStoreLongTermRef;
 
-  uint32_t size;
-  uint32_t usedSize;
-  uint32_t refFramesInBuffer;
-  uint32_t longTermRefFramesInBuffer;
+  uint32_t      size;
+  uint32_t      usedSize;
+  uint32_t      refFramesInBuffer;
+  uint32_t      longTermRefFramesInBuffer;
 
-  int lastOutputPoc;
-  int maxLongTermPicIndex;
-  int initDone;
-  int numRefFrames;
+  int           lastOutputPoc;
+  int           maxLongTermPicIndex;
+  int           initDone;
+  int           numRefFrames;
 
-  cFrameStore* lastPicture;
+  cFrameStore*  lastPictureFrameStore;
   };
 //}}}
 
