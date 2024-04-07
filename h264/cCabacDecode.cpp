@@ -245,7 +245,7 @@ uint32_t cCabacDecode::getWord() {
 //}}}
 
 //{{{
-void binaryArithmeticInitContext (int qp, sBiContext* context, const char* ini) {
+void biContextInit (sBiContext* context, int qp, const char* ini) {
 
   int state = ((ini[0] * qp) >> 4) + ini[1];
 

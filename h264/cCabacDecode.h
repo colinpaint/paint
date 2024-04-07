@@ -1,11 +1,11 @@
 #pragma once
 
 struct sBiContext {
-  uint16_t        state; // index into state-table CP
-  uint8_t MPS;   // least probable symbol 0/1 CP
-  uint8_t dummy; // for alignment
+  uint16_t state; // index into state-table CP
+  uint8_t  MPS;   // least probable symbol 0/1 CP
+  uint8_t  dummy; // for alignment
   };
-void binaryArithmeticInitContext (int qp, sBiContext* context, const char* ini);
+void biContextInit (sBiContext* context, int qp, const char* ini);
 
 class cCabacDecode {
 public:

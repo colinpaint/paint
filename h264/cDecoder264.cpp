@@ -1166,26 +1166,26 @@ namespace {
     #define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
       for (i = 0; i < ii; ++i) \
         for (j = 0; j < jj; ++j) \
-          binaryArithmeticInitContext (qp, &ctx[i][j], tab ## _I[num][i][j]); \
+          biContextInit (&ctx[i][j], qp, tab ## _I[num][i][j]); \
       }
     //}}}
     //{{{
     #define PBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
       for (i = 0; i < ii; ++i) \
         for (j = 0; j < jj; ++j) \
-          binaryArithmeticInitContext (qp, &ctx[i][j], tab ## _P[num][i][j]); \
+          biContextInit (&ctx[i][j], qp, tab ## _P[num][i][j]); \
       }
     //}}}
     //{{{
     #define IBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
       for (j = 0; j < jj; ++j) \
-        binaryArithmeticInitContext (qp, &ctx[j], tab ## _I[num][0][j]); \
+        biContextInit (&ctx[j], qp, tab ## _I[num][0][j]); \
       }
     //}}}
     //{{{
     #define PBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
       for (j = 0; j < jj; ++j) \
-        binaryArithmeticInitContext (qp, &ctx[j], tab ## _P[num][0][j]); \
+        biContextInit (&ctx[j], qp, tab ## _P[num][0][j]); \
       }
     //}}}
 
