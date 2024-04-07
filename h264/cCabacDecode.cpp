@@ -143,6 +143,125 @@ void cCabacDecode::ipcmPreamble() {
 //}}}
 
 //{{{
+uint32_t cCabacDecode::unary_bin_max_decode (sBiContext* context, int ctx_offset, uint32_t max_symbol) {
+
+  uint32_t symbol = getSymbol (context);
+  if (symbol == 0 || (max_symbol == 0))
+    return symbol;
+  else {
+    uint32_t l;
+    context += ctx_offset;
+    symbol = 0;
+    do {
+      l = getSymbol (context);
+      ++symbol;
+      }
+    while( (l != 0) && (symbol < max_symbol) );
+
+    if ((l != 0) && (symbol == max_symbol))
+      ++symbol;
+    return symbol;
+    }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::unary_bin_decode (sBiContext* context, int ctx_offset) {
+
+  uint32_t symbol = getSymbol (context);
+  if (symbol == 0)
+    return 0;
+  else {
+    uint32_t l;
+    context += ctx_offset;;
+    symbol = 0;
+    do {
+      l = getSymbol (context);
+      ++symbol;
+      }
+    while (l != 0);
+
+    return symbol;
+    }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::exp_golomb_decode_eq_prob (int k) {
+
+  uint32_t l;
+  int symbol = 0;
+  int binary_symbol = 0;
+
+  do {
+    l = getSymbolEqProb();
+    if (l == 1) {
+      symbol += (1<<k);
+      ++k;
+      }
+    } while (l!=0);
+
+  while (k--)
+    // next binary part
+    if (getSymbolEqProb() == 1)
+      binary_symbol |= (1 << k);
+
+  return (uint32_t)(symbol + binary_symbol);
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::unary_exp_golomb_level_decode (sBiContext* context) {
+
+  uint32_t symbol = getSymbol (context );
+  if (symbol == 0)
+    return 0;
+  else {
+    uint32_t l, k = 1;
+    uint32_t exp_start = 13;
+    symbol = 0;
+    do {
+      l = getSymbol (context);
+      ++symbol;
+      ++k;
+      } while ((l != 0) && (k != exp_start));
+
+    if (l != 0)
+      symbol += exp_golomb_decode_eq_prob (0)+1;
+    return symbol;
+    }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::unary_exp_golomb_mv_decode (sBiContext* context, uint32_t max_bin) {
+
+  uint32_t symbol = getSymbol (context );
+
+  if (symbol == 0)
+    return 0;
+
+  else {
+    uint32_t exp_start = 8;
+    uint32_t l,k = 1;
+    uint32_t bin = 1;
+    symbol = 0;
+    ++context;
+    do {
+      l = getSymbol (context);
+      if ((++bin) == 2)
+        context++;
+      if (bin == max_bin)
+        ++context;
+      ++symbol;
+      ++k;
+      } while ((l != 0) && (k != exp_start));
+
+    if (l != 0)
+      symbol += exp_golomb_decode_eq_prob (3) + 1;
+
+    return symbol;
+    }
+  }
+//}}}
+
+//{{{
 uint32_t cCabacDecode::getSymbol (sBiContext* biContext) {
 
   uint32_t bit = biContext->MPS;

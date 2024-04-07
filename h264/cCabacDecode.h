@@ -33,6 +33,12 @@ public:
 
   void ipcmPreamble();
 
+  uint32_t unary_bin_max_decode (sBiContext* context, int ctx_offset, uint32_t max_symbol);
+  uint32_t unary_bin_decode (sBiContext* context, int ctx_offset);
+  uint32_t exp_golomb_decode_eq_prob (int k);
+  uint32_t unary_exp_golomb_level_decode (sBiContext* context);
+  uint32_t unary_exp_golomb_mv_decode (sBiContext* context, uint32_t max_bin);
+
   int getBitsRead() { return ((*codeStreamLen) << 3) - bitsLeft; }
   uint32_t getSymbol (sBiContext* biContext);
   uint32_t getSymbolEqProb();
