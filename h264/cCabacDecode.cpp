@@ -127,9 +127,15 @@ void cCabacDecode::startDecoding (uint8_t* code_buffer, int firstbyte, int* code
   range = HALF;
   }
 //}}}
+
 //{{{
-int cCabacDecode::getBitsRead() {
-  return ((*codeStreamLen) << 3) - bitsLeft;
+void cCabacDecode::ipcmPreamble() {
+
+  while (bitsLeft >= 8) {
+    value >>= 8;
+    bitsLeft -= 8;
+    (*codeStreamLen)--;
+    }
   }
 //}}}
 

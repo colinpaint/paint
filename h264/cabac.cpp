@@ -1769,13 +1769,13 @@ void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* caba
 int readSyntaxElementCABAC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
 
   cCabacDecode* cabacDecode = &this_dataPart->cabacDecode;
-  int curr_len = cabacDecode->bitsRead();
+  int curr_len = cabacDecode->getBitsRead();
 
   // perform the actual decoding by calling the appropriate method
   se->reading (mb, se, cabacDecode);
 
   //read again and minus curr_len = bitsRead(cabacDecode); from above
-  se->len = cabacDecode->bitsRead() - curr_len;
+  se->len = cabacDecode->getBitsRead() - curr_len;
 
   return se->len;
   }
@@ -1795,12 +1795,7 @@ void readIPCMcabac (cSlice* slice, sDataPartition* dataPartition) {
   int val = 0;
   int bitsRead = 0;
 
-  while (cabacDecode->bitsLeft >= 8) {
-    cabacDecode->value >>= 8;
-    cabacDecode->bitsLeft -= 8;
-    (*cabacDecode->codeStreamLen)--;
-    }
-
+  cabacDecode->ipcmPreamble();
   int bitOffset = (*cabacDecode->codeStreamLen) << 3;
 
   // read luma values
