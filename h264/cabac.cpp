@@ -92,8 +92,7 @@ namespace {
   //{{{
   uint32_t unary_bin_max_decode (sCabacDecode* cabacDecode, sBiContext* context, int ctx_offset, uint32_t max_symbol) {
 
-    uint32_t symbol = cabacDecode->binaryArithmeticDecodeSymbol (context );
-
+    uint32_t symbol = cabacDecode->symbol (context );
     if (symbol == 0 || (max_symbol == 0))
       return symbol;
     else {
@@ -101,7 +100,7 @@ namespace {
       context += ctx_offset;
       symbol = 0;
       do {
-        l = cabacDecode->binaryArithmeticDecodeSymbol (context);
+        l = cabacDecode->symbol (context);
         ++symbol;
         }
       while( (l != 0) && (symbol < max_symbol) );
@@ -115,8 +114,7 @@ namespace {
   //{{{
   uint32_t unary_bin_decode (sCabacDecode* cabacDecode, sBiContext* context, int ctx_offset) {
 
-    uint32_t symbol = cabacDecode->binaryArithmeticDecodeSymbol (context);
-
+    uint32_t symbol = cabacDecode->symbol (context);
     if (symbol == 0)
       return 0;
     else {
@@ -124,7 +122,7 @@ namespace {
       context += ctx_offset;;
       symbol = 0;
       do {
-        l = cabacDecode->binaryArithmeticDecodeSymbol (context);
+        l = cabacDecode->symbol (context);
         ++symbol;
         }
       while (l != 0);
@@ -141,7 +139,7 @@ namespace {
     int binary_symbol = 0;
 
     do {
-      l = cabacDecode->binaryArithmeticDecodeSymbolEqProb();
+      l = cabacDecode->symbolEqProb();
       if (l == 1) {
         symbol += (1<<k);
         ++k;
@@ -150,7 +148,7 @@ namespace {
 
     while (k--)
       // next binary part
-      if (cabacDecode->binaryArithmeticDecodeSymbolEqProb() == 1)
+      if (cabacDecode->symbolEqProb() == 1)
         binary_symbol |= (1 << k);
 
     return (uint32_t)(symbol + binary_symbol);
@@ -159,8 +157,7 @@ namespace {
   //{{{
   uint32_t unary_exp_golomb_level_decode (sCabacDecode* cabacDecode, sBiContext* context) {
 
-    uint32_t symbol = cabacDecode->binaryArithmeticDecodeSymbol (context );
-
+    uint32_t symbol = cabacDecode->symbol (context );
     if (symbol == 0)
       return 0;
     else {
@@ -168,7 +165,7 @@ namespace {
       uint32_t exp_start = 13;
       symbol = 0;
       do {
-        l = cabacDecode->binaryArithmeticDecodeSymbol (context);
+        l = cabacDecode->symbol (context);
         ++symbol;
         ++k;
         } while ((l != 0) && (k != exp_start));
@@ -182,7 +179,7 @@ namespace {
   //{{{
   uint32_t unary_exp_golomb_mv_decode (sCabacDecode* cabacDecode, sBiContext* context, uint32_t max_bin) {
 
-    uint32_t symbol = cabacDecode->binaryArithmeticDecodeSymbol (context );
+    uint32_t symbol = cabacDecode->symbol (context );
 
     if (symbol == 0)
       return 0;
@@ -194,7 +191,7 @@ namespace {
       symbol = 0;
       ++context;
       do {
-        l = cabacDecode->binaryArithmeticDecodeSymbol (context);
+        l = cabacDecode->symbol (context);
         if ((++bin) == 2)
           context++;
         if (bin == max_bin)
@@ -286,7 +283,7 @@ namespace {
 
         ctx = 2 * upper_bit + left_bit;
         // encode symbol =====
-        codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+        codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
         }
       }
     else if( (decoder->coding.isSeperateColourPlane != 0) ) {
@@ -310,7 +307,7 @@ namespace {
 
         ctx = 2 * upper_bit + left_bit;
         //===== encode symbol =====
-        codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+        codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
         }
       }
 
@@ -364,7 +361,7 @@ namespace {
 
       ctx = 2 * upper_bit + left_bit;
       // encode symbol
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
       }
 
     // set bits for current block ---
@@ -457,7 +454,7 @@ namespace {
       ctx = 2 * upper_bit + left_bit;
 
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       // set bits for current block ---
       if (codedBlockPatternBit)
@@ -487,7 +484,7 @@ namespace {
       ctx = 2 * upper_bit + left_bit;
 
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
@@ -520,7 +517,7 @@ namespace {
 
       ctx = 2 * upper_bit + left_bit;
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
@@ -553,7 +550,7 @@ namespace {
 
       ctx = 2 * upper_bit + left_bit;
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
@@ -584,7 +581,7 @@ namespace {
 
       int ctx = 2 * upper_bit + left_bit;
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
@@ -634,7 +631,7 @@ namespace {
 
       int ctx = 2 * upper_bit + left_bit;
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
@@ -679,7 +676,7 @@ namespace {
       int ctx = 2 * upper_bit + left_bit;
 
       // encode symbol
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->symbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
       if (codedBlockPatternBit) {
         // set bits for current block ---
         bit = (u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
@@ -716,11 +713,11 @@ namespace {
     for (i = i0; i < i1; ++i){
       // if last coeff is reached, it has to be significant
       //--- read significance symbol ---
-      if (cabacDecode->binaryArithmeticDecodeSymbol (map_ctx + pos2ctx_Map[i])) {
+      if (cabacDecode->symbol (map_ctx + pos2ctx_Map[i])) {
         *(coeff++) = 1;
         ++coefCount;
         //--- read last coefficient symbol ---
-        if (cabacDecode->binaryArithmeticDecodeSymbol (last_ctx + pos2ctx_Last[i])) {
+        if (cabacDecode->symbol (last_ctx + pos2ctx_Last[i])) {
           memset(coeff, 0, (i1 - i) * sizeof(int));
           return coefCount;
           }
@@ -753,7 +750,7 @@ namespace {
 
     for (; i >= 0; i--) {
       if (*cof != 0) {
-        *cof += cabacDecode->binaryArithmeticDecodeSymbol (oneContexts + c1);
+        *cof += cabacDecode->symbol (oneContexts + c1);
 
         if (*cof == 2) {
           *cof += unary_exp_golomb_level_decode (cabacDecode, absContexts + c2);
@@ -763,7 +760,7 @@ namespace {
         else if (c1)
           c1 = imin (++c1, 4);
 
-        if (cabacDecode->binaryArithmeticDecodeSymbolEqProb())
+        if (cabacDecode->symbolEqProb())
           *cof = - *cof;
         }
       cof--;
@@ -785,7 +782,7 @@ int cabacStartCode (cSlice* slice, int eos_bit) {
     const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
     sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
-    bit = cabacDecode->binaryArithmeticDecodeFinal();
+    bit = cabacDecode->final();
     }
   else
     bit = 0;
@@ -856,7 +853,7 @@ void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode*
   int b = mb->mbAvailB ? slice->mbData[mb->mbIndexB].mbField : 0;
   int actContext = a + b;
 
-  se->value1 = cabacDecode->binaryArithmeticDecodeSymbol (&context->mbAffContexts[actContext]);
+  se->value1 = cabacDecode->symbol (&context->mbAffContexts[actContext]);
   }
 //}}}
 
@@ -1040,13 +1037,13 @@ void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDec
 
   se->context = a;
 
-  actSym = cabacDecode->binaryArithmeticDecodeSymbol (ctx->mvResContexts[0] + a );
+  actSym = cabacDecode->symbol (ctx->mvResContexts[0] + a );
 
   if (actSym != 0) {
     a = 5 * k;
     actSym = unary_exp_golomb_mv_decode (cabacDecode, ctx->mvResContexts[1] + a, 3) + 1;
 
-    if (cabacDecode->binaryArithmeticDecodeSymbolEqProb())
+    if (cabacDecode->symbolEqProb())
       actSym = -actSym;
     }
 
@@ -1099,11 +1096,11 @@ void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* ca
     actContext = 5 * k + 2;
   se->context = actContext;
 
-  actSym = cabacDecode->binaryArithmeticDecodeSymbol (&ctx->mvResContexts[0][actContext] );
+  actSym = cabacDecode->symbol (&ctx->mvResContexts[0][actContext] );
   if (actSym != 0) {
     actContext = 5 * k;
     actSym = unary_exp_golomb_mv_decode (cabacDecode, ctx->mvResContexts[1] + actContext, 3) + 1;
-    if (cabacDecode->binaryArithmeticDecodeSymbolEqProb())
+    if (cabacDecode->symbolEqProb())
       actSym = -actSym;
     }
 
@@ -1119,11 +1116,11 @@ void readB8_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   sBiContext* b8TypeContexts = &ctx->b8TypeContexts[0][1];
 
   int actSym = 0;
-  if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts++))
+  if (cabacDecode->symbol (b8TypeContexts++))
     actSym = 0;
   else {
-    if (cabacDecode->binaryArithmeticDecodeSymbol (++b8TypeContexts))
-      actSym = (cabacDecode->binaryArithmeticDecodeSymbol (++b8TypeContexts))? 2: 3;
+    if (cabacDecode->symbol (++b8TypeContexts))
+      actSym = (cabacDecode->symbol (++b8TypeContexts))? 2: 3;
     else
       actSym = 1;
     }
@@ -1139,32 +1136,32 @@ void readB8_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   int actSym = 0;
   sMotionContexts* ctx = slice->motionInfoContexts;
   sBiContext* b8TypeContexts = ctx->b8TypeContexts[1];
-  if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts++)) {
-    if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts++)) {
-      if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts++)) {
-        if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts)) {
+  if (cabacDecode->symbol (b8TypeContexts++)) {
+    if (cabacDecode->symbol (b8TypeContexts++)) {
+      if (cabacDecode->symbol (b8TypeContexts++)) {
+        if (cabacDecode->symbol (b8TypeContexts)) {
           actSym = 10;
-          if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts))
+          if (cabacDecode->symbol (b8TypeContexts))
             actSym++;
           }
         else {
           actSym = 6;
-          if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts))
+          if (cabacDecode->symbol (b8TypeContexts))
             actSym += 2;
-          if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts))
+          if (cabacDecode->symbol (b8TypeContexts))
             actSym++;
           }
         }
       else {
         actSym = 2;
-        if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts))
+        if (cabacDecode->symbol (b8TypeContexts))
           actSym += 2;
-        if (cabacDecode->binaryArithmeticDecodeSymbol (b8TypeContexts))
+        if (cabacDecode->symbol (b8TypeContexts))
           actSym ++;
         }
       }
     else
-      actSym = (cabacDecode->binaryArithmeticDecodeSymbol (++b8TypeContexts)) ? 1: 0;
+      actSym = (cabacDecode->symbol (++b8TypeContexts)) ? 1: 0;
     ++actSym;
     }
   else
@@ -1180,7 +1177,7 @@ void read_skipFlag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDec
   int b = (mb->mbCabacUp   != NULL) ? (mb->mbCabacUp  ->skipFlag == 0) : 0;
 
   sBiContext *mbTypeContexts = &mb->slice->motionInfoContexts->mbTypeContexts[1][a + b];
-  se->value1 = cabacDecode->binaryArithmeticDecodeSymbol (mbTypeContexts) != 1;
+  se->value1 = cabacDecode->symbol (mbTypeContexts) != 1;
 
   if (!se->value1)
     mb->slice->lastDquant = 0;
@@ -1193,7 +1190,7 @@ void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDec
   int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp->skipFlag == 0) : 0;
   sBiContext* mbTypeContexts = &mb->slice->motionInfoContexts->mbTypeContexts[2][7 + a + b];
 
-  se->value1 = se->value2 = (cabacDecode->binaryArithmeticDecodeSymbol (mbTypeContexts) != 1);
+  se->value1 = se->value2 = (cabacDecode->symbol (mbTypeContexts) != 1);
   if (!se->value1)
     mb->slice->lastDquant = 0;
   }
@@ -1208,7 +1205,7 @@ void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCaba
   int b = (mb->mbCabacUp == NULL) ? 0 : mb->mbCabacUp->lumaTransformSize8x8flag;
   int a = (mb->mbCabacLeft == NULL) ? 0 : mb->mbCabacLeft->lumaTransformSize8x8flag;
 
-  int actSym = cabacDecode->binaryArithmeticDecodeSymbol (ctx->transformSizeContexts + a + b );
+  int actSym = cabacDecode->symbol (ctx->transformSizeContexts + a + b );
   se->value1 = actSym;
   }
 //}}}
@@ -1233,37 +1230,37 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
       a = (((mb->mbCabacLeft)->mbType != I4MB && mb->mbCabacLeft->mbType != I8MB) ? 1 : 0 );
 
     actContext = a + b;
-    actSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext);
+    actSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext);
     se->context = actContext; // store context
 
     if (actSym == 0) // 4x4 Intra
       curMbType = actSym;
     else {
       // 16x16 Intra
-      modeSym = cabacDecode->binaryArithmeticDecodeFinal();
+      modeSym = cabacDecode->final();
       if(modeSym == 1)
         curMbType = 25;
       else {
         actSym = 1;
         actContext = 4;
-        modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext ); // decoding of AC/no AC
+        modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext ); // decoding of AC/no AC
         actSym += modeSym*12;
         actContext = 5;
         // decoding of codedBlockPattern: 0,1,2
-        modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext );
+        modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext );
         if (modeSym != 0) {
           actContext = 6;
-          modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext );
+          modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext );
           actSym += 4;
           if (modeSym != 0)
             actSym += 4;
         }
         // decoding of I pred-mode: 0,1,2,3
         actContext = 7;
-        modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext );
+        modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext );
         actSym += modeSym * 2;
         actContext = 8;
-        modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext );
+        modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext );
         actSym += modeSym;
         curMbType = actSym;
         }
@@ -1279,7 +1276,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
       a = ((mb->mbCabacLeft)->mbType != SI4MB) ? 1 : 0;
 
     actContext = a + b;
-    actSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[1] + actContext);
+    actSym = cabacDecode->symbol (context->mbTypeContexts[1] + actContext);
     se->context = actContext; // store context
 
     if (actSym == 0) //  SI 4x4 Intra
@@ -1293,27 +1290,27 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
         a = (((mb->mbCabacLeft)->mbType != I4MB) ? 1 : 0 );
 
       actContext = a + b;
-      actSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext);
+      actSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext);
       se->context = actContext; // store context
 
       if (actSym==0) // 4x4 Intra
         curMbType = 1;
       else {
         // 16x16 Intra
-        modeSym = cabacDecode->binaryArithmeticDecodeFinal();
+        modeSym = cabacDecode->final();
         if( modeSym==1 )
           curMbType = 26;
         else {
           actSym = 2;
           actContext = 4;
-          modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext ); // decoding of AC/no AC
+          modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext ); // decoding of AC/no AC
           actSym += modeSym*12;
           actContext = 5;
           // decoding of codedBlockPattern: 0,1,2
-          modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext );
+          modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext );
           if (modeSym != 0) {
             actContext = 6;
-            modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext );
+            modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext );
             actSym += 4;
             if (modeSym != 0)
               actSym += 4;
@@ -1321,10 +1318,10 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
 
           // decoding of I pred-mode: 0,1,2,3
           actContext = 7;
-          modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext );
+          modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext );
           actSym += modeSym * 2;
           actContext = 8;
-          modeSym = cabacDecode->binaryArithmeticDecodeSymbol (context->mbTypeContexts[0] + actContext );
+          modeSym = cabacDecode->symbol (context->mbTypeContexts[0] + actContext );
           actSym += modeSym;
           curMbType = actSym;
           }
@@ -1348,21 +1345,21 @@ void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   int curMbType;
 
   sBiContext* mbTypeContexts = ctx->mbTypeContexts[1];
-  if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[4] )) {
-    if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[7] ))
+  if (cabacDecode->symbol (&mbTypeContexts[4] )) {
+    if (cabacDecode->symbol (&mbTypeContexts[7] ))
       actSym = 7;
     else
       actSym = 6;
     }
   else {
-    if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[5] )) {
-      if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[7] ))
+    if (cabacDecode->symbol (&mbTypeContexts[5] )) {
+      if (cabacDecode->symbol (&mbTypeContexts[7] ))
         actSym = 2;
       else
         actSym = 3;
       }
     else {
-      if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[6] ))
+      if (cabacDecode->symbol (&mbTypeContexts[6] ))
         actSym = 4;
       else
         actSym = 1;
@@ -1373,29 +1370,29 @@ void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
     curMbType = actSym;
   else  {
     // additional info for 16x16 Intra-mode
-    modeSym = cabacDecode->binaryArithmeticDecodeFinal();
+    modeSym = cabacDecode->final();
     if (modeSym == 1)
       curMbType = 31;
     else {
       actContext = 8;
-      modeSym = cabacDecode->binaryArithmeticDecodeSymbol (mbTypeContexts + actContext ); // decoding of AC/no AC
+      modeSym = cabacDecode->symbol (mbTypeContexts + actContext ); // decoding of AC/no AC
       actSym += modeSym*12;
 
       // decoding of codedBlockPattern: 0,1,2
       actContext = 9;
-      modeSym = cabacDecode->binaryArithmeticDecodeSymbol (mbTypeContexts + actContext );
+      modeSym = cabacDecode->symbol (mbTypeContexts + actContext );
       if (modeSym != 0) {
         actSym += 4;
-        modeSym = cabacDecode->binaryArithmeticDecodeSymbol (mbTypeContexts + actContext );
+        modeSym = cabacDecode->symbol (mbTypeContexts + actContext );
         if (modeSym != 0)
           actSym += 4;
         }
 
       // decoding of I pred-mode: 0,1,2,3
       actContext = 10;
-      modeSym = cabacDecode->binaryArithmeticDecodeSymbol (mbTypeContexts + actContext );
+      modeSym = cabacDecode->symbol (mbTypeContexts + actContext );
       actSym += modeSym*2;
-      modeSym = cabacDecode->binaryArithmeticDecodeSymbol (mbTypeContexts + actContext );
+      modeSym = cabacDecode->symbol (mbTypeContexts + actContext );
       actSym += modeSym;
       curMbType = actSym;
       }
@@ -1424,15 +1421,15 @@ void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
     a = ((mb->mbCabacLeft)->mbType != 0) ? 1 : 0;
   actContext = a + b;
 
-  if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[actContext])) {
-    if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[4])) {
-      if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[5])) {
+  if (cabacDecode->symbol (&mbTypeContexts[actContext])) {
+    if (cabacDecode->symbol (&mbTypeContexts[4])) {
+      if (cabacDecode->symbol (&mbTypeContexts[5])) {
         actSym = 12;
-        if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[6]))
+        if (cabacDecode->symbol (&mbTypeContexts[6]))
           actSym += 8;
-        if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[6]))
+        if (cabacDecode->symbol (&mbTypeContexts[6]))
           actSym += 4;
-        if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[6]))
+        if (cabacDecode->symbol (&mbTypeContexts[6]))
           actSym += 2;
 
         if (actSym == 24)
@@ -1442,22 +1439,22 @@ void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
         else {
           if (actSym == 22)
             actSym = 23;
-          if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[6]))
+          if (cabacDecode->symbol (&mbTypeContexts[6]))
             actSym += 1;
           }
         }
       else {
         actSym = 3;
-        if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[6]))
+        if (cabacDecode->symbol (&mbTypeContexts[6]))
           actSym += 4;
-        if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[6]))
+        if (cabacDecode->symbol (&mbTypeContexts[6]))
           actSym += 2;
-        if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[6]))
+        if (cabacDecode->symbol (&mbTypeContexts[6]))
           actSym += 1;
         }
       }
     else {
-      if (cabacDecode->binaryArithmeticDecodeSymbol (&mbTypeContexts[6]))
+      if (cabacDecode->symbol (&mbTypeContexts[6]))
         actSym = 2;
       else
         actSym = 1;
@@ -1470,30 +1467,30 @@ void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
     curMbType = actSym;
   else  {
     // additional info for 16x16 Intra-mode
-    modeSym = cabacDecode->binaryArithmeticDecodeFinal();
+    modeSym = cabacDecode->final();
     if (modeSym == 1)
       curMbType = 48;
     else {
       mbTypeContexts = ctx->mbTypeContexts[1];
       actContext = 8;
-      modeSym = cabacDecode->binaryArithmeticDecodeSymbol(mbTypeContexts + actContext ); // decoding of AC/no AC
+      modeSym = cabacDecode->symbol(mbTypeContexts + actContext ); // decoding of AC/no AC
       actSym += modeSym*12;
 
       // decoding of codedBlockPattern: 0,1,2
       actContext = 9;
-      modeSym = cabacDecode->binaryArithmeticDecodeSymbol(mbTypeContexts + actContext );
+      modeSym = cabacDecode->symbol(mbTypeContexts + actContext );
       if (modeSym != 0) {
         actSym += 4;
-        modeSym = cabacDecode->binaryArithmeticDecodeSymbol(mbTypeContexts + actContext );
+        modeSym = cabacDecode->symbol(mbTypeContexts + actContext );
         if (modeSym != 0)
           actSym += 4;
         }
 
       // decoding of I pred-mode: 0,1,2,3
       actContext = 10;
-      modeSym = cabacDecode->binaryArithmeticDecodeSymbol(mbTypeContexts + actContext );
+      modeSym = cabacDecode->symbol(mbTypeContexts + actContext );
       actSym += modeSym*2;
-      modeSym = cabacDecode->binaryArithmeticDecodeSymbol(mbTypeContexts + actContext );
+      modeSym = cabacDecode->symbol(mbTypeContexts + actContext );
       actSym += modeSym;
       curMbType = actSym;
       }
@@ -1510,15 +1507,15 @@ void readIntraPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode*
   sTextureContexts* context = slice->textureInfoContexts;
 
   // use_most_probable_mode
-  int actSym = cabacDecode->binaryArithmeticDecodeSymbol (context->iprContexts);
+  int actSym = cabacDecode->symbol (context->iprContexts);
 
   // remaining_mode_selector
   if (actSym == 1)
     se->value1 = -1;
   else {
-    se->value1  = cabacDecode->binaryArithmeticDecodeSymbol (context->iprContexts + 1);
-    se->value1 |= cabacDecode->binaryArithmeticDecodeSymbol (context->iprContexts + 1) << 1;
-    se->value1 |= cabacDecode->binaryArithmeticDecodeSymbol (context->iprContexts + 1) << 2;
+    se->value1  = cabacDecode->symbol (context->iprContexts + 1);
+    se->value1 |= cabacDecode->symbol (context->iprContexts + 1) << 1;
+    se->value1 |= cabacDecode->symbol (context->iprContexts + 1) << 2;
     }
   }
 //}}}
@@ -1568,7 +1565,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* caba
   actContext = a + b;
   se->context = actContext; // store context
 
-  actSym = cabacDecode->binaryArithmeticDecodeSymbol (ctx->refNoContexts[addctx] + actContext );
+  actSym = cabacDecode->symbol (ctx->refNoContexts[addctx] + actContext );
 
   if (actSym != 0) {
     actContext = 4;
@@ -1587,7 +1584,7 @@ void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabac
 
   int* dquant = &se->value1;
   int actContext = (slice->lastDquant != 0) ? 1 : 0;
-  int actSym = cabacDecode->binaryArithmeticDecodeSymbol (context->deltaQpContexts + actContext);
+  int actSym = cabacDecode->symbol (context->deltaQpContexts + actContext);
 
   if (actSym != 0) {
     actContext = 2;
@@ -1652,7 +1649,7 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDec
 
       curr_cbp_ctx = a + b;
       mask = (1 << (mb_y + (mb_x >> 1)));
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol (ctx->cbpContexts[0] + curr_cbp_ctx );
+      codedBlockPatternBit = cabacDecode->symbol (ctx->cbpContexts[0] + curr_cbp_ctx );
       if (codedBlockPatternBit)
         codedBlockPattern += mask;
       }
@@ -1673,7 +1670,7 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDec
         a = 1;
 
     curr_cbp_ctx = a + b;
-    codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol(ctx->cbpContexts[1] + curr_cbp_ctx );
+    codedBlockPatternBit = cabacDecode->symbol(ctx->cbpContexts[1] + curr_cbp_ctx );
 
     // eCabac decoding for BinIdx 1
     if (codedBlockPatternBit) {
@@ -1691,7 +1688,7 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDec
           a = 1;
 
       curr_cbp_ctx = a + b;
-      codedBlockPatternBit = cabacDecode->binaryArithmeticDecodeSymbol(ctx->cbpContexts[2] + curr_cbp_ctx );
+      codedBlockPatternBit = cabacDecode->symbol(ctx->cbpContexts[2] + curr_cbp_ctx );
       codedBlockPattern += (codedBlockPatternBit == 1) ? 32 : 16;
       }
     }
@@ -1717,7 +1714,7 @@ void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* ca
   int a = (MbLeft != NULL) ? (((MbLeft->chromaPredMode != 0) && (MbLeft->mbType != IPCM)) ? 1 : 0) : 0;
   int actContext = a + b;
 
-  *actSym = cabacDecode->binaryArithmeticDecodeSymbol (context->ciprContexts + actContext );
+  *actSym = cabacDecode->symbol (context->ciprContexts + actContext );
 
   if (*actSym != 0)
     *actSym = unary_bin_max_decode (cabacDecode, context->ciprContexts + 3, 0, 1) + 1;
@@ -1772,13 +1769,13 @@ void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* caba
 int readSyntaxElementCABAC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
 
   sCabacDecode* cabacDecode = &this_dataPart->cabacDecode;
-  int curr_len = cabacDecode->arithmeticDecodeBitsRead();
+  int curr_len = cabacDecode->bitsRead();
 
   // perform the actual decoding by calling the appropriate method
   se->reading (mb, se, cabacDecode);
 
-  //read again and minus curr_len = arithmeticDecodeBitsRead(cabacDecode); from above
-  se->len = cabacDecode->arithmeticDecodeBitsRead() - curr_len;
+  //read again and minus curr_len = bitsRead(cabacDecode); from above
+  se->len = cabacDecode->bitsRead() - curr_len;
 
   return se->len;
   }

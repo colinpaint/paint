@@ -12,7 +12,17 @@
 //}}}
 namespace {
   //{{{
-  static const uint8_t rLPS_table_64x4[64][4] = {
+  const uint8_t kReNormTable[32] = {
+    6,
+    5,
+    4,4,
+    3,3,3,3,
+    2,2,2,2,2,2,2,2,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+    };
+  //}}}
+  //{{{
+  const uint8_t kLpsTable64x4[64][4] = {
     { 128, 176, 208, 240},
     { 128, 167, 197, 227},
     { 128, 158, 187, 216},
@@ -80,7 +90,7 @@ namespace {
     };
   //}}}
   //{{{
-  static const uint8_t AC_next_state_MPS_64[64] = {
+  const uint8_t kAcNextStateMps64[64] = {
     1,2,3,4,5,6,7,8,9,10,
     11,12,13,14,15,16,17,18,19,20,
     21,22,23,24,25,26,27,28,29,30,
@@ -91,7 +101,7 @@ namespace {
     };
   //}}}
   //{{{
-  static const uint8_t AC_next_state_LPS_64[64] = {
+  const uint8_t kAcNextStateLps64[64] = {
     0, 0, 1, 2, 2, 4, 4, 5, 6, 7,
     8, 9, 9,11,11,12,13,13,15,15,
     16,16,18,18,19,19,21,21,22,22,
@@ -101,20 +111,10 @@ namespace {
     37,38,38,63
     };
   //}}}
-  //{{{
-  static const uint8_t renorm_table_32[32] = {
-    6,
-    5,
-    4,4,
-    3,3,3,3,
-    2,2,2,2,2,2,2,2,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-    };
-  //}}}
   }
 
 //{{{
-void sCabacDecode::arithmeticDecodeStartDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen) {
+void sCabacDecode::startDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen) {
 
   codeStream = code_buffer;
   codeStreamLen = codeLen;
@@ -130,25 +130,25 @@ void sCabacDecode::arithmeticDecodeStartDecoding (uint8_t* code_buffer, int firs
   }
 //}}}
 //{{{
-int sCabacDecode::arithmeticDecodeBitsRead() {
+int sCabacDecode::bitsRead() {
   return ((*codeStreamLen) << 3) - bitsLeft;
   }
 //}}}
 
 //{{{
-uint32_t sCabacDecode::binaryArithmeticDecodeSymbol (sBiContext* biContext) {
+uint32_t sCabacDecode::symbol (sBiContext* biContext) {
 
   uint32_t bit = biContext->MPS;
   uint32_t* value1 = &value;
   uint32_t* range1 = &range;
   int* bitsLeft1 = &bitsLeft;
   uint16_t* state = &biContext->state;
-  uint32_t rLPS = rLPS_table_64x4[*state][(*range1 >> 6) & 0x03];
+  uint32_t rLPS = kLpsTable64x4[*state][(*range1 >> 6) & 0x03];
 
   *range1 -= rLPS;
   if (*value1 < (*range1 << *bitsLeft1)) {
     // MPS
-    *state = AC_next_state_MPS_64[*state]; // next state
+    *state = kAcNextStateMps64[*state]; // next state
     if (*range1 >= QUARTER)
       return (bit);
     else {
@@ -159,14 +159,14 @@ uint32_t sCabacDecode::binaryArithmeticDecodeSymbol (sBiContext* biContext) {
 
   else {
     // LPS
-    int renorm = renorm_table_32[(rLPS >> 3) & 0x1F];
+    int renorm = kReNormTable[(rLPS >> 3) & 0x1F];
     *value1 -= (*range1 << *bitsLeft1);
     *range1 = rLPS << renorm;
     (*bitsLeft1) -= renorm;
     bit ^= 0x01;
     if (!(*state))  // switch meaning of MPS if necessary
       biContext->MPS ^= 0x01;
-    *state = AC_next_state_LPS_64[*state]; // next state
+    *state = kAcNextStateLps64[*state]; // next state
     }
 
   if (*bitsLeft1 > 0 )
@@ -182,7 +182,7 @@ uint32_t sCabacDecode::binaryArithmeticDecodeSymbol (sBiContext* biContext) {
   }
 //}}}
 //{{{
-uint32_t sCabacDecode::binaryArithmeticDecodeSymbolEqProb() {
+uint32_t sCabacDecode::symbolEqProb() {
 
   uint32_t* value1 = &value;
   int* bitsLeft1 = &bitsLeft;
@@ -202,7 +202,7 @@ uint32_t sCabacDecode::binaryArithmeticDecodeSymbolEqProb() {
   }
 //}}}
 //{{{
-uint32_t sCabacDecode::binaryArithmeticDecodeFinal() {
+uint32_t sCabacDecode::final() {
 
   uint32_t range1 = range - 2;
 

@@ -2385,7 +2385,7 @@ namespace {
     for (int i = 0; i < dpNum;++i) {
       cBitStream& bitStream = slice->dataPartitions[i].bitStream;
       int byteStartPosition = bitStream.readLen;
-      slice->dataPartitions[i].cabacDecode.arithmeticDecodeStartDecoding (bitStream.bitStreamBuffer, byteStartPosition, &bitStream.readLen);
+      slice->dataPartitions[i].cabacDecode.startDecoding (bitStream.bitStreamBuffer, byteStartPosition, &bitStream.readLen);
       }
     }
   //}}}

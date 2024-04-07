@@ -2,12 +2,13 @@
 struct sBiContext;
 
 struct sCabacDecode {
-  void arithmeticDecodeStartDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen);
-  int arithmeticDecodeBitsRead();
+  void startDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen);
+  int bitsRead();
 
-  uint32_t binaryArithmeticDecodeSymbol (sBiContext* biContext);
-  uint32_t binaryArithmeticDecodeSymbolEqProb();
-  uint32_t binaryArithmeticDecodeFinal();
+  // vars
+  uint32_t symbol (sBiContext* biContext);
+  uint32_t symbolEqProb();
+  uint32_t final();
 
   uint32_t getByte();
   uint32_t getWord();
