@@ -2,7 +2,7 @@
 #include "global.h"
 #include "memory.h"
 
-#include "sCabacDecode.h"
+#include "cCabacDecode.h"
 //}}}
 
 //{{{  defines
@@ -114,29 +114,27 @@ namespace {
   }
 
 //{{{
-void sCabacDecode::startDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen) {
+void cCabacDecode::startDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen) {
 
   codeStream = code_buffer;
   codeStreamLen = codeLen;
   *codeStreamLen = firstbyte;
 
-  value = getByte();
-
   // lookahead of 2 bytes: always make sure that s buffer
   // contains 2 more bytes than actual s
-  value = (value << 16) | getWord();
+  value = (getByte() << 16) | getWord();
   bitsLeft = 15;
   range = HALF;
   }
 //}}}
 //{{{
-int sCabacDecode::bitsRead() {
+int cCabacDecode::getBitsRead() {
   return ((*codeStreamLen) << 3) - bitsLeft;
   }
 //}}}
 
 //{{{
-uint32_t sCabacDecode::symbol (sBiContext* biContext) {
+uint32_t cCabacDecode::symbol (sBiContext* biContext) {
 
   uint32_t bit = biContext->MPS;
   uint32_t* value1 = &value;
@@ -182,7 +180,7 @@ uint32_t sCabacDecode::symbol (sBiContext* biContext) {
   }
 //}}}
 //{{{
-uint32_t sCabacDecode::symbolEqProb() {
+uint32_t cCabacDecode::symbolEqProb() {
 
   uint32_t* value1 = &value;
   int* bitsLeft1 = &bitsLeft;
@@ -202,7 +200,7 @@ uint32_t sCabacDecode::symbolEqProb() {
   }
 //}}}
 //{{{
-uint32_t sCabacDecode::final() {
+uint32_t cCabacDecode::final() {
 
   uint32_t range1 = range - 2;
 
@@ -231,12 +229,12 @@ uint32_t sCabacDecode::final() {
 
 // private
 //{{{
-uint32_t sCabacDecode::getByte() {
+uint32_t cCabacDecode::getByte() {
   return codeStream[(*codeStreamLen)++];
   }
 //}}}
 //{{{
-uint32_t sCabacDecode::getWord() {
+uint32_t cCabacDecode::getWord() {
 
   int* len = codeStreamLen;
   uint8_t* codeStreamPtr = &codeStream[*len];

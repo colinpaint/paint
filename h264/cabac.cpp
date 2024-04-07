@@ -2,7 +2,7 @@
 #include "global.h"
 #include "memory.h"
 
-#include "sCabacDecode.h"
+#include "cCabacDecode.h"
 #include "cabac.h"
 #include "macroblock.h"
 //}}}
@@ -90,7 +90,7 @@ namespace {
                                            pos2ctx_last8x4, pos2ctx_last4x4};
   //}}}
   //{{{
-  uint32_t unary_bin_max_decode (sCabacDecode* cabacDecode, sBiContext* context, int ctx_offset, uint32_t max_symbol) {
+  uint32_t unary_bin_max_decode (cCabacDecode* cabacDecode, sBiContext* context, int ctx_offset, uint32_t max_symbol) {
 
     uint32_t symbol = cabacDecode->symbol (context );
     if (symbol == 0 || (max_symbol == 0))
@@ -112,7 +112,7 @@ namespace {
     }
   //}}}
   //{{{
-  uint32_t unary_bin_decode (sCabacDecode* cabacDecode, sBiContext* context, int ctx_offset) {
+  uint32_t unary_bin_decode (cCabacDecode* cabacDecode, sBiContext* context, int ctx_offset) {
 
     uint32_t symbol = cabacDecode->symbol (context);
     if (symbol == 0)
@@ -132,7 +132,7 @@ namespace {
     }
   //}}}
   //{{{
-  uint32_t exp_golomb_decode_eq_prob (sCabacDecode* cabacDecode, int k) {
+  uint32_t exp_golomb_decode_eq_prob (cCabacDecode* cabacDecode, int k) {
 
     uint32_t l;
     int symbol = 0;
@@ -155,7 +155,7 @@ namespace {
     }
   //}}}
   //{{{
-  uint32_t unary_exp_golomb_level_decode (sCabacDecode* cabacDecode, sBiContext* context) {
+  uint32_t unary_exp_golomb_level_decode (cCabacDecode* cabacDecode, sBiContext* context) {
 
     uint32_t symbol = cabacDecode->symbol (context );
     if (symbol == 0)
@@ -177,7 +177,7 @@ namespace {
     }
   //}}}
   //{{{
-  uint32_t unary_exp_golomb_mv_decode (sCabacDecode* cabacDecode, sBiContext* context, uint32_t max_bin) {
+  uint32_t unary_exp_golomb_mv_decode (cCabacDecode* cabacDecode, sBiContext* context, uint32_t max_bin) {
 
     uint32_t symbol = cabacDecode->symbol (context );
 
@@ -209,7 +209,7 @@ namespace {
   //}}}
 
   //{{{
-  int readStoreCbpBlockBit444 (sMacroBlock* mb, sCabacDecode*  cabacDecode, int type) {
+  int readStoreCbpBlockBit444 (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -425,7 +425,7 @@ namespace {
     }
   //}}}
   //{{{
-  int readStoreCbpBlockBitNormal (sMacroBlock* mb, sCabacDecode* cabacDecode, int type) {
+  int readStoreCbpBlockBitNormal (sMacroBlock* mb, cCabacDecode* cabacDecode, int type) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -689,7 +689,7 @@ namespace {
     }
   //}}}
   //{{{
-  int read_significance_map (sMacroBlock* mb, sCabacDecode*  cabacDecode, int type, int coeff[]) {
+  int read_significance_map (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type, int coeff[]) {
 
     cSlice* slice = mb->slice;
     int fld = ( slice->picStructure!=eFrame || mb->mbField );
@@ -736,7 +736,7 @@ namespace {
     }
   //}}}
   //{{{
-  void read_significant_coefficients (sCabacDecode* cabacDecode, sTextureContexts* textureInfoContexts,
+  void read_significant_coefficients (cCabacDecode* cabacDecode, sTextureContexts* textureInfoContexts,
                                              int type, int* coeff) {
 
     sBiContext* oneContexts = textureInfoContexts->oneContexts[type2ctx_one[type]];
@@ -781,7 +781,7 @@ int cabacStartCode (cSlice* slice, int eos_bit) {
   if (eos_bit) {
     const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
-    sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
+    cCabacDecode* cabacDecode = &dataPartition->cabacDecode;
     bit = cabacDecode->final();
     }
   else
@@ -844,7 +844,7 @@ void deleteTextureInfoContexts (sTextureContexts* contexts) {
 //}}}
 
 //{{{
-void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* context  = slice->motionInfoContexts;
@@ -862,11 +862,11 @@ int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sData
 
   sBiContext* mb_type_ctx_copy[3];
   sBiContext* mb_aff_ctx_copy;
-  sCabacDecode* decodingEnv_copy;
+  cCabacDecode* decodingEnv_copy;
   sMotionContexts* motionInfoContexts  = slice->motionInfoContexts;
 
   int length;
-  sCabacDecode* cabacDecode = &act_dp->cabacDecode;
+  cCabacDecode* cabacDecode = &act_dp->cabacDecode;
 
   int skip = 0;
   int field = 0;
@@ -886,13 +886,13 @@ int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sData
   checkNeighbourCabac (mb);
 
   // create
-  decodingEnv_copy = (sCabacDecode*)calloc (1, sizeof(sCabacDecode));
+  decodingEnv_copy = (cCabacDecode*)calloc (1, sizeof(cCabacDecode));
   for (int i = 0; i < 3;++i)
     mb_type_ctx_copy[i] = (sBiContext*) calloc(NUM_MB_TYPE_CTX, sizeof(sBiContext) );
   mb_aff_ctx_copy = (sBiContext*) calloc(NUM_MB_AFF_CTX, sizeof(sBiContext) );
 
   // copy
-  memcpy (decodingEnv_copy,cabacDecode,sizeof(sCabacDecode));
+  memcpy (decodingEnv_copy,cabacDecode,sizeof(cCabacDecode));
   length = *(decodingEnv_copy->codeStreamLen) = *(cabacDecode->codeStreamLen);
   for (int i = 0; i < 3;++i)
     memcpy (mb_type_ctx_copy[i], motionInfoContexts->mbTypeContexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContext) );
@@ -913,7 +913,7 @@ int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sData
   // reset
   slice->mbIndex--;
 
-  memcpy (cabacDecode, decodingEnv_copy, sizeof(sCabacDecode));
+  memcpy (cabacDecode, decodingEnv_copy, sizeof(cCabacDecode));
   *(cabacDecode->codeStreamLen) = length;
   for (int i = 0; i < 3; ++i)
     memcpy (motionInfoContexts->mbTypeContexts[i], mb_type_ctx_copy[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
@@ -935,10 +935,10 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
 
   sBiContext* mb_type_ctx_copy[3];
   sBiContext* mb_aff_ctx_copy;
-  sCabacDecode* decodingEnv_copy;
+  cCabacDecode* decodingEnv_copy;
 
   int length;
-  sCabacDecode* cabacDecode = &act_dp->cabacDecode;
+  cCabacDecode* cabacDecode = &act_dp->cabacDecode;
   sMotionContexts* motionInfoContexts = slice->motionInfoContexts;
 
   int skip = 0;
@@ -961,13 +961,13 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
   checkNeighbourCabac (mb);
 
   // create
-  decodingEnv_copy = (sCabacDecode*) calloc(1, sizeof(sCabacDecode) );
+  decodingEnv_copy = (cCabacDecode*) calloc(1, sizeof(cCabacDecode) );
   for (i = 0; i < 3; ++i)
     mb_type_ctx_copy[i] = (sBiContext*)calloc (NUM_MB_TYPE_CTX, sizeof(sBiContext) );
   mb_aff_ctx_copy = (sBiContext*)calloc (NUM_MB_AFF_CTX, sizeof(sBiContext) );
 
   //copy
-  memcpy (decodingEnv_copy, cabacDecode, sizeof(sCabacDecode));
+  memcpy (decodingEnv_copy, cabacDecode, sizeof(cCabacDecode));
   length = *(decodingEnv_copy->codeStreamLen) = *(cabacDecode->codeStreamLen);
 
   for (i = 0; i < 3;++i)
@@ -988,7 +988,7 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
   // reset
   slice->mbIndex--;
 
-  memcpy(cabacDecode,decodingEnv_copy,sizeof(sCabacDecode));
+  memcpy(cabacDecode,decodingEnv_copy,sizeof(cCabacDecode));
   *(cabacDecode->codeStreamLen) = length;
 
   for (i = 0; i < 3; ++i)
@@ -1008,7 +1008,7 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
 //}}}
 
 //{{{
-void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   int* mbSize = mb->decoder->mbSize[eLuma];
   cSlice* slice = mb->slice;
@@ -1051,7 +1051,7 @@ void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDec
   }
 //}}}
 //{{{
-void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cDecoder264* decoder = mb->decoder;
   cSlice* slice = mb->slice;
@@ -1108,7 +1108,7 @@ void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* ca
   }
 //}}}
 //{{{
-void readB8_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readB8_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
@@ -1129,7 +1129,7 @@ void readB8_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   }
 //}}}
 //{{{
-void readB8_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readB8_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
@@ -1171,7 +1171,7 @@ void readB8_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   }
 //}}}
 //{{{
-void read_skipFlag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void read_skipFlag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp   != NULL) ? (mb->mbCabacUp  ->skipFlag == 0) : 0;
@@ -1184,7 +1184,7 @@ void read_skipFlag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDec
   }
 //}}}
 //{{{
-void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp->skipFlag == 0) : 0;
@@ -1197,7 +1197,7 @@ void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDec
 //}}}
 
 //{{{
-void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sTextureContexts*ctx = slice->textureInfoContexts;
@@ -1210,7 +1210,7 @@ void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCaba
   }
 //}}}
 //{{{
-void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* context = slice->motionInfoContexts;
@@ -1334,7 +1334,7 @@ void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   }
 //}}}
 //{{{
-void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* ctx = slice->motionInfoContexts;
@@ -1402,7 +1402,7 @@ void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
   }
 //}}}
 //{{{
-void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* ctx = slice->motionInfoContexts;
@@ -1501,7 +1501,7 @@ void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacD
 //}}}
 
 //{{{
-void readIntraPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readIntraPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sTextureContexts* context = slice->textureInfoContexts;
@@ -1520,7 +1520,7 @@ void readIntraPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode*
   }
 //}}}
 //{{{
-void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cDecoder264* decoder = mb->decoder;
   cSlice* slice = mb->slice;
@@ -1577,7 +1577,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* caba
   }
 //}}}
 //{{{
-void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* context = slice->motionInfoContexts;
@@ -1601,7 +1601,7 @@ void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabac
   }
 //}}}
 //{{{
-void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cDecoder264* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
@@ -1700,7 +1700,7 @@ void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDec
   }
 //}}}
 //{{{
-void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
@@ -1732,7 +1732,7 @@ void setReadStoreCodedBlockPattern (sMacroBlock** mb, int chromaFormatIdc) {
 //}}}
 
 //{{{
-void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
+void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   int* coefCount = &slice->coefCount;
@@ -1768,7 +1768,7 @@ void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* caba
 //{{{
 int readSyntaxElementCABAC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
 
-  sCabacDecode* cabacDecode = &this_dataPart->cabacDecode;
+  cCabacDecode* cabacDecode = &this_dataPart->cabacDecode;
   int curr_len = cabacDecode->bitsRead();
 
   // perform the actual decoding by calling the appropriate method
@@ -1788,7 +1788,7 @@ void readIPCMcabac (cSlice* slice, sDataPartition* dataPartition) {
   sPicture* picture = slice->picture;
 
   cBitStream* s = &dataPartition->bitStream;
-  sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
+  cCabacDecode* cabacDecode = &dataPartition->cabacDecode;
   uint8_t* buf = s->bitStreamBuffer;
   int bitStreamLengthInBits = (dataPartition->bitStream.bitStreamLen << 3) + 7;
 

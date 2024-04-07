@@ -62,7 +62,7 @@
 #include "nalu.h"
 #include "cSps.h"
 #include "cPps.h"
-#include "sCabacDecode.h"
+#include "cCabacDecode.h"
 #include "cBitStream.h"
 #include "cSlice.h"
 #include "cFrameStore.h"
@@ -327,7 +327,7 @@ struct sCodedBlockPattern {
 //{{{
 struct sDataPartition {
   cBitStream   bitStream;
-  sCabacDecode cabacDecode;
+  cCabacDecode cabacDecode;
 
   int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
   };
@@ -413,7 +413,7 @@ struct sMacroBlock {
   void (*iTrans4x4) (sMacroBlock*, eColorPlane, int, int);
   void (*iTrans8x8) (sMacroBlock*, eColorPlane, int, int);
   void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, int16_t, sPicMotion**, int, int, int, int, int);
-  int  (*readStoreCBPblockBit) (sMacroBlock*, sCabacDecode*, int);
+  int  (*readStoreCBPblockBit) (sMacroBlock*, cCabacDecode*, int);
   char (*readRefPictureIndex) (sMacroBlock*, sSyntaxElement*, sDataPartition*, char, int);
   void (*readCompCoef4x4cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane);

@@ -11,27 +11,27 @@ void deleteTextureInfoContexts (sTextureContexts* contexts);
 
 void cabacNewSlice (cSlice* slice);
 
-void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void readB8_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void readB8_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readB8_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readB8_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 
-void readIntraPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readIntraPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 
-void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 
-void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 
-void read_skipFlag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
-void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void read_skipFlag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 
 void readIPCMcabac (cSlice* slice, sDataPartition* dataPartition);
 int cabacStartCode (cSlice* slice, int eos_bit);
