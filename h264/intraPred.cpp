@@ -2,7 +2,7 @@
 #include "global.h"
 
 #include "intraPred.h"
-#include "sMacroBlock.h"
+#include "macroblock.h"
 //}}}
 //{{{
 // Notation for comments regarding prediction and predictors.

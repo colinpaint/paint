@@ -254,6 +254,13 @@ struct sConcealNode {
   sConcealNode* next;
   };
 //}}}
+//{{{
+struct sBiContext {
+  uint16_t        state; // index into state-table CP
+  uint8_t MPS;   // least probable symbol 0/1 CP
+  uint8_t dummy; // for alignment
+  };
+//}}}
 //{{{  struct sMotionContexts
 #define NUM_MB_TYPE_CTX        11
 #define NUM_B8_TYPE_CTX        9

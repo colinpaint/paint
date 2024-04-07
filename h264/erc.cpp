@@ -3,7 +3,7 @@
 #include "memory.h"
 
 #include "mcPred.h"
-#include "sMacroBlock.h"
+#include "macroblock.h"
 #include "erc.h"
 //}}}
 //{{{  defines

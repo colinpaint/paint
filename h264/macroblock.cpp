@@ -3,9 +3,12 @@
 #include "memory.h"
 
 #include "cCabacDecode.h"
+#include "cabac.h"
+#include "cabacRead.h"
+#include "cavlcRead.h"
 #include "fmo.h"
 #include "intraPred.h"
-#include "sMacroBlock.h"
+#include "macroblock.h"
 #include "mcPred.h"
 #include "transform.h"
 
@@ -2394,7 +2397,7 @@ namespace {
     //For eCabac, we don't need to read bits to let stream uint8_t aligned
     //  because we have variable for integer bytes position
     if (decoder->activePps->entropyCoding == eCabac) {
-      readIpcmCabac (slice, dataPartition);
+      readIPCMcabac (slice, dataPartition);
       initIPCMdecoding (slice);
       }
     else {

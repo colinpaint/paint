@@ -1,7 +1,7 @@
 //{{{  includes
 #include "global.h"
 
-#include "sMacroBlock.h"
+#include "macroblock.h"
 #include "loopfilter.h"
 //}}}
 //{{{  defines
