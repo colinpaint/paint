@@ -2397,7 +2397,7 @@ namespace {
     //For eCabac, we don't need to read bits to let stream uint8_t aligned
     //  because we have variable for integer bytes position
     if (decoder->activePps->entropyCoding == eCabac) {
-      readIPCMcabac (slice, dataPartition);
+      readIpcmCabac (slice, dataPartition);
       initIPCMdecoding (slice);
       }
     else {

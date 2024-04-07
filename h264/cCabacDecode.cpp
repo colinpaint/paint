@@ -143,7 +143,27 @@ void cCabacDecode::ipcmPreamble() {
 //}}}
 
 //{{{
-uint32_t cCabacDecode::unary_bin_max_decode (sBiContext* context, int ctx_offset, uint32_t max_symbol) {
+uint32_t cCabacDecode::unaryBin (sBiContext* context, int ctx_offset) {
+
+  uint32_t symbol = getSymbol (context);
+  if (symbol == 0)
+    return 0;
+  else {
+    uint32_t l;
+    context += ctx_offset;;
+    symbol = 0;
+    do {
+      l = getSymbol (context);
+      ++symbol;
+      }
+    while (l != 0);
+
+    return symbol;
+    }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::unaryBinMax (sBiContext* context, int ctx_offset, uint32_t max_symbol) {
 
   uint32_t symbol = getSymbol (context);
   if (symbol == 0 || (max_symbol == 0))
@@ -165,27 +185,7 @@ uint32_t cCabacDecode::unary_bin_max_decode (sBiContext* context, int ctx_offset
   }
 //}}}
 //{{{
-uint32_t cCabacDecode::unary_bin_decode (sBiContext* context, int ctx_offset) {
-
-  uint32_t symbol = getSymbol (context);
-  if (symbol == 0)
-    return 0;
-  else {
-    uint32_t l;
-    context += ctx_offset;;
-    symbol = 0;
-    do {
-      l = getSymbol (context);
-      ++symbol;
-      }
-    while (l != 0);
-
-    return symbol;
-    }
-  }
-//}}}
-//{{{
-uint32_t cCabacDecode::exp_golomb_decode_eq_prob (int k) {
+uint32_t cCabacDecode::expGolombEqProb (int k) {
 
   uint32_t l;
   int symbol = 0;
@@ -208,29 +208,7 @@ uint32_t cCabacDecode::exp_golomb_decode_eq_prob (int k) {
   }
 //}}}
 //{{{
-uint32_t cCabacDecode::unary_exp_golomb_level_decode (sBiContext* context) {
-
-  uint32_t symbol = getSymbol (context );
-  if (symbol == 0)
-    return 0;
-  else {
-    uint32_t l, k = 1;
-    uint32_t exp_start = 13;
-    symbol = 0;
-    do {
-      l = getSymbol (context);
-      ++symbol;
-      ++k;
-      } while ((l != 0) && (k != exp_start));
-
-    if (l != 0)
-      symbol += exp_golomb_decode_eq_prob (0)+1;
-    return symbol;
-    }
-  }
-//}}}
-//{{{
-uint32_t cCabacDecode::unary_exp_golomb_mv_decode (sBiContext* context, uint32_t max_bin) {
+uint32_t cCabacDecode::unaryExpGolombMv (sBiContext* context, uint32_t max_bin) {
 
   uint32_t symbol = getSymbol (context );
 
@@ -254,8 +232,30 @@ uint32_t cCabacDecode::unary_exp_golomb_mv_decode (sBiContext* context, uint32_t
       } while ((l != 0) && (k != exp_start));
 
     if (l != 0)
-      symbol += exp_golomb_decode_eq_prob (3) + 1;
+      symbol += expGolombEqProb (3) + 1;
 
+    return symbol;
+    }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::unaryExpGolombLevel (sBiContext* context) {
+
+  uint32_t symbol = getSymbol (context );
+  if (symbol == 0)
+    return 0;
+  else {
+    uint32_t l, k = 1;
+    uint32_t exp_start = 13;
+    symbol = 0;
+    do {
+      l = getSymbol (context);
+      ++symbol;
+      ++k;
+      } while ((l != 0) && (k != exp_start));
+
+    if (l != 0)
+      symbol += expGolombEqProb (0)+1;
     return symbol;
     }
   }

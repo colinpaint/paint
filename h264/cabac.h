@@ -33,7 +33,7 @@ void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDec
 void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 
-void readIPCMcabac (cSlice* slice, sDataPartition* dataPartition);
+void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition);
 int cabacStartCode (cSlice* slice, int eos_bit);
 int readSyntaxElementCABAC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
 
