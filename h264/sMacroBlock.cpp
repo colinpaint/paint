@@ -3157,7 +3157,7 @@ namespace {
         dataPartition->bitStream.readSyntaxElement_FLC (&se);
         }
       else {
-        se.reading = readFieldModeInfo_CABAC;
+        se.reading = readFieldModeInfoCabac;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         }
       mb->mbField = (bool)se.value1;
@@ -3238,7 +3238,7 @@ namespace {
         se.mapping = cBitStream::linfo_ue;
 
       checkNeighbourCabac(mb);
-      se.reading = read_skipFlag_CABAC_p_slice;
+      se.reading = readSkipFlagCabacSliceP;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
       mb->mbType = (int16_t) se.value1;
@@ -3288,7 +3288,7 @@ namespace {
         fieldFlagInference (mb);
 
       checkNeighbourCabac(mb);
-      se.reading = read_skipFlag_CABAC_p_slice;
+      se.reading = readSkipFlagCabacSliceP;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
       mb->mbType = (int16_t)se.value1;
@@ -3307,7 +3307,7 @@ namespace {
         readBot = (topMB->skipFlag && (!mb->skipFlag));
 
       if (readBot || readTop) {
-        se.reading = readFieldModeInfo_CABAC;
+        se.reading = readFieldModeInfoCabac;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbField = (bool)se.value1;
         }
@@ -3386,7 +3386,7 @@ namespace {
         se.mapping = cBitStream::linfo_ue;
 
       checkNeighbourCabac(mb);
-      se.reading = read_skipFlag_CABAC_b_slice;
+      se.reading = readSkipFlagCabacSliceB;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
       mb->mbType  = (int16_t)se.value1;
@@ -3441,7 +3441,7 @@ namespace {
         fieldFlagInference (mb);
 
       checkNeighbourCabac (mb);
-      se.reading = read_skipFlag_CABAC_b_slice;
+      se.reading = readSkipFlagCabacSliceB;
 
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       mb->mbType = (int16_t)se.value1;
@@ -3462,7 +3462,7 @@ namespace {
         readBot = topMB->skipFlag && (!mb->skipFlag);
 
       if (readBot || readTop) {
-        se.reading = readFieldModeInfo_CABAC;
+        se.reading = readFieldModeInfoCabac;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbField = (bool)se.value1;
         }

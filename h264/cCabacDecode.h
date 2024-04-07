@@ -22,6 +22,7 @@ struct sBiContext {
       }
     }
   //}}}
+
   uint16_t state; // index into state-table CP
   uint8_t  MPS;   // least probable symbol 0/1 CP
   uint8_t  dummy; // for alignment

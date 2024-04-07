@@ -219,9 +219,9 @@ void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* caba
 void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 
-void read_skipFlag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readSkipFlagCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readSkipFlagCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readFieldModeInfoCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 
 void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition);
