@@ -3459,7 +3459,7 @@ int cDecoder264::readSlice (cSlice* slice) {
           int byteStartPosition = s.bitStreamOffset / 8;
           if (s.bitStreamOffset % 8)
             ++byteStartPosition;
-          arithmeticDecodeStartDecoding (&slice->dataPartitions[0].cabacDecode, s.bitStreamBuffer, byteStartPosition, &s.readLen);
+          slice->dataPartitions[0].cabacDecode.arithmeticDecodeStartDecoding (s.bitStreamBuffer, byteStartPosition, &s.readLen);
           }
 
         recoveryPoint = 0;

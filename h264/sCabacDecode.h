@@ -2,6 +2,16 @@
 struct sBiContext;
 
 struct sCabacDecode {
+  void arithmeticDecodeStartDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen);
+  int arithmeticDecodeBitsRead();
+
+  uint32_t binaryArithmeticDecodeSymbol (sBiContext* biContext);
+  uint32_t binaryArithmeticDecodeSymbolEqProb();
+  uint32_t binaryArithmeticDecodeFinal();
+
+  uint32_t getByte();
+  uint32_t getWord();
+
   uint32_t range;
   uint32_t value;
   int      bitsLeft;
@@ -9,10 +19,4 @@ struct sCabacDecode {
   int*     codeStreamLen;
   };
 
-void arithmeticDecodeStartDecoding (sCabacDecode* cabacDecode, uint8_t* code_buffer, int firstbyte, int* codeLen);
-int arithmeticDecodeBitsRead (sCabacDecode* cabacDecode);
-
-uint32_t binaryArithmeticDecodeSymbol (sCabacDecode* dep, sBiContext* biContext);
-uint32_t binaryArithmeticDecodeSymbolEqProb (sCabacDecode* cabacDecode);
-uint32_t binaryArithmeticDecodeFinal (sCabacDecode* cabacDecode);
 void binaryArithmeticInitContext (int qp, sBiContext* context, const char* ini);

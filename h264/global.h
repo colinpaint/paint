@@ -815,6 +815,5 @@ private:
   void endDecodeFrame();
   };
 //}}}
-
 sDataPartition* allocDataPartitions (int numPartitions);
 void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions);
