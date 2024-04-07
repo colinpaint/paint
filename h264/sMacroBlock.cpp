@@ -2,12 +2,10 @@
 #include "global.h"
 #include "memory.h"
 
-#include "cabac.h"
 #include "cCabacDecode.h"
-#include "cavlcRead.h"
 #include "fmo.h"
 #include "intraPred.h"
-#include "macroblock.h"
+#include "sMacroBlock.h"
 #include "mcPred.h"
 #include "transform.h"
 

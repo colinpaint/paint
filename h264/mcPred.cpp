@@ -3,7 +3,7 @@
 #include "memory.h"
 
 #include "mcPred.h"
-#include "macroblock.h"
+#include "sMacroBlock.h"
 //}}}
 namespace {
   const sMotionVec kZeroMv = {0, 0};

@@ -3,8 +3,7 @@
 #include "memory.h"
 
 #include "fmo.h"
-#include "cabac.h"
-#include "macroblock.h"
+#include "sMacroBlock.h"
 #include "mcPred.h"
 
 #include "../common/cLog.h"

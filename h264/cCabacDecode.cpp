@@ -2,8 +2,7 @@
 #include "global.h"
 #include "memory.h"
 
-#include "cabac.h"
-#include "macroblock.h"
+#include "sMacroBlock.h"
 #include "cCabacDecode.h"
 //}}}
 //{{{  defines
