@@ -247,16 +247,16 @@ uint32_t cCabacDecode::getWord() {
 //{{{
 void biContextInit (sBiContext* context, int qp, const char* ini) {
 
-  int state = ((ini[0] * qp) >> 4) + ini[1];
+  int state1 = ((ini[0] * qp) >> 4) + ini[1];
 
-  if (state >= 64) {
-    state = imin (126, state);
-    context->state = (uint16_t)(state - 64);
+  if (state1 >= 64) {
+    state1 = imin (126, state1);
+    context->state = (uint16_t)(state1 - 64);
     context->MPS = 1;
     }
   else {
-    state = imax (1, state);
-    context->state = (uint16_t)(63 - state);
+    state1 = imax (1, state1);
+    context->state = (uint16_t)(63 - state1);
     context->MPS = 0;
     }
   }
