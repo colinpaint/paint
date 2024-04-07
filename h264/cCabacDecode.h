@@ -1,5 +1,31 @@
 #pragma once
-struct sBiContext;
+struct sMotionContexts;
+struct sTextureContexts;
+struct sSyntaxElement;
+struct sMacroBlock;
+class cSlice;
+
+struct sBiContext {
+  //{{{
+  void init (int qp, const char* ini) {
+
+    state = ((ini[0] * qp) >> 4) + ini[1];
+    if (state >= 64) {
+      state = imin (126, state);
+      state = (uint16_t)(state - 64);
+      MPS = 1;
+      }
+    else {
+      state = imax (1, state);
+      state = (uint16_t)(63 - state);
+      MPS = 0;
+      }
+    }
+  //}}}
+  uint16_t state; // index into state-table CP
+  uint8_t  MPS;   // least probable symbol 0/1 CP
+  uint8_t  dummy; // for alignment
+  };
 
 class cCabacDecode {
 public:
@@ -8,15 +34,15 @@ public:
   void ipcmPreamble();
 
   int getBitsRead() { return ((*codeStreamLen) << 3) - bitsLeft; }
-  uint32_t symbol (sBiContext* biContext);
-  uint32_t symbolEqProb();
-  uint32_t final();
+  uint32_t getSymbol (sBiContext* biContext);
+  uint32_t getSymbolEqProb();
+  uint32_t getFinal();
 
   // vars
   int*     codeStreamLen;
 
 private:
-  uint32_t getByte();
+  uint32_t getByte() { return codeStream[(*codeStreamLen)++]; }
   uint32_t getWord();
 
   // vars
@@ -25,5 +51,3 @@ private:
   int      bitsLeft;
   uint8_t* codeStream;
   };
-
-void binaryArithmeticInitContext (int qp, sBiContext* context, const char* ini);

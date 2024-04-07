@@ -1,8 +1,8 @@
 //{{{  includes
 #include "global.h"
 
-#include "macroblock.h"
 #include "cabac.h"
+#include "macroblock.h"
 #include "transform.h"
 //}}}
 namespace {

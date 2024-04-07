@@ -2,8 +2,8 @@
 #include "global.h"
 #include "memory.h"
 
-#include "cabac.h"
 #include "fmo.h"
+#include "cabac.h"
 #include "macroblock.h"
 #include "mcPred.h"
 

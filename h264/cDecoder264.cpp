@@ -2,8 +2,8 @@
 #include "global.h"
 #include "memory.h"
 
-#include "cCabacDecode.h"
 #include "cabac.h"
+#include "cCabacDecode.h"
 #include "erc.h"
 #include "errorConceal.h"
 #include "fmo.h"
@@ -1164,35 +1164,34 @@ namespace {
 
     //{{{
     #define IBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
-      for (i = 0; i < ii; ++i) \
-        for (j = 0; j < jj; ++j) \
-          binaryArithmeticInitContext (qp, &ctx[i][j], tab ## _I[num][i][j]); \
+      for (int i = 0; i < ii; ++i) \
+        for (int j = 0; j < jj; ++j) \
+          ctx[i][j].init (qp, tab ## _I[num][i][j]); \
       }
     //}}}
     //{{{
     #define PBIARI_CTX_INIT2(ii,jj,ctx,tab,num, qp) { \
-      for (i = 0; i < ii; ++i) \
-        for (j = 0; j < jj; ++j) \
-          binaryArithmeticInitContext (qp, &ctx[i][j], tab ## _P[num][i][j]); \
+      for (int i = 0; i < ii; ++i) \
+        for (int j = 0; j < jj; ++j) \
+          ctx[i][j].init (qp,  tab ## _P[num][i][j]); \
       }
     //}}}
     //{{{
     #define IBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
-      for (j = 0; j < jj; ++j) \
-        binaryArithmeticInitContext (qp, &ctx[j], tab ## _I[num][0][j]); \
+      for (int j = 0; j < jj; ++j) \
+        ctx[j].init (qp, tab ## _I[num][0][j]); \
       }
     //}}}
     //{{{
     #define PBIARI_CTX_INIT1(jj,ctx,tab,num, qp) { \
-      for (j = 0; j < jj; ++j) \
-        binaryArithmeticInitContext (qp, &ctx[j], tab ## _P[num][0][j]); \
+      for (int j = 0; j < jj; ++j) \
+        ctx[j].init (qp, tab ## _P[num][0][j]); \
       }
     //}}}
 
     sMotionContexts* mc = slice->motionInfoContexts;
     sTextureContexts* tc = slice->textureInfoContexts;
 
-    int i, j;
     int qp = imax (0, slice->qp);
     int cabacInitIdc = slice->cabacInitIdc;
 

@@ -2,8 +2,8 @@
 #include "global.h"
 #include "memory.h"
 
-#include "cCabacDecode.h"
 #include "cabac.h"
+#include "cCabacDecode.h"
 #include "cabacRead.h"
 #include "cavlcRead.h"
 #include "fmo.h"
