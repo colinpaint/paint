@@ -1905,17 +1905,17 @@ void concealLostFrames (sDpb* dpb, cSlice *slice)
     {
       picture->sliceType = eSliceI;
       picture->isIDR = true;
-      flushDpb(dpb);
-      picture->topPoc= 0;
-      picture->botPoc=picture->topPoc;
-      picture->framePoc=picture->topPoc;
-      picture->poc=picture->topPoc;
+      dpb->flushDpb();
+      picture->topPoc = 0;
+      picture->botPoc =picture->topPoc;
+      picture->framePoc = picture->topPoc;
+      picture->poc = picture->topPoc;
       decoder->lastRefPicPoc = picture->poc;
     }
 
-    storePictureDpb (decoder->dpb, picture);
+    decoder->dpb->storePictureDpb (picture);
 
-    picture=NULL;
+    picture = NULL;
 
     decoder->preFrameNum = UnusedShortTermFrameNum;
     UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % decoder->coding.maxFrameNum;

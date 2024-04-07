@@ -3,6 +3,22 @@ class cFrameStore;
 class cDecoder;
 
 struct sDpb {
+  void getSmallestPoc (int* poc, int* pos);
+
+  void updateRefList();
+  void updateLongTermRefList();
+
+  void initDpb (cDecoder264* decoder, int type);
+  void reInitDpb (cDecoder264* decoder, int type);
+  void flushDpb();
+  int removeUnusedDpb();
+  void storePictureDpb (sPicture* picture);
+  void removeFrameDpb (int pos);
+  void freeDpb();
+
+  // private
+  void dumpDpb();
+
   cDecoder264*  decoder;
 
   cFrameStore** frameStore;
@@ -21,18 +37,6 @@ struct sDpb {
 
   cFrameStore*  lastPictureFrameStore;
   };
-
-void updateRefList (sDpb* dpb);
-void updateLongTermRefList (sDpb* dpb);
-void getSmallestPoc (sDpb* dpb, int* poc, int* pos);
-
-void initDpb (cDecoder264* decoder, sDpb* dpb, int type);
-void reInitDpb (cDecoder264* decoder, sDpb* dpb, int type);
-void flushDpb (sDpb* dpb);
-int removeUnusedDpb (sDpb* dpb);
-void storePictureDpb (sDpb* dpb, sPicture* picture);
-void removeFrameDpb (sDpb* dpb, int pos);
-void freeDpb (sDpb* dpb);
 
 void initListsSliceI (cSlice* slice);
 void initListsSliceP (cSlice* slice);

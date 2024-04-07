@@ -222,7 +222,7 @@ namespace {
 
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       dpb->frameStoreRef[i]->unmarkForRef();
-    updateRefList (dpb);
+    dpb->updateRefList();
     }
   //}}}
   //{{{
@@ -380,26 +380,26 @@ namespace {
         //{{{
         case 1:
           unmarkShortTermForRef (dpb, p, tmp_drpm->diffPicNumMinus1);
-          updateRefList (dpb);
+          dpb->updateRefList();
           break;
         //}}}
         //{{{
         case 2:
           unmarkLongTermForRef (dpb, p, tmp_drpm->longTermPicNum);
-          updateLongTermRefList (dpb);
+          dpb->updateLongTermRefList ();
           break;
         //}}}
         //{{{
         case 3:
           assignLongTermFrameIndex (dpb, p, tmp_drpm->diffPicNumMinus1, tmp_drpm->longTermFrameIndex);
-          updateRefList (dpb);
-          updateLongTermRefList(dpb);
+          dpb->updateRefList ();
+          dpb->updateLongTermRefList();
           break;
         //}}}
         //{{{
         case 4:
           updateMaxLongTermFrameIndex (dpb, tmp_drpm->maxLongTermFrameIndexPlus1);
-          updateLongTermRefList (dpb);
+          dpb->updateLongTermRefList();
           break;
         //}}}
         //{{{
@@ -446,7 +446,7 @@ namespace {
         //}}}
         }
 
-      flushDpb(decoder->dpb);
+      decoder->dpb->flushDpb();
       }
     }
   //}}}
@@ -458,7 +458,7 @@ namespace {
       for (uint32_t i = 0; i < dpb->usedSize; i++) {
         if (dpb->frameStore[i]->usedReference && (!(dpb->frameStore[i]->usedLongTerm))) {
           dpb->frameStore[i]->unmarkForRef();
-          updateRefList (dpb);
+          dpb->updateRefList();
           break;
           }
         }
@@ -484,12 +484,12 @@ namespace {
       dpb->usedSize = 0;
       }
     else
-      flushDpb (dpb);
+      dpb->flushDpb();
 
     dpb->lastPictureFrameStore = NULL;
 
-    updateRefList (dpb);
-    updateLongTermRefList (dpb);
+    dpb->updateRefList();
+    dpb->updateLongTermRefList();
     dpb->lastOutputPoc = INT_MIN;
 
     if (p->longTermRefFlag) {
@@ -770,7 +770,7 @@ void fillFrameNumGap (cDecoder264* decoder, cSlice* slice) {
     picture->botPoc = slice->botPoc;
     picture->framePoc = slice->framePoc;
     picture->poc = slice->framePoc;
-    storePictureDpb (slice->dpb, picture);
+    slice->dpb->storePictureDpb (picture);
 
     decoder->preFrameNum = unusedShortTermFrameNum;
     unusedShortTermFrameNum = (unusedShortTermFrameNum + 1) % decoder->coding.maxFrameNum;

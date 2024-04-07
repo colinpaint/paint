@@ -1535,7 +1535,7 @@ void cDecoder264::error (const string& text) {
 
   cLog::log (LOGERROR, text);
   if (cDecoder264::gDecoder)
-    flushDpb (cDecoder264::gDecoder->dpb);
+    cDecoder264::gDecoder->dpb->flushDpb();
 
   exit (0);
   }
@@ -1845,7 +1845,7 @@ int cDecoder264::decodeOneFrame (sDecodedPic** decPicList) {
 void cDecoder264::finish (sDecodedPic** decPicList) {
 
   clearDecodedPics();
-  flushDpb (dpb);
+  dpb->flushDpb();
 
   annexB->reset();
 
@@ -1869,7 +1869,7 @@ void cDecoder264::close() {
     pps[i].ok = false;
     }
 
-  freeDpb (dpb);
+  dpb->freeDpb();
 
   // free output
   delete outBuffer;
@@ -2775,8 +2775,8 @@ void cDecoder264::useParameterSet (cSlice* slice) {
     initGlobalBuffers();
 
     if (!noOutputPriorPicFlag)
-      flushDpb (dpb);
-    initDpb (this, dpb, 0);
+      dpb->flushDpb();
+    dpb->initDpb (this, 0);
 
     // enable error conceal
     ercInit (this, coding.width, coding.height, 1);
@@ -3890,7 +3890,7 @@ void cDecoder264::endDecodeFrame() {
   int qp = picture->qp;
   int picNum = picture->picNum;
   int isIdr = picture->isIDR;
-  storePictureDpb (dpb, picture);
+  dpb->storePictureDpb (picture);
   picture = NULL;
 
   if (lastHasMmco5)
