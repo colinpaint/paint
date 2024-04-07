@@ -660,7 +660,7 @@ namespace {
         //}}}
         }
 
-      flushDpb(decoder->dpb);
+      flushDpb (decoder->dpb);
       }
     }
   //}}}
