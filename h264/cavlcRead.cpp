@@ -417,7 +417,7 @@ namespace {
   //}}}
 
   //{{{
-  void readCbpCoefsfromNalCavlc400 (sMacroBlock* mb) {
+  void readCbpCoefsCavlc400 (sMacroBlock* mb) {
 
     int k;
     int mb_nr = mb->mbIndexX;
@@ -546,7 +546,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefsfromNalCavlc422 (sMacroBlock* mb) {
+  void readCbpCoefsCavlc422 (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -820,7 +820,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefsfromNalCavlc444 (sMacroBlock* mb) {
+  void readCbpCoefsCavlc444 (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -996,7 +996,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefsfromNalCavlc420 (sMacroBlock* mb) {
+  void readCbpCoefsCavlc420 (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -1073,7 +1073,7 @@ namespace {
           // check for prediction from neighbours
           checkDpNeighbours (mb);
           if (mb->dplFlag) {
-            codedBlockPattern = 0;         
+            codedBlockPattern = 0;
             mb->codedBlockPattern = codedBlockPattern;
             }
           }
@@ -1636,21 +1636,21 @@ void cSlice::setReadCbpCoefCavlc() {
   switch (decoder->activeSps->chromaFormatIdc) {
     case YUV444:
       if (decoder->coding.isSeperateColourPlane == 0)
-        readCBPcoeffs = readCbpCoefsfromNalCavlc444;
+        readCBPcoeffs = readCbpCoefsCavlc444;
       else
-        readCBPcoeffs = readCbpCoefsfromNalCavlc400;
+        readCBPcoeffs = readCbpCoefsCavlc400;
       break;
 
     case YUV422:
-      readCBPcoeffs = readCbpCoefsfromNalCavlc422;
+      readCBPcoeffs = readCbpCoefsCavlc422;
       break;
 
     case YUV420:
-      readCBPcoeffs = readCbpCoefsfromNalCavlc420;
+      readCBPcoeffs = readCbpCoefsCavlc420;
       break;
 
     case YUV400:
-      readCBPcoeffs = readCbpCoefsfromNalCavlc400;
+      readCBPcoeffs = readCbpCoefsCavlc400;
       break;
 
     default:

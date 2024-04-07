@@ -44,3 +44,4 @@ void checkNeighbourCabac (sMacroBlock* mb);
 
 void setReadStoreCodedBlockPattern (sMacroBlock** mb, int chromaFormatIdc);
 void setReadCbpCoefsCabac (cSlice* slice);
+void setReadCompCabac (sMacroBlock* mb);
