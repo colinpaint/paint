@@ -90,125 +90,6 @@ namespace {
                                            pos2ctx_last8x4, pos2ctx_last4x4};
   //}}}
   //{{{
-  uint32_t unary_bin_max_decode (cCabacDecode* cabacDecode, sBiContext* context, int ctx_offset, uint32_t max_symbol) {
-
-    uint32_t symbol = cabacDecode->symbol (context );
-    if (symbol == 0 || (max_symbol == 0))
-      return symbol;
-    else {
-      uint32_t l;
-      context += ctx_offset;
-      symbol = 0;
-      do {
-        l = cabacDecode->symbol (context);
-        ++symbol;
-        }
-      while( (l != 0) && (symbol < max_symbol) );
-
-      if ((l != 0) && (symbol == max_symbol))
-        ++symbol;
-      return symbol;
-      }
-    }
-  //}}}
-  //{{{
-  uint32_t unary_bin_decode (cCabacDecode* cabacDecode, sBiContext* context, int ctx_offset) {
-
-    uint32_t symbol = cabacDecode->symbol (context);
-    if (symbol == 0)
-      return 0;
-    else {
-      uint32_t l;
-      context += ctx_offset;;
-      symbol = 0;
-      do {
-        l = cabacDecode->symbol (context);
-        ++symbol;
-        }
-      while (l != 0);
-
-      return symbol;
-      }
-    }
-  //}}}
-  //{{{
-  uint32_t exp_golomb_decode_eq_prob (cCabacDecode* cabacDecode, int k) {
-
-    uint32_t l;
-    int symbol = 0;
-    int binary_symbol = 0;
-
-    do {
-      l = cabacDecode->symbolEqProb();
-      if (l == 1) {
-        symbol += (1<<k);
-        ++k;
-        }
-      } while (l!=0);
-
-    while (k--)
-      // next binary part
-      if (cabacDecode->symbolEqProb() == 1)
-        binary_symbol |= (1 << k);
-
-    return (uint32_t)(symbol + binary_symbol);
-    }
-  //}}}
-  //{{{
-  uint32_t unary_exp_golomb_level_decode (cCabacDecode* cabacDecode, sBiContext* context) {
-
-    uint32_t symbol = cabacDecode->symbol (context );
-    if (symbol == 0)
-      return 0;
-    else {
-      uint32_t l, k = 1;
-      uint32_t exp_start = 13;
-      symbol = 0;
-      do {
-        l = cabacDecode->symbol (context);
-        ++symbol;
-        ++k;
-        } while ((l != 0) && (k != exp_start));
-
-      if (l != 0)
-        symbol += exp_golomb_decode_eq_prob (cabacDecode,0)+1;
-      return symbol;
-      }
-    }
-  //}}}
-  //{{{
-  uint32_t unary_exp_golomb_mv_decode (cCabacDecode* cabacDecode, sBiContext* context, uint32_t max_bin) {
-
-    uint32_t symbol = cabacDecode->symbol (context );
-
-    if (symbol == 0)
-      return 0;
-
-    else {
-      uint32_t exp_start = 8;
-      uint32_t l,k = 1;
-      uint32_t bin = 1;
-      symbol = 0;
-      ++context;
-      do {
-        l = cabacDecode->symbol (context);
-        if ((++bin) == 2)
-          context++;
-        if (bin == max_bin)
-          ++context;
-        ++symbol;
-        ++k;
-        } while ((l != 0) && (k != exp_start));
-
-      if (l != 0)
-        symbol += exp_golomb_decode_eq_prob (cabacDecode, 3) + 1;
-
-      return symbol;
-      }
-    }
-  //}}}
-
-  //{{{
   int readStoreCbpBlockBit444 (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type) {
 
     cDecoder264* decoder = mb->decoder;
@@ -753,7 +634,7 @@ namespace {
         *cof += cabacDecode->symbol (oneContexts + c1);
 
         if (*cof == 2) {
-          *cof += unary_exp_golomb_level_decode (cabacDecode, absContexts + c2);
+          *cof += cabacDecode->unary_exp_golomb_level_decode (absContexts + c2);
           c2 = imin (++c2, max_type);
           c1 = 0;
           }
@@ -1041,7 +922,7 @@ void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDec
 
   if (actSym != 0) {
     a = 5 * k;
-    actSym = unary_exp_golomb_mv_decode (cabacDecode, ctx->mvResContexts[1] + a, 3) + 1;
+    actSym = cabacDecode->unaryExpGolombMv (ctx->mvResContexts[1] + a, 3) + 1;
 
     if (cabacDecode->symbolEqProb())
       actSym = -actSym;
@@ -1099,7 +980,7 @@ void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* ca
   actSym = cabacDecode->symbol (&ctx->mvResContexts[0][actContext] );
   if (actSym != 0) {
     actContext = 5 * k;
-    actSym = unary_exp_golomb_mv_decode (cabacDecode, ctx->mvResContexts[1] + actContext, 3) + 1;
+    actSym = cabacDecode->unaryExpGolombMv ( ctx->mvResContexts[1] + actContext, 3) + 1;
     if (cabacDecode->symbolEqProb())
       actSym = -actSym;
     }
@@ -1569,7 +1450,7 @@ void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* caba
 
   if (actSym != 0) {
     actContext = 4;
-    actSym = unary_bin_decode (cabacDecode,ctx->refNoContexts[addctx] + actContext,1);
+    actSym = cabacDecode->unary_bin_decode (ctx->refNoContexts[addctx] + actContext,1);
     ++actSym;
     }
 
@@ -1588,7 +1469,7 @@ void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
 
   if (actSym != 0) {
     actContext = 2;
-    actSym = unary_bin_decode (cabacDecode, context->deltaQpContexts + actContext, 1);
+    actSym = cabacDecode->unary_bin_decode ( context->deltaQpContexts + actContext, 1);
     ++actSym;
     *dquant = (actSym + 1) >> 1;
     if ((actSym & 0x01) == 0) // lsb is signed bit
@@ -1717,7 +1598,7 @@ void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* ca
   *actSym = cabacDecode->symbol (context->ciprContexts + actContext );
 
   if (*actSym != 0)
-    *actSym = unary_bin_max_decode (cabacDecode, context->ciprContexts + 3, 0, 1) + 1;
+    *actSym = cabacDecode->unary_bin_max_decode ( context->ciprContexts + 3, 0, 1) + 1;
   }
 //}}}
 

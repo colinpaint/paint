@@ -227,6 +227,125 @@ uint32_t cCabacDecode::final() {
   }
 //}}}
 
+//{{{
+uint32_t cCabacDecode::unary_bin_max_decode (sBiContext* context, int ctx_offset, uint32_t max_symbol) {
+
+  uint32_t symbol1 = symbol (context);
+
+  if (symbol1 == 0 || (max_symbol == 0))
+    return symbol1;
+  else {
+    uint32_t l;
+    context += ctx_offset;
+    symbol1 = 0;
+    do {
+      l = symbol (context);
+      ++symbol1;
+      }
+    while( (l != 0) && (symbol1 < max_symbol) );
+    if ((l != 0) && (symbol1 == max_symbol))
+      ++symbol1;
+
+    return symbol1;
+    }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::unary_bin_decode (sBiContext* context, int ctx_offset) {
+
+  uint32_t symbol1 = symbol (context);
+
+  if (symbol1 == 0)
+    return 0;
+  else {
+    uint32_t l;
+    context += ctx_offset;;
+    symbol1 = 0;
+    do {
+      l = symbol (context);
+      ++symbol1;
+      }
+    while (l != 0);
+
+    return symbol1;
+    }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::exp_golomb_decode_eq_prob (int k) {
+
+  uint32_t l;
+  int binary_symbol = 0;
+  int symbol = 0;
+
+  do {
+    l = symbolEqProb();
+    if (l == 1) {
+      symbol += (1<<k);
+      ++k;
+      }
+    } while (l!=0);
+
+  while (k--)
+    // next binary part
+    if (symbolEqProb() == 1)
+      binary_symbol |= (1 << k);
+
+  return (uint32_t)(symbol + binary_symbol);
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::unary_exp_golomb_level_decode (sBiContext* context) {
+
+  uint32_t symbol1 = symbol (context );
+  if (symbol1 == 0)
+    return 0;
+  else {
+    uint32_t l, k = 1;
+    uint32_t exp_start = 13;
+    symbol1 = 0;
+    do {
+      l = symbol (context);
+      ++symbol1;
+      ++k;
+      } while ((l != 0) && (k != exp_start));
+
+    if (l != 0)
+      symbol1 += exp_golomb_decode_eq_prob (0)+1;
+    return symbol1;
+    }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::unaryExpGolombMv (sBiContext* context, uint32_t max_bin) {
+
+  uint32_t symbol1 = symbol (context );
+  if (symbol1 == 0)
+    return 0;
+  else {
+    uint32_t exp_start = 8;
+    uint32_t l,k = 1;
+    uint32_t bin = 1;
+    symbol1 = 0;
+    ++context;
+    do {
+      l = symbol (context);
+      if ((++bin) == 2)
+        context++;
+      if (bin == max_bin)
+        ++context;
+      ++symbol1;
+      ++k;
+      } while ((l != 0) && (k != exp_start));
+
+    if (l != 0)
+      symbol1 += exp_golomb_decode_eq_prob (3) + 1;
+
+    return symbol1;
+    }
+  }
+//}}}
+
 // private
 //{{{
 uint32_t cCabacDecode::getByte() {
