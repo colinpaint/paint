@@ -150,6 +150,41 @@ namespace {
       }
     }
   //}}}
+
+  //{{{
+  void reorderShortTerm (cSlice* slice, int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
+
+    sPicture** refPicListX = slice->listX[curList];
+    sPicture* picLX = getShortTermPic (slice, slice->dpb, picNumLX);
+
+    for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
+      refPicListX[cIdx] = refPicListX[cIdx - 1];
+    refPicListX[(*refIdxLX)++] = picLX;
+
+    int nIdx = *refIdxLX;
+    for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
+      if (refPicListX[cIdx])
+        if ((refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->picNum != picNumLX))
+          refPicListX[nIdx++] = refPicListX[cIdx];
+    }
+  //}}}
+  //{{{
+  void reorderLongTerm (cSlice* slice, sPicture** refPicListX,
+                        int numRefIndexIXactiveMinus1, int LongTermPicNum, int *refIdxLX) {
+
+    sPicture* picLX = slice->dpb->getLongTermPic (slice, LongTermPicNum);
+
+    for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
+      refPicListX[cIdx] = refPicListX[cIdx - 1];
+    refPicListX[(*refIdxLX)++] = picLX;
+
+    int nIdx = *refIdxLX;
+    for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
+      if (refPicListX[cIdx])
+        if ((!refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->longTermPicNum != LongTermPicNum))
+          refPicListX[nIdx++] = refPicListX[cIdx];
+    }
+  //}}}
   }
 
 //{{{
@@ -434,6 +469,62 @@ void cSlice::freeRefPicListReorderBuffer() {
   modPicNumsIdc[LIST_1] = NULL;
   absDiffPicNumMinus1[LIST_1] = NULL;
   longTermPicIndex[LIST_1] = NULL;
+  }
+//}}}
+
+//{{{
+void cSlice::reorderRefPicList (int curList) {
+
+  int* curModPicNumsIdc = modPicNumsIdc[curList];
+  int* curAbsDiffPicNumMinus1 = absDiffPicNumMinus1[curList];
+  int* curLongTermPicIndex = longTermPicIndex[curList];
+  int numRefIndexIXactiveMinus1 = numRefIndexActive[curList] - 1;
+
+  int maxPicNum;
+  int currPicNum;
+  if (picStructure == eFrame) {
+    maxPicNum = decoder->coding.maxFrameNum;
+    currPicNum = frameNum;
+    }
+  else {
+    maxPicNum = 2 * decoder->coding.maxFrameNum;
+    currPicNum = 2 * frameNum + 1;
+    }
+
+  int picNumLX;
+  int picNumLXNoWrap;
+  int picNumLXPred = currPicNum;
+  int refIdxLX = 0;
+  for (int i = 0; curModPicNumsIdc[i] != 3; i++) {
+    if (curModPicNumsIdc[i] > 3)
+      cDecoder264::error ("Invalid modPicNumsIdc command");
+    if (curModPicNumsIdc[i] < 2) {
+      if (curModPicNumsIdc[i] == 0) {
+        if (picNumLXPred - (curAbsDiffPicNumMinus1[i]+1) < 0)
+          picNumLXNoWrap = picNumLXPred - (curAbsDiffPicNumMinus1[i]+1) + maxPicNum;
+        else
+          picNumLXNoWrap = picNumLXPred - (curAbsDiffPicNumMinus1[i]+1);
+        }
+      else {
+        if (picNumLXPred + curAbsDiffPicNumMinus1[i]+1 >= maxPicNum)
+          picNumLXNoWrap = picNumLXPred + (curAbsDiffPicNumMinus1[i]+1) - maxPicNum;
+        else
+          picNumLXNoWrap = picNumLXPred + (curAbsDiffPicNumMinus1[i]+1);
+        }
+
+      picNumLXPred = picNumLXNoWrap;
+      if (picNumLXNoWrap > currPicNum)
+        picNumLX = picNumLXNoWrap - maxPicNum;
+      else
+        picNumLX = picNumLXNoWrap;
+
+      reorderShortTerm (this, curList, numRefIndexIXactiveMinus1, picNumLX, &refIdxLX);
+      }
+    else
+      reorderLongTerm (this, listX[curList], numRefIndexIXactiveMinus1, curLongTermPicIndex[i], &refIdxLX);
+    }
+
+  listXsize[curList] = (char)(numRefIndexIXactiveMinus1 + 1);
   }
 //}}}
 

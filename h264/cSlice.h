@@ -200,6 +200,7 @@ public:
   void startMacroBlockDecode (sMacroBlock** mb);
   bool endMacroBlockDecode (int eos_bit);
 
+  void reorderRefPicList (int curList);
   //{{{  vars
   cDecoder264* decoder;
 
@@ -345,7 +346,6 @@ public:
   char*  intraBlock;
   char chromaVectorAdjust[6][32];
   //}}}
-
   //{{{  c style virtual functionss
   int  (*nalStartCode) (cSlice*, int);
   void (*initLists) (cSlice*);

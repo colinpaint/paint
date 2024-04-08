@@ -2706,7 +2706,7 @@ void cDecoder264::reorderLists (cSlice* slice) {
 
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
     if (slice->refPicReorderFlag[LIST_0])
-      reorderRefPicList (slice, LIST_0);
+      slice->reorderRefPicList (LIST_0);
     if (noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
       cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
                  slice->numRefIndexActive[LIST_0]-1, nonConformingStream ? "conform":"");
@@ -2716,7 +2716,7 @@ void cDecoder264::reorderLists (cSlice* slice) {
 
   if (slice->sliceType == eSliceB) {
     if (slice->refPicReorderFlag[LIST_1])
-      reorderRefPicList (slice, LIST_1);
+      slice->reorderRefPicList (LIST_1);
     if (noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
        cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
               slice->numRefIndexActive[LIST_0] - 1, nonConformingStream ? "conform" : "");

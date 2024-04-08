@@ -20,7 +20,6 @@ namespace {
     return currPicNum - (diffPicNumMinus1 + 1);
     }
   //}}}
-
   //{{{
   int getDpbSize (cDecoder264* decoder, cSps* activeSps) {
 
@@ -219,53 +218,6 @@ namespace {
           }
         }
       }
-    }
-  //}}}
-  //{{{
-  void reorderShortTerm (cSlice* slice, int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
-
-    sPicture** refPicListX = slice->listX[curList];
-    sPicture* picLX = getShortTermPic (slice, slice->dpb, picNumLX);
-
-    for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
-      refPicListX[cIdx] = refPicListX[cIdx - 1];
-    refPicListX[(*refIdxLX)++] = picLX;
-
-    int nIdx = *refIdxLX;
-    for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
-      if (refPicListX[cIdx])
-        if ((refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->picNum != picNumLX))
-          refPicListX[nIdx++] = refPicListX[cIdx];
-    }
-  //}}}
-  //{{{
-  void reorderLongTerm (cSlice* slice, sPicture** refPicListX,
-                        int numRefIndexIXactiveMinus1, int LongTermPicNum, int *refIdxLX) {
-
-    sPicture* picLX = slice->dpb->getLongTermPic (slice, LongTermPicNum);
-
-    for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
-      refPicListX[cIdx] = refPicListX[cIdx - 1];
-    refPicListX[(*refIdxLX)++] = picLX;
-
-    int nIdx = *refIdxLX;
-    for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
-      if (refPicListX[cIdx])
-        if ((!refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->longTermPicNum != LongTermPicNum))
-          refPicListX[nIdx++] = refPicListX[cIdx];
-    }
-  //}}}
-
-  //{{{
-  void allocPicMotion (sPicMotionOld* motion, int sizeY, int sizeX) {
-    motion->mbField = (uint8_t*)calloc (sizeY * sizeX, sizeof(uint8_t));
-    }
-  //}}}
-  //{{{
-  void freePicMotion (sPicMotionOld* motion) {
-
-    free (motion->mbField);
-    motion->mbField = NULL;
     }
   //}}}
   }
@@ -637,7 +589,7 @@ sPicture* cDpb::getLastPicRefFromDpb() {
 
   int usedSize = usedSize - 1;
   for (int i = usedSize; i >= 0; i--)
-    if (frameStore[i]->isUsed == 3) 
+    if (frameStore[i]->isUsed == 3)
       if (frameStore[i]->frame->usedForReference && !frameStore[i]->frame->usedLongTerm)
         return frameStore[i]->frame;
 
@@ -1178,64 +1130,6 @@ void cDpb::assignLongTermFrameIndex (sPicture* p, int diffPicNumMinus1, int long
 //}}}
 
 // slice
-//{{{
-void reorderRefPicList (cSlice* slice, int curList) {
-
-  cDecoder264* decoder = slice->decoder;
-
-  int* modPicNumsIdc = slice->modPicNumsIdc[curList];
-  int* absDiffPicNumMinus1 = slice->absDiffPicNumMinus1[curList];
-  int* longTermPicIndex = slice->longTermPicIndex[curList];
-  int numRefIndexIXactiveMinus1 = slice->numRefIndexActive[curList] - 1;
-
-  int maxPicNum;
-  int currPicNum;
-  if (slice->picStructure == eFrame) {
-    maxPicNum = decoder->coding.maxFrameNum;
-    currPicNum = slice->frameNum;
-    }
-  else {
-    maxPicNum = 2 * decoder->coding.maxFrameNum;
-    currPicNum = 2 * slice->frameNum + 1;
-    }
-
-  int picNumLX;
-  int picNumLXNoWrap;
-  int picNumLXPred = currPicNum;
-  int refIdxLX = 0;
-  for (int i = 0; modPicNumsIdc[i] != 3; i++) {
-    if (modPicNumsIdc[i] > 3)
-      cDecoder264::error ("Invalid modPicNumsIdc command");
-    if (modPicNumsIdc[i] < 2) {
-      if (modPicNumsIdc[i] == 0) {
-        if (picNumLXPred - (absDiffPicNumMinus1[i]+1) < 0)
-          picNumLXNoWrap = picNumLXPred - (absDiffPicNumMinus1[i]+1) + maxPicNum;
-        else
-          picNumLXNoWrap = picNumLXPred - (absDiffPicNumMinus1[i]+1);
-        }
-      else {
-        if (picNumLXPred + absDiffPicNumMinus1[i]+1 >= maxPicNum)
-          picNumLXNoWrap = picNumLXPred + (absDiffPicNumMinus1[i]+1) - maxPicNum;
-        else
-          picNumLXNoWrap = picNumLXPred + (absDiffPicNumMinus1[i]+1);
-        }
-
-      picNumLXPred = picNumLXNoWrap;
-      if (picNumLXNoWrap > currPicNum)
-        picNumLX = picNumLXNoWrap - maxPicNum;
-      else
-        picNumLX = picNumLXNoWrap;
-
-      reorderShortTerm (slice, curList, numRefIndexIXactiveMinus1, picNumLX, &refIdxLX);
-      }
-    else
-      reorderLongTerm (slice, slice->listX[curList], numRefIndexIXactiveMinus1, longTermPicIndex[i], &refIdxLX);
-    }
-
-  slice->listXsize[curList] = (char)(numRefIndexIXactiveMinus1 + 1);
-  }
-//}}}
-
 //{{{
 void updatePicNum (cSlice* slice) {
 
