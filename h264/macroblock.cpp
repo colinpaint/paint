@@ -5235,7 +5235,7 @@ void cSlice::setSliceReadFunctions() {
   switch (decoder->activePps->entropyCoding) {
     //{{{
     case eCabac:
-      setReadCbpCoefsCabac();
+      setReadCbpCabac();
       break;
     //}}}
     //{{{
