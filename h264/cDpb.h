@@ -21,25 +21,23 @@ public:
   sPicture* getLongTermPic (cSlice* slice, int longtermPicNum);
   sPicture* getLastPicRefFromDpb();
 
-  //{{{  vars
+  //  vars
   cDecoder264*  decoder;
 
+  int           numRefFrames;
   cFrameStore** frameStore;
   cFrameStore** frameStoreRef;
   cFrameStore** frameStoreLongTermRef;
+  cFrameStore*  lastPictureFrameStore;
 
   uint32_t      size;
   uint32_t      usedSize;
   uint32_t      refFramesInBuffer;
   uint32_t      longTermRefFramesInBuffer;
+  int           maxLongTermPicIndex;
 
   int           lastOutputPoc;
-  int           maxLongTermPicIndex;
   int           initDone;
-  int           numRefFrames;
-
-  cFrameStore*  lastPictureFrameStore;
-  //}}}
 
 private:
   void dumpDpb();
@@ -54,15 +52,15 @@ private:
   void updateMaxLongTermFrameIndex (int maxLongTermFrameIndexPlus1);
 
   void unmarkLongTermFrameForRefByFrameIndex (int longTermFrameIndex);
-  void unmarkLongTermForRef (sPicture* p, int longTermPicNum);
-  void unmarkShortTermForRef (sPicture* p, int diffPicNumMinus1);
+  void unmarkLongTermForRef (sPicture* picture, int longTermPicNum);
+  void unmarkShortTermForRef (sPicture* picture, int diffPicNumMinus1);
   void unmarkAllLongTermForRef();
   void unmarkLongTermFieldRefFrameIndex (ePicStructure picStructure, int longTermFrameIndex,
                                          int mark_current, uint32_t curr_frame_num, int curr_pic_num);
   void unmarkAllShortTermForRef();
 
-  void markPicLongTerm (sPicture* p, int longTermFrameIndex, int picNumX);
-  void markCurPicLongTerm (sPicture* p, int longTermFrameIndex);
+  void markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNumX);
+  void markCurPicLongTerm (sPicture* picture, int longTermFrameIndex);
 
-  void assignLongTermFrameIndex (sPicture* p, int diffPicNumMinus1, int longTermFrameIndex);
+  void assignLongTermFrameIndex (sPicture* picture, int diffPicNumMinus1, int longTermFrameIndex);
   };
