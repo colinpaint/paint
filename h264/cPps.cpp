@@ -161,7 +161,7 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
   if (decoder->pps[pps.id].ok)
     if (!pps.isEqual (decoder->pps[pps.id]))
-      printf ("-----> readNaluPps new pps id:%d\n", pps.id);
+      cLog::log (LOGINFO, fmt::format ("-----> cPps::readNalu new pps id:{}", pps.id));
 
   // free any sliceGroupId calloc
   if (decoder->pps[pps.id].ok && decoder->pps[pps.id].sliceGroupId)

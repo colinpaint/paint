@@ -3,6 +3,10 @@
 #include "memory.h"
 
 #include "nalu.h"
+
+#include "../common/cLog.h"
+
+using namespace std;
 //}}}
 
 namespace {
@@ -100,7 +104,7 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 
   // because it is not a very serious problem, we do not exit here
   if (CheckZeroByte && startCodeLen == 3)
-    printf ("warning: zero_byte shall exist\n");
+    cLog::log (LOGERROR, "warning: zero_byte shall exist");
    }
 //}}}
 //{{{
@@ -134,7 +138,7 @@ void cNalu::checkZeroByteNonVCL (cDecoder264* decoder) {
     CheckZeroByte = 1;
 
   if (CheckZeroByte && startCodeLen == 3)
-    printf ("Warning: zero_byte should exist\n");
+    cLog::log (LOGERROR, "Warning: zero_byte should exist");
     //because it is not a very serious problem, we do not exit here
   }
 //}}}
@@ -166,43 +170,44 @@ int cNalu::readNalu (cDecoder264* decoder) {
 //{{{
 void cNalu::debug() {
 
+  string nalTypeString;
   switch (unitType) {
     case NALU_TYPE_IDR:
-      printf ("IDR");
+      nalTypeString = "IDR";
       break;
     case NALU_TYPE_SLICE:
-      printf ("SLC");
+      nalTypeString = "SLC";
       break;
     case NALU_TYPE_SPS:
-      printf ("SPS");
+      nalTypeString = "SPS";
       break;
     case NALU_TYPE_PPS:
-      printf ("PPS");
+      nalTypeString = "PPS";
       break;
     case NALU_TYPE_SEI:
-      printf ("SEI");
+      nalTypeString = "SEI";
       break;
     case NALU_TYPE_DPA:
-      printf ("DPA");
+      nalTypeString = "DPA";
       break;
     case NALU_TYPE_DPB:
-      printf ("DPB");
+      nalTypeString = "DPB";
       break;
     case NALU_TYPE_DPC:
-      printf ("DPC");
+      nalTypeString = "DPC";
       break;
     case NALU_TYPE_AUD:
-      printf ("AUD");
+      nalTypeString = "AUD";
       break;
     case NALU_TYPE_FILL:
-      printf ("FIL");
+      nalTypeString = "FIL";
       break;
     default:
       break;
     }
 
-  printf (" %c:%d:%d:%d:%d\n",
-          startCodeLen == 4 ? 'l':'s', forbiddenBit, refId, unitType, len);
+  cLog::log (LOGINFO, fmt::format ("{} {}:{}:{}:{}:{}",
+             nalTypeString, startCodeLen == 4 ? 'l':'s', forbiddenBit, (int)refId, (int)unitType, len));
 
   }
 //}}}

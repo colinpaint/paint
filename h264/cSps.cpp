@@ -97,7 +97,7 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   freeDataPartitions (dataPartition, 1);
 
   if (!decoder->sps[sps.id].isEqual (sps))
-    cLog::log (LOGINFO, fmt::format ("-----> readNaluSps new sps id:%d", sps.id));
+    cLog::log (LOGINFO, fmt::format ("-----> cSps::readNalu new sps id:%d", sps.id));
 
   memcpy (&decoder->sps[sps.id], &sps, sizeof(cSps));
 
