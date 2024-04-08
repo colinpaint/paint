@@ -74,13 +74,13 @@ int ercConcealIntraFrame (cDecoder264* decoder, frame* recfr,
 int ercConcealInterFrame (frame *recfr, sObjectBuffer* object_list,
                           int picSizeX, int picSizeY, sErcVariables *errorVar, int chromaFormatIdc );
 
-struct sConcealNode* init_node (sPicture* , int);
-void init_lists_for_non_reference_loss (cDpb* dpb, int , ePicStructure );
+struct sConcealNode* initNode (sPicture* , int);
+void initListsForNonRefLoss (cDpb* dpb, int , ePicStructure );
 void concealLostFrames (cDpb* dpb, cSlice *slice);
-void conceal_non_ref_pics (cDpb* dpb, int diff);
-void sliding_window_poc_management (cDpb* dpb, sPicture* p);
-void write_lost_non_ref_pic (cDpb* dpb, int poc);
-void write_lost_ref_after_idr (cDpb* dpb, int pos);
+void concealNonRefPics (cDpb* dpb, int diff);
+void slidingWindowPocManagement (cDpb* dpb, sPicture* p);
+void writeLostNonRefPic (cDpb* dpb, int poc);
+void writeLostRefAfterIdr (cDpb* dpb, int pos);
 
 void ercInit (cDecoder264* decoder, int pic_sizex, int pic_sizey, int flag);
 sErcVariables* ercOpen();

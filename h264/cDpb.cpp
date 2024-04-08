@@ -22,52 +22,6 @@ namespace {
   //}}}
 
   //{{{
-  int outputDpbFrame (cDpb* dpb) {
-
-    // diagnostics
-    if (dpb->usedSize < 1)
-      cDecoder264::error ("Cannot output frame, DPB empty");
-
-    // find smallest POC
-    int poc;
-    int pos;
-    dpb->getSmallestPoc (&poc, &pos);
-    if (pos == -1)
-      return 0;
-
-    // picture error conceal
-    cDecoder264* decoder = dpb->decoder;
-    if (decoder->concealMode != 0) {
-      if (dpb->lastOutputPoc == 0)
-        write_lost_ref_after_idr (dpb, pos);
-      write_lost_non_ref_pic (dpb, poc);
-      }
-
-    decoder->writeStoredFrame (dpb->frameStore[pos]);
-
-    // picture error conceal
-    if(decoder->concealMode == 0)
-      if (dpb->lastOutputPoc >= poc)
-        cDecoder264::error ("output POC must be in ascending order");
-
-    dpb->lastOutputPoc = poc;
-
-    // free frame store and move empty store to end of buffer
-    if (!dpb->frameStore[pos]->isReference())
-      dpb->removeFrameDpb (pos);
-
-    return 1;
-    }
-  //}}}
-  //{{{
-  void checkNumDpbFrames (cDpb* dpb) {
-
-    if ((int)(dpb->longTermRefFramesInBuffer + dpb->refFramesInBuffer) > imax (1, dpb->numRefFrames))
-      cDecoder264::error ("Max. number of reference frames exceeded. Invalid stream");
-    }
-  //}}}
-
-  //{{{
   int getDpbSize (cDecoder264* decoder, cSps* activeSps) {
 
     int pic_size_mb = (activeSps->picWidthMbsMinus1 + 1) * (activeSps->picHeightMapUnitsMinus1 + 1) * (activeSps->frameMbOnly?1:2);
@@ -442,7 +396,7 @@ void cDpb::flushDpb() {
     return;
 
   if (decoder->concealMode != 0)
-    conceal_non_ref_pics (this, 0);
+    concealNonRefPics (this, 0);
 
   // mark all frames unused
   for (uint32_t i = 0; i < usedSize; i++)
@@ -451,7 +405,7 @@ void cDpb::flushDpb() {
   while (removeUnusedDpb());
 
   // output frames in POC order
-  while (usedSize && outputDpbFrame (this));
+  while (usedSize && outputDpbFrame());
 
   lastOutputPoc = INT_MIN;
   }
@@ -525,12 +479,12 @@ void cDpb::storePictureDpb (sPicture* picture) {
   if (usedSize == size) {
     // picture error conceal
     if (decoder->concealMode != 0)
-      conceal_non_ref_pics (this, 2);
+      concealNonRefPics (this, 2);
 
     removeUnusedDpb();
 
     if (decoder->concealMode != 0)
-      sliding_window_poc_management (this, picture);
+      slidingWindowPocManagement (this, picture);
     }
 
   // then output frames until one can be removed
@@ -545,7 +499,7 @@ void cDpb::storePictureDpb (sPicture* picture) {
       }
 
     // flush a frame
-    outputDpbFrame (this);
+    outputDpbFrame();
     }
 
   // check for duplicate frame number in int16_t term reference buffer
@@ -573,7 +527,7 @@ void cDpb::storePictureDpb (sPicture* picture) {
 
   updateRefList();
   updateLongTermRefList();
-  checkNumDpbFrames (this);
+  checkNumDpbFrames();
   dumpDpb();
   }
 //}}}
@@ -678,8 +632,64 @@ sPicture* cDpb::getLongTermPic (cSlice* slice, int longtermPicNum) {
   return NULL;
   }
 //}}}
+//{{{
+sPicture* cDpb::getLastPicRefFromDpb() {
+
+  int usedSize = usedSize - 1;
+  for (int i = usedSize; i >= 0; i--)
+    if (frameStore[i]->isUsed == 3) 
+      if (frameStore[i]->frame->usedForReference && !frameStore[i]->frame->usedLongTerm)
+        return frameStore[i]->frame;
+
+  return NULL;
+  }
+//}}}
 
 // private
+//{{{
+int cDpb::outputDpbFrame() {
+
+  // diagnostics
+  if (usedSize < 1)
+    cDecoder264::error ("Cannot output frame, DPB empty");
+
+  // find smallest POC
+  int poc;
+  int pos;
+  getSmallestPoc (&poc, &pos);
+  if (pos == -1)
+    return 0;
+
+  // picture error conceal
+  if (decoder->concealMode != 0) {
+    if (lastOutputPoc == 0)
+      writeLostRefAfterIdr (this, pos);
+    writeLostNonRefPic (this, poc);
+    }
+
+  decoder->writeStoredFrame (frameStore[pos]);
+
+  // picture error conceal
+  if(decoder->concealMode == 0)
+    if (lastOutputPoc >= poc)
+      cDecoder264::error ("output POC must be in ascending order");
+
+  lastOutputPoc = poc;
+
+  // free frame store and move empty store to end of buffer
+  if (!frameStore[pos]->isReference())
+    removeFrameDpb (pos);
+
+  return 1;
+  }
+//}}}
+//{{{
+void cDpb::checkNumDpbFrames() {
+
+  if ((int)(longTermRefFramesInBuffer + refFramesInBuffer) > imax (1, numRefFrames))
+    cDecoder264::error ("Max. number of reference frames exceeded. Invalid stream");
+  }
+//}}}
 //{{{
 void cDpb::dumpDpb() {
 
@@ -771,7 +781,7 @@ void cDpb::adaptiveMemoryManagement (sPicture* picture) {
       //{{{
       case 6:
         markCurPicLongTerm (picture, tmp_drpm->longTermFrameIndex);
-        checkNumDpbFrames (this);
+        checkNumDpbFrames();
         break;
       //}}}
       //{{{

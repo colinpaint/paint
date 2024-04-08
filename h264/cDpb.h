@@ -18,6 +18,7 @@ public:
   void freeDpb();
 
   sPicture* getLongTermPic (cSlice* slice, int longtermPicNum);
+  sPicture* getLastPicRefFromDpb();
 
   // vars
   cDecoder264*  decoder;
@@ -39,6 +40,8 @@ public:
   cFrameStore*  lastPictureFrameStore;
 
 private:
+  int outputDpbFrame();
+  void checkNumDpbFrames();
   void dumpDpb();
 
   void adaptiveMemoryManagement (sPicture* picture);
