@@ -1228,7 +1228,50 @@ namespace {
   }
 
 //{{{
-void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j, 
+void sMacroBlock::setReadCompCavlc() {
+
+  if (isLossless) {
+    readCompCoef4x4cavlc = readCompCoef4x4lossless;
+    readCompCoef8x8cavlc = readCompCoef8x8lossless;
+    }
+  else {
+    readCompCoef4x4cavlc = readCompCoef4x4;
+    readCompCoef8x8cavlc = readCompCoef8x8;
+    }
+  }
+//}}}
+//{{{
+void cSlice::setReadCbpCavlc() {
+
+  switch (decoder->activeSps->chromaFormatIdc) {
+    case YUV444:
+      if (decoder->coding.isSeperateColourPlane == 0)
+        readCBPcoeffs = readCbpCoefs444;
+      else
+        readCBPcoeffs = readCbpCoefs400;
+      break;
+
+    case YUV422:
+      readCBPcoeffs = readCbpCoefs422;
+      break;
+
+    case YUV420:
+      readCBPcoeffs = readCbpCoefs420;
+      break;
+
+    case YUV400:
+      readCBPcoeffs = readCbpCoefs400;
+      break;
+
+    default:
+      readCBPcoeffs = NULL;
+      break;
+    }
+  }
+//}}}
+
+//{{{
+void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
                           int levarr[16], int runarr[16], int* number_coefficients) {
 
   static const int incVlc[] = {0, 3, 6, 12, 24, 48, 32768};    // maximum vlc = 6
@@ -1448,7 +1491,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
   }
 //}}}
 //{{{
-void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j, 
+void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
                              int levarr[16], int runarr[16], int* number_coefficients) {
 
   cSlice* slice = mb->slice;
@@ -1613,49 +1656,6 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
       }
     //}}}
     runarr[i] = zerosleft;
-    }
-  }
-//}}}
-
-//{{{
-void sMacroBlock::setReadCompCavlc() {
-
-  if (isLossless) {
-    readCompCoef4x4cavlc = readCompCoef4x4lossless;
-    readCompCoef8x8cavlc = readCompCoef8x8lossless;
-    }
-  else {
-    readCompCoef4x4cavlc = readCompCoef4x4;
-    readCompCoef8x8cavlc = readCompCoef8x8;
-    }
-  }
-//}}}
-//{{{
-void cSlice::setReadCbpCavlc() {
-
-  switch (decoder->activeSps->chromaFormatIdc) {
-    case YUV444:
-      if (decoder->coding.isSeperateColourPlane == 0)
-        readCBPcoeffs = readCbpCoefs444;
-      else
-        readCBPcoeffs = readCbpCoefs400;
-      break;
-
-    case YUV422:
-      readCBPcoeffs = readCbpCoefs422;
-      break;
-
-    case YUV420:
-      readCBPcoeffs = readCbpCoefs420;
-      break;
-
-    case YUV400:
-      readCBPcoeffs = readCbpCoefs400;
-      break;
-
-    default:
-      readCBPcoeffs = NULL;
-      break;
     }
   }
 //}}}

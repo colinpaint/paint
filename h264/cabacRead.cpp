@@ -1325,7 +1325,6 @@ void sMacroBlock::setReadCompCabac() {
     }
   }
 //}}}
-
 //{{{
 void cSlice::setReadCbpCoefsCabac() {
 
