@@ -14,6 +14,26 @@ using namespace std;
 
 namespace {
   //{{{
+  int quant_org[16] = {
+  16,16,16,16,
+  16,16,16,16,
+  16,16,16,16,
+  16,16,16,16
+  };
+  //}}}
+  //{{{
+  int quant8_org[64] = {
+  16,16,16,16,16,16,16,16,
+  16,16,16,16,16,16,16,16,
+  16,16,16,16,16,16,16,16,
+  16,16,16,16,16,16,16,16,
+  16,16,16,16,16,16,16,16,
+  16,16,16,16,16,16,16,16,
+  16,16,16,16,16,16,16,16,
+  16,16,16,16,16,16,16,16
+  };
+  //}}}
+  //{{{
   int quant_intra_default[16] = {
      6,13,20,28,
     13,20,28,32,
@@ -51,26 +71,6 @@ namespace {
   21,22,24,25,27,28,30,32,
   22,24,25,27,28,30,32,33,
   24,25,27,28,30,32,33,35
-  };
-  //}}}
-  //{{{
-  int quant_org[16] = {
-  16,16,16,16,
-  16,16,16,16,
-  16,16,16,16,
-  16,16,16,16
-  };
-  //}}}
-  //{{{
-  int quant8_org[64] = {
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16
   };
   //}}}
 
@@ -293,7 +293,6 @@ void cSlice::setQuantParams() {
     calculateQuant8x8Param();
   }
 //}}}
-
 //{{{
 void cSlice::fillWeightedPredParam() {
 
@@ -437,6 +436,68 @@ void cSlice::copyPoc (cSlice* toSlice) {
   toSlice->framePoc = framePoc;
   }
 //}}}
+//{{{
+void cSlice::updatePicNum() {
+
+  int addTop = 0;
+  int addBot = 0;
+  int maxFrameNum = 1 << (decoder->activeSps->log2maxFrameNumMinus4 + 4);
+
+  if (picStructure == eFrame) {
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
+      if (dpb->frameStoreRef[i]->isUsed == 3 ) {
+        if (dpb->frameStoreRef[i]->frame->usedForReference &&
+            !dpb->frameStoreRef[i]->frame->usedLongTerm) {
+          if (dpb->frameStoreRef[i]->frameNum > frameNum )
+            dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
+          else
+            dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum;
+          dpb->frameStoreRef[i]->frame->picNum = dpb->frameStoreRef[i]->frameNumWrap;
+          }
+        }
+      }
+
+    // update longTermPicNum
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+      if (dpb->frameStoreLongTermRef[i]->isUsed == 3) {
+        if (dpb->frameStoreLongTermRef[i]->frame->usedLongTerm)
+          dpb->frameStoreLongTermRef[i]->frame->longTermPicNum = dpb->frameStoreLongTermRef[i]->frame->longTermFrameIndex;
+        }
+      }
+    }
+  else {
+    if (picStructure == eTopField) {
+      addTop = 1;
+      addBot = 0;
+      }
+    else {
+      addTop = 0;
+      addBot = 1;
+      }
+
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
+      if (dpb->frameStoreRef[i]->usedReference) {
+        if (dpb->frameStoreRef[i]->frameNum > frameNum )
+          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
+        else
+          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum;
+        if (dpb->frameStoreRef[i]->usedReference & 1)
+          dpb->frameStoreRef[i]->topField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addTop;
+        if (dpb->frameStoreRef[i]->usedReference & 2)
+          dpb->frameStoreRef[i]->botField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addBot;
+        }
+      }
+
+    // update longTermPicNum
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+      if (dpb->frameStoreLongTermRef[i]->usedLongTerm & 1)
+        dpb->frameStoreLongTermRef[i]->topField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->topField->longTermFrameIndex + addTop;
+      if (dpb->frameStoreLongTermRef[i]->usedLongTerm & 2)
+        dpb->frameStoreLongTermRef[i]->botField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->botField->longTermFrameIndex + addBot;
+      }
+    }
+  }
+//}}}
 
 //{{{
 void cSlice::allocRefPicListReordeBuffer() {
@@ -494,7 +555,6 @@ void cSlice::freeRefPicListReorderBuffer() {
   longTermPicIndex[LIST_1] = NULL;
   }
 //}}}
-
 //{{{
 void cSlice::reorderRefPicList (int curList) {
 
@@ -577,69 +637,6 @@ void cSlice::computeColocated (sPicture** listX[6]) {
   }
 //}}}
 
-//{{{
-void cSlice::updatePicNum() {
-
-  int addTop = 0;
-  int addBot = 0;
-  int maxFrameNum = 1 << (decoder->activeSps->log2maxFrameNumMinus4 + 4);
-
-  if (picStructure == eFrame) {
-    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
-      if (dpb->frameStoreRef[i]->isUsed == 3 ) {
-        if (dpb->frameStoreRef[i]->frame->usedForReference &&
-            !dpb->frameStoreRef[i]->frame->usedLongTerm) {
-          if (dpb->frameStoreRef[i]->frameNum > frameNum )
-            dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
-          else
-            dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum;
-          dpb->frameStoreRef[i]->frame->picNum = dpb->frameStoreRef[i]->frameNumWrap;
-          }
-        }
-      }
-
-    // update longTermPicNum
-    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-      if (dpb->frameStoreLongTermRef[i]->isUsed == 3) {
-        if (dpb->frameStoreLongTermRef[i]->frame->usedLongTerm)
-          dpb->frameStoreLongTermRef[i]->frame->longTermPicNum = dpb->frameStoreLongTermRef[i]->frame->longTermFrameIndex;
-        }
-      }
-    }
-  else {
-    if (picStructure == eTopField) {
-      addTop = 1;
-      addBot = 0;
-      }
-    else {
-      addTop = 0;
-      addBot = 1;
-      }
-
-    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
-      if (dpb->frameStoreRef[i]->usedReference) {
-        if (dpb->frameStoreRef[i]->frameNum > frameNum )
-          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
-        else
-          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum;
-        if (dpb->frameStoreRef[i]->usedReference & 1)
-          dpb->frameStoreRef[i]->topField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addTop;
-        if (dpb->frameStoreRef[i]->usedReference & 2)
-          dpb->frameStoreRef[i]->botField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addBot;
-        }
-      }
-
-    // update longTermPicNum
-    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-      if (dpb->frameStoreLongTermRef[i]->usedLongTerm & 1)
-        dpb->frameStoreLongTermRef[i]->topField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->topField->longTermFrameIndex + addTop;
-      if (dpb->frameStoreLongTermRef[i]->usedLongTerm & 2)
-        dpb->frameStoreLongTermRef[i]->botField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->botField->longTermFrameIndex + addBot;
-      }
-    }
-  }
-//}}}
-
 // private:
 //{{{
 void cSlice::calculateQuant4x4Param() {
@@ -653,11 +650,11 @@ void cSlice::calculateQuant4x4Param() {
   int (*InvLevelScale4x4_Inter_2)[4][4] = InvLevelScale4x4_Inter[2];
 
   for (int k = 0; k < 6; k++) {
-    setDequant4x4 (*InvLevelScale4x4_Intra_0++, *p_dequant_coef  , qmatrix[0]);
-    setDequant4x4 (*InvLevelScale4x4_Intra_1++, *p_dequant_coef  , qmatrix[1]);
-    setDequant4x4 (*InvLevelScale4x4_Intra_2++, *p_dequant_coef  , qmatrix[2]);
-    setDequant4x4 (*InvLevelScale4x4_Inter_0++, *p_dequant_coef  , qmatrix[3]);
-    setDequant4x4 (*InvLevelScale4x4_Inter_1++, *p_dequant_coef  , qmatrix[4]);
+    setDequant4x4 (*InvLevelScale4x4_Intra_0++, *p_dequant_coef, qmatrix[0]);
+    setDequant4x4 (*InvLevelScale4x4_Intra_1++, *p_dequant_coef, qmatrix[1]);
+    setDequant4x4 (*InvLevelScale4x4_Intra_2++, *p_dequant_coef, qmatrix[2]);
+    setDequant4x4 (*InvLevelScale4x4_Inter_0++, *p_dequant_coef, qmatrix[3]);
+    setDequant4x4 (*InvLevelScale4x4_Inter_1++, *p_dequant_coef, qmatrix[4]);
     setDequant4x4 (*InvLevelScale4x4_Inter_2++, *p_dequant_coef++, qmatrix[5]);
     }
   }
@@ -682,9 +679,9 @@ void cSlice::calculateQuant8x8Param() {
   if (activeSps->chromaFormatIdc == 3) {
     // 4:4:4
     for (int k = 0; k < 6; k++) {
-      setDequant8x8 (*InvLevelScale8x8_Intra_1++, *p_dequant_coef  , qmatrix[8]);
-      setDequant8x8 (*InvLevelScale8x8_Inter_1++, *p_dequant_coef  , qmatrix[9]);
-      setDequant8x8 (*InvLevelScale8x8_Intra_2++, *p_dequant_coef  , qmatrix[10]);
+      setDequant8x8 (*InvLevelScale8x8_Intra_1++, *p_dequant_coef, qmatrix[8]);
+      setDequant8x8 (*InvLevelScale8x8_Inter_1++, *p_dequant_coef, qmatrix[9]);
+      setDequant8x8 (*InvLevelScale8x8_Intra_2++, *p_dequant_coef, qmatrix[10]);
       setDequant8x8 (*InvLevelScale8x8_Inter_2++, *p_dequant_coef++, qmatrix[11]);
       }
     }
@@ -692,11 +689,10 @@ void cSlice::calculateQuant8x8Param() {
 //}}}
 
 //{{{
-void cSlice::reorderShortTerm (int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
+void cSlice::reorderShortTerm (int curList, int numRefIndexIXactiveMinus1, int picNumLX, int* refIdxLX) {
 
   sPicture** refPicListX = listX[curList];
   sPicture* picLX = dpb->getShortTermPic (this, picNumLX);
-
   for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
     refPicListX[cIdx] = refPicListX[cIdx - 1];
   refPicListX[(*refIdxLX)++] = picLX;
@@ -709,10 +705,10 @@ void cSlice::reorderShortTerm (int curList, int numRefIndexIXactiveMinus1, int p
   }
 //}}}
 //{{{
-void cSlice::reorderLongTerm (sPicture** refPicListX, int numRefIndexIXactiveMinus1, int LongTermPicNum, int *refIdxLX) {
+void cSlice::reorderLongTerm (sPicture** refPicListX, int numRefIndexIXactiveMinus1, 
+                              int LongTermPicNum, int* refIdxLX) {
 
   sPicture* picLX = dpb->getLongTermPic (this, LongTermPicNum);
-
   for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
     refPicListX[cIdx] = refPicListX[cIdx - 1];
   refPicListX[(*refIdxLX)++] = picLX;

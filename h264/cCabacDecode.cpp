@@ -132,7 +132,6 @@ int cCabacDecode::getBitsRead() {
   return ((*codeStreamLen) << 3) - bitsLeft;
   }
 //}}}
-
 //{{{
 uint32_t cCabacDecode::symbol (sBiContext* biContext) {
 

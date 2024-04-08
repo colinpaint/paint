@@ -185,26 +185,27 @@ public:
   ~cSlice();
 
   void setQuantParams();
-
-  void fillWeightedPredParam();
-  void resetWeightedPredParam();
-  void initMbAffLists (sPicture* noReferencePicture);
-  void copyPoc (cSlice* toSlice);
-
-  void allocRefPicListReordeBuffer();
-  void freeRefPicListReorderBuffer();
-
   void setReadCbpCoefCavlc();
   void setReadCbpCoefsCabac();
   void setIntraPredFunctions();
   void setUpdateDirectFunction();
   void setSliceReadFunctions();
-  void startMacroBlockDecode (sMacroBlock** mb);
-  bool endMacroBlockDecode (int eos_bit);
 
-  void reorderRefPicList (int curList);
-  void computeColocated (sPicture** listX[6]);
+  void fillWeightedPredParam();
+  void resetWeightedPredParam();
+
+  void initMbAffLists (sPicture* noReferencePicture);
+  void copyPoc (cSlice* toSlice);
   void updatePicNum();
+
+  void allocRefPicListReordeBuffer();
+  void freeRefPicListReorderBuffer();
+  void reorderRefPicList (int curList);
+
+  void computeColocated (sPicture** listX[6]);
+  void startMacroBlockDecode (sMacroBlock** mb);
+
+  bool endMacroBlockDecode (int eos_bit);
 
   //{{{  vars
   cDecoder264* decoder;
@@ -373,6 +374,6 @@ private:
   void calculateQuant4x4Param();
   void calculateQuant8x8Param();
 
-  void reorderShortTerm (int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX);
-  void reorderLongTerm (sPicture** refPicListX, int numRefIndexIXactiveMinus1, int LongTermPicNum, int *refIdxLX);
+  void reorderShortTerm (int curList, int numRefIndexIXactiveMinus1, int picNumLX, int* refIdxLX);
+  void reorderLongTerm (sPicture** refPicListX, int numRefIndexIXactiveMinus1, int LongTermPicNum, int* refIdxLX);
   };
