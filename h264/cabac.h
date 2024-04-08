@@ -5,37 +5,37 @@
 #define IS_DIRECT(MB) (((MB)->mbType == 0) && (slice->sliceType == eSliceB))
 
 void cabacNewSlice (cSlice* slice);
-
-void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readMB_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readMB_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readB8_typeInfo_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readB8_typeInfo_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-
-void readIntraPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readRefFrame_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-
-void read_MVD_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void read_mvd_CABAC_mbaff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void read_CBP_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-
-void readRunLevel_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void read_dQuant_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readCIPredMode_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-
-void read_skipFlag_CABAC_p_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void read_skipFlag_CABAC_b_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readFieldModeInfo_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readMB_transform_sizeFlag_CABAC (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-
-void readIPCMcabac (cSlice* slice, sDataPartition* dataPartition);
 int cabacStartCode (cSlice* slice, int eos_bit);
-int readSyntaxElementCABAC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
 
+void checkNeighbourCabac (sMacroBlock* mb);
 int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
 int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
 
-void checkNeighbourCabac (sMacroBlock* mb);
+void readMbTypeInfoCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readMbTypeInfoCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readMbTypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readB8TypeInfoCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readB8TypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
 
-void setReadStoreCodedBlockPattern (sMacroBlock** mb, int chromaFormatIdc);
+void readIntraPredModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readRefFrameCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+
+void readMvdCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readMvdCabacMbAff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+
+void readRunLevelCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readQuantCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readCiPredModCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+
+void readSkipFlagCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readSkipFlagCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readFieldModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readMbTransformSizeFlagCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+
+int readSyntaxElementCabac(sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
+
+void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition);
+
 void setReadCbpCoefsCabac (cSlice* slice);
+void setReadStoreCodedBlockPattern(sMacroBlock** mb, int chromaFormatIdc);

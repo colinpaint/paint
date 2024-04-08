@@ -2820,7 +2820,7 @@ void cDecoder264::useParameterSet (cSlice* slice) {
   else {
     slice->nalStartCode = cabacStartCode;
     for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCABAC;
+      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCabac;
     }
 
   coding.sliceType = slice->sliceType;

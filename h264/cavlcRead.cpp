@@ -154,7 +154,7 @@ namespace {
   //}}}
 
   //{{{
-  void readCompCoef4x4cavlc (sMacroBlock* mb, eColorPlane plane,
+  void readCompCoef4x4 (sMacroBlock* mb, eColorPlane plane,
                                     int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern, uint8_t** nzcoeff) {
 
     int i0, j0;
@@ -222,7 +222,7 @@ namespace {
     }
   //}}}
   //{{{
-  void read_comp_coeff_4x4_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
+  void readCompCoef4x4lossless (sMacroBlock* mb, eColorPlane plane,
                                             int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern, uint8_t** nzcoeff) {
 
     int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
@@ -285,7 +285,7 @@ namespace {
   //}}}
 
   //{{{
-  void readCompCoef8x8cavlc (sMacroBlock* mb, eColorPlane plane,
+  void readCompCoef8x8 (sMacroBlock* mb, eColorPlane plane,
                                     int (*InvLevelScale8x8)[8], int qp_per, int codedBlockPattern, uint8_t** nzcoeff) {
 
     int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
@@ -351,7 +351,7 @@ namespace {
     }
   //}}}
   //{{{
-  void read_comp_coeff_8x8_CAVLC_ls (sMacroBlock* mb, eColorPlane plane,
+  void readCompCoef8x8lossless (sMacroBlock* mb, eColorPlane plane,
                                             int (*InvLevelScale8x8)[8], int qp_per, int codedBlockPattern, uint8_t** nzcoeff) {
 
     int levarr[16] = {0}, runarr[16] = {0}, numcoeff;
@@ -417,7 +417,7 @@ namespace {
   //}}}
 
   //{{{
-  void readCbpCoefsfromNalCavlc400 (sMacroBlock* mb) {
+  void readCbpCoefs400 (sMacroBlock* mb) {
 
     int k;
     int mb_nr = mb->mbIndexX;
@@ -546,7 +546,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefsfromNalCavlc422 (sMacroBlock* mb) {
+  void readCbpCoefs422 (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -820,7 +820,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefsfromNalCavlc444 (sMacroBlock* mb) {
+  void readCbpCoefs444 (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -996,7 +996,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefsfromNalCavlc420 (sMacroBlock* mb) {
+  void readCbpCoefs420 (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -1073,7 +1073,7 @@ namespace {
           // check for prediction from neighbours
           checkDpNeighbours (mb);
           if (mb->dplFlag) {
-            codedBlockPattern = 0;         
+            codedBlockPattern = 0;
             mb->codedBlockPattern = codedBlockPattern;
             }
           }
@@ -1227,175 +1227,6 @@ namespace {
   //}}}
   }
 
-//{{{
-void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
-                       int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
-
-  cSlice* slice = mb->slice;
-  cDecoder264* decoder = mb->decoder;
-  int mb_nr = mb->mbIndexX;
-
-  int k, code, vlcnum;
-  int numcoeff = 0, numtrailingones;
-  int level_two_or_higher;
-  int totzeros, abslevel, cdc=0, cac=0;
-  int zerosleft, ntr, dptype = 0;
-  int max_coeff_num = 0, nnz;
-  char type[15];
-  static const int incVlc[] = {0, 3, 6, 12, 24, 48, 32768};    // maximum vlc = 6
-
-  switch (block_type) {
-    //{{{
-    case LUMA:
-      max_coeff_num = 16;
-      dptype = (mb->isIntraBlock == true) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
-      decoder->nzCoeff[mb_nr][0][j][i] = 0;
-      break;
-    //}}}
-    //{{{
-    case LUMA_INTRA16x16DC:
-      max_coeff_num = 16;
-      dptype = SE_LUM_DC_INTRA;
-      decoder->nzCoeff[mb_nr][0][j][i] = 0;
-      break;
-    //}}}
-    //{{{
-    case LUMA_INTRA16x16AC:
-      max_coeff_num = 15;
-      dptype = SE_LUM_AC_INTRA;
-      decoder->nzCoeff[mb_nr][0][j][i] = 0;
-      break;
-    //}}}
-    //{{{
-    case CHROMA_DC:
-      max_coeff_num = decoder->coding.numCdcCoeff;
-      cdc = 1;
-      dptype = (mb->isIntraBlock == true) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
-      decoder->nzCoeff[mb_nr][0][j][i] = 0;
-      break;
-    //}}}
-    //{{{
-    case CHROMA_AC:
-      max_coeff_num = 15;
-      cac = 1;
-      dptype = (mb->isIntraBlock == true) ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER;
-      decoder->nzCoeff[mb_nr][0][j][i] = 0;
-      break;
-    //}}}
-    //{{{
-    default:
-      cDecoder264::error ("readCoef4x4cavlc: invalid block type");
-      decoder->nzCoeff[mb_nr][0][j][i] = 0;
-      break;
-    //}}}
-    }
-
-  sSyntaxElement se;
-  se.type = dptype;
-  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-  sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
-  cBitStream& s = dataPartition->bitStream;
-
-  if (!cdc) {
-    //{{{  luma or chroma AC
-    nnz = (!cac) ? predictNnz (mb, LUMA, i<<2, j<<2) : predictNnzChroma (mb, i, ((j-4)<<2));
-    se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-    s.readSyntaxElement_NumCoeffTrailingOnes(&se, type);
-    numcoeff = se.value1;
-    numtrailingones = se.value2;
-    decoder->nzCoeff[mb_nr][0][j][i] = (uint8_t) numcoeff;
-    }
-    //}}}
-  else {
-    //{{{  chroma DC
-    s.readSyntaxElement_NumCoeffTrailingOnesChromaDC (decoder, &se);
-    numcoeff = se.value1;
-    numtrailingones = se.value2;
-    }
-    //}}}
-  memset (levarr, 0, max_coeff_num * sizeof(int));
-  memset (runarr, 0, max_coeff_num * sizeof(int));
-
-  int numones = numtrailingones;
-  *number_coefficients = numcoeff;
-  if (numcoeff) {
-    if (numtrailingones) {
-      se.len = numtrailingones;
-      s.readSyntaxElement_FLC (&se);
-      code = se.inf;
-      ntr = numtrailingones;
-      for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
-        ntr --;
-        levarr[k] = (code>>ntr)&1 ? -1 : 1;
-        }
-      }
-
-    // decode levels
-    level_two_or_higher = (numcoeff > 3 && numtrailingones == 3)? 0 : 1;
-    vlcnum = (numcoeff > 10 && numtrailingones < 3) ? 1 : 0;
-    for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
-      //{{{  decode level
-      if (vlcnum == 0)
-        s.readSyntaxElement_Level_VLC0 (&se);
-      else
-        s.readSyntaxElement_Level_VLCN (&se, vlcnum);
-
-      if (level_two_or_higher) {
-        se.inf += (se.inf > 0) ? 1 : -1;
-        level_two_or_higher = 0;
-        }
-
-      levarr[k] = se.inf;
-      abslevel = iabs(levarr[k]);
-      if (abslevel  == 1)
-        ++numones;
-
-      // update VLC table
-      if (abslevel  > incVlc[vlcnum])
-        ++vlcnum;
-      if (k == numcoeff - 1 - numtrailingones && abslevel >3)
-        vlcnum = 2;
-      }
-      //}}}
-
-    if (numcoeff < max_coeff_num) {
-      //{{{  decode total run
-      vlcnum = numcoeff - 1;
-      se.value1 = vlcnum;
-
-      if (cdc)
-        s.readSyntaxElement_TotalZerosChromaDC (decoder, &se);
-      else
-        s.readSyntaxElement_TotalZeros (&se);
-
-      totzeros = se.value1;
-      }
-      //}}}
-    else
-      totzeros = 0;
-
-    //{{{  decode run before each coefficient
-    zerosleft = totzeros;
-    i = numcoeff - 1;
-
-    if (zerosleft > 0 && i > 0) {
-      do {
-        // select VLC for runbefore
-        vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
-
-        se.value1 = vlcnum;
-        s.readSyntaxElement_Run (&se);
-        runarr[i] = se.value1;
-
-        zerosleft -= runarr[i];
-        i --;
-        } while (zerosleft != 0 && i != 0);
-      }
-    //}}}
-    runarr[i] = zerosleft;
-    }
-  }
-//}}}
 //{{{
 void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
                           int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
@@ -1617,15 +1448,184 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
   }
 //}}}
 //{{{
+void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
+                       int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
+
+  cSlice* slice = mb->slice;
+  cDecoder264* decoder = mb->decoder;
+  int mb_nr = mb->mbIndexX;
+
+  int k, code, vlcnum;
+  int numcoeff = 0, numtrailingones;
+  int level_two_or_higher;
+  int totzeros, abslevel, cdc=0, cac=0;
+  int zerosleft, ntr, dptype = 0;
+  int max_coeff_num = 0, nnz;
+  char type[15];
+  static const int incVlc[] = {0, 3, 6, 12, 24, 48, 32768};    // maximum vlc = 6
+
+  switch (block_type) {
+    //{{{
+    case LUMA:
+      max_coeff_num = 16;
+      dptype = (mb->isIntraBlock == true) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
+      decoder->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case LUMA_INTRA16x16DC:
+      max_coeff_num = 16;
+      dptype = SE_LUM_DC_INTRA;
+      decoder->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case LUMA_INTRA16x16AC:
+      max_coeff_num = 15;
+      dptype = SE_LUM_AC_INTRA;
+      decoder->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CHROMA_DC:
+      max_coeff_num = decoder->coding.numCdcCoeff;
+      cdc = 1;
+      dptype = (mb->isIntraBlock == true) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER;
+      decoder->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    case CHROMA_AC:
+      max_coeff_num = 15;
+      cac = 1;
+      dptype = (mb->isIntraBlock == true) ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER;
+      decoder->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    //{{{
+    default:
+      cDecoder264::error ("readCoef4x4cavlc: invalid block type");
+      decoder->nzCoeff[mb_nr][0][j][i] = 0;
+      break;
+    //}}}
+    }
+
+  sSyntaxElement se;
+  se.type = dptype;
+  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
+  cBitStream& s = dataPartition->bitStream;
+
+  if (!cdc) {
+    //{{{  luma or chroma AC
+    nnz = (!cac) ? predictNnz (mb, LUMA, i<<2, j<<2) : predictNnzChroma (mb, i, ((j-4)<<2));
+    se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
+    s.readSyntaxElement_NumCoeffTrailingOnes(&se, type);
+    numcoeff = se.value1;
+    numtrailingones = se.value2;
+    decoder->nzCoeff[mb_nr][0][j][i] = (uint8_t) numcoeff;
+    }
+    //}}}
+  else {
+    //{{{  chroma DC
+    s.readSyntaxElement_NumCoeffTrailingOnesChromaDC (decoder, &se);
+    numcoeff = se.value1;
+    numtrailingones = se.value2;
+    }
+    //}}}
+  memset (levarr, 0, max_coeff_num * sizeof(int));
+  memset (runarr, 0, max_coeff_num * sizeof(int));
+
+  int numones = numtrailingones;
+  *number_coefficients = numcoeff;
+  if (numcoeff) {
+    if (numtrailingones) {
+      se.len = numtrailingones;
+      s.readSyntaxElement_FLC (&se);
+      code = se.inf;
+      ntr = numtrailingones;
+      for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
+        ntr --;
+        levarr[k] = (code>>ntr)&1 ? -1 : 1;
+        }
+      }
+
+    // decode levels
+    level_two_or_higher = (numcoeff > 3 && numtrailingones == 3)? 0 : 1;
+    vlcnum = (numcoeff > 10 && numtrailingones < 3) ? 1 : 0;
+    for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
+      //{{{  decode level
+      if (vlcnum == 0)
+        s.readSyntaxElement_Level_VLC0 (&se);
+      else
+        s.readSyntaxElement_Level_VLCN (&se, vlcnum);
+
+      if (level_two_or_higher) {
+        se.inf += (se.inf > 0) ? 1 : -1;
+        level_two_or_higher = 0;
+        }
+
+      levarr[k] = se.inf;
+      abslevel = iabs(levarr[k]);
+      if (abslevel  == 1)
+        ++numones;
+
+      // update VLC table
+      if (abslevel  > incVlc[vlcnum])
+        ++vlcnum;
+      if (k == numcoeff - 1 - numtrailingones && abslevel >3)
+        vlcnum = 2;
+      }
+      //}}}
+
+    if (numcoeff < max_coeff_num) {
+      //{{{  decode total run
+      vlcnum = numcoeff - 1;
+      se.value1 = vlcnum;
+
+      if (cdc)
+        s.readSyntaxElement_TotalZerosChromaDC (decoder, &se);
+      else
+        s.readSyntaxElement_TotalZeros (&se);
+
+      totzeros = se.value1;
+      }
+      //}}}
+    else
+      totzeros = 0;
+
+    //{{{  decode run before each coefficient
+    zerosleft = totzeros;
+    i = numcoeff - 1;
+
+    if (zerosleft > 0 && i > 0) {
+      do {
+        // select VLC for runbefore
+        vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
+
+        se.value1 = vlcnum;
+        s.readSyntaxElement_Run (&se);
+        runarr[i] = se.value1;
+
+        zerosleft -= runarr[i];
+        i --;
+        } while (zerosleft != 0 && i != 0);
+      }
+    //}}}
+    runarr[i] = zerosleft;
+    }
+  }
+//}}}
+//{{{
 void setReadCompCoefCavlc (sMacroBlock* mb) {
 
   if (mb->isLossless == false) {
-    mb->readCompCoef4x4cavlc = readCompCoef4x4cavlc;
-    mb->readCompCoef8x8cavlc = readCompCoef8x8cavlc;
+    mb->readCompCoef4x4cavlc = readCompCoef4x4;
+    mb->readCompCoef8x8cavlc = readCompCoef8x8;
     }
   else {
-    mb->readCompCoef4x4cavlc = read_comp_coeff_4x4_CAVLC_ls;
-    mb->readCompCoef8x8cavlc = read_comp_coeff_8x8_CAVLC_ls;
+    mb->readCompCoef4x4cavlc = readCompCoef4x4lossless;
+    mb->readCompCoef8x8cavlc = readCompCoef8x8lossless;
     }
   }
 //}}}
@@ -1636,21 +1636,21 @@ void cSlice::setReadCbpCoefCavlc() {
   switch (decoder->activeSps->chromaFormatIdc) {
     case YUV444:
       if (decoder->coding.isSeperateColourPlane == 0)
-        readCBPcoeffs = readCbpCoefsfromNalCavlc444;
+        readCBPcoeffs = readCbpCoefs444;
       else
-        readCBPcoeffs = readCbpCoefsfromNalCavlc400;
+        readCBPcoeffs = readCbpCoefs400;
       break;
 
     case YUV422:
-      readCBPcoeffs = readCbpCoefsfromNalCavlc422;
+      readCBPcoeffs = readCbpCoefs422;
       break;
 
     case YUV420:
-      readCBPcoeffs = readCbpCoefsfromNalCavlc420;
+      readCBPcoeffs = readCbpCoefs420;
       break;
 
     case YUV400:
-      readCBPcoeffs = readCbpCoefsfromNalCavlc400;
+      readCBPcoeffs = readCbpCoefs400;
       break;
 
     default:

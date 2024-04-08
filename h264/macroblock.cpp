@@ -1756,7 +1756,7 @@ namespace {
           mb->readRefPictureIndex = readRefPictureIdxNull;
         }
       else {
-        se->reading = readRefFrame_CABAC;
+        se->reading = readRefFrameCabac;
         mb->readRefPictureIndex = refidx_present ? readRefPictureIdxVLC : readRefPictureIdxNull;
         }
       }
@@ -2010,7 +2010,7 @@ namespace {
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
 
     if (!(decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag))
-      se.reading = readIntraPredMode_CABAC;
+      se.reading = readIntraPredModeCabac;
 
     for (int b8 = 0; b8 < 4; ++b8)  {
       // loop 8x8 blocks
@@ -2070,7 +2070,7 @@ namespace {
     se.type = SE_INTRAPREDMODE;
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
     if (!(decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag))
-      se.reading = readIntraPredMode_CABAC;
+      se.reading = readIntraPredModeCabac;
 
     get4x4Neighbour (mb, -1,  0, decoder->mbSize[eLuma], &left_mb);
     get4x4Neighbour (mb,  0, -1, decoder->mbSize[eLuma], &top_mb );
@@ -2134,7 +2134,7 @@ namespace {
     se.type = SE_INTRAPREDMODE;
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
     if (!(decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag))
-      se.reading = readIntraPredMode_CABAC;
+      se.reading = readIntraPredModeCabac;
 
     for (b8 = 0; b8 < 4; ++b8) { //loop 8x8 blocks
       for (j = 0; j < 2; j++) { //loop subblocks
@@ -2203,7 +2203,7 @@ namespace {
     se.type = SE_INTRAPREDMODE;
     sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
     if (!(decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag))
-      se.reading = readIntraPredMode_CABAC;
+      se.reading = readIntraPredModeCabac;
 
     get4x4Neighbour (mb, -1,  0, decoder->mbSize[eLuma], &left_mb);
     get4x4Neighbour (mb,  0, -1, decoder->mbSize[eLuma], &top_mb );
@@ -2290,7 +2290,7 @@ namespace {
       if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
         se.mapping = cBitStream::linfo_ue;
       else
-        se.reading = readCIPredMode_CABAC;
+        se.reading = readCiPredModCabac;
 
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       mb->chromaPredMode = (char)se.value1;
@@ -2397,7 +2397,7 @@ namespace {
     //For eCabac, we don't need to read bits to let stream uint8_t aligned
     //  because we have variable for integer bytes position
     if (decoder->activePps->entropyCoding == eCabac) {
-      readIPCMcabac (slice, dataPartition);
+      readIpcmCabac (slice, dataPartition);
       initIPCMdecoding (slice);
       }
     else {
@@ -2673,7 +2673,7 @@ namespace {
      sSyntaxElement se;
       sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.type = SE_HEADER;
-      se.reading = readMB_transform_sizeFlag_CABAC;
+      se.reading = readMbTransformSizeFlagCabac;
       // read eCavlc transform_size_8x8Flag
       if (dataPartition->bitStream.errorFlag) {
         se.len = (int64_t) 1;
@@ -3160,7 +3160,7 @@ namespace {
         dataPartition->bitStream.readSyntaxElement_FLC (&se);
         }
       else {
-        se.reading = readFieldModeInfo_CABAC;
+        se.reading = readFieldModeCabac;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         }
       mb->mbField = (bool)se.value1;
@@ -3169,7 +3169,7 @@ namespace {
     checkNeighbourCabac(mb);
 
     //  read MB type
-    se.reading = readMB_typeInfo_CABAC_i_slice;
+    se.reading = readMbTypeInfoCabacSliceI;
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
     mb->mbType = (int16_t)se.value1;
@@ -3190,7 +3190,7 @@ namespace {
       if (slice->transform8x8Mode) {
         se.type = SE_HEADER;
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-        se.reading = readMB_transform_sizeFlag_CABAC;
+        se.reading = readMbTransformSizeFlagCabac;
 
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
@@ -3241,7 +3241,7 @@ namespace {
         se.mapping = cBitStream::linfo_ue;
 
       checkNeighbourCabac(mb);
-      se.reading = read_skipFlag_CABAC_p_slice;
+      se.reading = readSkipFlagCabacSliceP;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
       mb->mbType = (int16_t) se.value1;
@@ -3251,7 +3251,7 @@ namespace {
 
       // read MB type
       if (mb->mbType != 0 ) {
-        se.reading = readMB_typeInfo_CABAC_p_slice;
+        se.reading = readMbTypeInfoCabacSliceP;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbType = (int16_t) se.value1;
         if(!dataPartition->bitStream.errorFlag)
@@ -3291,7 +3291,7 @@ namespace {
         fieldFlagInference (mb);
 
       checkNeighbourCabac(mb);
-      se.reading = read_skipFlag_CABAC_p_slice;
+      se.reading = readSkipFlagCabacSliceP;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
       mb->mbType = (int16_t)se.value1;
@@ -3310,7 +3310,7 @@ namespace {
         readBot = (topMB->skipFlag && (!mb->skipFlag));
 
       if (readBot || readTop) {
-        se.reading = readFieldModeInfo_CABAC;
+        se.reading = readFieldModeCabac;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbField = (bool)se.value1;
         }
@@ -3324,7 +3324,7 @@ namespace {
 
       // read MB type
       if (mb->mbType != 0 ) {
-        se.reading = readMB_typeInfo_CABAC_p_slice;
+        se.reading = readMbTypeInfoCabacSliceP;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbType = (int16_t) se.value1;
         if (!dataPartition->bitStream.errorFlag)
@@ -3353,7 +3353,7 @@ namespace {
       if (dataPartition->bitStream.errorFlag)
         se.mapping = cBitStream::linfo_ue;
       else
-        se.reading = readB8_typeInfo_CABAC_p_slice;
+        se.reading = readB8TypeInfoCabacSliceP;
 
       readI8x8macroBlock (mb, dataPartition, &se);
       }
@@ -3389,7 +3389,7 @@ namespace {
         se.mapping = cBitStream::linfo_ue;
 
       checkNeighbourCabac(mb);
-      se.reading = read_skipFlag_CABAC_b_slice;
+      se.reading = readSkipFlagCabacSliceB;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
       mb->mbType  = (int16_t)se.value1;
@@ -3403,7 +3403,7 @@ namespace {
 
       // read MB type
       if (mb->mbType != 0 ) {
-        se.reading = readMB_typeInfo_CABAC_b_slice;
+        se.reading = readMbTypeInfoCabacSliceB;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbType = (int16_t)se.value1;
         if (!dataPartition->bitStream.errorFlag)
@@ -3444,7 +3444,7 @@ namespace {
         fieldFlagInference (mb);
 
       checkNeighbourCabac (mb);
-      se.reading = read_skipFlag_CABAC_b_slice;
+      se.reading = readSkipFlagCabacSliceB;
 
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       mb->mbType = (int16_t)se.value1;
@@ -3465,7 +3465,7 @@ namespace {
         readBot = topMB->skipFlag && (!mb->skipFlag);
 
       if (readBot || readTop) {
-        se.reading = readFieldModeInfo_CABAC;
+        se.reading = readFieldModeCabac;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbField = (bool)se.value1;
         }
@@ -3479,7 +3479,7 @@ namespace {
 
       // read MB type
       if (mb->mbType != 0 ) {
-        se.reading = readMB_typeInfo_CABAC_b_slice;
+        se.reading = readMbTypeInfoCabacSliceB;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbType = (int16_t)se.value1;
         if(!dataPartition->bitStream.errorFlag)
@@ -3506,7 +3506,7 @@ namespace {
       if (dataPartition->bitStream.errorFlag)
         se.mapping = cBitStream::linfo_ue;
       else
-        se.reading = readB8_typeInfo_CABAC_b_slice;
+        se.reading = readB8TypeInfoCabacSliceB;
       readI8x8macroBlock(mb, dataPartition, &se);
       }
     else if (mb->mbType == BSKIP_DIRECT) {
@@ -3759,7 +3759,7 @@ namespace {
     if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
       se.mapping = cBitStream::linfo_se;
     else
-      se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+      se.reading = slice->mbAffFrame ? readMvdCabacMbAff : readMvdCabac;
 
     // LIST_0 Motion vectors
     readMBMotionVectors (&se, dataPartition, mb, LIST_0, step_h0, step_v0);
@@ -3817,7 +3817,7 @@ namespace {
     if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
       se.mapping = cBitStream::linfo_se;
     else
-      se.reading = slice->mbAffFrame ? read_mvd_CABAC_mbaff : read_MVD_CABAC;
+      se.reading = slice->mbAffFrame ? readMvdCabacMbAff : readMvdCabac;
 
     // LIST_0 Motion vectors
     readMBMotionVectors (&se, dataPartition, mb, LIST_0, step_h0, step_v0);
@@ -5010,7 +5010,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition* dataPartition, sMacroBl
   if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
     se->mapping = cBitStream::linfo_se;
   else
-    se->reading = read_dQuant_CABAC;
+    se->reading = readQuantCabac;
 
   dataPartition->readSyntaxElement (mb, se, dataPartition);
   mb->deltaQuant = (int16_t)se->value1;
