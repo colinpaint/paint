@@ -1,6 +1,6 @@
 #pragma once
 struct sMacroBlock;
-struct sDpb;
+class cDpb;
 struct sPicture;
 struct sDecodedRefPicMark;
 struct sDataPartition;
@@ -205,7 +205,7 @@ public:
 
   cPps* activePps;
   cSps* activeSps;
-  sDpb* dpb;
+  cDpb* dpb;
 
   eSliceType sliceType;
 

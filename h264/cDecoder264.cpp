@@ -1513,7 +1513,7 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
   decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
 
-  decoder->dpb = (sDpb*)calloc (1, sizeof(sDpb));
+  decoder->dpb = (cDpb*)calloc (1, sizeof(cDpb));
   decoder->dpb->decoder = decoder;
   decoder->dpb->initDone = 0;
 
@@ -2491,7 +2491,7 @@ void cDecoder264::initRefPicture (cSlice* slice) {
 //{{{
 void cDecoder264::initPicture (cSlice* slice) {
 
-  sDpb* dpb = slice->dpb;
+  cDpb* dpb = slice->dpb;
 
   picHeightInMbs = coding.frameHeightMbs / (slice->fieldPic+1);
   picSizeInMbs = coding.picWidthMbs * picHeightInMbs;

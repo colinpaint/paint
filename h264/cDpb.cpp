@@ -22,7 +22,7 @@ namespace {
   //}}}
 
   //{{{
-  int outputDpbFrame (sDpb* dpb) {
+  int outputDpbFrame (cDpb* dpb) {
 
     // diagnostics
     if (dpb->usedSize < 1)
@@ -60,7 +60,7 @@ namespace {
     }
   //}}}
   //{{{
-  void checkNumDpbFrames (sDpb* dpb) {
+  void checkNumDpbFrames (cDpb* dpb) {
 
     if ((int)(dpb->longTermRefFramesInBuffer + dpb->refFramesInBuffer) > imax (1, dpb->numRefFrames))
       cDecoder264::error ("Max. number of reference frames exceeded. Invalid stream");
@@ -202,7 +202,7 @@ namespace {
   //}}}
 
   //{{{
-  sPicture* getLongTermPic (cSlice* slice, sDpb* dpb, int longtermPicNum) {
+  sPicture* getLongTermPic (cSlice* slice, cDpb* dpb, int longtermPicNum) {
 
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
       if (slice->picStructure == eFrame) {
@@ -229,7 +229,7 @@ namespace {
     }
   //}}}
   //{{{
-  void updateMaxLongTermFrameIndex (sDpb* dpb, int maxLongTermFrameIndexPlus1) {
+  void updateMaxLongTermFrameIndex (cDpb* dpb, int maxLongTermFrameIndexPlus1) {
 
     dpb->maxLongTermPicIndex = maxLongTermFrameIndexPlus1 - 1;
 
@@ -240,7 +240,7 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStructure, int longTermFrameIndex,
+  void unmarkLongTermFieldRefFrameIndex (cDpb* dpb, ePicStructure picStructure, int longTermFrameIndex,
                                                 int mark_current, uint32_t curr_frame_num, int curr_pic_num) {
 
     cDecoder264* decoder = dpb->decoder;
@@ -302,7 +302,7 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkLongTermFrameForRefByFrameIndex (sDpb* dpb, int longTermFrameIndex) {
+  void unmarkLongTermFrameForRefByFrameIndex (cDpb* dpb, int longTermFrameIndex) {
 
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
       if (dpb->frameStoreLongTermRef[i]->longTermFrameIndex == longTermFrameIndex)
@@ -310,7 +310,7 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkLongTermForRef (sDpb* dpb, sPicture* p, int longTermPicNum) {
+  void unmarkLongTermForRef (cDpb* dpb, sPicture* p, int longTermPicNum) {
 
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
       if (p->picStructure == eFrame) {
@@ -349,7 +349,7 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkShortTermForRef (sDpb* dpb, sPicture* p, int diffPicNumMinus1)
+  void unmarkShortTermForRef (cDpb* dpb, sPicture* p, int diffPicNumMinus1)
   {
     int picNumX = getPicNumX(p, diffPicNumMinus1);
 
@@ -387,12 +387,12 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkAllLongTermForRef (sDpb* dpb) {
+  void unmarkAllLongTermForRef (cDpb* dpb) {
     updateMaxLongTermFrameIndex (dpb, 0);
     }
   //}}}
   //{{{
-  void unmarkAllShortTermForRef (sDpb* dpb) {
+  void unmarkAllShortTermForRef (cDpb* dpb) {
 
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       dpb->frameStoreRef[i]->unmarkForRef();
@@ -400,7 +400,7 @@ namespace {
     }
   //}}}
   //{{{
-  void markPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex, int picNumX) {
+  void markPicLongTerm (cDpb* dpb, sPicture* p, int longTermFrameIndex, int picNumX) {
 
     int addTop, addBot;
 
@@ -485,7 +485,7 @@ namespace {
     }
   //}}}
   //{{{
-  void markCurPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex) {
+  void markCurPicLongTerm (cDpb* dpb, sPicture* p, int longTermFrameIndex) {
 
     // remove long term pictures with same longTermFrameIndex
     if (p->picStructure == eFrame)
@@ -498,7 +498,7 @@ namespace {
     }
   //}}}
   //{{{
-  void assignLongTermFrameIndex (sDpb* dpb, sPicture* p, int diffPicNumMinus1, int longTermFrameIndex) {
+  void assignLongTermFrameIndex (cDpb* dpb, sPicture* p, int diffPicNumMinus1, int longTermFrameIndex) {
 
     int picNumX = getPicNumX(p, diffPicNumMinus1);
 
@@ -531,150 +531,6 @@ namespace {
       }
 
     markPicLongTerm (dpb, p, longTermFrameIndex, picNumX);
-    }
-  //}}}
-
-  //{{{
-  void adaptiveMemoryManagement (sDpb* dpb, sPicture* p) {
-
-    sDecodedRefPicMark* tmp_drpm;
-    cDecoder264* decoder = dpb->decoder;
-
-    decoder->lastHasMmco5 = 0;
-
-    while (p->decRefPicMarkBuffer) {
-      tmp_drpm = p->decRefPicMarkBuffer;
-      switch (tmp_drpm->memManagement) {
-        //{{{
-        case 0:
-          if (tmp_drpm->next != NULL)
-            cDecoder264::error ("memManagement = 0 not last operation in buffer");
-          break;
-        //}}}
-        //{{{
-        case 1:
-          unmarkShortTermForRef (dpb, p, tmp_drpm->diffPicNumMinus1);
-          dpb->updateRefList();
-          break;
-        //}}}
-        //{{{
-        case 2:
-          unmarkLongTermForRef (dpb, p, tmp_drpm->longTermPicNum);
-          dpb->updateLongTermRefList();
-          break;
-        //}}}
-        //{{{
-        case 3:
-          assignLongTermFrameIndex (dpb, p, tmp_drpm->diffPicNumMinus1, tmp_drpm->longTermFrameIndex);
-          dpb->updateRefList();
-          dpb->updateLongTermRefList();
-          break;
-        //}}}
-        //{{{
-        case 4:
-          updateMaxLongTermFrameIndex (dpb, tmp_drpm->maxLongTermFrameIndexPlus1);
-          dpb->updateLongTermRefList();
-          break;
-        //}}}
-        //{{{
-        case 5:
-          unmarkAllShortTermForRef (dpb);
-          unmarkAllLongTermForRef (dpb);
-          decoder->lastHasMmco5 = 1;
-          break;
-        //}}}
-        //{{{
-        case 6:
-          markCurPicLongTerm (dpb, p, tmp_drpm->longTermFrameIndex);
-          checkNumDpbFrames (dpb);
-          break;
-        //}}}
-        //{{{
-        default:
-          cDecoder264::error ("invalid memManagement in buffer");
-        //}}}
-        }
-      p->decRefPicMarkBuffer = tmp_drpm->next;
-      free (tmp_drpm);
-      }
-
-    if (decoder->lastHasMmco5 ) {
-      p->picNum = p->frameNum = 0;
-      switch (p->picStructure) {
-        //{{{
-        case eTopField:
-          p->poc = p->topPoc = 0;
-          break;
-        //}}}
-        //{{{
-        case eBotField:
-          p->poc = p->botPoc = 0;
-          break;
-        //}}}
-        //{{{
-        case eFrame:
-          p->topPoc    -= p->poc;
-          p->botPoc -= p->poc;
-          p->poc = imin (p->topPoc, p->botPoc);
-          break;
-        //}}}
-        }
-
-      decoder->dpb->flushDpb();
-      }
-    }
-  //}}}
-  //{{{
-  void slidingWindowMemoryManagement (sDpb* dpb, sPicture* p) {
-
-    // if this is a reference pic with sliding window, unmark first ref frame
-    if (dpb->refFramesInBuffer == imax (1, dpb->numRefFrames) - dpb->longTermRefFramesInBuffer) {
-      for (uint32_t i = 0; i < dpb->usedSize; i++) {
-        if (dpb->frameStore[i]->usedReference && (!(dpb->frameStore[i]->usedLongTerm))) {
-          dpb->frameStore[i]->unmarkForRef();
-          dpb->updateRefList();
-          break;
-          }
-        }
-      }
-
-    p->usedLongTerm = 0;
-    }
-  //}}}
-  //{{{
-  void idrMemoryManagement (sDpb* dpb, sPicture* p) {
-
-    if (p->noOutputPriorPicFlag) {
-      // free all stored pictures
-      for (uint32_t i = 0; i < dpb->usedSize; i++) {
-        // reset all reference settings
-        delete dpb->frameStore[i];
-        dpb->frameStore[i] = new cFrameStore();
-        }
-      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-        dpb->frameStoreRef[i]=NULL;
-      for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
-        dpb->frameStoreLongTermRef[i]=NULL;
-      dpb->usedSize = 0;
-      }
-    else
-      dpb->flushDpb();
-
-    dpb->lastPictureFrameStore = NULL;
-
-    dpb->updateRefList();
-    dpb->updateLongTermRefList();
-    dpb->lastOutputPoc = INT_MIN;
-
-    if (p->longTermRefFlag) {
-      dpb->maxLongTermPicIndex = 0;
-      p->usedLongTerm = 1;
-      p->longTermFrameIndex = 0;
-      }
-    else {
-      dpb->maxLongTermPicIndex = -1;
-      p->usedLongTerm = 0;
-      }
     }
   //}}}
 
@@ -795,7 +651,7 @@ namespace {
 
 // dpb
 //{{{
-void sDpb::getSmallestPoc (int* poc, int* pos) {
+void cDpb::getSmallestPoc (int* poc, int* pos) {
 
   if (usedSize<1)
     cDecoder264::error ("Cannot determine smallest POC, DPB empty");
@@ -812,7 +668,7 @@ void sDpb::getSmallestPoc (int* poc, int* pos) {
 //}}}
 
 //{{{
-void sDpb::updateRefList() {
+void cDpb::updateRefList() {
 
   uint32_t i, j;
   for (i = 0, j = 0; i < usedSize; i++)
@@ -826,7 +682,7 @@ void sDpb::updateRefList() {
   }
 //}}}
 //{{{
-void sDpb::updateLongTermRefList() {
+void cDpb::updateLongTermRefList() {
 
   uint32_t i, j;
   for (i = 0, j = 0; i < usedSize; i++)
@@ -841,7 +697,7 @@ void sDpb::updateLongTermRefList() {
 //}}}
 
 //{{{
-void sDpb::initDpb (cDecoder264* decoder, int type) {
+void cDpb::initDpb (cDecoder264* decoder, int type) {
 
   cSps* activeSps = decoder->activeSps;
 
@@ -886,7 +742,7 @@ void sDpb::initDpb (cDecoder264* decoder, int type) {
   }
 //}}}
 //{{{
-void sDpb::reInitDpb (cDecoder264* decoder, int type) {
+void cDpb::reInitDpb (cDecoder264* decoder, int type) {
 
   cSps* activeSps = decoder->activeSps;
   int dpbSize = getDpbSize (decoder, activeSps) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
@@ -913,7 +769,7 @@ void sDpb::reInitDpb (cDecoder264* decoder, int type) {
   }
 //}}}
 //{{{
-void sDpb::flushDpb() {
+void cDpb::flushDpb() {
 
   if (!initDone)
     return;
@@ -934,7 +790,7 @@ void sDpb::flushDpb() {
   }
 //}}}
 //{{{
-int sDpb::removeUnusedDpb() {
+int cDpb::removeUnusedDpb() {
 
   // check for frames that were already output and no longer used for reference
   for (uint32_t i = 0; i < usedSize; i++) {
@@ -948,7 +804,7 @@ int sDpb::removeUnusedDpb() {
   }
 //}}}
 //{{{
-void sDpb::storePictureDpb (sPicture* picture) {
+void cDpb::storePictureDpb (sPicture* picture) {
 
   int poc, pos;
   // picture error conceal
@@ -958,14 +814,14 @@ void sDpb::storePictureDpb (sPicture* picture) {
   decoder->lastPicBotField = (picture->picStructure == eBotField);
 
   if (picture->isIDR) {
-    idrMemoryManagement (this, picture);
+    idrMemoryManagement (picture);
     // picture error conceal
     memset (decoder->dpbPoc, 0, sizeof(int)*100);
     }
   else {
     // adaptive memory management
     if (picture->usedForReference && (picture->adaptRefPicBufFlag))
-      adaptiveMemoryManagement (this, picture);
+      adaptiveMemoryManagement (picture);
     }
 
   if ((picture->picStructure == eTopField) || (picture->picStructure == eBotField)) {
@@ -990,7 +846,7 @@ void sDpb::storePictureDpb (sPicture* picture) {
 
   // this is a frame or a field which has no stored complementary field sliding window, if necessary
   if (!picture->isIDR && (picture->usedForReference && !picture->adaptRefPicBufFlag))
-    slidingWindowMemoryManagement (this, picture);
+    slidingWindowMemoryManagement (picture);
 
   // picture error conceal
   if (decoder->concealMode != 0)
@@ -1055,7 +911,7 @@ void sDpb::storePictureDpb (sPicture* picture) {
   }
 //}}}
 //{{{
-void sDpb::removeFrameDpb (int pos) {
+void cDpb::removeFrameDpb (int pos) {
 
   cFrameStore* frameStore1 = frameStore[pos];
   switch (frameStore1->isUsed) {
@@ -1099,7 +955,7 @@ void sDpb::removeFrameDpb (int pos) {
   }
 //}}}
 //{{{
-void sDpb::freeDpb () {
+void cDpb::freeDpb () {
 
   if (frameStore) {
     for (uint32_t i = 0; i < size; i++)
@@ -1130,7 +986,7 @@ void sDpb::freeDpb () {
 
 // private
 //{{{
-void sDpb::dumpDpb() {
+void cDpb::dumpDpb() {
 
 #ifdef DUMP_DPB
   for (uint32_t i = 0; i < usedSize; i++) {
@@ -1167,6 +1023,148 @@ void sDpb::dumpDpb() {
     printf ("\n");
     }
 #endif
+  }
+//}}}
+//{{{
+void cDpb::adaptiveMemoryManagement (sPicture* picture) {
+
+  sDecodedRefPicMark* tmp_drpm;
+
+  decoder->lastHasMmco5 = 0;
+
+  while (picture->decRefPicMarkBuffer) {
+    tmp_drpm = picture->decRefPicMarkBuffer;
+    switch (tmp_drpm->memManagement) {
+      //{{{
+      case 0:
+        if (tmp_drpm->next != NULL)
+          cDecoder264::error ("memManagement = 0 not last operation in buffer");
+        break;
+      //}}}
+      //{{{
+      case 1:
+        unmarkShortTermForRef (this, picture, tmp_drpm->diffPicNumMinus1);
+        updateRefList();
+        break;
+      //}}}
+      //{{{
+      case 2:
+        unmarkLongTermForRef (this, picture, tmp_drpm->longTermPicNum);
+        updateLongTermRefList();
+        break;
+      //}}}
+      //{{{
+      case 3:
+        assignLongTermFrameIndex (this, picture, tmp_drpm->diffPicNumMinus1, tmp_drpm->longTermFrameIndex);
+        updateRefList();
+        updateLongTermRefList();
+        break;
+      //}}}
+      //{{{
+      case 4:
+        updateMaxLongTermFrameIndex (this, tmp_drpm->maxLongTermFrameIndexPlus1);
+        updateLongTermRefList();
+        break;
+      //}}}
+      //{{{
+      case 5:
+        unmarkAllShortTermForRef (this);
+        unmarkAllLongTermForRef (this);
+        decoder->lastHasMmco5 = 1;
+        break;
+      //}}}
+      //{{{
+      case 6:
+        markCurPicLongTerm (this, picture, tmp_drpm->longTermFrameIndex);
+        checkNumDpbFrames (this);
+        break;
+      //}}}
+      //{{{
+      default:
+        cDecoder264::error ("invalid memManagement in buffer");
+      //}}}
+      }
+    picture->decRefPicMarkBuffer = tmp_drpm->next;
+    free (tmp_drpm);
+    }
+
+  if (decoder->lastHasMmco5 ) {
+    picture->picNum = picture->frameNum = 0;
+    switch (picture->picStructure) {
+      //{{{
+      case eTopField:
+        picture->poc = picture->topPoc = 0;
+        break;
+      //}}}
+      //{{{
+      case eBotField:
+        picture->poc = picture->botPoc = 0;
+        break;
+      //}}}
+      //{{{
+      case eFrame:
+        picture->topPoc -= picture->poc;
+        picture->botPoc -= picture->poc;
+        picture->poc = imin (picture->topPoc, picture->botPoc);
+        break;
+      //}}}
+      }
+
+    decoder->dpb->flushDpb();
+    }
+  }
+//}}}
+//{{{
+void cDpb::slidingWindowMemoryManagement (sPicture* picture) {
+
+  // if this is a reference pic with sliding window, unmark first ref frame
+  if (refFramesInBuffer == imax (1, numRefFrames) - longTermRefFramesInBuffer) {
+    for (uint32_t i = 0; i < usedSize; i++) {
+      if (frameStore[i]->usedReference && (!(frameStore[i]->usedLongTerm))) {
+        frameStore[i]->unmarkForRef();
+        updateRefList();
+        break;
+        }
+      }
+    }
+
+  picture->usedLongTerm = 0;
+  }
+//}}}
+//{{{
+void cDpb::idrMemoryManagement (sPicture* picture) {
+
+  if (picture->noOutputPriorPicFlag) {
+    // free all stored pictures
+    for (uint32_t i = 0; i < usedSize; i++) {
+      // reset all reference settings
+      delete frameStore[i];
+      frameStore[i] = new cFrameStore();
+      }
+    for (uint32_t i = 0; i < refFramesInBuffer; i++)
+      frameStoreRef[i]=NULL;
+    for (uint32_t i = 0; i < longTermRefFramesInBuffer; i++)
+      frameStoreLongTermRef[i]=NULL;
+    usedSize = 0;
+    }
+  else
+    flushDpb();
+
+  lastPictureFrameStore = NULL;
+
+  updateRefList();
+  updateLongTermRefList();
+  lastOutputPoc = INT_MIN;
+
+  if (picture->longTermRefFlag) {
+    maxLongTermPicIndex = 0;
+    picture->usedLongTerm = 1;
+    picture->longTermFrameIndex = 0;
+    }
+  else {
+    maxLongTermPicIndex = -1;
+    picture->usedLongTerm = 0;
+    }
   }
 //}}}
 
@@ -1238,7 +1236,7 @@ void updatePicNum (cSlice* slice) {
   int addBot = 0;
   int maxFrameNum = 1 << (decoder->activeSps->log2maxFrameNumMinus4 + 4);
 
-  sDpb* dpb = slice->dpb;
+  cDpb* dpb = slice->dpb;
   if (slice->picStructure == eFrame) {
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->frameStoreRef[i]->isUsed == 3 ) {
@@ -1295,7 +1293,7 @@ void updatePicNum (cSlice* slice) {
   }
 //}}}
 //{{{
-sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum) {
+sPicture* getShortTermPic (cSlice* slice, cDpb* dpb, int picNum) {
 
   for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
     if (slice->picStructure == eFrame) {
@@ -1332,7 +1330,7 @@ void initListsSliceI (cSlice* slice) {
 void initListsSliceP (cSlice* slice) {
 
   cDecoder264* decoder = slice->decoder;
-  sDpb* dpb = slice->dpb;
+  cDpb* dpb = slice->dpb;
 
   int list0idx = 0;
   int listLtIndex = 0;
@@ -1395,7 +1393,7 @@ void initListsSliceP (cSlice* slice) {
 void initListsSliceB (cSlice* slice) {
 
   cDecoder264* decoder = slice->decoder;
-  sDpb* dpb = slice->dpb;
+  cDpb* dpb = slice->dpb;
 
   int list0idx = 0;
   int list0index1 = 0;

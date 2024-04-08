@@ -2,7 +2,8 @@
 class cFrameStore;
 class cDecoder;
 
-struct sDpb {
+class cDpb {
+public:
   void getSmallestPoc (int* poc, int* pos);
 
   void updateRefList();
@@ -16,9 +17,7 @@ struct sDpb {
   void removeFrameDpb (int pos);
   void freeDpb();
 
-  // private
-  void dumpDpb();
-
+  // vars
   cDecoder264*  decoder;
 
   cFrameStore** frameStore;
@@ -36,6 +35,12 @@ struct sDpb {
   int           numRefFrames;
 
   cFrameStore*  lastPictureFrameStore;
+
+private:
+  void dumpDpb();
+  void adaptiveMemoryManagement (sPicture* picture);
+  void slidingWindowMemoryManagement (sPicture* picture);
+  void idrMemoryManagement (sPicture* picture);
   };
 
 void initListsSliceI (cSlice* slice);
@@ -44,6 +49,6 @@ void initListsSliceB (cSlice* slice);
 void updatePicNum (cSlice* slice);
 
 void reorderRefPicList (cSlice* slice, int curList);
-sPicture* getShortTermPic (cSlice* slice, sDpb* dpb, int picNum);
+sPicture* getShortTermPic (cSlice* slice, cDpb* dpb, int picNum);
 
 void computeColocated (cSlice* slice, sPicture** listX[6]);

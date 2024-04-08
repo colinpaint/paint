@@ -67,7 +67,7 @@
 #include "cSlice.h"
 #include "cFrameStore.h"
 #include "sPicture.h"
-#include "sDpb.h"
+#include "cDpb.h"
 
 //{{{
 enum ePixelFormat {
@@ -656,7 +656,7 @@ public:
   sOldSlice*   oldSlice = nullptr;
 
   // output
-  sDpb*        dpb = nullptr;
+  cDpb*        dpb = nullptr;
   int          lastHasMmco5 = 0;
   int          dpbPoc[100] = {0};
   sPicture*    picture = nullptr;

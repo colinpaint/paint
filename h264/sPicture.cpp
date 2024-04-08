@@ -20,7 +20,7 @@ namespace {
     }
   //}}}
   //{{{
-  void checkNumDpbFrames (sDpb* dpb) {
+  void checkNumDpbFrames (cDpb* dpb) {
 
     if ((int)(dpb->longTermRefFramesInBuffer + dpb->refFramesInBuffer) > imax (1, dpb->numRefFrames))
       cDecoder264::error ("Max. number of reference frames exceeded. Invalid stream");
@@ -28,7 +28,7 @@ namespace {
   //}}}
 
   //{{{
-  sPicture* getLongTermPic (cSlice* slice, sDpb* dpb, int longtermPicNum) {
+  sPicture* getLongTermPic (cSlice* slice, cDpb* dpb, int longtermPicNum) {
 
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
       if (slice->picStructure == eFrame) {
@@ -55,7 +55,7 @@ namespace {
     }
   //}}}
   //{{{
-  void updateMaxLongTermFrameIndex (sDpb* dpb, int maxLongTermFrameIndexPlus1) {
+  void updateMaxLongTermFrameIndex (cDpb* dpb, int maxLongTermFrameIndexPlus1) {
 
     dpb->maxLongTermPicIndex = maxLongTermFrameIndexPlus1 - 1;
 
@@ -66,7 +66,7 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkLongTermFieldRefFrameIndex (sDpb* dpb, ePicStructure picStructure, int longTermFrameIndex,
+  void unmarkLongTermFieldRefFrameIndex (cDpb* dpb, ePicStructure picStructure, int longTermFrameIndex,
                                                 int mark_current, uint32_t curr_frame_num, int curr_pic_num) {
 
     cDecoder264* decoder = dpb->decoder;
@@ -128,7 +128,7 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkLongTermFrameForRefByFrameIndex (sDpb* dpb, int longTermFrameIndex) {
+  void unmarkLongTermFrameForRefByFrameIndex (cDpb* dpb, int longTermFrameIndex) {
 
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
       if (dpb->frameStoreLongTermRef[i]->longTermFrameIndex == longTermFrameIndex)
@@ -136,7 +136,7 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkLongTermForRef (sDpb* dpb, sPicture* p, int longTermPicNum) {
+  void unmarkLongTermForRef (cDpb* dpb, sPicture* p, int longTermPicNum) {
 
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
       if (p->picStructure == eFrame) {
@@ -175,7 +175,7 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkShortTermForRef (sDpb* dpb, sPicture* p, int diffPicNumMinus1)
+  void unmarkShortTermForRef (cDpb* dpb, sPicture* p, int diffPicNumMinus1)
   {
     int picNumX = getPicNumX(p, diffPicNumMinus1);
 
@@ -213,12 +213,12 @@ namespace {
     }
   //}}}
   //{{{
-  void unmarkAllLongTermForRef (sDpb* dpb) {
+  void unmarkAllLongTermForRef (cDpb* dpb) {
     updateMaxLongTermFrameIndex (dpb, 0);
     }
   //}}}
   //{{{
-  void unmarkAllShortTermForRef (sDpb* dpb) {
+  void unmarkAllShortTermForRef (cDpb* dpb) {
 
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
       dpb->frameStoreRef[i]->unmarkForRef();
@@ -226,7 +226,7 @@ namespace {
     }
   //}}}
   //{{{
-  void markPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex, int picNumX) {
+  void markPicLongTerm (cDpb* dpb, sPicture* p, int longTermFrameIndex, int picNumX) {
 
     int addTop, addBot;
 
@@ -311,7 +311,7 @@ namespace {
     }
   //}}}
   //{{{
-  void markCurPicLongTerm (sDpb* dpb, sPicture* p, int longTermFrameIndex) {
+  void markCurPicLongTerm (cDpb* dpb, sPicture* p, int longTermFrameIndex) {
 
     // remove long term pictures with same longTermFrameIndex
     if (p->picStructure == eFrame)
@@ -324,7 +324,7 @@ namespace {
     }
   //}}}
   //{{{
-  void assignLongTermFrameIndex (sDpb* dpb, sPicture* p, int diffPicNumMinus1, int longTermFrameIndex) {
+  void assignLongTermFrameIndex (cDpb* dpb, sPicture* p, int diffPicNumMinus1, int longTermFrameIndex) {
 
     int picNumX = getPicNumX(p, diffPicNumMinus1);
 
@@ -361,7 +361,7 @@ namespace {
   //}}}
 
   //{{{
-  void adaptiveMemoryManagement (sDpb* dpb, sPicture* p) {
+  void adaptiveMemoryManagement (cDpb* dpb, sPicture* p) {
 
     sDecodedRefPicMark* tmp_drpm;
     cDecoder264* decoder = dpb->decoder;
@@ -451,7 +451,7 @@ namespace {
     }
   //}}}
   //{{{
-  void slidingWindowMemoryManagement (sDpb* dpb, sPicture* p) {
+  void slidingWindowMemoryManagement (cDpb* dpb, sPicture* p) {
 
     // if this is a reference pic with sliding window, unmark first ref frame
     if (dpb->refFramesInBuffer == imax (1, dpb->numRefFrames) - dpb->longTermRefFramesInBuffer) {
@@ -468,7 +468,7 @@ namespace {
     }
   //}}}
   //{{{
-  void idrMemoryManagement (sDpb* dpb, sPicture* p) {
+  void idrMemoryManagement (cDpb* dpb, sPicture* p) {
 
     if (p->noOutputPriorPicFlag) {
       // free all stored pictures
