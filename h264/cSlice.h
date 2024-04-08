@@ -184,7 +184,7 @@ public:
   static cSlice* allocSlice();
   ~cSlice();
 
-  void useQuantParams();
+  void setQuantParams();
 
   void fillWeightedPredParam();
   void resetWeightedPredParam();
@@ -198,7 +198,7 @@ public:
   void setReadCbpCoefsCabac();
   void setIntraPredFunctions();
   void setUpdateDirectFunction();
-  void setSliceFunctions();
+  void setSliceReadFunctions();
   void startMacroBlockDecode (sMacroBlock** mb);
   bool endMacroBlockDecode (int eos_bit);
 

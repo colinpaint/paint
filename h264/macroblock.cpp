@@ -5116,7 +5116,7 @@ int decodeMacroBlock (sMacroBlock* mb, sPicture* picture) {
 //}}}
 
 //{{{
-void cSlice::setSliceFunctions() {
+void cSlice::setSliceReadFunctions() {
 
   if (decoder->activePps->entropyCoding == eCabac) {
     switch (sliceType) {

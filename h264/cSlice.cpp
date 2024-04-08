@@ -187,6 +187,114 @@ cSlice::~cSlice() {
 //}}}
 
 //{{{
+void cSlice::setQuantParams() {
+
+  cSps* sps = activeSps;
+  cPps* pps = activePps;
+
+  if (!pps->hasPicScalingMatrix && !sps->hasSeqScalingMatrix) {
+    for (int i = 0; i < 12; i++)
+      qmatrix[i] = (i < 6) ? quant_org : quant8_org;
+    }
+  else {
+    int n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
+    if (sps->hasSeqScalingMatrix) {
+      //{{{  check sps first
+      for (int i = 0; i < n_ScalingList; i++) {
+        if (i < 6) {
+          if (!sps->hasSeqScalingList[i]) {
+            // fall-back rule A
+            if (i == 0)
+              qmatrix[i] = quant_intra_default;
+            else if (i == 3)
+              qmatrix[i] = quant_inter_default;
+            else
+              qmatrix[i] = qmatrix[i-1];
+            }
+          else {
+            if (sps->useDefaultScalingMatrix4x4[i])
+              qmatrix[i] = (i<3) ? quant_intra_default : quant_inter_default;
+            else
+              qmatrix[i] = sps->scalingList4x4[i];
+          }
+        }
+        else {
+          if (!sps->hasSeqScalingList[i]) {
+            // fall-back rule A
+            if (i == 6)
+              qmatrix[i] = quant8_intra_default;
+            else if (i == 7)
+              qmatrix[i] = quant8_inter_default;
+            else
+              qmatrix[i] = qmatrix[i-2];
+            }
+          else {
+            if (sps->useDefaultScalingMatrix8x8[i-6])
+              qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
+            else
+              qmatrix[i] = sps->scalingList8x8[i-6];
+            }
+          }
+        }
+      }
+      //}}}
+    if (pps->hasPicScalingMatrix) {
+      //{{{  then check pps
+      for (int i = 0; i < n_ScalingList; i++) {
+        if (i < 6) {
+          if (!pps->picScalingListPresentFlag[i]) {
+            // fall-back rule B
+            if (i == 0) {
+              if (!sps->hasSeqScalingMatrix)
+                qmatrix[i] = quant_intra_default;
+              }
+            else if (i == 3) {
+              if (!sps->hasSeqScalingMatrix)
+                qmatrix[i] = quant_inter_default;
+              }
+            else
+              qmatrix[i] = qmatrix[i-1];
+            }
+          else {
+            if (pps->useDefaultScalingMatrix4x4Flag[i])
+              qmatrix[i] = (i<3) ? quant_intra_default:quant_inter_default;
+            else
+              qmatrix[i] = pps->scalingList4x4[i];
+            }
+          }
+        else {
+          if (!pps->picScalingListPresentFlag[i]) {
+            // fall-back rule B
+            if (i == 6) {
+              if (!sps->hasSeqScalingMatrix)
+                qmatrix[i] = quant8_intra_default;
+              }
+            else if (i == 7) {
+              if (!sps->hasSeqScalingMatrix)
+                qmatrix[i] = quant8_inter_default;
+              }
+            else
+              qmatrix[i] = qmatrix[i-2];
+            }
+          else {
+            if (pps->useDefaultScalingMatrix8x8Flag[i-6])
+              qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
+            else
+              qmatrix[i] = pps->scalingList8x8[i-6];
+            }
+          }
+        }
+      }
+      //}}}
+    }
+
+  calculateQuant4x4Param();
+  if (pps->hasTransform8x8mode)
+    calculateQuant8x8Param();
+  }
+//}}}
+
+//{{{
 void cSlice::fillWeightedPredParam() {
 
   if (sliceType == eSliceB) {
@@ -529,114 +637,6 @@ void cSlice::updatePicNum() {
         dpb->frameStoreLongTermRef[i]->botField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->botField->longTermFrameIndex + addBot;
       }
     }
-  }
-//}}}
-
-//{{{
-void cSlice::useQuantParams() {
-
-  cSps* sps = activeSps;
-  cPps* pps = activePps;
-
-  if (!pps->hasPicScalingMatrix && !sps->hasSeqScalingMatrix) {
-    for (int i = 0; i < 12; i++)
-      qmatrix[i] = (i < 6) ? quant_org : quant8_org;
-    }
-  else {
-    int n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
-    if (sps->hasSeqScalingMatrix) {
-      //{{{  check sps first
-      for (int i = 0; i < n_ScalingList; i++) {
-        if (i < 6) {
-          if (!sps->hasSeqScalingList[i]) {
-            // fall-back rule A
-            if (i == 0)
-              qmatrix[i] = quant_intra_default;
-            else if (i == 3)
-              qmatrix[i] = quant_inter_default;
-            else
-              qmatrix[i] = qmatrix[i-1];
-            }
-          else {
-            if (sps->useDefaultScalingMatrix4x4[i])
-              qmatrix[i] = (i<3) ? quant_intra_default : quant_inter_default;
-            else
-              qmatrix[i] = sps->scalingList4x4[i];
-          }
-        }
-        else {
-          if (!sps->hasSeqScalingList[i]) {
-            // fall-back rule A
-            if (i == 6)
-              qmatrix[i] = quant8_intra_default;
-            else if (i == 7)
-              qmatrix[i] = quant8_inter_default;
-            else
-              qmatrix[i] = qmatrix[i-2];
-            }
-          else {
-            if (sps->useDefaultScalingMatrix8x8[i-6])
-              qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
-            else
-              qmatrix[i] = sps->scalingList8x8[i-6];
-            }
-          }
-        }
-      }
-      //}}}
-    if (pps->hasPicScalingMatrix) {
-      //{{{  then check pps
-      for (int i = 0; i < n_ScalingList; i++) {
-        if (i < 6) {
-          if (!pps->picScalingListPresentFlag[i]) {
-            // fall-back rule B
-            if (i == 0) {
-              if (!sps->hasSeqScalingMatrix)
-                qmatrix[i] = quant_intra_default;
-              }
-            else if (i == 3) {
-              if (!sps->hasSeqScalingMatrix)
-                qmatrix[i] = quant_inter_default;
-              }
-            else
-              qmatrix[i] = qmatrix[i-1];
-            }
-          else {
-            if (pps->useDefaultScalingMatrix4x4Flag[i])
-              qmatrix[i] = (i<3) ? quant_intra_default:quant_inter_default;
-            else
-              qmatrix[i] = pps->scalingList4x4[i];
-            }
-          }
-        else {
-          if (!pps->picScalingListPresentFlag[i]) {
-            // fall-back rule B
-            if (i == 6) {
-              if (!sps->hasSeqScalingMatrix)
-                qmatrix[i] = quant8_intra_default;
-              }
-            else if (i == 7) {
-              if (!sps->hasSeqScalingMatrix)
-                qmatrix[i] = quant8_inter_default;
-              }
-            else
-              qmatrix[i] = qmatrix[i-2];
-            }
-          else {
-            if (pps->useDefaultScalingMatrix8x8Flag[i-6])
-              qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
-            else
-              qmatrix[i] = pps->scalingList8x8[i-6];
-            }
-          }
-        }
-      }
-      //}}}
-    }
-
-  calculateQuant4x4Param();
-  if (pps->hasTransform8x8mode)
-    calculateQuant8x8Param();
   }
 //}}}
 
