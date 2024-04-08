@@ -155,7 +155,7 @@ namespace {
   void reorderShortTerm (cSlice* slice, int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
 
     sPicture** refPicListX = slice->listX[curList];
-    sPicture* picLX = getShortTermPic (slice, slice->dpb, picNumLX);
+    sPicture* picLX = slice->dpb->getShortTermPic (slice, picNumLX);
 
     for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
       refPicListX[cIdx] = refPicListX[cIdx - 1];

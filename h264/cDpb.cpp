@@ -558,6 +558,32 @@ void cDpb::freeDpb () {
 //}}}
 
 //{{{
+sPicture* cDpb::getShortTermPic (cSlice* slice, int picNum) {
+
+  for (uint32_t i = 0; i < refFramesInBuffer; i++) {
+    if (slice->picStructure == eFrame) {
+      if (frameStoreRef[i]->usedReference == 3)
+        if (!frameStoreRef[i]->frame->usedLongTerm &&
+            (frameStoreRef[i]->frame->picNum == picNum))
+          return frameStoreRef[i]->frame;
+      }
+    else {
+      if (frameStoreRef[i]->usedReference & 1)
+        if (!frameStoreRef[i]->topField->usedLongTerm &&
+            (frameStoreRef[i]->topField->picNum == picNum))
+          return frameStoreRef[i]->topField;
+
+      if (frameStoreRef[i]->usedReference & 2)
+        if (!frameStoreRef[i]->botField->usedLongTerm &&
+            (frameStoreRef[i]->botField->picNum == picNum))
+          return frameStoreRef[i]->botField;
+      }
+    }
+
+  return slice->decoder->noReferencePicture;
+  }
+//}}}
+//{{{
 sPicture* cDpb::getLongTermPic (cSlice* slice, int longtermPicNum) {
 
   for (uint32_t i = 0; i < longTermRefFramesInBuffer; i++) {
@@ -587,8 +613,8 @@ sPicture* cDpb::getLongTermPic (cSlice* slice, int longtermPicNum) {
 //{{{
 sPicture* cDpb::getLastPicRefFromDpb() {
 
-  int usedSize = usedSize - 1;
-  for (int i = usedSize; i >= 0; i--)
+  int usedSize1 = usedSize - 1;
+  for (int i = usedSize1; i >= 0; i--)
     if (frameStore[i]->isUsed == 3)
       if (frameStore[i]->frame->usedForReference && !frameStore[i]->frame->usedLongTerm)
         return frameStore[i]->frame;
@@ -1193,32 +1219,6 @@ void updatePicNum (cSlice* slice) {
         dpb->frameStoreLongTermRef[i]->botField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->botField->longTermFrameIndex + addBot;
       }
     }
-  }
-//}}}
-//{{{
-sPicture* getShortTermPic (cSlice* slice, cDpb* dpb, int picNum) {
-
-  for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
-    if (slice->picStructure == eFrame) {
-      if (dpb->frameStoreRef[i]->usedReference == 3)
-        if (!dpb->frameStoreRef[i]->frame->usedLongTerm &&
-            (dpb->frameStoreRef[i]->frame->picNum == picNum))
-          return dpb->frameStoreRef[i]->frame;
-      }
-    else {
-      if (dpb->frameStoreRef[i]->usedReference & 1)
-        if (!dpb->frameStoreRef[i]->topField->usedLongTerm &&
-            (dpb->frameStoreRef[i]->topField->picNum == picNum))
-          return dpb->frameStoreRef[i]->topField;
-
-      if (dpb->frameStoreRef[i]->usedReference & 2)
-        if (!dpb->frameStoreRef[i]->botField->usedLongTerm &&
-            (dpb->frameStoreRef[i]->botField->picNum == picNum))
-          return dpb->frameStoreRef[i]->botField;
-      }
-    }
-
-  return slice->decoder->noReferencePicture;
   }
 //}}}
 

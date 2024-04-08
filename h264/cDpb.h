@@ -17,6 +17,7 @@ public:
   void removeFrameDpb (int pos);
   void freeDpb();
 
+  sPicture* getShortTermPic (cSlice* slice, int picNum);
   sPicture* getLongTermPic (cSlice* slice, int longtermPicNum);
   sPicture* getLastPicRefFromDpb();
 
