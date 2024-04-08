@@ -161,23 +161,6 @@ namespace {
 
 // dpb
 //{{{
-void cDpb::getSmallestPoc (int* poc, int* pos) {
-
-  if (usedSize < 1)
-    cDecoder264::error ("Cannot determine smallest POC, DPB empty");
-
-  *pos = -1;
-  *poc = INT_MAX;
-  for (uint32_t i = 0; i < usedSize; i++) {
-    if ((*poc > frameStore[i]->poc) && (!frameStore[i]->isOutput)) {
-      *poc = frameStore[i]->poc;
-      *pos = i;
-      }
-    }
-  }
-//}}}
-
-//{{{
 void cDpb::updateRefList() {
 
   uint32_t i, j;
@@ -492,6 +475,18 @@ void cDpb::freeDpb () {
 //}}}
 
 //{{{
+sPicture* cDpb::getLastPicRefFromDpb() {
+
+  int usedSize1 = usedSize - 1;
+  for (int i = usedSize1; i >= 0; i--)
+    if (frameStore[i]->isUsed == 3)
+      if (frameStore[i]->frame->usedForReference && !frameStore[i]->frame->usedLongTerm)
+        return frameStore[i]->frame;
+
+  return NULL;
+  }
+//}}}
+//{{{
 sPicture* cDpb::getShortTermPic (cSlice* slice, int picNum) {
 
   for (uint32_t i = 0; i < refFramesInBuffer; i++) {
@@ -518,40 +513,28 @@ sPicture* cDpb::getShortTermPic (cSlice* slice, int picNum) {
   }
 //}}}
 //{{{
-sPicture* cDpb::getLongTermPic (cSlice* slice, int longtermPicNum) {
+sPicture* cDpb::getLongTermPic (cSlice* slice, int picNum) {
 
   for (uint32_t i = 0; i < longTermRefFramesInBuffer; i++) {
     if (slice->picStructure == eFrame) {
       if (frameStoreLongTermRef[i]->usedReference == 3)
         if ((frameStoreLongTermRef[i]->frame->usedLongTerm) &&
-            (frameStoreLongTermRef[i]->frame->longTermPicNum == longtermPicNum))
+            (frameStoreLongTermRef[i]->frame->longTermPicNum == picNum))
           return frameStoreLongTermRef[i]->frame;
       }
 
     else {
       if (frameStoreLongTermRef[i]->usedReference & 1)
         if ((frameStoreLongTermRef[i]->topField->usedLongTerm) &&
-            (frameStoreLongTermRef[i]->topField->longTermPicNum == longtermPicNum))
+            (frameStoreLongTermRef[i]->topField->longTermPicNum == picNum))
           return frameStoreLongTermRef[i]->topField;
 
       if (frameStoreLongTermRef[i]->usedReference & 2)
         if ((frameStoreLongTermRef[i]->botField->usedLongTerm) &&
-            (frameStoreLongTermRef[i]->botField->longTermPicNum == longtermPicNum))
+            (frameStoreLongTermRef[i]->botField->longTermPicNum == picNum))
           return frameStoreLongTermRef[i]->botField;
       }
     }
-
-  return NULL;
-  }
-//}}}
-//{{{
-sPicture* cDpb::getLastPicRefFromDpb() {
-
-  int usedSize1 = usedSize - 1;
-  for (int i = usedSize1; i >= 0; i--)
-    if (frameStore[i]->isUsed == 3)
-      if (frameStore[i]->frame->usedForReference && !frameStore[i]->frame->usedLongTerm)
-        return frameStore[i]->frame;
 
   return NULL;
   }
@@ -787,6 +770,22 @@ void cDpb::idrMemoryManagement (sPicture* picture) {
 //}}}
 
 //{{{
+void cDpb::getSmallestPoc (int* poc, int* pos) {
+
+  if (usedSize < 1)
+    cDecoder264::error ("Cannot determine smallest POC, DPB empty");
+
+  *pos = -1;
+  *poc = INT_MAX;
+  for (uint32_t i = 0; i < usedSize; i++) {
+    if ((*poc > frameStore[i]->poc) && (!frameStore[i]->isOutput)) {
+      *poc = frameStore[i]->poc;
+      *pos = i;
+      }
+    }
+  }
+//}}}
+//{{{
 void cDpb::updateMaxLongTermFrameIndex (int maxLongTermFrameIndexPlus1) {
 
   maxLongTermPicIndex = maxLongTermFrameIndexPlus1 - 1;
@@ -807,17 +806,19 @@ void cDpb::unmarkLongTermFrameForRefByFrameIndex (int longTermFrameIndex) {
   }
 //}}}
 //{{{
-void cDpb::unmarkLongTermForRef (sPicture* picture, int longTermPicNum) {
+void cDpb::unmarkLongTermForRef (sPicture* picture, int picNum) {
 
   for (uint32_t i = 0; i < longTermRefFramesInBuffer; i++) {
     if (picture->picStructure == eFrame) {
-      if ((frameStoreLongTermRef[i]->usedReference == 3) && (frameStoreLongTermRef[i]->usedLongTerm == 3))
-        if (frameStoreLongTermRef[i]->frame->longTermPicNum == longTermPicNum)
+      if ((frameStoreLongTermRef[i]->usedReference == 3) &&
+          (frameStoreLongTermRef[i]->usedLongTerm == 3))
+        if (frameStoreLongTermRef[i]->frame->longTermPicNum == picNum)
           frameStoreLongTermRef[i]->unmarkForLongTermRef();
       }
     else {
-      if ((frameStoreLongTermRef[i]->usedReference & 1) && ((frameStoreLongTermRef[i]->usedLongTerm & 1)))
-        if (frameStoreLongTermRef[i]->topField->longTermPicNum == longTermPicNum) {
+      if ((frameStoreLongTermRef[i]->usedReference & 1) &&
+          (frameStoreLongTermRef[i]->usedLongTerm & 1))
+        if (frameStoreLongTermRef[i]->topField->longTermPicNum == picNum) {
           frameStoreLongTermRef[i]->topField->usedForReference = 0;
           frameStoreLongTermRef[i]->topField->usedLongTerm = 0;
           frameStoreLongTermRef[i]->usedReference &= 2;
@@ -829,8 +830,9 @@ void cDpb::unmarkLongTermForRef (sPicture* picture, int longTermPicNum) {
           return;
           }
 
-      if ((frameStoreLongTermRef[i]->usedReference & 2) && (frameStoreLongTermRef[i]->usedLongTerm & 2))
-        if (frameStoreLongTermRef[i]->botField->longTermPicNum == longTermPicNum) {
+      if ((frameStoreLongTermRef[i]->usedReference & 2) &&
+          (frameStoreLongTermRef[i]->usedLongTerm & 2))
+        if (frameStoreLongTermRef[i]->botField->longTermPicNum == picNum) {
           frameStoreLongTermRef[i]->botField->usedForReference = 0;
           frameStoreLongTermRef[i]->botField->usedLongTerm = 0;
           frameStoreLongTermRef[i]->usedReference &= 1;
@@ -890,10 +892,10 @@ void cDpb::unmarkAllLongTermForRef() {
 //}}}
 //{{{
 void cDpb::unmarkLongTermFieldRefFrameIndex (ePicStructure picStructure, int longTermFrameIndex,
-                                              int mark_current, uint32_t curr_frame_num, int curr_pic_num) {
+                                              int markCur, uint32_t curFrameNum, int curPicNum) {
 
-  if (curr_pic_num < 0)
-    curr_pic_num += (2 * decoder->coding.maxFrameNum);
+  if (curPicNum < 0)
+    curPicNum += (2 * decoder->coding.maxFrameNum);
 
   for (uint32_t i = 0; i < longTermRefFramesInBuffer; i++) {
     if (frameStoreLongTermRef[i]->longTermFrameIndex == longTermFrameIndex) {
@@ -904,17 +906,17 @@ void cDpb::unmarkLongTermFieldRefFrameIndex (ePicStructure picStructure, int lon
           if (frameStoreLongTermRef[i]->usedLongTerm == 1)
             frameStoreLongTermRef[i]->unmarkForLongTermRef();
           else {
-            if (mark_current) {
+            if (markCur) {
               if (lastPictureFrameStore) {
                 if ((lastPictureFrameStore != frameStoreLongTermRef[i]) ||
-                    lastPictureFrameStore->frameNum != curr_frame_num)
+                    lastPictureFrameStore->frameNum != curFrameNum)
                   frameStoreLongTermRef[i]->unmarkForLongTermRef();
                 }
               else
                 frameStoreLongTermRef[i]->unmarkForLongTermRef();
             }
             else {
-              if ((frameStoreLongTermRef[i]->frameNum) != (uint32_t)(curr_pic_num >> 1))
+              if ((frameStoreLongTermRef[i]->frameNum) != (uint32_t)(curPicNum >> 1))
                 frameStoreLongTermRef[i]->unmarkForLongTermRef();
               }
             }
@@ -928,17 +930,17 @@ void cDpb::unmarkLongTermFieldRefFrameIndex (ePicStructure picStructure, int lon
           if (frameStoreLongTermRef[i]->usedLongTerm == 2)
             frameStoreLongTermRef[i]->unmarkForLongTermRef();
           else {
-            if (mark_current) {
+            if (markCur) {
               if (lastPictureFrameStore) {
                 if ((lastPictureFrameStore != frameStoreLongTermRef[i]) ||
-                    lastPictureFrameStore->frameNum != curr_frame_num)
+                    lastPictureFrameStore->frameNum != curFrameNum)
                   frameStoreLongTermRef[i]->unmarkForLongTermRef();
                 }
               else
                 frameStoreLongTermRef[i]->unmarkForLongTermRef();
               }
             else {
-              if ((frameStoreLongTermRef[i]->frameNum) != (uint32_t)(curr_pic_num >> 1))
+              if ((frameStoreLongTermRef[i]->frameNum) != (uint32_t)(curPicNum >> 1))
                 frameStoreLongTermRef[i]->unmarkForLongTermRef();
               }
             }

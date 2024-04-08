@@ -4,8 +4,6 @@ class cDecoder;
 
 class cDpb {
 public:
-  void getSmallestPoc (int* poc, int* pos);
-
   void updateRefList();
   void updateLongTermRefList();
 
@@ -17,9 +15,9 @@ public:
   void removeFrameDpb (int pos);
   void freeDpb();
 
-  sPicture* getShortTermPic (cSlice* slice, int picNum);
-  sPicture* getLongTermPic (cSlice* slice, int longtermPicNum);
   sPicture* getLastPicRefFromDpb();
+  sPicture* getShortTermPic (cSlice* slice, int picNum);
+  sPicture* getLongTermPic (cSlice* slice, int picNum);
 
   //  vars
   cDecoder264*  decoder;
@@ -49,14 +47,15 @@ private:
   void slidingWindowMemoryManagement (sPicture* picture);
   void idrMemoryManagement (sPicture* picture);
 
+  void getSmallestPoc (int* poc, int* pos);
   void updateMaxLongTermFrameIndex (int maxLongTermFrameIndexPlus1);
 
   void unmarkLongTermFrameForRefByFrameIndex (int longTermFrameIndex);
-  void unmarkLongTermForRef (sPicture* picture, int longTermPicNum);
+  void unmarkLongTermForRef (sPicture* picture, int picNum);
   void unmarkShortTermForRef (sPicture* picture, int diffPicNumMinus1);
   void unmarkAllLongTermForRef();
   void unmarkLongTermFieldRefFrameIndex (ePicStructure picStructure, int longTermFrameIndex,
-                                         int mark_current, uint32_t curr_frame_num, int curr_pic_num);
+                                         int markCur, uint32_t curFrameNum, int curPicNum);
   void unmarkAllShortTermForRef();
 
   void markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNumX);
