@@ -17,6 +17,8 @@ public:
   void removeFrameDpb (int pos);
   void freeDpb();
 
+  sPicture* getLongTermPic (cSlice* slice, int longtermPicNum);
+
   // vars
   cDecoder264*  decoder;
 
@@ -38,9 +40,22 @@ public:
 
 private:
   void dumpDpb();
+
   void adaptiveMemoryManagement (sPicture* picture);
   void slidingWindowMemoryManagement (sPicture* picture);
   void idrMemoryManagement (sPicture* picture);
+
+  void updateMaxLongTermFrameIndex (int maxLongTermFrameIndexPlus1);
+  void unmarkLongTermFrameForRefByFrameIndex (int longTermFrameIndex);
+  void unmarkLongTermForRef (sPicture* p, int longTermPicNum);
+  void unmarkShortTermForRef (sPicture* p, int diffPicNumMinus1);
+  void unmarkAllLongTermForRef();
+  void unmarkLongTermFieldRefFrameIndex (ePicStructure picStructure, int longTermFrameIndex,
+                                         int mark_current, uint32_t curr_frame_num, int curr_pic_num);
+  void unmarkAllShortTermForRef();
+  void markPicLongTerm (sPicture* p, int longTermFrameIndex, int picNumX);
+  void markCurPicLongTerm (sPicture* p, int longTermFrameIndex);
+  void assignLongTermFrameIndex (sPicture* p, int diffPicNumMinus1, int longTermFrameIndex);
   };
 
 void initListsSliceI (cSlice* slice);
