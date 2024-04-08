@@ -100,91 +100,6 @@ namespace {
       }
     }
   //}}}
-
-  //{{{
-  void calculateQuant4x4Param (cSlice* slice) {
-
-    const int (*p_dequant_coef)[4][4] = dequant_coef;
-    int (*InvLevelScale4x4_Intra_0)[4][4] = slice->InvLevelScale4x4_Intra[0];
-    int (*InvLevelScale4x4_Intra_1)[4][4] = slice->InvLevelScale4x4_Intra[1];
-    int (*InvLevelScale4x4_Intra_2)[4][4] = slice->InvLevelScale4x4_Intra[2];
-    int (*InvLevelScale4x4_Inter_0)[4][4] = slice->InvLevelScale4x4_Inter[0];
-    int (*InvLevelScale4x4_Inter_1)[4][4] = slice->InvLevelScale4x4_Inter[1];
-    int (*InvLevelScale4x4_Inter_2)[4][4] = slice->InvLevelScale4x4_Inter[2];
-
-    for (int k = 0; k < 6; k++) {
-      setDequant4x4(*InvLevelScale4x4_Intra_0++, *p_dequant_coef  , slice->qmatrix[0]);
-      setDequant4x4(*InvLevelScale4x4_Intra_1++, *p_dequant_coef  , slice->qmatrix[1]);
-      setDequant4x4(*InvLevelScale4x4_Intra_2++, *p_dequant_coef  , slice->qmatrix[2]);
-      setDequant4x4(*InvLevelScale4x4_Inter_0++, *p_dequant_coef  , slice->qmatrix[3]);
-      setDequant4x4(*InvLevelScale4x4_Inter_1++, *p_dequant_coef  , slice->qmatrix[4]);
-      setDequant4x4(*InvLevelScale4x4_Inter_2++, *p_dequant_coef++, slice->qmatrix[5]);
-      }
-    }
-  //}}}
-  //{{{
-  void calculateQuant8x8Param (cSlice* slice) {
-
-    const int (*p_dequant_coef)[8][8] = dequant_coef8;
-    int (*InvLevelScale8x8_Intra_0)[8][8] = slice->InvLevelScale8x8_Intra[0];
-    int (*InvLevelScale8x8_Intra_1)[8][8] = slice->InvLevelScale8x8_Intra[1];
-    int (*InvLevelScale8x8_Intra_2)[8][8] = slice->InvLevelScale8x8_Intra[2];
-    int (*InvLevelScale8x8_Inter_0)[8][8] = slice->InvLevelScale8x8_Inter[0];
-    int (*InvLevelScale8x8_Inter_1)[8][8] = slice->InvLevelScale8x8_Inter[1];
-    int (*InvLevelScale8x8_Inter_2)[8][8] = slice->InvLevelScale8x8_Inter[2];
-
-    for (int k = 0; k < 6; k++) {
-      setDequant8x8 (*InvLevelScale8x8_Intra_0++, *p_dequant_coef  , slice->qmatrix[6]);
-      setDequant8x8 (*InvLevelScale8x8_Inter_0++, *p_dequant_coef++, slice->qmatrix[7]);
-      }
-
-    p_dequant_coef = dequant_coef8;
-    if (slice->activeSps->chromaFormatIdc == 3) {
-      // 4:4:4
-      for (int k = 0; k < 6; k++) {
-        setDequant8x8 (*InvLevelScale8x8_Intra_1++, *p_dequant_coef  , slice->qmatrix[8]);
-        setDequant8x8 (*InvLevelScale8x8_Inter_1++, *p_dequant_coef  , slice->qmatrix[9]);
-        setDequant8x8 (*InvLevelScale8x8_Intra_2++, *p_dequant_coef  , slice->qmatrix[10]);
-        setDequant8x8 (*InvLevelScale8x8_Inter_2++, *p_dequant_coef++, slice->qmatrix[11]);
-        }
-      }
-    }
-  //}}}
-
-  //{{{
-  void reorderShortTerm (cSlice* slice, int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
-
-    sPicture** refPicListX = slice->listX[curList];
-    sPicture* picLX = slice->dpb->getShortTermPic (slice, picNumLX);
-
-    for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
-      refPicListX[cIdx] = refPicListX[cIdx - 1];
-    refPicListX[(*refIdxLX)++] = picLX;
-
-    int nIdx = *refIdxLX;
-    for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
-      if (refPicListX[cIdx])
-        if ((refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->picNum != picNumLX))
-          refPicListX[nIdx++] = refPicListX[cIdx];
-    }
-  //}}}
-  //{{{
-  void reorderLongTerm (cSlice* slice, sPicture** refPicListX,
-                        int numRefIndexIXactiveMinus1, int LongTermPicNum, int *refIdxLX) {
-
-    sPicture* picLX = slice->dpb->getLongTermPic (slice, LongTermPicNum);
-
-    for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
-      refPicListX[cIdx] = refPicListX[cIdx - 1];
-    refPicListX[(*refIdxLX)++] = picLX;
-
-    int nIdx = *refIdxLX;
-    for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
-      if (refPicListX[cIdx])
-        if ((!refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->longTermPicNum != LongTermPicNum))
-          refPicListX[nIdx++] = refPicListX[cIdx];
-    }
-  //}}}
   }
 
 //{{{
@@ -518,10 +433,10 @@ void cSlice::reorderRefPicList (int curList) {
       else
         picNumLX = picNumLXNoWrap;
 
-      reorderShortTerm (this, curList, numRefIndexIXactiveMinus1, picNumLX, &refIdxLX);
+      reorderShortTerm (curList, numRefIndexIXactiveMinus1, picNumLX, &refIdxLX);
       }
     else
-      reorderLongTerm (this, listX[curList], numRefIndexIXactiveMinus1, curLongTermPicIndex[i], &refIdxLX);
+      reorderLongTerm (listX[curList], numRefIndexIXactiveMinus1, curLongTermPicIndex[i], &refIdxLX);
     }
 
   listXsize[curList] = (char)(numRefIndexIXactiveMinus1 + 1);
@@ -554,7 +469,6 @@ void cSlice::computeColocated (sPicture** listX[6]) {
   }
 //}}}
 
-// slice
 //{{{
 void cSlice::updatePicNum() {
 
@@ -618,16 +532,15 @@ void cSlice::updatePicNum() {
   }
 //}}}
 
-
 //{{{
-void useQuantParams (cSlice* slice) {
+void cSlice::useQuantParams() {
 
-  cSps* sps = slice->activeSps;
-  cPps* pps = slice->activePps;
+  cSps* sps = activeSps;
+  cPps* pps = activePps;
 
   if (!pps->hasPicScalingMatrix && !sps->hasSeqScalingMatrix) {
     for (int i = 0; i < 12; i++)
-      slice->qmatrix[i] = (i < 6) ? quant_org : quant8_org;
+      qmatrix[i] = (i < 6) ? quant_org : quant8_org;
     }
   else {
     int n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
@@ -638,34 +551,34 @@ void useQuantParams (cSlice* slice) {
           if (!sps->hasSeqScalingList[i]) {
             // fall-back rule A
             if (i == 0)
-              slice->qmatrix[i] = quant_intra_default;
+              qmatrix[i] = quant_intra_default;
             else if (i == 3)
-              slice->qmatrix[i] = quant_inter_default;
+              qmatrix[i] = quant_inter_default;
             else
-              slice->qmatrix[i] = slice->qmatrix[i-1];
+              qmatrix[i] = qmatrix[i-1];
             }
           else {
             if (sps->useDefaultScalingMatrix4x4[i])
-              slice->qmatrix[i] = (i<3) ? quant_intra_default : quant_inter_default;
+              qmatrix[i] = (i<3) ? quant_intra_default : quant_inter_default;
             else
-              slice->qmatrix[i] = sps->scalingList4x4[i];
+              qmatrix[i] = sps->scalingList4x4[i];
           }
         }
         else {
           if (!sps->hasSeqScalingList[i]) {
             // fall-back rule A
             if (i == 6)
-              slice->qmatrix[i] = quant8_intra_default;
+              qmatrix[i] = quant8_intra_default;
             else if (i == 7)
-              slice->qmatrix[i] = quant8_inter_default;
+              qmatrix[i] = quant8_inter_default;
             else
-              slice->qmatrix[i] = slice->qmatrix[i-2];
+              qmatrix[i] = qmatrix[i-2];
             }
           else {
             if (sps->useDefaultScalingMatrix8x8[i-6])
-              slice->qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
+              qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
             else
-              slice->qmatrix[i] = sps->scalingList8x8[i-6];
+              qmatrix[i] = sps->scalingList8x8[i-6];
             }
           }
         }
@@ -679,20 +592,20 @@ void useQuantParams (cSlice* slice) {
             // fall-back rule B
             if (i == 0) {
               if (!sps->hasSeqScalingMatrix)
-                slice->qmatrix[i] = quant_intra_default;
+                qmatrix[i] = quant_intra_default;
               }
             else if (i == 3) {
               if (!sps->hasSeqScalingMatrix)
-                slice->qmatrix[i] = quant_inter_default;
+                qmatrix[i] = quant_inter_default;
               }
             else
-              slice->qmatrix[i] = slice->qmatrix[i-1];
+              qmatrix[i] = qmatrix[i-1];
             }
           else {
             if (pps->useDefaultScalingMatrix4x4Flag[i])
-              slice->qmatrix[i] = (i<3) ? quant_intra_default:quant_inter_default;
+              qmatrix[i] = (i<3) ? quant_intra_default:quant_inter_default;
             else
-              slice->qmatrix[i] = pps->scalingList4x4[i];
+              qmatrix[i] = pps->scalingList4x4[i];
             }
           }
         else {
@@ -700,20 +613,20 @@ void useQuantParams (cSlice* slice) {
             // fall-back rule B
             if (i == 6) {
               if (!sps->hasSeqScalingMatrix)
-                slice->qmatrix[i] = quant8_intra_default;
+                qmatrix[i] = quant8_intra_default;
               }
             else if (i == 7) {
               if (!sps->hasSeqScalingMatrix)
-                slice->qmatrix[i] = quant8_inter_default;
+                qmatrix[i] = quant8_inter_default;
               }
             else
-              slice->qmatrix[i] = slice->qmatrix[i-2];
+              qmatrix[i] = qmatrix[i-2];
             }
           else {
             if (pps->useDefaultScalingMatrix8x8Flag[i-6])
-              slice->qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
+              qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
             else
-              slice->qmatrix[i] = pps->scalingList8x8[i-6];
+              qmatrix[i] = pps->scalingList8x8[i-6];
             }
           }
         }
@@ -721,8 +634,93 @@ void useQuantParams (cSlice* slice) {
       //}}}
     }
 
-  calculateQuant4x4Param (slice);
+  calculateQuant4x4Param();
   if (pps->hasTransform8x8mode)
-    calculateQuant8x8Param (slice);
+    calculateQuant8x8Param();
+  }
+//}}}
+
+// private:
+//{{{
+void cSlice::calculateQuant4x4Param() {
+
+  const int (*p_dequant_coef)[4][4] = dequant_coef;
+  int (*InvLevelScale4x4_Intra_0)[4][4] = InvLevelScale4x4_Intra[0];
+  int (*InvLevelScale4x4_Intra_1)[4][4] = InvLevelScale4x4_Intra[1];
+  int (*InvLevelScale4x4_Intra_2)[4][4] = InvLevelScale4x4_Intra[2];
+  int (*InvLevelScale4x4_Inter_0)[4][4] = InvLevelScale4x4_Inter[0];
+  int (*InvLevelScale4x4_Inter_1)[4][4] = InvLevelScale4x4_Inter[1];
+  int (*InvLevelScale4x4_Inter_2)[4][4] = InvLevelScale4x4_Inter[2];
+
+  for (int k = 0; k < 6; k++) {
+    setDequant4x4 (*InvLevelScale4x4_Intra_0++, *p_dequant_coef  , qmatrix[0]);
+    setDequant4x4 (*InvLevelScale4x4_Intra_1++, *p_dequant_coef  , qmatrix[1]);
+    setDequant4x4 (*InvLevelScale4x4_Intra_2++, *p_dequant_coef  , qmatrix[2]);
+    setDequant4x4 (*InvLevelScale4x4_Inter_0++, *p_dequant_coef  , qmatrix[3]);
+    setDequant4x4 (*InvLevelScale4x4_Inter_1++, *p_dequant_coef  , qmatrix[4]);
+    setDequant4x4 (*InvLevelScale4x4_Inter_2++, *p_dequant_coef++, qmatrix[5]);
+    }
+  }
+//}}}
+//{{{
+void cSlice::calculateQuant8x8Param() {
+
+  const int (*p_dequant_coef)[8][8] = dequant_coef8;
+  int (*InvLevelScale8x8_Intra_0)[8][8] = InvLevelScale8x8_Intra[0];
+  int (*InvLevelScale8x8_Intra_1)[8][8] = InvLevelScale8x8_Intra[1];
+  int (*InvLevelScale8x8_Intra_2)[8][8] = InvLevelScale8x8_Intra[2];
+  int (*InvLevelScale8x8_Inter_0)[8][8] = InvLevelScale8x8_Inter[0];
+  int (*InvLevelScale8x8_Inter_1)[8][8] = InvLevelScale8x8_Inter[1];
+  int (*InvLevelScale8x8_Inter_2)[8][8] = InvLevelScale8x8_Inter[2];
+
+  for (int k = 0; k < 6; k++) {
+    setDequant8x8 (*InvLevelScale8x8_Intra_0++, *p_dequant_coef  , qmatrix[6]);
+    setDequant8x8 (*InvLevelScale8x8_Inter_0++, *p_dequant_coef++, qmatrix[7]);
+    }
+
+  p_dequant_coef = dequant_coef8;
+  if (activeSps->chromaFormatIdc == 3) {
+    // 4:4:4
+    for (int k = 0; k < 6; k++) {
+      setDequant8x8 (*InvLevelScale8x8_Intra_1++, *p_dequant_coef  , qmatrix[8]);
+      setDequant8x8 (*InvLevelScale8x8_Inter_1++, *p_dequant_coef  , qmatrix[9]);
+      setDequant8x8 (*InvLevelScale8x8_Intra_2++, *p_dequant_coef  , qmatrix[10]);
+      setDequant8x8 (*InvLevelScale8x8_Inter_2++, *p_dequant_coef++, qmatrix[11]);
+      }
+    }
+  }
+//}}}
+
+//{{{
+void cSlice::reorderShortTerm (int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX) {
+
+  sPicture** refPicListX = listX[curList];
+  sPicture* picLX = dpb->getShortTermPic (this, picNumLX);
+
+  for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
+    refPicListX[cIdx] = refPicListX[cIdx - 1];
+  refPicListX[(*refIdxLX)++] = picLX;
+
+  int nIdx = *refIdxLX;
+  for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
+    if (refPicListX[cIdx])
+      if ((refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->picNum != picNumLX))
+        refPicListX[nIdx++] = refPicListX[cIdx];
+  }
+//}}}
+//{{{
+void cSlice::reorderLongTerm (sPicture** refPicListX, int numRefIndexIXactiveMinus1, int LongTermPicNum, int *refIdxLX) {
+
+  sPicture* picLX = dpb->getLongTermPic (this, LongTermPicNum);
+
+  for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
+    refPicListX[cIdx] = refPicListX[cIdx - 1];
+  refPicListX[(*refIdxLX)++] = picLX;
+
+  int nIdx = *refIdxLX;
+  for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
+    if (refPicListX[cIdx])
+      if ((!refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->longTermPicNum != LongTermPicNum))
+        refPicListX[nIdx++] = refPicListX[cIdx];
   }
 //}}}

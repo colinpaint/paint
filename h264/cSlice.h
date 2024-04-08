@@ -184,6 +184,8 @@ public:
   static cSlice* allocSlice();
   ~cSlice();
 
+  void useQuantParams();
+
   void fillWeightedPredParam();
   void resetWeightedPredParam();
   void initMbAffLists (sPicture* noReferencePicture);
@@ -366,6 +368,11 @@ public:
   void (*linfoCbpIntra) (int, int, int*, int*);
   void (*linfoCbpInter) (int, int, int*, int*);
   //}}}
-  };
 
-void useQuantParams (cSlice* currslice);
+private:
+  void calculateQuant4x4Param();
+  void calculateQuant8x8Param();
+
+  void reorderShortTerm (int curList, int numRefIndexIXactiveMinus1, int picNumLX, int *refIdxLX);
+  void reorderLongTerm (sPicture** refPicListX, int numRefIndexIXactiveMinus1, int LongTermPicNum, int *refIdxLX);
+  };
