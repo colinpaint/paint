@@ -15,10 +15,10 @@ namespace {
   const uint8_t kReNormTable[32] = {
     6,
     5,
-    4,4,
-    3,3,3,3,
-    2,2,2,2,2,2,2,2,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+    4, 4,
+    3, 3, 3, 3,
+    2, 2, 2, 2, 2, 2 ,2 ,2,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
     };
   //}}}
   //{{{
@@ -91,24 +91,24 @@ namespace {
   //}}}
   //{{{
   const uint8_t kAcNextStateMps64[64] = {
-    1,2,3,4,5,6,7,8,9,10,
-    11,12,13,14,15,16,17,18,19,20,
-    21,22,23,24,25,26,27,28,29,30,
-    31,32,33,34,35,36,37,38,39,40,
-    41,42,43,44,45,46,47,48,49,50,
-    51,52,53,54,55,56,57,58,59,60,
-    61,62,62,63
+    1,   2,  3,  4,  5,  6,  7,  8,  9, 10,
+    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+    21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+    31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+    51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
+    61, 62, 62, 63
     };
   //}}}
   //{{{
   const uint8_t kAcNextStateLps64[64] = {
-    0, 0, 1, 2, 2, 4, 4, 5, 6, 7,
-    8, 9, 9,11,11,12,13,13,15,15,
-    16,16,18,18,19,19,21,21,22,22,
-    23,24,24,25,26,26,27,27,28,29,
-    29,30,30,30,31,32,32,33,33,33,
-    34,34,35,35,35,36,36,36,37,37,
-    37,38,38,63
+    0,  0,  1,   2,  2,  4,  4,  5,  6,  7,
+    8,  9,  9,  11, 11, 12, 13, 13, 15, 15,
+    16, 16, 18, 18, 19, 19, 21, 21, 22, 22,
+    23, 24, 24, 25, 26, 26, 27, 27, 28, 29,
+    29, 30, 30, 30, 31, 32, 32, 33, 33, 33,
+    34, 34, 35, 35, 35, 36, 36, 36, 37, 37,
+    37, 38, 38, 63
     };
   //}}}
   }
@@ -120,8 +120,7 @@ void cCabacDecode::startDecoding (uint8_t* code_buffer, int firstbyte, int* code
   codeStreamLen = codeLen;
   *codeStreamLen = firstbyte;
 
-  // lookahead of 2 bytes: always make sure that s buffer
-  // contains 2 more bytes than actual s
+  // lookahead of 2 bytes: always make sure that s buffer contains 2 more bytes than actual s
   value = (getByte() << 16) | getWord();
   bitsLeft = 15;
   range = HALF;
@@ -133,7 +132,7 @@ int cCabacDecode::getBitsRead() {
   }
 //}}}
 //{{{
-uint32_t cCabacDecode::symbol (sBiContext* biContext) {
+uint32_t cCabacDecode::getSymbol (sBiContext* biContext) {
 
   uint32_t bit = biContext->MPS;
   uint32_t* value1 = &value;
@@ -170,8 +169,7 @@ uint32_t cCabacDecode::symbol (sBiContext* biContext) {
     return bit;
   else {
     *value1 <<= 16;
-    // lookahead of 2 bytes: always make sure that s buffer
-    // contains 2 more bytes than actual s
+    // lookahead of 2 bytes: always make sure that s buffer contains 2 more bytes than actual s
     *value1 |=  getWord();
     (*bitsLeft1) += 16;
     return bit;
@@ -179,7 +177,7 @@ uint32_t cCabacDecode::symbol (sBiContext* biContext) {
   }
 //}}}
 //{{{
-uint32_t cCabacDecode::symbolEqProb() {
+uint32_t cCabacDecode::getSymbolEqProb() {
 
   uint32_t* value1 = &value;
   int* bitsLeft1 = &bitsLeft;
@@ -199,7 +197,7 @@ uint32_t cCabacDecode::symbolEqProb() {
   }
 //}}}
 //{{{
-uint32_t cCabacDecode::final() {
+uint32_t cCabacDecode::getFinal() {
 
   uint32_t range1 = range - 2;
 
@@ -227,32 +225,9 @@ uint32_t cCabacDecode::final() {
 //}}}
 
 //{{{
-uint32_t cCabacDecode::unary_bin_max_decode (sBiContext* context, int ctx_offset, uint32_t max_symbol) {
+uint32_t cCabacDecode::unaryBin (sBiContext* context, int ctx_offset) {
 
-  uint32_t symbol1 = symbol (context);
-
-  if (symbol1 == 0 || (max_symbol == 0))
-    return symbol1;
-  else {
-    uint32_t l;
-    context += ctx_offset;
-    symbol1 = 0;
-    do {
-      l = symbol (context);
-      ++symbol1;
-      }
-    while( (l != 0) && (symbol1 < max_symbol) );
-    if ((l != 0) && (symbol1 == max_symbol))
-      ++symbol1;
-
-    return symbol1;
-    }
-  }
-//}}}
-//{{{
-uint32_t cCabacDecode::unary_bin_decode (sBiContext* context, int ctx_offset) {
-
-  uint32_t symbol1 = symbol (context);
+  uint32_t symbol1 = getSymbol (context);
 
   if (symbol1 == 0)
     return 0;
@@ -261,7 +236,7 @@ uint32_t cCabacDecode::unary_bin_decode (sBiContext* context, int ctx_offset) {
     context += ctx_offset;;
     symbol1 = 0;
     do {
-      l = symbol (context);
+      l = getSymbol (context);
       ++symbol1;
       }
     while (l != 0);
@@ -271,46 +246,26 @@ uint32_t cCabacDecode::unary_bin_decode (sBiContext* context, int ctx_offset) {
   }
 //}}}
 //{{{
-uint32_t cCabacDecode::exp_golomb_decode_eq_prob (int k) {
+uint32_t cCabacDecode::unaryBinMax (sBiContext* context, int ctx_offset, uint32_t max_symbol) {
 
-  uint32_t l;
-  int binary_symbol = 0;
-  int symbol = 0;
+  uint32_t symbol1 = getSymbol (context);
 
-  do {
-    l = symbolEqProb();
-    if (l == 1) {
-      symbol += (1<<k);
-      ++k;
-      }
-    } while (l!=0);
-
-  while (k--)
-    // next binary part
-    if (symbolEqProb() == 1)
-      binary_symbol |= (1 << k);
-
-  return (uint32_t)(symbol + binary_symbol);
-  }
-//}}}
-//{{{
-uint32_t cCabacDecode::unary_exp_golomb_level_decode (sBiContext* context) {
-
-  uint32_t symbol1 = symbol (context );
-  if (symbol1 == 0)
-    return 0;
+  if (symbol1 == 0 || (max_symbol == 0))
+    return symbol1;
   else {
-    uint32_t l, k = 1;
-    uint32_t exp_start = 13;
+    uint32_t l;
+    context += ctx_offset;
     symbol1 = 0;
     do {
-      l = symbol (context);
+      l = getSymbol (context);
       ++symbol1;
-      ++k;
-      } while ((l != 0) && (k != exp_start));
+      }
 
-    if (l != 0)
-      symbol1 += exp_golomb_decode_eq_prob (0)+1;
+    while ((l != 0) && (symbol1 < max_symbol));
+
+    if ((l != 0) && (symbol1 == max_symbol))
+      ++symbol1;
+
     return symbol1;
     }
   }
@@ -318,9 +273,10 @@ uint32_t cCabacDecode::unary_exp_golomb_level_decode (sBiContext* context) {
 //{{{
 uint32_t cCabacDecode::unaryExpGolombMv (sBiContext* context, uint32_t max_bin) {
 
-  uint32_t symbol1 = symbol (context );
+  uint32_t symbol1 = getSymbol (context );
   if (symbol1 == 0)
     return 0;
+
   else {
     uint32_t exp_start = 8;
     uint32_t l,k = 1;
@@ -328,7 +284,7 @@ uint32_t cCabacDecode::unaryExpGolombMv (sBiContext* context, uint32_t max_bin) 
     symbol1 = 0;
     ++context;
     do {
-      l = symbol (context);
+      l = getSymbol(context);
       if ((++bin) == 2)
         context++;
       if (bin == max_bin)
@@ -338,10 +294,55 @@ uint32_t cCabacDecode::unaryExpGolombMv (sBiContext* context, uint32_t max_bin) 
       } while ((l != 0) && (k != exp_start));
 
     if (l != 0)
-      symbol1 += exp_golomb_decode_eq_prob (3) + 1;
+      symbol1 += expGolombEqProb (3) + 1;
 
     return symbol1;
     }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::unaryExpGolombLevel (sBiContext* context) {
+
+  uint32_t symbol1 = getSymbol (context );
+  if (symbol1 == 0)
+    return 0;
+
+  else {
+    uint32_t l, k = 1;
+    uint32_t exp_start = 13;
+    symbol1 = 0;
+    do {
+      l = getSymbol (context);
+      ++symbol1;
+      ++k;
+      } while ((l != 0) && (k != exp_start));
+
+    if (l != 0)
+      symbol1 += expGolombEqProb (0)+1;
+    return symbol1;
+    }
+  }
+//}}}
+//{{{
+uint32_t cCabacDecode::expGolombEqProb (int k) {
+
+  uint32_t l;
+  int binary_symbol = 0;
+  int symbol = 0;
+
+  do {
+    l = getSymbolEqProb();
+    if (l == 1) {
+      symbol += (1<<k);
+      ++k;
+      }
+    } while (l!=0);
+
+  while (k--) // next binary part
+    if (getSymbolEqProb() == 1)
+      binary_symbol |= (1 << k);
+
+  return (uint32_t)(symbol + binary_symbol);
   }
 //}}}
 

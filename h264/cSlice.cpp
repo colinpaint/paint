@@ -109,8 +109,8 @@ cSlice* cSlice::allocSlice() {
   memset (slice, 0, sizeof(cSlice));
 
   // create all context models
-  slice->motionInfoContexts = createMotionInfoContexts();
-  slice->textureInfoContexts = createTextureInfoContexts();
+  slice->motionInfoContexts = (sMotionContexts*)calloc (1, sizeof(sMotionContexts));
+  slice->textureInfoContexts = (sTextureContexts*)calloc (1, sizeof(sTextureContexts));
 
   slice->maxDataPartitions = 3;
   slice->dataPartitions = allocDataPartitions (slice->maxDataPartitions);
@@ -168,8 +168,8 @@ cSlice::~cSlice() {
 
   freeDataPartitions (dataPartitions, 3);
 
-  deleteMotionInfoContexts (motionInfoContexts);
-  deleteTextureInfoContexts (textureInfoContexts);
+  free (motionInfoContexts);
+  free (textureInfoContexts);
 
   for (int i = 0; i < 6; i++) {
     if (listX[i]) {

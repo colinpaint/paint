@@ -4,11 +4,6 @@
 #define IS_I16MB(MB) (((MB)->mbType == I16MB) || ((MB)->mbType == IPCM))
 #define IS_DIRECT(MB) (((MB)->mbType == 0) && (slice->sliceType == eSliceB))
 
-sMotionContexts* createMotionInfoContexts();
-sTextureContexts* createTextureInfoContexts();
-void deleteMotionInfoContexts (sMotionContexts* contexts);
-void deleteTextureInfoContexts (sTextureContexts* contexts);
-
 void cabacNewSlice (cSlice* slice);
 
 void readMB_typeInfo_CABAC_i_slice (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);

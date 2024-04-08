@@ -12,15 +12,15 @@ public:
   void startDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen);
 
   int getBitsRead();
-  uint32_t symbol (sBiContext* biContext);
-  uint32_t symbolEqProb();
-  uint32_t final();
+  uint32_t getSymbol (sBiContext* biContext);
+  uint32_t getSymbolEqProb();
+  uint32_t getFinal();
 
-  uint32_t unary_bin_max_decode (sBiContext* context, int ctx_offset, uint32_t max_symbol);
-  uint32_t unary_bin_decode (sBiContext* context, int ctx_offset);
-  uint32_t exp_golomb_decode_eq_prob (int k);
-  uint32_t unary_exp_golomb_level_decode (sBiContext* context);
+  uint32_t unaryBin (sBiContext* context, int ctx_offset);
+  uint32_t unaryBinMax (sBiContext* context, int ctx_offset, uint32_t max_symbol);
   uint32_t unaryExpGolombMv (sBiContext* context, uint32_t max_bin);
+  uint32_t unaryExpGolombLevel (sBiContext* context);
+  uint32_t expGolombEqProb (int k);
 
   // vars
   uint32_t range;
