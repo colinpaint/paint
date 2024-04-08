@@ -1924,7 +1924,7 @@ void cDecoder264::initPictureDecode() {
   coding.picStructure = slice->picStructure;
   initFmo (this, slice);
 
-  updatePicNum (slice);
+  slice->updatePicNum();
 
   initDeblock (this, slice->mbAffFrame);
   for (int j = 0; j < picSliceIndex; j++)
@@ -3647,7 +3647,7 @@ void cDecoder264::decodeSlice (cSlice* slice) {
     }
 
   if (slice->sliceType == eSliceB)
-    computeColocated (slice, slice->listX);
+    slice->computeColocated (slice->listX);
 
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI))
     initRefPicture (slice);

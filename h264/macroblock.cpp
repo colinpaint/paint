@@ -3873,6 +3873,270 @@ namespace {
       }
     }
   //}}}
+
+  //{{{
+  void genPicListFromFrameList (ePicStructure currStructure, cFrameStore** frameStoreList,
+                                int list_idx, sPicture** list, char *list_size, int long_term) {
+
+    int top_idx = 0;
+    int bot_idx = 0;
+
+    int (*is_ref)(sPicture*s) = (long_term) ? isLongRef : isShortRef;
+
+    if (currStructure == eTopField) {
+      while ((top_idx<list_idx)||(bot_idx<list_idx)) {
+        for ( ; top_idx<list_idx; top_idx++) {
+          if (frameStoreList[top_idx]->isUsed & 1) {
+            if (is_ref (frameStoreList[top_idx]->topField)) {
+              // int16_t term ref pic
+              list[(int16_t) *list_size] = frameStoreList[top_idx]->topField;
+              (*list_size)++;
+              top_idx++;
+              break;
+              }
+            }
+          }
+
+        for ( ; bot_idx<list_idx; bot_idx++) {
+          if (frameStoreList[bot_idx]->isUsed & 2) {
+            if (is_ref (frameStoreList[bot_idx]->botField)) {
+              // int16_t term ref pic
+              list[(int16_t) *list_size] = frameStoreList[bot_idx]->botField;
+              (*list_size)++;
+              bot_idx++;
+              break;
+              }
+            }
+          }
+        }
+      }
+
+    if (currStructure == eBotField) {
+      while ((top_idx<list_idx)||(bot_idx<list_idx)) {
+        for ( ; bot_idx<list_idx; bot_idx++) {
+          if (frameStoreList[bot_idx]->isUsed & 2) {
+            if (is_ref (frameStoreList[bot_idx]->botField)) {
+              // int16_t term ref pic
+              list[(int16_t) *list_size] = frameStoreList[bot_idx]->botField;
+              (*list_size)++;
+              bot_idx++;
+              break;
+              }
+            }
+          }
+
+        for ( ; top_idx<list_idx; top_idx++) {
+          if (frameStoreList[top_idx]->isUsed & 1) {
+            if (is_ref (frameStoreList[top_idx]->topField)) {
+              // int16_t term ref pic
+              list[(int16_t) *list_size] = frameStoreList[top_idx]->topField;
+              (*list_size)++;
+              top_idx++;
+              break;
+              }
+            }
+          }
+        }
+      }
+    }
+  //}}}
+  //{{{
+  void initListsSliceI (cSlice* slice) {
+
+    slice->listXsize[0] = 0;
+    slice->listXsize[1] = 0;
+    }
+  //}}}
+  //{{{
+  void initListsSliceP (cSlice* slice) {
+
+    cDecoder264* decoder = slice->decoder;
+    cDpb* dpb = slice->dpb;
+
+    int list0idx = 0;
+    int listLtIndex = 0;
+    cFrameStore** frameStoreList0;
+    cFrameStore** frameStoreListLongTerm;
+
+    if (slice->picStructure == eFrame) {
+      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
+        if (dpb->frameStoreRef[i]->isUsed == 3)
+          if ((dpb->frameStoreRef[i]->frame->usedForReference) &&
+              !dpb->frameStoreRef[i]->frame->usedLongTerm)
+            slice->listX[0][list0idx++] = dpb->frameStoreRef[i]->frame;
+
+      // order list 0 by picNum
+      qsort ((void *)slice->listX[0], list0idx, sizeof(sPicture*), comparePicByPicNumDescending);
+      slice->listXsize[0] = (char) list0idx;
+
+      // long term
+      for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+        if (dpb->frameStoreLongTermRef[i]->isUsed == 3)
+          if (dpb->frameStoreLongTermRef[i]->frame->usedLongTerm)
+            slice->listX[0][list0idx++] = dpb->frameStoreLongTermRef[i]->frame;
+      qsort ((void*)&slice->listX[0][(int16_t)slice->listXsize[0]], list0idx - slice->listXsize[0],
+             sizeof(sPicture*), comparePicByLtPicNumAscending);
+      slice->listXsize[0] = (char) list0idx;
+      }
+    else {
+      frameStoreList0 = (cFrameStore**)calloc (dpb->size, sizeof(cFrameStore*));
+      frameStoreListLongTerm = (cFrameStore**)calloc (dpb->size, sizeof(cFrameStore*));
+      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
+        if (dpb->frameStoreRef[i]->usedReference)
+          frameStoreList0[list0idx++] = dpb->frameStoreRef[i];
+      qsort ((void*)frameStoreList0, list0idx, sizeof(cFrameStore*), compareFsByFrameNumDescending);
+      slice->listXsize[0] = 0;
+      genPicListFromFrameList (slice->picStructure, frameStoreList0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
+
+      // long term
+      for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+        frameStoreListLongTerm[listLtIndex++] = dpb->frameStoreLongTermRef[i];
+      qsort ((void*)frameStoreListLongTerm, listLtIndex, sizeof(cFrameStore*), compareFsbyLtPicIndexAscending);
+      genPicListFromFrameList (slice->picStructure, frameStoreListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
+
+      free (frameStoreList0);
+      free (frameStoreListLongTerm);
+      }
+    slice->listXsize[1] = 0;
+
+    // set max size
+    slice->listXsize[0] = (char)imin (slice->listXsize[0], slice->numRefIndexActive[LIST_0]);
+    slice->listXsize[1] = (char)imin (slice->listXsize[1], slice->numRefIndexActive[LIST_1]);
+
+    // set the unused list entries to NULL
+    for (uint32_t i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
+      slice->listX[0][i] = decoder->noReferencePicture;
+    for (uint32_t i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
+      slice->listX[1][i] = decoder->noReferencePicture;
+    }
+  //}}}
+  //{{{
+  void initListsSliceB (cSlice* slice) {
+
+    cDecoder264* decoder = slice->decoder;
+    cDpb* dpb = slice->dpb;
+
+    int list0idx = 0;
+    int list0index1 = 0;
+    int listLtIndex = 0;
+    cFrameStore** frameStoreList0;
+    cFrameStore** frameStoreList1;
+    cFrameStore** frameStoreListLongTerm;
+
+    // B Slice
+    if (slice->picStructure == eFrame) {
+      //{{{  frame
+      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
+        if (dpb->frameStoreRef[i]->isUsed==3)
+          if ((dpb->frameStoreRef[i]->frame->usedForReference) && (!dpb->frameStoreRef[i]->frame->usedLongTerm))
+            if (slice->framePoc >= dpb->frameStoreRef[i]->frame->poc) // !KS use >= for error conceal
+              slice->listX[0][list0idx++] = dpb->frameStoreRef[i]->frame;
+      qsort ((void*)slice->listX[0], list0idx, sizeof(sPicture*), comparePicByPocdesc);
+
+      // get the backward reference picture (POC>current POC) in list0;
+      list0index1 = list0idx;
+      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
+        if (dpb->frameStoreRef[i]->isUsed==3)
+          if ((dpb->frameStoreRef[i]->frame->usedForReference)&&(!dpb->frameStoreRef[i]->frame->usedLongTerm))
+            if (slice->framePoc < dpb->frameStoreRef[i]->frame->poc)
+              slice->listX[0][list0idx++] = dpb->frameStoreRef[i]->frame;
+      qsort ((void*)&slice->listX[0][list0index1], list0idx-list0index1, sizeof(sPicture*), comparePicByPocAscending);
+
+      for (int j = 0; j < list0index1; j++)
+        slice->listX[1][list0idx-list0index1+j]=slice->listX[0][j];
+      for (int j = list0index1; j < list0idx; j++)
+        slice->listX[1][j-list0index1] = slice->listX[0][j];
+      slice->listXsize[0] = slice->listXsize[1] = (char) list0idx;
+
+      // long term
+      for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+        if (dpb->frameStoreLongTermRef[i]->isUsed == 3) {
+          if (dpb->frameStoreLongTermRef[i]->frame->usedLongTerm) {
+            slice->listX[0][list0idx] = dpb->frameStoreLongTermRef[i]->frame;
+            slice->listX[1][list0idx++] = dpb->frameStoreLongTermRef[i]->frame;
+            }
+          }
+        }
+      qsort ((void *)&slice->listX[0][(int16_t) slice->listXsize[0]], list0idx - slice->listXsize[0],
+             sizeof(sPicture*), comparePicByLtPicNumAscending);
+      qsort ((void *)&slice->listX[1][(int16_t) slice->listXsize[0]], list0idx - slice->listXsize[0],
+             sizeof(sPicture*), comparePicByLtPicNumAscending);
+
+      slice->listXsize[0] = slice->listXsize[1] = (char)list0idx;
+      }
+      //}}}
+    else {
+      //{{{  field
+      frameStoreList0 = (cFrameStore**)calloc(dpb->size, sizeof (cFrameStore*));
+      frameStoreList1 = (cFrameStore**)calloc(dpb->size, sizeof (cFrameStore*));
+      frameStoreListLongTerm = (cFrameStore**)calloc(dpb->size, sizeof (cFrameStore*));
+      slice->listXsize[0] = 0;
+      slice->listXsize[1] = 1;
+
+      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
+        if (dpb->frameStoreRef[i]->isUsed)
+          if (slice->thisPoc >= dpb->frameStoreRef[i]->poc)
+            frameStoreList0[list0idx++] = dpb->frameStoreRef[i];
+      qsort ((void*)frameStoreList0, list0idx, sizeof(cFrameStore*), comparefsByPocdesc);
+
+      list0index1 = list0idx;
+      for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
+        if (dpb->frameStoreRef[i]->isUsed)
+          if (slice->thisPoc < dpb->frameStoreRef[i]->poc)
+            frameStoreList0[list0idx++] = dpb->frameStoreRef[i];
+      qsort ((void*)&frameStoreList0[list0index1], list0idx-list0index1, sizeof(cFrameStore*), compareFsByPocAscending);
+
+      for (int j = 0; j < list0index1; j++)
+        frameStoreList1[list0idx-list0index1+j]=frameStoreList0[j];
+      for (int j = list0index1; j < list0idx; j++)
+        frameStoreList1[j-list0index1]=frameStoreList0[j];
+
+      slice->listXsize[0] = 0;
+      slice->listXsize[1] = 0;
+      genPicListFromFrameList (slice->picStructure, frameStoreList0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
+      genPicListFromFrameList (slice->picStructure, frameStoreList1, list0idx, slice->listX[1], &slice->listXsize[1], 0);
+
+      // long term
+      for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
+        frameStoreListLongTerm[listLtIndex++] = dpb->frameStoreLongTermRef[i];
+
+      qsort ((void*)frameStoreListLongTerm, listLtIndex, sizeof(cFrameStore*), compareFsbyLtPicIndexAscending);
+      genPicListFromFrameList (slice->picStructure, frameStoreListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
+      genPicListFromFrameList (slice->picStructure, frameStoreListLongTerm, listLtIndex, slice->listX[1], &slice->listXsize[1], 1);
+
+      free (frameStoreList0);
+      free (frameStoreList1);
+      free (frameStoreListLongTerm);
+      }
+      //}}}
+
+    if ((slice->listXsize[0] == slice->listXsize[1]) && (slice->listXsize[0] > 1)) {
+      // check if lists are identical, if yes swap first two elements of slice->listX[1]
+      bool diff = false;
+      for (int j = 0; j< slice->listXsize[0]; j++) {
+        if (slice->listX[0][j] != slice->listX[1][j]) {
+          diff = true;
+          break;
+          }
+        }
+      if (!diff) {
+        sPicture* tmp_s = slice->listX[1][0];
+        slice->listX[1][0] = slice->listX[1][1];
+        slice->listX[1][1] = tmp_s;
+        }
+      }
+
+    // set max size
+    slice->listXsize[0] = (char)imin (slice->listXsize[0], slice->numRefIndexActive[LIST_0]);
+    slice->listXsize[1] = (char)imin (slice->listXsize[1], slice->numRefIndexActive[LIST_1]);
+
+    // set the unused list entries to NULL
+    for (uint32_t i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
+      slice->listX[0][i] = decoder->noReferencePicture;
+    for (uint32_t i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
+      slice->listX[1][i] = decoder->noReferencePicture;
+    }
+  //}}}
   }
 
 //{{{

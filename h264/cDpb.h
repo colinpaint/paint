@@ -21,7 +21,7 @@ public:
   sPicture* getLongTermPic (cSlice* slice, int longtermPicNum);
   sPicture* getLastPicRefFromDpb();
 
-  // vars
+  //{{{  vars
   cDecoder264*  decoder;
 
   cFrameStore** frameStore;
@@ -39,17 +39,20 @@ public:
   int           numRefFrames;
 
   cFrameStore*  lastPictureFrameStore;
+  //}}}
 
 private:
+  void dumpDpb();
+
   int outputDpbFrame();
   void checkNumDpbFrames();
-  void dumpDpb();
 
   void adaptiveMemoryManagement (sPicture* picture);
   void slidingWindowMemoryManagement (sPicture* picture);
   void idrMemoryManagement (sPicture* picture);
 
   void updateMaxLongTermFrameIndex (int maxLongTermFrameIndexPlus1);
+
   void unmarkLongTermFrameForRefByFrameIndex (int longTermFrameIndex);
   void unmarkLongTermForRef (sPicture* p, int longTermPicNum);
   void unmarkShortTermForRef (sPicture* p, int diffPicNumMinus1);
@@ -57,17 +60,9 @@ private:
   void unmarkLongTermFieldRefFrameIndex (ePicStructure picStructure, int longTermFrameIndex,
                                          int mark_current, uint32_t curr_frame_num, int curr_pic_num);
   void unmarkAllShortTermForRef();
+
   void markPicLongTerm (sPicture* p, int longTermFrameIndex, int picNumX);
   void markCurPicLongTerm (sPicture* p, int longTermFrameIndex);
+
   void assignLongTermFrameIndex (sPicture* p, int diffPicNumMinus1, int longTermFrameIndex);
   };
-
-void initListsSliceI (cSlice* slice);
-void initListsSliceP (cSlice* slice);
-void initListsSliceB (cSlice* slice);
-void updatePicNum (cSlice* slice);
-
-void reorderRefPicList (cSlice* slice, int curList);
-sPicture* getShortTermPic (cSlice* slice, cDpb* dpb, int picNum);
-
-void computeColocated (cSlice* slice, sPicture** listX[6]);

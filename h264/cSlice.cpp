@@ -527,6 +527,97 @@ void cSlice::reorderRefPicList (int curList) {
   listXsize[curList] = (char)(numRefIndexIXactiveMinus1 + 1);
   }
 //}}}
+//{{{
+void cSlice::computeColocated (sPicture** listX[6]) {
+
+  if (directSpatialMvPredFlag == 0) {
+    for (int j = 0; j < 2 + (mbAffFrame * 4); j += 2) {
+      for (int i = 0; i < listXsize[j];i++) {
+        int iTRb;
+        if (j == 0)
+          iTRb = iClip3 (-128, 127, decoder->picture->poc - listX[LIST_0 + j][i]->poc);
+        else if (j == 2)
+          iTRb = iClip3 (-128, 127, decoder->picture->topPoc - listX[LIST_0 + j][i]->poc);
+        else
+          iTRb = iClip3 (-128, 127, decoder->picture->botPoc - listX[LIST_0 + j][i]->poc);
+
+        int iTRp = iClip3 (-128, 127, listX[LIST_1 + j][0]->poc - listX[LIST_0 + j][i]->poc);
+        if (iTRp != 0) {
+          int prescale = (16384 + iabs( iTRp / 2)) / iTRp;
+          mvscale[j][i] = iClip3 (-1024, 1023, (iTRb * prescale + 32) >> 6) ;
+          }
+        else
+          mvscale[j][i] = 9999;
+        }
+     }
+    }
+  }
+//}}}
+
+// slice
+//{{{
+void cSlice::updatePicNum() {
+
+  int addTop = 0;
+  int addBot = 0;
+  int maxFrameNum = 1 << (decoder->activeSps->log2maxFrameNumMinus4 + 4);
+
+  if (picStructure == eFrame) {
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
+      if (dpb->frameStoreRef[i]->isUsed == 3 ) {
+        if (dpb->frameStoreRef[i]->frame->usedForReference &&
+            !dpb->frameStoreRef[i]->frame->usedLongTerm) {
+          if (dpb->frameStoreRef[i]->frameNum > frameNum )
+            dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
+          else
+            dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum;
+          dpb->frameStoreRef[i]->frame->picNum = dpb->frameStoreRef[i]->frameNumWrap;
+          }
+        }
+      }
+
+    // update longTermPicNum
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+      if (dpb->frameStoreLongTermRef[i]->isUsed == 3) {
+        if (dpb->frameStoreLongTermRef[i]->frame->usedLongTerm)
+          dpb->frameStoreLongTermRef[i]->frame->longTermPicNum = dpb->frameStoreLongTermRef[i]->frame->longTermFrameIndex;
+        }
+      }
+    }
+  else {
+    if (picStructure == eTopField) {
+      addTop = 1;
+      addBot = 0;
+      }
+    else {
+      addTop = 0;
+      addBot = 1;
+      }
+
+    for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
+      if (dpb->frameStoreRef[i]->usedReference) {
+        if (dpb->frameStoreRef[i]->frameNum > frameNum )
+          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
+        else
+          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum;
+        if (dpb->frameStoreRef[i]->usedReference & 1)
+          dpb->frameStoreRef[i]->topField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addTop;
+        if (dpb->frameStoreRef[i]->usedReference & 2)
+          dpb->frameStoreRef[i]->botField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addBot;
+        }
+      }
+
+    // update longTermPicNum
+    for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
+      if (dpb->frameStoreLongTermRef[i]->usedLongTerm & 1)
+        dpb->frameStoreLongTermRef[i]->topField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->topField->longTermFrameIndex + addTop;
+      if (dpb->frameStoreLongTermRef[i]->usedLongTerm & 2)
+        dpb->frameStoreLongTermRef[i]->botField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->botField->longTermFrameIndex + addBot;
+      }
+    }
+  }
+//}}}
+
 
 //{{{
 void useQuantParams (cSlice* slice) {

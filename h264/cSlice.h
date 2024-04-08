@@ -201,6 +201,9 @@ public:
   bool endMacroBlockDecode (int eos_bit);
 
   void reorderRefPicList (int curList);
+  void computeColocated (sPicture** listX[6]);
+  void updatePicNum();
+
   //{{{  vars
   cDecoder264* decoder;
 
