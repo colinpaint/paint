@@ -1228,8 +1228,8 @@ namespace {
   }
 
 //{{{
-void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
-                          int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
+void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j, 
+                          int levarr[16], int runarr[16], int* number_coefficients) {
 
   static const int incVlc[] = {0, 3, 6, 12, 24, 48, 32768};    // maximum vlc = 6
 
@@ -1448,8 +1448,8 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type,
   }
 //}}}
 //{{{
-void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
-                       int i, int j, int levarr[16], int runarr[16], int *number_coefficients) {
+void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j, 
+                             int levarr[16], int runarr[16], int* number_coefficients) {
 
   cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
@@ -1616,22 +1616,22 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type,
     }
   }
 //}}}
-//{{{
-void setReadCompCoefCavlc (sMacroBlock* mb) {
 
-  if (mb->isLossless == false) {
-    mb->readCompCoef4x4cavlc = readCompCoef4x4;
-    mb->readCompCoef8x8cavlc = readCompCoef8x8;
+//{{{
+void sMacroBlock::setReadCompCavlc() {
+
+  if (isLossless) {
+    readCompCoef4x4cavlc = readCompCoef4x4lossless;
+    readCompCoef8x8cavlc = readCompCoef8x8lossless;
     }
   else {
-    mb->readCompCoef4x4cavlc = readCompCoef4x4lossless;
-    mb->readCompCoef8x8cavlc = readCompCoef8x8lossless;
+    readCompCoef4x4cavlc = readCompCoef4x4;
+    readCompCoef8x8cavlc = readCompCoef8x8;
     }
   }
 //}}}
-
 //{{{
-void cSlice::setReadCbpCoefCavlc() {
+void cSlice::setReadCbpCavlc() {
 
   switch (decoder->activeSps->chromaFormatIdc) {
     case YUV444:

@@ -185,7 +185,7 @@ public:
   ~cSlice();
 
   void setQuantParams();
-  void setReadCbpCoefCavlc();
+  void setReadCbpCavlc();
   void setReadCbpCoefsCabac();
   void setIntraPredFunctions();
   void setUpdateDirectFunction();

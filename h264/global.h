@@ -2,7 +2,7 @@
 //{{{  includes
 #define _CRT_SECURE_NO_WARNINGS
 #define NOMINMAX
-  
+
 #include <cstdint>
 #include <string>
 
@@ -327,6 +327,9 @@ struct sDataPartition {
 //}}}
 //{{{
 struct sMacroBlock {
+  void setReadCompCavlc();
+  void setReadCompCabac();
+
   cDecoder264* decoder;
   cSlice*   slice;
 

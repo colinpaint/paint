@@ -4,7 +4,6 @@
 
 #include "cCabacDecode.h"
 #include "cabac.h"
-#include "cabacRead.h"
 #include "cavlcRead.h"
 #include "fmo.h"
 #include "intraPred.h"
@@ -2329,8 +2328,8 @@ namespace {
       resetMvInfo (*(mvInfo++) + i, slice_no);
       }
 
-    setReadCompCabac (mb);
-    setReadCompCoefCavlc (mb);
+    mb->setReadCompCabac();
+    mb->setReadCompCavlc();
     }
   //}}}
   //{{{
@@ -2339,8 +2338,8 @@ namespace {
     int slice_no = mb->slice->curSliceIndex;
     sPicMotion** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
 
-    setReadCompCabac (mb);
-    setReadCompCoefCavlc (mb);
+    mb->setReadCompCabac();
+    mb->setReadCompCavlc();
 
     int i = mb->blockX;
     for (int j = 0; j < BLOCK_SIZE; ++j) {
@@ -4995,8 +4994,8 @@ void updateQp (sMacroBlock* mb, int qp) {
   setChromaQp (mb);
 
   mb->isLossless = (bool)((mb->qpScaled[0] == 0) && (decoder->coding.useLosslessQpPrime == 1));
-  setReadCompCoefCavlc (mb);
-  setReadCompCabac (mb);
+  mb->setReadCompCavlc();
+  mb->setReadCompCabac();
   }
 //}}}
 //{{{
@@ -5241,7 +5240,7 @@ void cSlice::setSliceReadFunctions() {
     //}}}
     //{{{
     case eCavlc:
-      setReadCbpCoefCavlc();
+      setReadCbpCavlc();
       break;
     //}}}
     //{{{
@@ -5262,8 +5261,8 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
 
   // Update coordinates of the current macroBlock
   if (mbAffFrame) {
-    (*mb)->mb.x = (int16_t) (   (mbIndex) % ((2*decoder->coding.width) / MB_BLOCK_SIZE));
-    (*mb)->mb.y = (int16_t) (2*((mbIndex) / ((2*decoder->coding.width) / MB_BLOCK_SIZE)));
+    (*mb)->mb.x = (int16_t)((mbIndex) % ((2*decoder->coding.width) / MB_BLOCK_SIZE));
+    (*mb)->mb.y = (int16_t)(2*((mbIndex) / ((2*decoder->coding.width) / MB_BLOCK_SIZE)));
     (*mb)->mb.y += ((*mb)->mb.x & 0x01);
     (*mb)->mb.x >>= 1;
     }

@@ -1313,15 +1313,15 @@ namespace {
   }
 
 //{{{
-void setReadCompCabac (sMacroBlock* mb) {
+void sMacroBlock::setReadCompCabac() {
 
-  if (mb->isLossless) {
-    mb->readCompCoef4x4cabac = readCompCoef4x4Lossless;
-    mb->readCompCoef8x8cabac = readCompCoef8x8mbLossless;
+  if (isLossless) {
+    readCompCoef4x4cabac = readCompCoef4x4Lossless;
+    readCompCoef8x8cabac = readCompCoef8x8mbLossless;
     }
   else {
-    mb->readCompCoef4x4cabac = readCompCoef4x4;
-    mb->readCompCoef8x8cabac = readCompCoef8x8mb;
+    readCompCoef4x4cabac = readCompCoef4x4;
+    readCompCoef8x8cabac = readCompCoef8x8mb;
     }
   }
 //}}}
