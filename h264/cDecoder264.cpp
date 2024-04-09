@@ -1506,7 +1506,7 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->coding.sliceType = eSliceI;
   decoder->recoveryPoc = 0x7fffffff;
   decoder->deblockEnable = 0x3;
-  decoder->pendingOutState = eFrame;
+  decoder->pendingOutPicStructure = eFrame;
 
   decoder->coding.lumaPadX = MCBUF_LUMA_PAD_X;
   decoder->coding.lumaPadY = MCBUF_LUMA_PAD_Y;
@@ -2924,7 +2924,7 @@ void cDecoder264::writeOutPicture (sPicture* p) {
 //{{{
 void cDecoder264::flushPendingOut() {
 
-  if (pendingOutState != eFrame)
+  if (pendingOutPicStructure != eFrame)
     writeOutPicture (pendingOut);
 
   if (pendingOut->imgY) {
@@ -2937,7 +2937,7 @@ void cDecoder264::flushPendingOut() {
     pendingOut->imgUV = NULL;
     }
 
-  pendingOutState = eFrame;
+  pendingOutPicStructure = eFrame;
   }
 //}}}
 //{{{
@@ -2949,13 +2949,13 @@ void cDecoder264::writePicture (sPicture* p, int realStructure) {
     return;
     }
 
-  if (realStructure == pendingOutState) {
+  if (realStructure == pendingOutPicStructure) {
     flushPendingOut();
     writePicture (p, realStructure);
     return;
     }
 
-  if (pendingOutState == eFrame) {
+  if (pendingOutPicStructure == eFrame) {
     //{{{  output frame
     pendingOut->sizeX = p->sizeX;
     pendingOut->sizeY = p->sizeY;
@@ -2985,7 +2985,7 @@ void cDecoder264::writePicture (sPicture* p, int realStructure) {
       memcpy (pendingOut->imgUV[1][(i+add)], p->imgUV[1][(i+add)], p->sizeXcr * sizeof(sPixel));
       }
 
-    pendingOutState = realStructure;
+    pendingOutPicStructure = realStructure;
     }
     //}}}
   else {

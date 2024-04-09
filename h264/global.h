@@ -659,16 +659,20 @@ public:
   cSlice*      nextSlice = nullptr; // pointer to first cSlice of next picture;
   sOldSlice*   oldSlice = nullptr;
 
-  // output
-  cDpb         dpb;
   int          lastHasMmco5 = 0;
 
-  int          pendingOutState;
-  sPicture*    pendingOut = nullptr;
+  // dpb
+  cDpb         dpb;
+
+  // out
   sPicture*    picture = nullptr;
-  cFrameStore* lastOutFrameStore = nullptr;
+  sPicture*    pendingOut = nullptr;
+  int          pendingOutPicStructure;
   cFrameStore* outBuffer = nullptr;
   sDecodedPic* outDecodedPics = nullptr;
+
+  // conceal
+  cFrameStore* lastOutFrameStore = nullptr;
 
   // sCoding
   sCoding      coding = {0};
