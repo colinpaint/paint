@@ -278,73 +278,13 @@ void cDpb::flushDpb() {
   }
 //}}}
 //{{{
-int cDpb::removeUnusedDpb() {
-
-  // check for frames that were already output and no longer used for ref
-  for (uint32_t i = 0; i < usedSize; i++) {
-    if (frameStoreArray[i]->isOutput && (!frameStoreArray[i]->isRef())) {
-      removeFrameDpb (i);
-      return 1;
-      }
-    }
-
-  return 0;
-  }
-//}}}
-//{{{
-void cDpb::removeFrameDpb (int pos) {
-
-  cFrameStore* frameStore1 = frameStoreArray[pos];
-  switch (frameStore1->isUsed) {
-    case 3:
-      freePicture (frameStore1->frame);
-      freePicture (frameStore1->topField);
-      freePicture (frameStore1->botField);
-      frameStore1->frame = NULL;
-      frameStore1->topField = NULL;
-      frameStore1->botField = NULL;
-      break;
-
-    case 2:
-      freePicture (frameStore1->botField);
-      frameStore1->botField = NULL;
-      break;
-
-    case 1:
-      freePicture (frameStore1->topField);
-      frameStore1->topField = NULL;
-      break;
-
-    case 0:
-      break;
-
-    default:
-      cDecoder264::error ("invalid frame store type");
-    }
-
-  frameStore1->isUsed = 0;
-  frameStore1->usedLongTermRef = 0;
-  frameStore1->usedRef = 0;
-  frameStore1->usedOrigRef = 0;
-
-  // move empty framestore to end of buffer
-  for (uint32_t i = pos; i < usedSize-1; i++)
-    frameStoreArray[i] = frameStoreArray[i+1];
-
-  frameStoreArray[usedSize-1] = frameStore1;
-  usedSize--;
-  }
-//}}}
-//{{{
 void cDpb::storePictureDpb (sPicture* picture) {
-
-  int poc, pos;
-  // picture error conceal
 
   // if frame, check for new store,
   decoder->lastHasMmco5 = 0;
   decoder->lastPicBotField = (picture->picStructure == eBotField);
 
+  int poc, pos;
   if (picture->isIDR) {
     idrMemoryManagement (picture);
     // picture error conceal
@@ -409,8 +349,6 @@ void cDpb::storePictureDpb (sPicture* picture) {
         return;
         }
       }
-
-    // flush a frame
     outputDpbFrame();
     }
 
@@ -553,6 +491,68 @@ string cDpb::getIndexString (uint32_t index) const {
 //}}}
 
 // private
+//{{{
+int cDpb::removeUnusedDpb() {
+// check for frames that were already output and no longer used for ref
+
+  for (uint32_t i = 0; i < usedSize; i++) {
+    if (frameStoreArray[i]->isOutput && (!frameStoreArray[i]->isRef())) {
+      removeFrameDpb (i);
+      return 1;
+      }
+    }
+
+  return 0;
+  }
+//}}}
+//{{{
+void cDpb::removeFrameDpb (int pos) {
+
+  cFrameStore* frameStore = frameStoreArray[pos];
+  switch (frameStore->isUsed) {
+    case 3:
+      freePicture (frameStore->frame);
+      frameStore->frame = NULL;
+
+      freePicture (frameStore->topField);
+      frameStore->topField = NULL;
+
+      freePicture (frameStore->botField);
+      frameStore->botField = NULL;
+      break;
+
+    case 2:
+      freePicture (frameStore->botField);
+      frameStore->botField = NULL;
+      break;
+
+    case 1:
+      freePicture (frameStore->topField);
+      frameStore->topField = NULL;
+      break;
+
+    case 0:
+      break;
+
+    default:
+      cDecoder264::error ("invalid frame store type");
+    }
+
+  frameStore->isUsed = 0;
+  frameStore->usedRef = 0;
+  frameStore->usedLongTermRef = 0;
+  frameStore->usedOrigRef = 0;
+
+  // move empty framestore to end of buffer
+  for (uint32_t i = pos; i < usedSize-1; i++)
+    frameStoreArray[i] = frameStoreArray[i+1];
+
+  frameStoreArray[usedSize-1] = frameStore;
+
+  usedSize--;
+  }
+//}}}
+
 //{{{
 void cDpb::dump() {
 
@@ -747,8 +747,8 @@ void cDpb::adaptiveMemoryManagement (sPicture* picture) {
 //}}}
 //{{{
 void cDpb::slidingWindowMemoryManagement (sPicture* picture) {
+// if this is a refPic with sliding window, unmark first ref frame
 
-  // if this is a refPic with sliding window, unmark first ref frame
   if (refFramesInBuffer == imax (1, numRefFrames) - longTermRefFramesInBuffer) {
     for (uint32_t i = 0; i < usedSize; i++) {
       if (frameStoreArray[i]->usedRef && (!frameStoreArray[i]->usedLongTermRef)) {
@@ -766,9 +766,9 @@ void cDpb::slidingWindowMemoryManagement (sPicture* picture) {
 //{{{
 void cDpb::updateRefList() {
 
-  uint32_t i;
-  uint32_t j;
-  for (i = 0, j = 0; i < usedSize; i++)
+  uint32_t i = 0;
+  uint32_t j = 0;
+  for (; i < usedSize; i++)
     if (frameStoreArray[i]->isShortTermRef())
       frameStoreRefArray[j++] = frameStoreArray[i];
 
@@ -781,9 +781,9 @@ void cDpb::updateRefList() {
 //{{{
 void cDpb::updateLongTermRefList() {
 
-  uint32_t i;
-  uint32_t j;
-  for (i = 0, j = 0; i < usedSize; i++)
+  uint32_t i = 0;
+  uint32_t j = 0;
+  for (; i < usedSize; i++)
     if (frameStoreArray[i]->isLongTermRef())
       frameStoreLongTermRefArray[j++] = frameStoreArray[i];
 
@@ -902,7 +902,7 @@ void cDpb::unmarkLongTermForRef (sPicture* picture, int picNum) {
 //}}}
 //{{{
 void cDpb::unmarkLongTermFieldRefFrameIndex (ePicStructure picStructure, int longTermFrameIndex,
-                                              int markCur, uint32_t curFrameNum, int curPicNum) {
+                                             int markCur, uint32_t curFrameNum, int curPicNum) {
 
   if (curPicNum < 0)
     curPicNum += 2 * decoder->coding.maxFrameNum;
@@ -977,12 +977,12 @@ void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNu
   if (picture->picStructure == eFrame) {
     for (uint32_t i = 0; i < refFramesInBuffer; i++) {
       if (frameStoreRefArray[i]->usedRef == 3) {
-        if ((!frameStoreRefArray[i]->frame->usedLongTermRef)&&(frameStoreRefArray[i]->frame->picNum == picNumX)) {
-          frameStoreRefArray[i]->longTermFrameIndex = frameStoreRefArray[i]->frame->longTermFrameIndex
-                                             = longTermFrameIndex;
+        if (!frameStoreRefArray[i]->frame->usedLongTermRef &&
+            (frameStoreRefArray[i]->frame->picNum == picNumX)) {
+          frameStoreRefArray[i]->longTermFrameIndex = longTermFrameIndex;
+          frameStoreRefArray[i]->frame->longTermFrameIndex = longTermFrameIndex;
           frameStoreRefArray[i]->frame->longTermPicNum = longTermFrameIndex;
           frameStoreRefArray[i]->frame->usedLongTermRef = 1;
-
           if (frameStoreRefArray[i]->topField && frameStoreRefArray[i]->botField) {
             frameStoreRefArray[i]->topField->longTermFrameIndex = longTermFrameIndex;
             frameStoreRefArray[i]->botField->longTermFrameIndex = longTermFrameIndex;
@@ -996,7 +996,7 @@ void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNu
           }
         }
       }
-    cLog::log (LOGERROR, "Warning: refFrame for long term marking not found");
+    cLog::log (LOGERROR, "refFrame for long term marking not found");
     }
 
   else {
@@ -1015,7 +1015,7 @@ void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNu
             (frameStoreRefArray[i]->topField->picNum == picNumX)) {
           if ((frameStoreRefArray[i]->usedLongTermRef) &&
               (frameStoreRefArray[i]->longTermFrameIndex != longTermFrameIndex)) {
-            cLog::log (LOGERROR, "Warning: assigning longTermFrameIndex different from other field");
+            cLog::log (LOGERROR, "assigning longTermFrameIndex different from other field");
             }
 
           frameStoreRefArray[i]->longTermFrameIndex = longTermFrameIndex;
@@ -1033,7 +1033,7 @@ void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNu
         }
 
       if (frameStoreRefArray[i]->usedRef & 2) {
-        if ((!frameStoreRefArray[i]->botField->usedLongTermRef) &&
+        if (!frameStoreRefArray[i]->botField->usedLongTermRef &&
             (frameStoreRefArray[i]->botField->picNum == picNumX)) {
           if ((frameStoreRefArray[i]->usedLongTermRef) &&
               (frameStoreRefArray[i]->longTermFrameIndex != longTermFrameIndex))

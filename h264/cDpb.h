@@ -9,8 +9,7 @@ public:
 
   void flushDpb();
   void freeDpb();
-  int removeUnusedDpb();
-  void removeFrameDpb (int pos);
+
   void storePictureDpb (sPicture* picture);
 
   sPicture* getLastPicRefFromDpb();
@@ -24,14 +23,13 @@ public:
 
   void setSize (uint32_t size) { usedSize = size; };
 
-  //  vars
-  cDecoder264*  decoder = nullptr;
+  // vars
   bool          initDone = false;
+  cDecoder264*  decoder = nullptr;
 
   uint32_t      refFramesInBuffer = 0;
   uint32_t      longTermRefFramesInBuffer = 0;
   int           lastOutPoc = 0;
-
   int           dpbPoc[100] = {0};
 
   cFrameStore** frameStoreArray = nullptr;
@@ -41,6 +39,9 @@ public:
   sPicture*     noRefPicture = nullptr;
 
 private:
+  int removeUnusedDpb();
+  void removeFrameDpb (int pos);
+
   void dump();
   int outputDpbFrame();
   void checkNumDpbFrames();
@@ -69,6 +70,7 @@ private:
 
   void assignLongTermFrameIndex (sPicture* picture, int diffPicNumMinus1, int longTermFrameIndex);
 
+  // vars
   uint32_t      usedSize = 0;
   uint32_t      allocatedSize =0 ;
   int           numRefFrames = 0;
