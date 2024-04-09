@@ -3959,10 +3959,10 @@ namespace {
 
     if (slice->picStructure == eFrame) {
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-        if (dpb->frameStoreRef[i]->isUsed == 3)
-          if ((dpb->frameStoreRef[i]->frame->usedForRef) &&
-              !dpb->frameStoreRef[i]->frame->usedLongTermRef)
-            slice->listX[0][list0idx++] = dpb->frameStoreRef[i]->frame;
+        if (dpb->frameStoreRefArray[i]->isUsed == 3)
+          if ((dpb->frameStoreRefArray[i]->frame->usedForRef) &&
+              !dpb->frameStoreRefArray[i]->frame->usedLongTermRef)
+            slice->listX[0][list0idx++] = dpb->frameStoreRefArray[i]->frame;
 
       // order list 0 by picNum
       qsort ((void *)slice->listX[0], list0idx, sizeof(sPicture*), comparePicByPicNumDescending);
@@ -3970,9 +3970,9 @@ namespace {
 
       // long term
       for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
-        if (dpb->frameStoreLongTermRef[i]->isUsed == 3)
-          if (dpb->frameStoreLongTermRef[i]->frame->usedLongTermRef)
-            slice->listX[0][list0idx++] = dpb->frameStoreLongTermRef[i]->frame;
+        if (dpb->frameStoreLongTermRefArray[i]->isUsed == 3)
+          if (dpb->frameStoreLongTermRefArray[i]->frame->usedLongTermRef)
+            slice->listX[0][list0idx++] = dpb->frameStoreLongTermRefArray[i]->frame;
       qsort ((void*)&slice->listX[0][(int16_t)slice->listXsize[0]], list0idx - slice->listXsize[0],
              sizeof(sPicture*), comparePicByLtPicNumAscending);
       slice->listXsize[0] = (char) list0idx;
@@ -3981,15 +3981,15 @@ namespace {
       frameStoreList0 = (cFrameStore**)calloc (dpb->allocatedSize, sizeof(cFrameStore*));
       frameStoreListLongTerm = (cFrameStore**)calloc (dpb->allocatedSize, sizeof(cFrameStore*));
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-        if (dpb->frameStoreRef[i]->usedRef)
-          frameStoreList0[list0idx++] = dpb->frameStoreRef[i];
+        if (dpb->frameStoreRefArray[i]->usedRef)
+          frameStoreList0[list0idx++] = dpb->frameStoreRefArray[i];
       qsort ((void*)frameStoreList0, list0idx, sizeof(cFrameStore*), compareFsByFrameNumDescending);
       slice->listXsize[0] = 0;
       genPicListFromFrameList (slice->picStructure, frameStoreList0, list0idx, slice->listX[0], &slice->listXsize[0], 0);
 
       // long term
       for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
-        frameStoreListLongTerm[listLtIndex++] = dpb->frameStoreLongTermRef[i];
+        frameStoreListLongTerm[listLtIndex++] = dpb->frameStoreLongTermRefArray[i];
       qsort ((void*)frameStoreListLongTerm, listLtIndex, sizeof(cFrameStore*), compareFsbyLtPicIndexAscending);
       genPicListFromFrameList (slice->picStructure, frameStoreListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);
 
@@ -4026,19 +4026,19 @@ namespace {
     if (slice->picStructure == eFrame) {
       //{{{  frame
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-        if (dpb->frameStoreRef[i]->isUsed==3)
-          if ((dpb->frameStoreRef[i]->frame->usedForRef) && (!dpb->frameStoreRef[i]->frame->usedLongTermRef))
-            if (slice->framePoc >= dpb->frameStoreRef[i]->frame->poc) // !KS use >= for error conceal
-              slice->listX[0][list0idx++] = dpb->frameStoreRef[i]->frame;
+        if (dpb->frameStoreRefArray[i]->isUsed==3)
+          if ((dpb->frameStoreRefArray[i]->frame->usedForRef) && (!dpb->frameStoreRefArray[i]->frame->usedLongTermRef))
+            if (slice->framePoc >= dpb->frameStoreRefArray[i]->frame->poc) // !KS use >= for error conceal
+              slice->listX[0][list0idx++] = dpb->frameStoreRefArray[i]->frame;
       qsort ((void*)slice->listX[0], list0idx, sizeof(sPicture*), comparePicByPocdesc);
 
       // get the backward reference picture (POC>current POC) in list0;
       list0index1 = list0idx;
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-        if (dpb->frameStoreRef[i]->isUsed==3)
-          if ((dpb->frameStoreRef[i]->frame->usedForRef)&&(!dpb->frameStoreRef[i]->frame->usedLongTermRef))
-            if (slice->framePoc < dpb->frameStoreRef[i]->frame->poc)
-              slice->listX[0][list0idx++] = dpb->frameStoreRef[i]->frame;
+        if (dpb->frameStoreRefArray[i]->isUsed==3)
+          if ((dpb->frameStoreRefArray[i]->frame->usedForRef)&&(!dpb->frameStoreRefArray[i]->frame->usedLongTermRef))
+            if (slice->framePoc < dpb->frameStoreRefArray[i]->frame->poc)
+              slice->listX[0][list0idx++] = dpb->frameStoreRefArray[i]->frame;
       qsort ((void*)&slice->listX[0][list0index1], list0idx-list0index1, sizeof(sPicture*), comparePicByPocAscending);
 
       for (int j = 0; j < list0index1; j++)
@@ -4049,10 +4049,10 @@ namespace {
 
       // long term
       for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-        if (dpb->frameStoreLongTermRef[i]->isUsed == 3) {
-          if (dpb->frameStoreLongTermRef[i]->frame->usedLongTermRef) {
-            slice->listX[0][list0idx] = dpb->frameStoreLongTermRef[i]->frame;
-            slice->listX[1][list0idx++] = dpb->frameStoreLongTermRef[i]->frame;
+        if (dpb->frameStoreLongTermRefArray[i]->isUsed == 3) {
+          if (dpb->frameStoreLongTermRefArray[i]->frame->usedLongTermRef) {
+            slice->listX[0][list0idx] = dpb->frameStoreLongTermRefArray[i]->frame;
+            slice->listX[1][list0idx++] = dpb->frameStoreLongTermRefArray[i]->frame;
             }
           }
         }
@@ -4073,16 +4073,16 @@ namespace {
       slice->listXsize[1] = 1;
 
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-        if (dpb->frameStoreRef[i]->isUsed)
-          if (slice->thisPoc >= dpb->frameStoreRef[i]->poc)
-            frameStoreList0[list0idx++] = dpb->frameStoreRef[i];
+        if (dpb->frameStoreRefArray[i]->isUsed)
+          if (slice->thisPoc >= dpb->frameStoreRefArray[i]->poc)
+            frameStoreList0[list0idx++] = dpb->frameStoreRefArray[i];
       qsort ((void*)frameStoreList0, list0idx, sizeof(cFrameStore*), comparefsByPocdesc);
 
       list0index1 = list0idx;
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-        if (dpb->frameStoreRef[i]->isUsed)
-          if (slice->thisPoc < dpb->frameStoreRef[i]->poc)
-            frameStoreList0[list0idx++] = dpb->frameStoreRef[i];
+        if (dpb->frameStoreRefArray[i]->isUsed)
+          if (slice->thisPoc < dpb->frameStoreRefArray[i]->poc)
+            frameStoreList0[list0idx++] = dpb->frameStoreRefArray[i];
       qsort ((void*)&frameStoreList0[list0index1], list0idx-list0index1, sizeof(cFrameStore*), compareFsByPocAscending);
 
       for (int j = 0; j < list0index1; j++)
@@ -4097,7 +4097,7 @@ namespace {
 
       // long term
       for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++)
-        frameStoreListLongTerm[listLtIndex++] = dpb->frameStoreLongTermRef[i];
+        frameStoreListLongTerm[listLtIndex++] = dpb->frameStoreLongTermRefArray[i];
 
       qsort ((void*)frameStoreListLongTerm, listLtIndex, sizeof(cFrameStore*), compareFsbyLtPicIndexAscending);
       genPicListFromFrameList (slice->picStructure, frameStoreListLongTerm, listLtIndex, slice->listX[0], &slice->listXsize[0], 1);

@@ -1244,7 +1244,7 @@ namespace {
     uint32_t j = 0;
     for (uint32_t i = 0; i < dpb->usedSize; i++)
       if (dpb->frameStore[i]->concealRef)
-        dpb->frameStoreRef[j++] = dpb->frameStore[i];
+        dpb->frameStoreRefArray[j++] = dpb->frameStore[i];
 
     dpb->refFramesInBuffer = decoder->activePps->numRefIndexL0defaultActiveMinus1;
     }
@@ -1452,10 +1452,10 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
     for (i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->frameStore[i]->concealRef == 1) {
         if (dpb->frameStore[i]->frameNum > decoder->concealFrame)
-          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStore[i]->frameNum - maxFrameNum;
+          dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStore[i]->frameNum - maxFrameNum;
         else
-          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStore[i]->frameNum;
-        dpb->frameStoreRef[i]->frame->picNum = dpb->frameStoreRef[i]->frameNumWrap;
+          dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStore[i]->frameNum;
+        dpb->frameStoreRefArray[i]->frame->picNum = dpb->frameStoreRefArray[i]->frameNumWrap;
         }
       }
     }

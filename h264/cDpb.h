@@ -34,8 +34,8 @@ public:
   int           lastOutPoc;
 
   cFrameStore** frameStore;
-  cFrameStore** frameStoreRef;
-  cFrameStore** frameStoreLongTermRef;
+  cFrameStore** frameStoreRefArray;
+  cFrameStore** frameStoreLongTermRefArray;
 
 private:
   void dump();

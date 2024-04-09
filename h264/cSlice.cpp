@@ -2316,23 +2316,23 @@ void cSlice::updatePicNum() {
 
   if (picStructure == eFrame) {
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
-      if (dpb->frameStoreRef[i]->isUsed == 3 ) {
-        if (dpb->frameStoreRef[i]->frame->usedForRef &&
-            !dpb->frameStoreRef[i]->frame->usedLongTermRef) {
-          if (dpb->frameStoreRef[i]->frameNum > frameNum )
-            dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
+      if (dpb->frameStoreRefArray[i]->isUsed == 3 ) {
+        if (dpb->frameStoreRefArray[i]->frame->usedForRef &&
+            !dpb->frameStoreRefArray[i]->frame->usedLongTermRef) {
+          if (dpb->frameStoreRefArray[i]->frameNum > frameNum )
+            dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStoreRefArray[i]->frameNum - maxFrameNum;
           else
-            dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum;
-          dpb->frameStoreRef[i]->frame->picNum = dpb->frameStoreRef[i]->frameNumWrap;
+            dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStoreRefArray[i]->frameNum;
+          dpb->frameStoreRefArray[i]->frame->picNum = dpb->frameStoreRefArray[i]->frameNumWrap;
           }
         }
       }
 
     // update longTermPicNum
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-      if (dpb->frameStoreLongTermRef[i]->isUsed == 3) {
-        if (dpb->frameStoreLongTermRef[i]->frame->usedLongTermRef)
-          dpb->frameStoreLongTermRef[i]->frame->longTermPicNum = dpb->frameStoreLongTermRef[i]->frame->longTermFrameIndex;
+      if (dpb->frameStoreLongTermRefArray[i]->isUsed == 3) {
+        if (dpb->frameStoreLongTermRefArray[i]->frame->usedLongTermRef)
+          dpb->frameStoreLongTermRefArray[i]->frame->longTermPicNum = dpb->frameStoreLongTermRefArray[i]->frame->longTermFrameIndex;
         }
       }
     }
@@ -2347,24 +2347,24 @@ void cSlice::updatePicNum() {
       }
 
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
-      if (dpb->frameStoreRef[i]->usedRef) {
-        if (dpb->frameStoreRef[i]->frameNum > frameNum )
-          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
+      if (dpb->frameStoreRefArray[i]->usedRef) {
+        if (dpb->frameStoreRefArray[i]->frameNum > frameNum )
+          dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStoreRefArray[i]->frameNum - maxFrameNum;
         else
-          dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum;
-        if (dpb->frameStoreRef[i]->usedRef & 1)
-          dpb->frameStoreRef[i]->topField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addTop;
-        if (dpb->frameStoreRef[i]->usedRef & 2)
-          dpb->frameStoreRef[i]->botField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addBot;
+          dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStoreRefArray[i]->frameNum;
+        if (dpb->frameStoreRefArray[i]->usedRef & 1)
+          dpb->frameStoreRefArray[i]->topField->picNum = (2 * dpb->frameStoreRefArray[i]->frameNumWrap) + addTop;
+        if (dpb->frameStoreRefArray[i]->usedRef & 2)
+          dpb->frameStoreRefArray[i]->botField->picNum = (2 * dpb->frameStoreRefArray[i]->frameNumWrap) + addBot;
         }
       }
 
     // update longTermPicNum
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-      if (dpb->frameStoreLongTermRef[i]->usedLongTermRef & 1)
-        dpb->frameStoreLongTermRef[i]->topField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->topField->longTermFrameIndex + addTop;
-      if (dpb->frameStoreLongTermRef[i]->usedLongTermRef & 2)
-        dpb->frameStoreLongTermRef[i]->botField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->botField->longTermFrameIndex + addBot;
+      if (dpb->frameStoreLongTermRefArray[i]->usedLongTermRef & 1)
+        dpb->frameStoreLongTermRefArray[i]->topField->longTermPicNum = 2 * dpb->frameStoreLongTermRefArray[i]->topField->longTermFrameIndex + addTop;
+      if (dpb->frameStoreLongTermRefArray[i]->usedLongTermRef & 2)
+        dpb->frameStoreLongTermRefArray[i]->botField->longTermPicNum = 2 * dpb->frameStoreLongTermRefArray[i]->botField->longTermFrameIndex + addBot;
       }
     }
   }
