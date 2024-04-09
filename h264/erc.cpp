@@ -1188,7 +1188,7 @@ namespace {
   //{{{
   sPicture* getPicFromDpb (cDpb* dpb, int missingpoc, uint32_t* pos) {
 
-    int usedSize = dpb->usedSize - 1;
+    int usedSize = dpb->getSize() - 1;
     int concealfrom = 0;
 
     if (dpb->decoder->concealMode == 1)
@@ -1240,7 +1240,7 @@ namespace {
     cDecoder264* decoder = dpb->decoder;
 
     uint32_t j = 0;
-    for (uint32_t i = 0; i < dpb->usedSize; i++)
+    for (uint32_t i = 0; i < dpb->getSize(); i++)
       if (dpb->frameStoreArray[i]->concealRef)
         dpb->frameStoreRefArray[j++] = dpb->frameStoreArray[i];
 
@@ -1461,7 +1461,7 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
   if (currSliceType == eSliceP) {
     // Calculate FrameNumWrap and PicNum
     if (currPicStructure == eFrame) {
-      for (i = 0; i < dpb->usedSize; i++)
+      for (i = 0; i < dpb->getSize(); i++)
         if (dpb->frameStoreArray[i]->concealRef == 1)
           decoder->sliceList[0]->listX[0][list0idx++] = dpb->frameStoreArray[i]->frame;
       // order list 0 by PicNum
@@ -1472,14 +1472,14 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
 
   if (currSliceType == eSliceB) {
     if (currPicStructure == eFrame) {
-      for (i = 0; i < dpb->usedSize; i++)
+      for (i = 0; i < dpb->getSize(); i++)
         if (dpb->frameStoreArray[i]->concealRef == 1)
           if (decoder->earlierMissingPoc > dpb->frameStoreArray[i]->frame->poc)
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->frameStoreArray[i]->frame;
 
       qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), comparePicByPocdesc);
       list0index1 = list0idx;
-      for (i = 0; i < dpb->usedSize; i++)
+      for (i = 0; i < dpb->getSize(); i++)
         if (dpb->frameStoreArray[i]->concealRef == 1)
           if (decoder->earlierMissingPoc < dpb->frameStoreArray[i]->frame->poc)
             decoder->sliceList[0]->listX[0][list0idx++] = dpb->frameStoreArray[i]->frame;
@@ -1614,22 +1614,19 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
   sPicture* conceal_from_picture = NULL;
   sPicture* conceal_to_picture = NULL;
   struct sConcealNode* concealment_ptr = NULL;
-  int temp_used_size = dpb->usedSize;
+  int temp_used_size = dpb->getSize();
 
-  if (dpb->usedSize == 0)
+  if (dpb->getSize() == 0)
     return;
 
-  qsort (decoder->dpb.dpbPoc, dpb->allocatedSize, sizeof(int), comp);
+  qsort (decoder->dpb.dpbPoc, dpb->getAllocatedSize(), sizeof(int), comp);
 
-  for (i = 0; i < dpb->allocatedSize - diff; i++) {
-    dpb->usedSize = dpb->allocatedSize;
+  for (i = 0; i < dpb->getAllocatedSize() - diff; i++) {
+    dpb->setSize (dpb->getAllocatedSize());
     if((decoder->dpb.dpbPoc[i+1] - decoder->dpb.dpbPoc[i]) > decoder->param.pocGap)  {
       conceal_to_picture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
 
       missingpoc = decoder->dpb.dpbPoc[i] + decoder->param.pocGap;
-      // Diagnostics
-      // printf("\n missingpoc = %d\n",missingpoc);
-
       if (missingpoc > decoder->earlierMissingPoc) {
         decoder->earlierMissingPoc  = missingpoc;
         conceal_to_picture->topPoc = missingpoc;
@@ -1638,7 +1635,7 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
         conceal_to_picture->poc = missingpoc;
         conceal_from_picture = getPicFromDpb (dpb, missingpoc, &pos);
 
-        dpb->usedSize = pos + 1;
+        dpb->setSize (pos + 1);
 
         decoder->concealFrame = conceal_from_picture->frameNum + 1;
 
@@ -1651,16 +1648,16 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
       }
     }
 
-  //restore the original value
-  dpb->usedSize = temp_used_size;
+  // restore the original value
+  dpb->setSize (temp_used_size);
   }
 //}}}
 //{{{
 void slidingWindowPocManagement (cDpb* dpb, sPicture* p) {
-  if (dpb->usedSize == dpb->allocatedSize) {
+  if (dpb->getSize() == dpb->getAllocatedSize()) {
     cDecoder264* decoder = dpb->decoder;
     uint32_t i;
-    for (i = 0; i < dpb->allocatedSize-1; i++)
+    for (i = 0; i < dpb->getAllocatedSize() -1; i++)
       decoder->dpb.dpbPoc[i] = decoder->dpb.dpbPoc[i+1];
     }
   }

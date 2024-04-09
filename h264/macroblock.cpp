@@ -3978,8 +3978,8 @@ namespace {
       slice->listXsize[0] = (char) list0idx;
       }
     else {
-      frameStoreList0 = (cFrameStore**)calloc (dpb->allocatedSize, sizeof(cFrameStore*));
-      frameStoreListLongTerm = (cFrameStore**)calloc (dpb->allocatedSize, sizeof(cFrameStore*));
+      frameStoreList0 = (cFrameStore**)calloc (dpb->getAllocatedSize(), sizeof(cFrameStore*));
+      frameStoreListLongTerm = (cFrameStore**)calloc (dpb->getAllocatedSize(), sizeof(cFrameStore*));
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
         if (dpb->frameStoreRefArray[i]->usedRef)
           frameStoreList0[list0idx++] = dpb->frameStoreRefArray[i];
@@ -4066,9 +4066,9 @@ namespace {
       //}}}
     else {
       //{{{  field
-      frameStoreList0 = (cFrameStore**)calloc(dpb->allocatedSize, sizeof (cFrameStore*));
-      frameStoreList1 = (cFrameStore**)calloc(dpb->allocatedSize, sizeof (cFrameStore*));
-      frameStoreListLongTerm = (cFrameStore**)calloc(dpb->allocatedSize, sizeof (cFrameStore*));
+      frameStoreList0 = (cFrameStore**)calloc(dpb->getAllocatedSize(), sizeof (cFrameStore*));
+      frameStoreList1 = (cFrameStore**)calloc(dpb->getAllocatedSize(), sizeof (cFrameStore*));
+      frameStoreListLongTerm = (cFrameStore**)calloc(dpb->getAllocatedSize(), sizeof (cFrameStore*));
       slice->listXsize[0] = 0;
       slice->listXsize[1] = 1;
 
