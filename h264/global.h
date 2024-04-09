@@ -660,7 +660,7 @@ public:
   sOldSlice*   oldSlice = nullptr;
 
   // output
-  cDpb*        dpb = nullptr;
+  cDpb         dpb;
   int          lastHasMmco5 = 0;
 
   int          pendingOutState;

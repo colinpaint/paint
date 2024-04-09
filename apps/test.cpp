@@ -1225,14 +1225,12 @@ public:
       ImGui::TextColored (kWhite, decoder->debug.profileString.c_str());
       mDebugLines++;
 
-      if (decoder->dpb) {
-        ImGui::TextColored (kWhite, decoder->dpb->getString().c_str());
-        for (uint32_t i = 0; i < decoder->dpb->getSize(); i++)
-          ImGui::TextColored (kWhite, decoder->dpb->getIndexString (i).c_str());
-        for (uint32_t i = decoder->dpb->getSize(); i < decoder->dpb->getAllocatedSize(); i++)
-          ImGui::TextColored (kWhite, "");
-        mDebugLines += decoder->dpb->getAllocatedSize() + 1;
-        }
+      ImGui::TextColored (kWhite, decoder->dpb.getString().c_str());
+      for (uint32_t i = 0; i < decoder->dpb.getSize(); i++)
+        ImGui::TextColored (kWhite, decoder->dpb.getIndexString (i).c_str());
+      for (uint32_t i = decoder->dpb.getSize(); i < decoder->dpb.getAllocatedSize(); i++)
+        ImGui::TextColored (kWhite, "");
+      mDebugLines += decoder->dpb.getAllocatedSize() + 1;
 
       int spsIndex = 0;
       while (decoder->sps[spsIndex].ok) {

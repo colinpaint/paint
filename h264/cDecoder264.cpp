@@ -1513,9 +1513,8 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->coding.chromaPadX = MCBUF_CHROMA_PAD_X;
   decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
 
-  decoder->dpb = (cDpb*)calloc (1, sizeof(cDpb));
-  decoder->dpb->decoder = decoder;
-  decoder->dpb->initDone = false;
+  decoder->dpb.decoder = decoder;
+  decoder->dpb.initDone = false;
 
   decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
 
@@ -1535,7 +1534,7 @@ void cDecoder264::error (const string& text) {
 
   cLog::log (LOGERROR, text);
   if (cDecoder264::gDecoder)
-    cDecoder264::gDecoder->dpb->flushDpb();
+    cDecoder264::gDecoder->dpb.flushDpb();
 
   exit (0);
   }
@@ -1544,7 +1543,6 @@ void cDecoder264::error (const string& text) {
 cDecoder264::~cDecoder264() {
 
   free (annexB);
-  free (dpb);
   free (oldSlice);
   free (nextSlice);
 
@@ -1845,7 +1843,7 @@ int cDecoder264::decodeOneFrame (sDecodedPic** decPicList) {
 void cDecoder264::finish (sDecodedPic** decPicList) {
 
   clearDecodedPics();
-  dpb->flushDpb();
+  dpb.flushDpb();
 
   annexB->reset();
 
@@ -1869,7 +1867,7 @@ void cDecoder264::close() {
     pps[i].ok = false;
     }
 
-  dpb->freeDpb();
+  dpb.freeDpb();
 
   // free output
   delete outBuffer;
@@ -2452,7 +2450,7 @@ void cDecoder264::readDecRefPicMarking (cBitStream& s, cSlice* slice) {
 //{{{
 void cDecoder264::initRefPicture (cSlice* slice) {
 
-  sPicture* vidRefPicture = dpb->noRefPicture;
+  sPicture* vidRefPicture = dpb.noRefPicture;
   int noRef = slice->framePoc < recoveryPoc;
 
   if (coding.isSeperateColourPlane) {
@@ -2682,7 +2680,7 @@ void cDecoder264::initSlice (cSlice* slice) {
   reorderLists (slice);
 
   if (slice->picStructure == eFrame)
-    slice->initMbAffLists (dpb->noRefPicture);
+    slice->initMbAffLists (dpb.noRefPicture);
 
   // update reference flags and set current refFlag
   if (!(slice->redundantPicCount && (prevFrameNum == slice->frameNum)))
@@ -2707,7 +2705,7 @@ void cDecoder264::reorderLists (cSlice* slice) {
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
     if (slice->refPicReorderFlag[LIST_0])
       slice->reorderRefPicList (LIST_0);
-    if (dpb->noRefPicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
+    if (dpb.noRefPicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
       cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
                  slice->numRefIndexActive[LIST_0]-1, nonConformingStream ? "conform":"");
     else
@@ -2717,7 +2715,7 @@ void cDecoder264::reorderLists (cSlice* slice) {
   if (slice->sliceType == eSliceB) {
     if (slice->refPicReorderFlag[LIST_1])
       slice->reorderRefPicList (LIST_1);
-    if (dpb->noRefPicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
+    if (dpb.noRefPicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
       cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
                  slice->numRefIndexActive[LIST_0] - 1, nonConformingStream ? "conform" : "");
     else
@@ -2769,14 +2767,14 @@ void cDecoder264::useParameterSet (cSlice* slice) {
 
     activeSps = &sps[pps->spsId];
 
-    if (activeSps->isBLprofile() && !dpb->initDone)
+    if (activeSps->isBLprofile() && !dpb.initDone)
       setCodingParam (sps);
     setCoding();
     initGlobalBuffers();
 
     if (!noOutputPriorPicFlag)
-      dpb->flushDpb();
-    dpb->initDpb (this, 0);
+      dpb.flushDpb();
+    dpb.initDpb (this, 0);
 
     // enable error conceal
     ercInit (this, coding.width, coding.height, 1);
@@ -3699,7 +3697,7 @@ int cDecoder264::decodeFrame() {
 
     cSlice* slice = sliceList[picSliceIndex];
     slice->decoder = this;
-    slice->dpb = dpb; //set default value;
+    slice->dpb = &dpb; //set default value;
     slice->nextHeader = -8888;
     slice->numDecodedMbs = 0;
     slice->coefCount = -1;
@@ -3889,7 +3887,7 @@ void cDecoder264::endDecodeFrame() {
   int qp = picture->qp;
   int picNum = picture->picNum;
   int isIdr = picture->isIDR;
-  dpb->storePictureDpb (picture);
+  dpb.storePictureDpb (picture);
   picture = NULL;
 
   if (lastHasMmco5)

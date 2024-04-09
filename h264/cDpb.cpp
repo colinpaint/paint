@@ -348,7 +348,7 @@ void cDpb::storePictureDpb (sPicture* picture) {
   if (picture->isIDR) {
     idrMemoryManagement (picture);
     // picture error conceal
-    memset (&decoder->dpb->dpbPoc, 0, sizeof(int)*100);
+    memset (&decoder->dpb.dpbPoc, 0, sizeof(int)*100);
     }
   else {
     // adaptive memory management
@@ -435,7 +435,7 @@ void cDpb::storePictureDpb (sPicture* picture) {
   usedSize++;
 
   if (decoder->concealMode != 0)
-    decoder->dpb->dpbPoc[usedSize-1] = picture->poc;
+    decoder->dpb.dpbPoc[usedSize-1] = picture->poc;
 
   updateRefList();
   updateLongTermRefList();
@@ -480,7 +480,7 @@ sPicture* cDpb::getShortTermPic (cSlice* slice, int picNum) {
       }
     }
 
-  return slice->decoder->dpb->noRefPicture;
+  return slice->decoder->dpb.noRefPicture;
   }
 //}}}
 //{{{
@@ -741,7 +741,7 @@ void cDpb::adaptiveMemoryManagement (sPicture* picture) {
         break;
       //}}}
       }
-    decoder->dpb->flushDpb();
+    decoder->dpb.flushDpb();
     }
   }
 //}}}

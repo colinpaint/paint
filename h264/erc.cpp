@@ -1112,9 +1112,7 @@ namespace {
       scale = (decoder->concealSliceType == eSliceB) ? 2 : 1;
 
       if(decoder->concealSliceType == eSliceB)
-      {
-        initListsForNonRefLoss (decoder->dpb, dst->sliceType, decoder->sliceList[0]->picStructure);
-      }
+        initListsForNonRefLoss (&decoder->dpb, dst->sliceType, decoder->sliceList[0]->picStructure);
       else
         decoder->sliceList[0]->initLists(decoder->sliceList[0]); //decoder->currentSlice);
 
@@ -1589,7 +1587,7 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
       decoder->lastRefPicPoc = picture->poc;
       }
 
-    decoder->dpb->storePictureDpb (picture);
+    decoder->dpb.storePictureDpb (picture);
     picture = NULL;
 
     decoder->preFrameNum = UnusedShortTermFrameNum;
@@ -1621,14 +1619,14 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
   if (dpb->usedSize == 0)
     return;
 
-  qsort (decoder->dpb->dpbPoc, dpb->allocatedSize, sizeof(int), comp);
+  qsort (decoder->dpb.dpbPoc, dpb->allocatedSize, sizeof(int), comp);
 
-  for ( i =0; i < dpb->allocatedSize - diff; i++) {
+  for (i = 0; i < dpb->allocatedSize - diff; i++) {
     dpb->usedSize = dpb->allocatedSize;
-    if((decoder->dpb->dpbPoc[i+1] - decoder->dpb->dpbPoc[i]) > decoder->param.pocGap)  {
-      conceal_to_picture = allocPicture(decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
+    if((decoder->dpb.dpbPoc[i+1] - decoder->dpb.dpbPoc[i]) > decoder->param.pocGap)  {
+      conceal_to_picture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
 
-      missingpoc = decoder->dpb->dpbPoc[i] + decoder->param.pocGap;
+      missingpoc = decoder->dpb.dpbPoc[i] + decoder->param.pocGap;
       // Diagnostics
       // printf("\n missingpoc = %d\n",missingpoc);
 
@@ -1663,7 +1661,7 @@ void slidingWindowPocManagement (cDpb* dpb, sPicture* p) {
     cDecoder264* decoder = dpb->decoder;
     uint32_t i;
     for (i = 0; i < dpb->allocatedSize-1; i++)
-      decoder->dpb->dpbPoc[i] = decoder->dpb->dpbPoc[i+1];
+      decoder->dpb.dpbPoc[i] = decoder->dpb.dpbPoc[i+1];
     }
   }
 
