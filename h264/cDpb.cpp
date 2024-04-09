@@ -145,13 +145,13 @@ namespace {
     }
   //}}}
   //{{{
-  int getPicNumX (sPicture* p, int diffPicNumMinus1) {
+  int getPicNumX (sPicture* picture, int diffPicNumMinus1) {
 
     int curPicNum;
-    if (p->picStructure == eFrame)
-      curPicNum = p->frameNum;
+    if (picture->picStructure == eFrame)
+      curPicNum = picture->frameNum;
     else
-      curPicNum = 2 * p->frameNum + 1;
+      curPicNum = 2 * picture->frameNum + 1;
 
     return curPicNum - (diffPicNumMinus1 + 1);
     }
@@ -343,7 +343,7 @@ void cDpb::storePictureDpb (sPicture* picture) {
   while (usedSize == allocatedSize) {
     // non-reference frames may be output directly
     if (!picture->usedForRef) {
-      getSmallestPoc (&poc, &pos);
+      getSmallestPoc (poc, pos);
       if ((-1 == pos) || (picture->poc < poc)) {
         decoder->directOutput (picture);
         return;
@@ -569,7 +569,7 @@ int cDpb::outputDpbFrame() {
 
   int poc;
   int pos;
-  getSmallestPoc (&poc, &pos);
+  getSmallestPoc (poc, pos);
   if (pos == -1)
     return 0;
 
@@ -605,17 +605,17 @@ void cDpb::checkNumDpbFrames() {
 //}}}
 
 //{{{
-void cDpb::getSmallestPoc (int* poc, int* pos) {
+void cDpb::getSmallestPoc (int& poc, int& pos) {
 
   if (usedSize < 1)
     cDecoder264::error ("Cannot determine smallest POC, DPB empty");
 
-  *pos = -1;
-  *poc = INT_MAX;
+  pos = -1;
+  poc = INT_MAX;
   for (uint32_t i = 0; i < usedSize; i++) {
-    if ((*poc > frameStoreArray[i]->poc) && (!frameStoreArray[i]->isOutput)) {
-      *poc = frameStoreArray[i]->poc;
-      *pos = i;
+    if ((poc > frameStoreArray[i]->poc) && (!frameStoreArray[i]->isOutput)) {
+      poc = frameStoreArray[i]->poc;
+      pos = i;
       }
     }
   }

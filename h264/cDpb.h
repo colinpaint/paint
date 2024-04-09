@@ -46,7 +46,7 @@ private:
   int outputDpbFrame();
   void checkNumDpbFrames();
 
-  void getSmallestPoc (int* poc, int* pos);
+  void getSmallestPoc (int& poc, int& pos);
 
   void idrMemoryManagement (sPicture* picture);
   void adaptiveMemoryManagement (sPicture* picture);
