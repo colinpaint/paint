@@ -14,12 +14,6 @@
 //}}}
 namespace {
   //{{{
-  // NOTE: In principle, the alpha and beta tables are calculated with the formulas below
-  //       Alpha( qp ) = 0.8 * (2^(qp/6)  -  1)
-  //       Beta ( qp ) = 0.5 * qp  -  7
-  // The tables actually used have been "hand optimized" though (by Anthony Joch). So, the
-  // table values might be a little different to formula-generated values. Also, the first
-  // few values of both tables is set to zero to force the filter off at low qp’s
   const uint8_t ALPHA_TABLE[52] = {
     0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,4,4,5,6,
@@ -49,7 +43,6 @@ namespace {
   } ;
   //}}}
   //{{{
-  //[dir][edge][yuvFormat]
   const char chroma_edge[2][4][4] = {
     { {-4, 0, 0, 0},
       {-4,-4,-4, 4},
@@ -68,7 +61,7 @@ namespace {
   //}}}
 
   //{{{
-  inline int compare_mvs (const sMotionVec* mv0, const sMotionVec* mv1, int mvlimit) {
+  int compare_mvs (const sMotionVec* mv0, const sMotionVec* mv1, int mvlimit) {
     return ((iabs (mv0->mvX - mv1->mvX) >= 4) | (iabs (mv0->mvY - mv1->mvY) >= mvlimit));
     }
   //}}}
@@ -107,8 +100,8 @@ namespace {
 
   // mbaff
   //{{{
-  void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img,
-                                        uint8_t* Strength, sMacroBlock* mbQ, int edge) {
+  void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img, uint8_t* Strength, 
+                                 sMacroBlock* mbQ, int edge) {
 
     int      pel, Strng ;
     sPixel   L2 = 0, L1, L0, R0, R1, R2 = 0;
@@ -207,8 +200,8 @@ namespace {
     }
   //}}}
   //{{{
-  void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, uint8_t* Strength, sMacroBlock* mbQ,
-                                        int edge, sPicture *p)
+  void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, uint8_t* Strength, 
+                                 sMacroBlock* mbQ, int edge, sPicture *p)
   {
     int      width = p->lumaStride; //p->sizeX;
     int      pel, Strng ;
@@ -314,8 +307,8 @@ namespace {
   }
   //}}}
   //{{{
-  void edge_loop_chroma_ver_MBAff (sPixel** img, uint8_t *Strength, sMacroBlock* mbQ,
-                                          int edge, int uv, sPicture *p) {
+  void edge_loop_chroma_ver_MBAff (sPixel** img, uint8_t* Strength,
+                                   sMacroBlock* mbQ, int edge, int uv, sPicture* p) {
 
     int      pel, Strng ;
     sPixel   L1, L0, R0, R1;
@@ -383,7 +376,8 @@ namespace {
     }
   //}}}
   //{{{
-  void edge_loop_chroma_hor_MBAff (sPixel** img, uint8_t *Strength, sMacroBlock* mbQ, int edge, int uv, sPicture *p)
+  void edge_loop_chroma_hor_MBAff (sPixel** img, uint8_t* Strength, 
+                                   sMacroBlock* mbQ, int edge, int uv, sPicture* p)
   {
     cDecoder264* decoder = mbQ->decoder;
     int PelNum = pelnum_cr[1][p->chromaFormatIdc];
@@ -1006,7 +1000,7 @@ namespace {
   //}}}
   //{{{
   void luma_ver_deblock_normal (sPixel** pixel, int pos_x1,
-                                       int Alpha, int Beta, int C0, int max_imgpel_value) {
+                                int Alpha, int Beta, int C0, int max_imgpel_value) {
 
     int i;
     sPixel *SrcPtrP, *SrcPtrQ;
@@ -1153,7 +1147,7 @@ namespace {
   //}}}
   //{{{
   void luma_hor_deblock_normal (sPixel* imgP, sPixel* imgQ, int width,
-                                       int Alpha, int Beta, int C0, int max_imgpel_value) {
+                                int Alpha, int Beta, int C0, int max_imgpel_value) {
 
     if (C0 == 0)
       for (int i = 0 ; i < BLOCK_SIZE ; ++i) {
@@ -1210,8 +1204,8 @@ namespace {
     }
   //}}}
   //{{{
-  void edge_loop_luma_hor (eColorPlane plane, sPixel** img, uint8_t* Strength,
-                                  sMacroBlock* mb, int edge, sPicture *p) {
+  void edge_loop_luma_hor (eColorPlane plane, sPixel** img, uint8_t* Strength, 
+                           sMacroBlock* mb, int edge, sPicture *p) {
 
     cDecoder264* decoder = mb->decoder;
 
@@ -1251,8 +1245,7 @@ namespace {
   }
   //}}}
   //{{{
-  void edge_loop_chroma_ver (sPixel** img, uint8_t* Strength, sMacroBlock* mb,
-                                    int edge, int uv, sPicture *p) {
+  void edge_loop_chroma_ver (sPixel** img, uint8_t* Strength, sMacroBlock* mb, int edge, int uv, sPicture *p) {
 
     cDecoder264* decoder = mb->decoder;
 
@@ -1316,7 +1309,7 @@ namespace {
   //}}}
   //{{{
   void edge_loop_chroma_hor (sPixel** img, uint8_t* Strength, sMacroBlock* mb,
-                                    int edge, int uv, sPicture *p) {
+                             int edge, int uv, sPicture *p) {
 
     cDecoder264* decoder = mb->decoder;
     int block_width = decoder->mbCrSizeX;

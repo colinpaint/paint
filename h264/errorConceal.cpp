@@ -19,6 +19,7 @@ int setEcFlag (cDecoder264* decoder, int se) {
       se = SE_CBP_INTER;      // conceal also Inter texture elements
       break;
     //}}}
+
     //{{{
     case SE_INTRAPREDMODE :
       decoder->ecFlag[SE_INTRAPREDMODE] = EC_REQ;
@@ -65,6 +66,7 @@ int setEcFlag (cDecoder264* decoder, int se) {
       decoder->ecFlag[SE_CHR_AC_INTER] = EC_REQ;
       break;
     //}}}
+
     //{{{
     case SE_DELTA_QUANT_INTER :
       decoder->ecFlag[SE_DELTA_QUANT_INTER] = EC_REQ;
@@ -114,6 +116,7 @@ int get_concealed_element (cDecoder264* decoder, sSyntaxElement* se) {
       se->inf = 0;
       break;
     //}}}
+
     case SE_INTRAPREDMODE :
     //{{{
     case SE_MVD :
@@ -121,12 +124,7 @@ int get_concealed_element (cDecoder264* decoder, sSyntaxElement* se) {
       se->inf = 0;  // set vector to zero length
       break;
     //}}}
-    //{{{
-    case SE_CBP_INTRA :
-      se->len = 5;
-      se->inf = 0; // codenumber 3 <=> no CBP information for INTRA images
-      break;
-    //}}}
+
     case SE_LUM_DC_INTRA :
     case SE_CHR_DC_INTRA :
     case SE_LUM_AC_INTRA :
@@ -136,12 +134,7 @@ int get_concealed_element (cDecoder264* decoder, sSyntaxElement* se) {
       se->inf = 0;  // return EOB
       break;
     //}}}
-    //{{{
-    case SE_CBP_INTER :
-      se->len = 1;
-      se->inf = 0; // codenumber 1 <=> no CBP information for INTER images
-      break;
-    //}}}
+
     case SE_LUM_DC_INTER :
     case SE_CHR_DC_INTER :
     case SE_LUM_AC_INTER :
@@ -149,6 +142,19 @@ int get_concealed_element (cDecoder264* decoder, sSyntaxElement* se) {
     case SE_CHR_AC_INTER :
       se->len = 1;
       se->inf = 0;  // return EOB
+      break;
+    //}}}
+
+    //{{{
+    case SE_CBP_INTRA :
+      se->len = 5;
+      se->inf = 0; // codenumber 3 <=> no CBP information for INTRA images
+      break;
+    //}}}
+    //{{{
+    case SE_CBP_INTER :
+      se->len = 1;
+      se->inf = 0; // codenumber 1 <=> no CBP information for INTER images
       break;
     //}}}
     //{{{

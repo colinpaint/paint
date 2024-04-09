@@ -21,18 +21,16 @@ public:
   cDecoder264*  decoder;
   bool          initDone;
 
-  int           numRefFrames;
   uint32_t      size;
   uint32_t      usedSize;
+
   uint32_t      refFramesInBuffer;
   uint32_t      longTermRefFramesInBuffer;
-  int           maxLongTermPicIndex;
   int           lastOutPoc;
 
   cFrameStore** frameStore;
   cFrameStore** frameStoreRef;
   cFrameStore** frameStoreLongTermRef;
-  cFrameStore* lastPictureFrameStore;
 
 private:
   void dump();
@@ -62,4 +60,9 @@ private:
   void markCurPicLongTerm (sPicture* picture, int longTermFrameIndex);
 
   void assignLongTermFrameIndex (sPicture* picture, int diffPicNumMinus1, int longTermFrameIndex);
+
+  int           numRefFrames;
+  int           maxLongTermPicIndex;
+
+  cFrameStore* lastPictureFrameStore;
   };

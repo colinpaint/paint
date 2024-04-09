@@ -56,29 +56,6 @@ namespace {
 
   // intraFrame
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      collects prediction blocks only from the current column
-   * \return
-   *      Number of usable neighbour MacroBlocks for conceal.
-   * \param predBlocks[]
-   *      Array for indicating the valid neighbor blocks
-   * \param currRow
-   *      Current block row in the frame
-   * \param currColumn
-   *      Current block column in the frame
-   * \param condition
-   *      The block condition (ok, lost) table
-   * \param maxRow
-   *      Number of block rows in the frame
-   * \param maxColumn
-   *      Number of block columns in the frame
-   * \param step
-   *      Number of blocks belonging to a MB, when counting
-   *      in vertical/horizontal direction. (Y:2 U,V:1)
-  ** **********************************************************************
-   */
   int ercCollectColumnBlocks (int predBlocks[], int currRow, int currColumn, char *condition, int maxRow, int maxColumn, int step )
   {
     int srcCounter = 0, threshold = ERC_BLOCK_CORRUPTED;
@@ -101,39 +78,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      This function checks the neighbors of a sMacroBlock for usability in
-   *      conceal. First the OK macroBlocks are marked, and if there is not
-   *      enough of them, then the CONCEALED ones as well.
-   *      A "1" in the the output array means reliable, a "0" non reliable MB.
-   *      The block order in "predBlocks":
-   *              1 4 0
-   *              5 x 7
-   *              2 6 3
-   *      i.e., corners first.
-   * \return
-   *      Number of useable neighbor macroBlocks for conceal.
-   * \param predBlocks[]
-   *      Array for indicating the valid neighbor blocks
-   * \param currRow
-   *      Current block row in the frame
-   * \param currColumn
-   *      Current block column in the frame
-   * \param condition
-   *      The block condition (ok, lost) table
-   * \param maxRow
-   *      Number of block rows in the frame
-   * \param maxColumn
-   *      Number of block columns in the frame
-   * \param step
-   *      Number of blocks belonging to a MB, when counting
-   *      in vertical/horizontal direction. (Y:2 U,V:1)
-   * \param fNoCornerNeigh
-   *      No corner neighbors are considered
-  ** **********************************************************************
-   */
   int ercCollect8PredBlocks (int predBlocks[], int currRow, int currColumn, char *condition,
                              int maxRow, int maxColumn, int step, uint8_t fNoCornerNeigh )
   {
@@ -221,23 +165,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      Does the actual pixel based interpolation for block[]
-   *      using weighted average
-   * \param decoder
-   *      video encoding parameters for current picture
-   * \param src[]
-   *      pointers to neighboring source blocks
-   * \param block
-   *      destination block
-   * \param blockSize
-   *      16 for Y, 8 for U/V components
-   * \param frameWidth
-   *      Width of the frame in pixels
-  ** **********************************************************************
-   */
   void pixMeanInterpolateBlock (cDecoder264* decoder, sPixel *src[], sPixel *block, int blockSize, int frameWidth )
   {
     int row, column, k, tmp, srcCounter = 0, weight = 0, bmax = blockSize - 1;
@@ -288,27 +215,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      Conceals the MB at position (row, column) using pixels from predBlocks[]
-   *      using pixMeanInterpolateBlock()
-   * \param decoder
-   *      video encoding parameters for current picture
-   * \param currFrame
-   *      current frame
-   * \param row
-   *      y coordinate in blocks
-   * \param column
-   *      x coordinate in blocks
-   * \param predBlocks[]
-   *      list of neighboring source blocks (numbering 0 to 7, 1 means: use the neighbor)
-   * \param frameWidth
-   *      width of frame in pixels
-   * \param mbWidthInBlocks
-   *      2 for Y, 1 for U/V components
-  ** **********************************************************************
-   */
   void ercPixConcealIMB (cDecoder264* decoder, sPixel* currFrame, int row, int column, int predBlocks[], int frameWidth, int mbWidthInBlocks)
   {
      sPixel *src[8]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
@@ -337,31 +243,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      Core for the Intra blocks conceal.
-   *      It is called for each color component (Y,U,V) separately
-   *      Finds the corrupted blocks and calls pixel interpolation functions
-   *      to correct them, one block at a time.
-   *      Scanning is done vertically and each corrupted column is corrected
-   *      bi-directionally, i.e., first block, last block, first block+1, last block -1 ...
-   * \param decoder
-   *      video encoding parameters for current picture
-   * \param lastColumn
-   *      Number of block columns in the frame
-   * \param lastRow
-   *      Number of block rows in the frame
-   * \param comp
-   *      color component
-   * \param recfr
-   *      Reconstructed frame buffer
-   * \param picSizeX
-   *      Width of the frame in pixels
-   * \param condition
-   *      The block condition (ok, lost) table
-  ** **********************************************************************
-   */
   void concealBlocks (cDecoder264* decoder, int lastColumn, int lastRow, int comp, frame *recfr, int picSizeX, char *condition )
   {
     //int row, column, srcCounter = 0,  thr = ERC_BLOCK_CORRUPTED,
@@ -541,28 +422,8 @@ namespace {
 
   // interFrame
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      Copies pixel values between a YUV frame and the temporary pixel value storage place. This is
-   *      used to save some pixel values temporarily before overwriting it, or to copy back to a given
-   *      location in a frame the saved pixel values.
-   * \param currYBlockNum
-   *      index of the block (8x8) in the Y plane
-   * \param predMB
-   *      memory area where the temporary pixel values are stored
-   *      the Y,U,V planes are concatenated y = predMB, u = predMB+256, v = predMB+320
-   * \param recfr
-   *      pointer to a YUV frame
-   * \param picSizeX
-   *      picture width in pixels
-   * \param regionSize
-   *      can be 16 or 8 to tell the dimension of the region to copy
-  ** **********************************************************************
-   */
-  void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr,
-                          int picSizeX, int regionSize)
-  {
+  void copyPredMB (int currYBlockNum, sPixel *predMB, frame *recfr, int picSizeX, int regionSize) {
+
     cDecoder264* decoder = recfr->decoder;
     sPicture* picture = decoder->picture;
     int j, k, xmin, ymin, xmax, ymax;
@@ -602,33 +463,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      Calculates a weighted pixel difference between edge Y pixels of the macroBlock stored in predMB
-   *      and the pixels in the given Y plane of a frame (recY) that would become neighbor pixels if
-   *      predMB was placed at currYBlockNum block position into the frame. This "edge distortion" value
-   *      is used to determine how well the given macroBlock in predMB would fit into the frame when
-   *      considering spatial smoothness. If there are correctly received neighbor blocks (status stored
-   *      in predBlocks) only they are used in calculating the edge distorion; otherwise also the already
-   *      concealed neighbor blocks can also be used.
-   * \return
-   *      The calculated weighted pixel difference at the edges of the MB.
-   * \param predBlocks
-   *      status array of the neighboring blocks (if they are OK, concealed or lost)
-   * \param currYBlockNum
-   *      index of the block (8x8) in the Y plane
-   * \param predMB
-   *      memory area where the temporary pixel values are stored
-   *      the Y,U,V planes are concatenated y = predMB, u = predMB+256, v = predMB+320
-   * \param recY
-   *      pointer to a Y plane of a YUV frame
-   * \param picSizeX
-   *      picture width in pixels
-   * \param regionSize
-   *      can be 16 or 8 to tell the dimension of the region to copy
-  ** **********************************************************************
-   */
   int edgeDistortion (int predBlocks[], int currYBlockNum, sPixel *predMB,
                              sPixel *recY, int picSizeX, int regionSize)
   {
@@ -701,26 +535,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ************************************************************************
-  * \brief
-  *      Builds the motion prediction pixels from the given location (in 1/4 pixel units)
-  *      of the reference frame. It not only copies the pixel values but builds the interpolation
-  *      when the pixel positions to be copied from is not full pixel (any 1/4 pixel position).
-  *      It copies the resulting pixel vlaues into predMB.
-  * \param decoder
-  *      The pointer of Decoder picStructure of current frame
-  * \param mv
-  *      The pointer of the predicted MV of the current (being concealed) MB
-  * \param x
-  *      The x-coordinate of the above-left corner pixel of the current MB
-  * \param y
-  *      The y-coordinate of the above-left corner pixel of the current MB
-  * \param predMB
-  *      memory area for storing temporary pixel values for a macroBlock
-  *      the Y,U,V planes are concatenated y = predMB, u = predMB+256, v = predMB+320
-  ************************************************************************
-  */
   void buildPredRegionYUV (cDecoder264* decoder, int *mv, int x, int y, sPixel *predMB)
   {
     sPixel** tmp_block;
@@ -862,21 +676,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      Copies the co-located pixel values from the reference to the current frame.
-   *      Used by concealByCopy
-   * \param recfr
-   *      Reconstructed frame buffer
-   * \param currYBlockNum
-   *      index of the block (8x8) in the Y plane
-   * \param picSizeX
-   *      Width of the frame in pixels
-   * \param regionSize
-   *      can be 16 or 8 to tell the dimension of the region to copy
-  ** **********************************************************************
-   */
   void copyBetweenFrames (frame* recfr, int currYBlockNum, int picSizeX, int regionSize)
   {
     cDecoder264* decoder = recfr->decoder;
@@ -903,24 +702,6 @@ namespace {
     }
   //}}}
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      It conceals a given MB by simply copying the pixel area from the reference image
-   *      that is at the same location as the macroBlock in the current image. This correcponds
-   *      to COPY MBs.
-   * \return
-   *      Always zero (0).
-   * \param recfr
-   *      Reconstructed frame buffer
-   * \param currMBNum
-   *      current MB index
-   * \param object_list
-   *      Motion info for all MBs in the frame
-   * \param picSizeX
-   *      Width of the frame in pixels
-  ** **********************************************************************
-   */
   int concealByCopy (frame* recfr, int currMBNum, sObjectBuffer *object_list, int picSizeX)
   {
     sObjectBuffer* currRegion;
@@ -937,33 +718,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ** **********************************************************************
-   * \brief
-   *      It conceals a given MB by using the motion vectors of one reliable neighbor. That MV of a
-   *      neighbor is selected wich gives the lowest pixel difference at the edges of the MB
-   *      (see function edgeDistortion). This corresponds to a spatial smoothness criteria.
-   * \return
-   *      Always zero (0).
-   * \param recfr
-   *      Reconstructed frame buffer
-   * \param predMB
-   *      memory area for storing temporary pixel values for a macroBlock
-   *      the Y,U,V planes are concatenated y = predMB, u = predMB+256, v = predMB+320
-   * \param currMBNum
-   *      current MB index
-   * \param object_list
-   *      array of region structures storing region mode and mv for each region
-   * \param predBlocks
-   *      status array of the neighboring blocks (if they are OK, concealed or lost)
-   * \param picSizeX
-   *      Width of the frame in pixels
-   * \param picSizeY
-   *      Height of the frame in pixels
-   * \param yCondition
-   *      array for conditions of Y blocks from sErcVariables
-  ** **********************************************************************
-   */
   int concealByTrial (frame* recfr, sPixel *predMB,
                              int currMBNum, sObjectBuffer *object_list, int predBlocks[],
                              int picSizeX, int picSizeY, char *yCondition)
@@ -1156,15 +910,6 @@ namespace {
   //}}}
 
   //{{{
-  /*!
-  ************************************************************************
-  * \brief
-  * The motion prediction pixels are calculated from the given location (in
-  * 1/4 pixel units) of the referenced frame. It copies the sub block from the
-  * corresponding reference to the frame to be concealed.
-  *
-  *************************************************************************
-  */
   void buildPredblockRegionYUV (cDecoder264* decoder, int *mv,
                                        int x, int y, sPixel *predMB, int list, int mbIndex)
   {
@@ -1283,13 +1028,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ************************************************************************
-  * \brief
-  *    Copy image data from one array to another array
-  ************************************************************************
-  */
-
   void CopyImgData (sPixel** inputY, sPixel** *inputUV, sPixel** outputY, sPixel** *outputUV,
                            int img_width, int img_height, int img_width_cr, int img_height_cr)
   {
@@ -1442,14 +1180,6 @@ namespace {
   }
   //}}}
   //{{{
-  /*!
-  ************************************************************************
-  * \brief
-  * Uses the previous reference pic for conceal of reference frames
-  *
-  ************************************************************************
-  */
-
   void copyPrevPicToConcealPic (sPicture *picture, cDpb* dpb) {
 
     sPicture* refPic = dpb->getLastPicRefFromDpb();
@@ -1705,15 +1435,6 @@ struct sConcealNode* initNode (sPicture* picture, int missingpoc ) {
   }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-*    Initialize the list based on the B frame or non reference 'p' frame
-*    to be concealed. The function initialize slice->listX[0] and list 1 depending
-*    on current picture type
-*
-************************************************************************
-*/
 void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPicStructure)
 {
   cDecoder264* decoder = dpb->decoder;
@@ -1809,14 +1530,6 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
   }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-* This function conceals a missing reference frame. The routine is called
-* based on the difference in frame number. It conceals an IDR frame loss
-* based on the sudden decrease in frame number.
-************************************************************************
-*/
 void concealLostFrames (cDpb* dpb, cSlice *slice)
 {
   cDecoder264* decoder = dpb->decoder;
@@ -1900,17 +1613,6 @@ void concealLostFrames (cDpb* dpb, cSlice *slice)
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-* Stores the missing non reference frames in the conceal buffer. The
-* detection is based on the POC difference in the sorted POC array. A missing
-* non reference frame is detected when the dpb is full. A singly linked list
-* is maintained for storing the missing non reference frames.
-*
-************************************************************************
-*/
-
 void concealNonRefPics (cDpb* dpb, int diff)
 {
   cDecoder264* decoder = dpb->decoder;
@@ -1964,15 +1666,6 @@ void concealNonRefPics (cDpb* dpb, int diff)
 }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-* Perform Sliding window decoded reference picture marking process. It
-* maintains the POC s stored in the dpb at a specific instance.
-*
-************************************************************************
-*/
-
 void slidingWindowPocManagement (cDpb* dpb, sPicture *p)
 {
   if (dpb->usedSize == dpb->size)
@@ -1987,17 +1680,6 @@ void slidingWindowPocManagement (cDpb* dpb, sPicture *p)
 
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-* Outputs the non reference frames. The POCs in the conceal buffer are
-* sorted in ascending order and outputted when the lowest POC in the
-* conceal buffer is lower than the lowest in the dpb-> The linked list
-* entry corresponding to the outputted POC is immediately deleted.
-*
-************************************************************************
-*/
-
 void writeLostNonRefPic (cDpb* dpb, int poc) {
 
   cDecoder264* decoder = dpb->decoder;
@@ -2016,14 +1698,6 @@ void writeLostNonRefPic (cDpb* dpb, int poc) {
   }
 //}}}
 //{{{
-/*!
-************************************************************************
-* \brief
-* Conceals frame loss immediately after the IDR. This special case produces
-* the same result for either frame copy or motion vector copy conceal.
-*
-************************************************************************
-*/
 void writeLostRefAfterIdr (cDpb* dpb, int pos) {
 
   cDecoder264* decoder = dpb->decoder;
@@ -2197,23 +1871,6 @@ void ercSetErrorConcealment (sErcVariables *errorVar, int value ) {
 //}}}
 
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *      Creates a new segment in the segment-list, and marks the start MB and bit position.
- *      If the end of the previous segment was not explicitly marked by "ercStopSegment",
- *      also marks the end of the previous segment.
- *      If needed, it reallocates the segment-list for a larger storage place.
- * \param currMBNum
- *      The MB number where the new slice/segment starts
- * \param segment
- *      Segment/cSlice No. counted by the caller
- * \param bitPos
- *      cBitStream pointer: number of bits read from the buffer.
- * \param errorVar
- *      Variables for error detector
-** **********************************************************************
- */
 void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables *errorVar ) {
 
   if ( errorVar && errorVar->conceal ) {
@@ -2224,21 +1881,6 @@ void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables
   }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *      Marks the end position of a segment.
- * \param currMBNum
- *      The last MB number of the previous segment
- * \param segment
- *      Segment/cSlice No. counted by the caller
- *      If (segment<0) the internal segment counter is used.
- * \param bitPos
- *      cBitStream pointer: number of bits read from the buffer.
- * \param errorVar
- *      Variables for error detector
-** **********************************************************************
- */
 void ercStopSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables *errorVar ) {
 
   if ( errorVar && errorVar->conceal ) {
@@ -2248,17 +1890,6 @@ void ercStopSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables 
   }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *      Marks the current segment (the one which has the "currMBNum" MB in it)
- *      as lost: all the blocks of the MBs in the segment as corrupted.
- * \param picSizeX
- *      Width of the frame in pixels.
- * \param errorVar
- *      Variables for error detector
-** **********************************************************************
- */
 void ercMarksegmentLost (int picSizeX, sErcVariables *errorVar )
 {
   int j = 0;
@@ -2285,17 +1916,6 @@ void ercMarksegmentLost (int picSizeX, sErcVariables *errorVar )
   }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *      Marks the current segment (the one which has the "currMBNum" MB in it)
- *      as OK: all the blocks of the MBs in the segment as OK.
- * \param picSizeX
- *      Width of the frame in pixels.
- * \param errorVar
- *      Variables for error detector
-** **********************************************************************
- */
 void ercMarksegmentOK (int picSizeX, sErcVariables *errorVar ) {
 
   int j = 0;
@@ -2318,20 +1938,6 @@ void ercMarksegmentOK (int picSizeX, sErcVariables *errorVar ) {
   }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *      Marks the Blocks of the given component (YUV) of the current MB as concealed.
- * \param currMBNum
- *      Selects the segment where this MB number is in.
- * \param comp
- *      Component to mark (0:Y, 1:U, 2:V, <0:All)
- * \param picSizeX
- *      Width of the frame in pixels.
- * \param errorVar
- *      Variables for error detector
-** **********************************************************************
- */
 void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, sErcVariables *errorVar ) {
 
   int setAll = 0;
