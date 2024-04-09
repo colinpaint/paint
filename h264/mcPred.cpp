@@ -482,7 +482,7 @@ namespace {
                       mvInfo->refIndex [LIST_1] = 0;
                       mvInfo->refPic[LIST_0] = list0[mapped_idx];
                       mvInfo->refPic[LIST_1] = list1[0];
-                      if (mv_scale == 9999 || slice->listX[LIST_0+listOffset][mapped_idx]->usedLongTerm) {
+                      if (mv_scale == 9999 || slice->listX[LIST_0+listOffset][mapped_idx]->usedLongTermRef) {
                         mvInfo->mv[LIST_0].mvX = colocated->mv[refList].mvX;
                         mvInfo->mv[LIST_0].mvY = (int16_t) mvY;
                         mvInfo->mv[LIST_1] = kZeroMv;
@@ -1815,7 +1815,7 @@ void getBlockLuma (sPicture* curRef, int x_pos, int y_pos,
 //{{{
 bool getColocatedInfo4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
-  if (list1->usedLongTerm)
+  if (list1->usedLongTermRef)
     return true;
 
   else {
@@ -1834,7 +1834,7 @@ bool getColocatedInfo4x4 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 //{{{
 bool getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
 
-  if (list1->usedLongTerm)
+  if (list1->usedLongTermRef)
     return true;
  else {
     cSlice* slice = mb->slice;

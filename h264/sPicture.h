@@ -46,7 +46,7 @@ struct sPicture {
   int           longTermPicNum;
   int           longTermFrameIndex;
 
-  uint8_t       usedLongTerm;
+  uint8_t       usedLongTermRef;
   int           usedForRef;
   int           isOutput;
   int           nonExisting;
@@ -239,12 +239,12 @@ static inline int comparefsByPocdesc (const void* arg1, const void* arg2) {
 //}}}
 //{{{
 static inline int isLongRef (sPicture* picture) { 
-  return picture->usedForRef && picture->usedLongTerm; 
+  return picture->usedForRef && picture->usedLongTermRef; 
   }
 //}}}
 //{{{
 static inline int isShortRef (sPicture* picture) { 
-  return picture->usedForRef && !picture->usedLongTerm; 
+  return picture->usedForRef && !picture->usedLongTermRef; 
   }
 //}}}
 

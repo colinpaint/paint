@@ -2195,7 +2195,7 @@ void cSlice::fillWeightedPredParam() {
             }
           else if (activePps->weightedBiPredIdc == 2) {
             int td = iClip3(-128,127,listX[LIST_1][j]->poc - listX[LIST_0][i]->poc);
-            if (!td || listX[LIST_1][j]->usedLongTerm || listX[LIST_0][i]->usedLongTerm) {
+            if (!td || listX[LIST_1][j]->usedLongTermRef || listX[LIST_0][i]->usedLongTermRef) {
               weightedBiPredWeight[0][i][j][comp] = 32;
               weightedBiPredWeight[1][i][j][comp] = 32;
               }
@@ -2230,7 +2230,7 @@ void cSlice::fillWeightedPredParam() {
                 }
               else if (activePps->weightedBiPredIdc == 2) {
                 int td = iClip3 (-128, 127, listX[k+LIST_1][j]->poc - listX[k+LIST_0][i]->poc);
-                if (!td || listX[k+LIST_1][j]->usedLongTerm || listX[k+LIST_0][i]->usedLongTerm) {
+                if (!td || listX[k+LIST_1][j]->usedLongTermRef || listX[k+LIST_0][i]->usedLongTermRef) {
                   weightedBiPredWeight[k+0][i][j][comp] = 32;
                   weightedBiPredWeight[k+1][i][j][comp] = 32;
                   }
@@ -2318,7 +2318,7 @@ void cSlice::updatePicNum() {
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->frameStoreRef[i]->isUsed == 3 ) {
         if (dpb->frameStoreRef[i]->frame->usedForRef &&
-            !dpb->frameStoreRef[i]->frame->usedLongTerm) {
+            !dpb->frameStoreRef[i]->frame->usedLongTermRef) {
           if (dpb->frameStoreRef[i]->frameNum > frameNum )
             dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
           else
@@ -2331,7 +2331,7 @@ void cSlice::updatePicNum() {
     // update longTermPicNum
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
       if (dpb->frameStoreLongTermRef[i]->isUsed == 3) {
-        if (dpb->frameStoreLongTermRef[i]->frame->usedLongTerm)
+        if (dpb->frameStoreLongTermRef[i]->frame->usedLongTermRef)
           dpb->frameStoreLongTermRef[i]->frame->longTermPicNum = dpb->frameStoreLongTermRef[i]->frame->longTermFrameIndex;
         }
       }
@@ -2361,9 +2361,9 @@ void cSlice::updatePicNum() {
 
     // update longTermPicNum
     for (uint32_t i = 0; i < dpb->longTermRefFramesInBuffer; i++) {
-      if (dpb->frameStoreLongTermRef[i]->usedLongTerm & 1)
+      if (dpb->frameStoreLongTermRef[i]->usedLongTermRef & 1)
         dpb->frameStoreLongTermRef[i]->topField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->topField->longTermFrameIndex + addTop;
-      if (dpb->frameStoreLongTermRef[i]->usedLongTerm & 2)
+      if (dpb->frameStoreLongTermRef[i]->usedLongTermRef & 2)
         dpb->frameStoreLongTermRef[i]->botField->longTermPicNum = 2 * dpb->frameStoreLongTermRef[i]->botField->longTermFrameIndex + addBot;
       }
     }
@@ -2571,7 +2571,7 @@ void cSlice::reorderShortTerm (int curList, int numRefIndexIXactiveMinus1, int p
   int nIdx = *refIdxLX;
   for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
     if (refPicListX[cIdx])
-      if ((refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->picNum != picNumLX))
+      if ((refPicListX[cIdx]->usedLongTermRef) || (refPicListX[cIdx]->picNum != picNumLX))
         refPicListX[nIdx++] = refPicListX[cIdx];
   }
 //}}}
@@ -2587,7 +2587,7 @@ void cSlice::reorderLongTerm (sPicture** refPicListX, int numRefIndexIXactiveMin
   int nIdx = *refIdxLX;
   for (int cIdx = *refIdxLX; cIdx <= numRefIndexIXactiveMinus1+1; cIdx++)
     if (refPicListX[cIdx])
-      if ((!refPicListX[cIdx]->usedLongTerm) || (refPicListX[cIdx]->longTermPicNum != LongTermPicNum))
+      if ((!refPicListX[cIdx]->usedLongTermRef) || (refPicListX[cIdx]->longTermPicNum != LongTermPicNum))
         refPicListX[nIdx++] = refPicListX[cIdx];
   }
 //}}}

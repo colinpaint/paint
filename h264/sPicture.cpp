@@ -66,7 +66,7 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   s->longTermFrameIndex = 0;
   s->longTermPicNum = 0;
   s->usedForRef  = 0;
-  s->usedLongTerm = 0;
+  s->usedLongTermRef = 0;
   s->nonExisting = 0;
   s->isOutput = 0;
   s->maxSliceId = 0;

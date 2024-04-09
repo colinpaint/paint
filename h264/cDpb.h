@@ -38,8 +38,7 @@ public:
   int           initDone;
 
 private:
-  void dumpDpb();
-
+  void dump();
   int outputDpbFrame();
   void checkNumDpbFrames();
 
