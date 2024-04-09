@@ -284,7 +284,6 @@ void cDpb::storePictureDpb (sPicture* picture) {
   decoder->lastHasMmco5 = 0;
   decoder->lastPicBotField = (picture->picStructure == eBotField);
 
-  int poc, pos;
   if (picture->isIDR) {
     idrMemoryManagement (picture);
     // picture error conceal
@@ -343,6 +342,8 @@ void cDpb::storePictureDpb (sPicture* picture) {
   while (usedSize == allocatedSize) {
     // non-reference frames may be output directly
     if (!picture->usedForRef) {
+      int poc;
+      int pos;
       getSmallestPoc (poc, pos);
       if ((-1 == pos) || (picture->poc < poc)) {
         decoder->directOutput (picture);
@@ -359,7 +360,7 @@ void cDpb::storePictureDpb (sPicture* picture) {
         cDecoder264::error ("duplicate frameNum in int16_t-term ref picture buffer");
 
   // store at end of buffer
-  frameStoreArray[usedSize]->insertPictureDpb (decoder,  picture);
+  frameStoreArray[usedSize]->insertPictureDpb (decoder, picture);
 
   // picture error conceal
   if (picture->isIDR)
@@ -972,8 +973,6 @@ void cDpb::unmarkLongTermFrameForRefByFrameIndex (int longTermFrameIndex) {
 //{{{
 void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNumX) {
 
-  int addTop, addBot;
-
   if (picture->picStructure == eFrame) {
     for (uint32_t i = 0; i < refFramesInBuffer; i++) {
       if (frameStoreRefArray[i]->usedRef == 3) {
@@ -1000,6 +999,7 @@ void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNu
     }
 
   else {
+    int addTop, addBot;
     if (picture->picStructure == eTopField) {
       addTop = 1;
       addBot = 0;
