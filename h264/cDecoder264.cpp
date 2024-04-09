@@ -1515,7 +1515,7 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
 
   decoder->dpb = (cDpb*)calloc (1, sizeof(cDpb));
   decoder->dpb->decoder = decoder;
-  decoder->dpb->initDone = 0;
+  decoder->dpb->initDone = false;
 
   decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
 

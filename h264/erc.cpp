@@ -2003,7 +2003,7 @@ void writeLostNonRefPic (cDpb* dpb, int poc) {
   cDecoder264* decoder = dpb->decoder;
   cFrameStore concealment_fs;
   if (poc > 0) {
-    if ((poc - dpb->lastOutputPoc) > decoder->param.pocGap) {
+    if ((poc - dpb->lastOutPoc) > decoder->param.pocGap) {
       concealment_fs.frame = decoder->concealHead->picture;
       concealment_fs.isOutput = 0;
       concealment_fs.usedRef = 0;
