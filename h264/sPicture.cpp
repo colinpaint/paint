@@ -81,9 +81,9 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   s->size_x_cr_m1 = sizeXcr - 1;
   s->size_y_cr_m1 = sizeYcr - 1;
 
-  s->topField = decoder->noRefPicture;
-  s->botField = decoder->noRefPicture;
-  s->frame = decoder->noRefPicture;
+  s->topField = decoder->dpb->noRefPicture;
+  s->botField = decoder->dpb->noRefPicture;
+  s->frame = decoder->dpb->noRefPicture;
 
   s->decRefPicMarkBuffer = NULL;
   s->codedFrame  = 0;

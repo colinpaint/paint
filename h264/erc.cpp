@@ -1046,7 +1046,7 @@ namespace {
   }
   //}}}
   //{{{
-  void copyToConceal (sPicture *src, sPicture *dst, cDecoder264* decoder)
+  void copyToConceal (sPicture* src, sPicture* dst, cDecoder264* decoder)
   {
     int i = 0;
     int mv[3];
@@ -1180,7 +1180,7 @@ namespace {
   }
   //}}}
   //{{{
-  void copyPrevPicToConcealPic (sPicture *picture, cDpb* dpb) {
+  void copyPrevPicToConcealPic (sPicture* picture, cDpb* dpb) {
 
     sPicture* refPic = dpb->getLastPicRefFromDpb();
     dpb->decoder->concealSliceType = eSliceP;
@@ -1188,7 +1188,7 @@ namespace {
     }
   //}}}
   //{{{
-  sPicture* getPicFromDpb (cDpb* dpb, int missingpoc, uint32_t *pos) {
+  sPicture* getPicFromDpb (cDpb* dpb, int missingpoc, uint32_t* pos) {
 
     int usedSize = dpb->usedSize - 1;
     int concealfrom = 0;
@@ -1209,12 +1209,12 @@ namespace {
     }
   //}}}
   //{{{
-  int comp (const void *i, const void *j) {
+  int comp (const void* i, const void* j) {
     return *(int *)i - *(int *)j;
     }
   //}}}
   //{{{
-  void addNode (cDecoder264* decoder, struct sConcealNode *concealment_new )
+  void addNode (cDecoder264* decoder, struct sConcealNode* concealment_new )
   {
     if( decoder->concealHead == NULL ) {
       decoder->concealTail = decoder->concealHead = concealment_new;
@@ -1225,7 +1225,7 @@ namespace {
   }
   //}}}
   //{{{
-  void deleteNode (cDecoder264* decoder, struct sConcealNode *ptr ) {
+  void deleteNode (cDecoder264* decoder, struct sConcealNode* ptr) {
 
     // We only need to delete the first node in the linked list
     if( ptr == decoder->concealHead ) {
@@ -1530,8 +1530,8 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
   }
 //}}}
 //{{{
-void concealLostFrames (cDpb* dpb, cSlice *slice)
-{
+void concealLostFrames (cDpb* dpb, cSlice* slice) {
+
   cDecoder264* decoder = dpb->decoder;
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
@@ -1543,22 +1543,19 @@ void concealLostFrames (cDpb* dpb, cSlice *slice)
   slice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[1] = 0;
 
   // printf("A gap in frame number is found, try to fill it.\n");
-
-  if(decoder->idrConcealFlag == 1)
-  {
+  if(decoder->idrConcealFlag == 1) {
     // Conceals an IDR frame loss. Uses the reference frame in the previous
     // GOP for conceal.
     UnusedShortTermFrameNum = 0;
     decoder->lastRefPicPoc = -decoder->param.pocGap;
     decoder->earlierMissingPoc = 0;
-  }
+    }
   else
     UnusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum;
 
   CurrFrameNum = slice->frameNum;
 
-  while (CurrFrameNum != UnusedShortTermFrameNum)
-  {
+  while (CurrFrameNum != UnusedShortTermFrameNum) {
     picture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
 
     picture->codedFrame = 1;
@@ -1607,7 +1604,7 @@ void concealLostFrames (cDpb* dpb, cSlice *slice)
   slice->deltaPicOrderCount[0] = tmp1;
   slice->deltaPicOrderCount[1] = tmp2;
   slice->frameNum = CurrFrameNum;
-}
+  }
 //}}}
 //{{{
  void concealNonRefPics (cDpb* dpb, int diff) {
@@ -1624,14 +1621,14 @@ void concealLostFrames (cDpb* dpb, cSlice *slice)
   if (dpb->usedSize == 0)
     return;
 
-  qsort (decoder->dpbPoc, dpb->allocatedSize, sizeof(int), comp);
+  qsort (decoder->dpb->dpbPoc, dpb->allocatedSize, sizeof(int), comp);
 
   for ( i =0; i < dpb->allocatedSize - diff; i++) {
     dpb->usedSize = dpb->allocatedSize;
-    if((decoder->dpbPoc[i+1] - decoder->dpbPoc[i]) > decoder->param.pocGap)  {
+    if((decoder->dpb->dpbPoc[i+1] - decoder->dpb->dpbPoc[i]) > decoder->param.pocGap)  {
       conceal_to_picture = allocPicture(decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
 
-      missingpoc = decoder->dpbPoc[i] + decoder->param.pocGap;
+      missingpoc = decoder->dpb->dpbPoc[i] + decoder->param.pocGap;
       // Diagnostics
       // printf("\n missingpoc = %d\n",missingpoc);
 
@@ -1657,7 +1654,7 @@ void concealLostFrames (cDpb* dpb, cSlice *slice)
     }
 
   //restore the original value
-  dpb->usedSize = temp_used_size; 
+  dpb->usedSize = temp_used_size;
   }
 //}}}
 //{{{
@@ -1666,7 +1663,7 @@ void slidingWindowPocManagement (cDpb* dpb, sPicture* p) {
     cDecoder264* decoder = dpb->decoder;
     uint32_t i;
     for (i = 0; i < dpb->allocatedSize-1; i++)
-      decoder->dpbPoc[i] = decoder->dpbPoc[i+1];
+      decoder->dpb->dpbPoc[i] = decoder->dpb->dpbPoc[i+1];
     }
   }
 
@@ -1862,6 +1859,35 @@ void ercStopSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables*
   }
 //}}}
 //{{{
+void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, sErcVariables* errorVar) {
+
+  int setAll = 0;
+
+  if (errorVar && errorVar->conceal) {
+    if (comp < 0) {
+      setAll = 1;
+      comp = 0;
+      }
+
+    switch (comp) {
+      case 0:
+        errorVar->yCondition[MBNum2YBlock (currMBNum, 0, picSizeX)] = ERC_BLOCK_CONCEALED;
+        errorVar->yCondition[MBNum2YBlock (currMBNum, 1, picSizeX)] = ERC_BLOCK_CONCEALED;
+        errorVar->yCondition[MBNum2YBlock (currMBNum, 2, picSizeX)] = ERC_BLOCK_CONCEALED;
+        errorVar->yCondition[MBNum2YBlock (currMBNum, 3, picSizeX)] = ERC_BLOCK_CONCEALED;
+        if (!setAll)
+          break;
+      case 1:
+        errorVar->uCondition[currMBNum] = ERC_BLOCK_CONCEALED;
+        if (!setAll)
+          break;
+      case 2:
+        errorVar->vCondition[currMBNum] = ERC_BLOCK_CONCEALED;
+      }
+    }
+  }
+//}}}
+//{{{
 void ercMarksegmentLost (int picSizeX, sErcVariables* errorVar)
 {
   int j = 0;
@@ -1906,35 +1932,6 @@ void ercMarksegmentOK (int picSizeX, sErcVariables* errorVar) {
       errorVar->vCondition[j] = ERC_BLOCK_OK;
       }
     errorVar->segments[current_segment].corrupted = 0;
-    }
-  }
-//}}}
-//{{{
-void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, sErcVariables* errorVar) {
-
-  int setAll = 0;
-
-  if (errorVar && errorVar->conceal) {
-    if (comp < 0) {
-      setAll = 1;
-      comp = 0;
-      }
-
-    switch (comp) {
-      case 0:
-        errorVar->yCondition[MBNum2YBlock (currMBNum, 0, picSizeX)] = ERC_BLOCK_CONCEALED;
-        errorVar->yCondition[MBNum2YBlock (currMBNum, 1, picSizeX)] = ERC_BLOCK_CONCEALED;
-        errorVar->yCondition[MBNum2YBlock (currMBNum, 2, picSizeX)] = ERC_BLOCK_CONCEALED;
-        errorVar->yCondition[MBNum2YBlock (currMBNum, 3, picSizeX)] = ERC_BLOCK_CONCEALED;
-        if (!setAll)
-          break;
-      case 1:
-        errorVar->uCondition[currMBNum] = ERC_BLOCK_CONCEALED;
-        if (!setAll)
-          break;
-      case 2:
-        errorVar->vCondition[currMBNum] = ERC_BLOCK_CONCEALED;
-      }
     }
   }
 //}}}

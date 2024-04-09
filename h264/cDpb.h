@@ -23,19 +23,23 @@ public:
   std::string getIndexString (uint32_t index) const;
 
   //  vars
-  cDecoder264*  decoder;
-  bool          initDone;
+  cDecoder264*  decoder = nullptr;
+  bool          initDone = false;
 
-  uint32_t      usedSize;
-  uint32_t      allocatedSize;
+  uint32_t      usedSize = 0;
+  uint32_t      allocatedSize =0 ;
 
-  uint32_t      refFramesInBuffer;
-  uint32_t      longTermRefFramesInBuffer;
-  int           lastOutPoc;
+  uint32_t      refFramesInBuffer = 0;
+  uint32_t      longTermRefFramesInBuffer = 0;
+  int           lastOutPoc = 0;
 
-  cFrameStore** frameStoreArray;
-  cFrameStore** frameStoreRefArray;
-  cFrameStore** frameStoreLongTermRefArray;
+  int           dpbPoc[100] = {0};
+
+  cFrameStore** frameStoreArray = nullptr;
+  cFrameStore** frameStoreRefArray = nullptr;
+  cFrameStore** frameStoreLongTermRefArray = nullptr;
+
+  sPicture*     noRefPicture = nullptr; 
 
 private:
   void dump();
@@ -66,8 +70,8 @@ private:
 
   void assignLongTermFrameIndex (sPicture* picture, int diffPicNumMinus1, int longTermFrameIndex);
 
-  int           numRefFrames;
-  int           maxLongTermPicIndex;
+  int           numRefFrames = 0;
+  int           maxLongTermPicIndex = 0;
 
-  cFrameStore* lastPictureFrameStore;
+  cFrameStore* lastPictureFrameStore = nullptr;
   };

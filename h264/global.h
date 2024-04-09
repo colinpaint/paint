@@ -662,15 +662,13 @@ public:
   // output
   cDpb*        dpb = nullptr;
   int          lastHasMmco5 = 0;
-  int          dpbPoc[100] = {0};
-  sPicture*    picture = nullptr;
-  sPicture*    decPictureJV[MAX_PLANE] = {nullptr};  // picture to be used during 4:4:4 independent mode decoding
-  sPicture*    noRefPicture = nullptr;         // dummy storable picture for recovery point
-  cFrameStore* lastOutFrameStore = nullptr;
-  sDecodedPic* outDecodedPics = nullptr;
-  cFrameStore* outBuffer = nullptr;
-  sPicture*    pendingOut = nullptr;
+
   int          pendingOutState;
+  sPicture*    pendingOut = nullptr;
+  sPicture*    picture = nullptr;
+  cFrameStore* lastOutFrameStore = nullptr;
+  cFrameStore* outBuffer = nullptr;
+  sDecodedPic* outDecodedPics = nullptr;
 
   // sCoding
   sCoding      coding = {0};
@@ -698,7 +696,7 @@ public:
   uint8_t**    predMode = nullptr;   // prediction type [90][74]
   int**        siBlock = nullptr;
 
-  // POC
+  // poc
   int          lastRefPicPoc = 0;
 
   // - mode 0:
@@ -755,6 +753,7 @@ public:
   int           idrConcealFlag = 0;
   int           concealSliceType = 0;
 
+  sPicture*     decPictureJV[MAX_PLANE] = {nullptr};  // picture to be used during 4:4:4 independent mode decoding
   sMacroBlock*  mbDataJV[MAX_PLANE] = {nullptr};
   char*         intraBlockJV[MAX_PLANE] = {nullptr};
   uint8_t**     predModeJV[MAX_PLANE] = {nullptr};

@@ -186,11 +186,11 @@ void cDpb::initDpb (cDecoder264* decoder, int type) {
     }
 
   // allocate dummyRefPicture
-  if (!decoder->noRefPicture) {
-    decoder->noRefPicture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
-    decoder->noRefPicture->topField = decoder->noRefPicture;
-    decoder->noRefPicture->botField = decoder->noRefPicture;
-    decoder->noRefPicture->frame = decoder->noRefPicture;
+  if (!noRefPicture) {
+    noRefPicture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
+    noRefPicture->topField = noRefPicture;
+    noRefPicture->botField = noRefPicture;
+    noRefPicture->frame = noRefPicture;
     }
 
   decoder->lastHasMmco5 = 0;
@@ -250,8 +250,8 @@ void cDpb::freeDpb () {
   if (decoder->concealMode != 0 || decoder->lastOutFrameStore)
     delete decoder->lastOutFrameStore;
 
-  freePicture (decoder->noRefPicture);
-  decoder->noRefPicture = NULL;
+  freePicture (noRefPicture);
+  noRefPicture = NULL;
 
   initDone = false;
   }
@@ -348,7 +348,7 @@ void cDpb::storePictureDpb (sPicture* picture) {
   if (picture->isIDR) {
     idrMemoryManagement (picture);
     // picture error conceal
-    memset (decoder->dpbPoc, 0, sizeof(int)*100);
+    memset (&decoder->dpb->dpbPoc, 0, sizeof(int)*100);
     }
   else {
     // adaptive memory management
@@ -435,7 +435,7 @@ void cDpb::storePictureDpb (sPicture* picture) {
   usedSize++;
 
   if (decoder->concealMode != 0)
-    decoder->dpbPoc[usedSize-1] = picture->poc;
+    decoder->dpb->dpbPoc[usedSize-1] = picture->poc;
 
   updateRefList();
   updateLongTermRefList();
@@ -480,7 +480,7 @@ sPicture* cDpb::getShortTermPic (cSlice* slice, int picNum) {
       }
     }
 
-  return slice->decoder->noRefPicture;
+  return slice->decoder->dpb->noRefPicture;
   }
 //}}}
 //{{{

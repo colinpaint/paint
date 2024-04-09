@@ -3844,7 +3844,7 @@ namespace {
   // this at the MB level, and it really should be done at the slice level
 
     if (decoder->coding.isSeperateColourPlane == 0) {
-      sPicture* vidref = decoder->noRefPicture;
+      sPicture* vidref = decoder->dpb->noRefPicture;
       int noref = (slice->framePoc < decoder->recoveryPoc);
 
       if (plane == PLANE_Y) {
@@ -4004,9 +4004,9 @@ namespace {
 
     // set the unused list entries to NULL
     for (uint32_t i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
-      slice->listX[0][i] = decoder->noRefPicture;
+      slice->listX[0][i] = decoder->dpb->noRefPicture;
     for (uint32_t i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
-      slice->listX[1][i] = decoder->noRefPicture;
+      slice->listX[1][i] = decoder->dpb->noRefPicture;
     }
   //}}}
   //{{{
@@ -4131,9 +4131,9 @@ namespace {
 
     // set the unused list entries to NULL
     for (uint32_t i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
-      slice->listX[0][i] = decoder->noRefPicture;
+      slice->listX[0][i] = decoder->dpb->noRefPicture;
     for (uint32_t i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
-      slice->listX[1][i] = decoder->noRefPicture;
+      slice->listX[1][i] = decoder->dpb->noRefPicture;
     }
   //}}}
   }

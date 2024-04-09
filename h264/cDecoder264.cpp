@@ -2452,7 +2452,7 @@ void cDecoder264::readDecRefPicMarking (cBitStream& s, cSlice* slice) {
 //{{{
 void cDecoder264::initRefPicture (cSlice* slice) {
 
-  sPicture* vidRefPicture = noRefPicture;
+  sPicture* vidRefPicture = dpb->noRefPicture;
   int noRef = slice->framePoc < recoveryPoc;
 
   if (coding.isSeperateColourPlane) {
@@ -2682,7 +2682,7 @@ void cDecoder264::initSlice (cSlice* slice) {
   reorderLists (slice);
 
   if (slice->picStructure == eFrame)
-    slice->initMbAffLists (noRefPicture);
+    slice->initMbAffLists (dpb->noRefPicture);
 
   // update reference flags and set current refFlag
   if (!(slice->redundantPicCount && (prevFrameNum == slice->frameNum)))
@@ -2707,7 +2707,7 @@ void cDecoder264::reorderLists (cSlice* slice) {
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
     if (slice->refPicReorderFlag[LIST_0])
       slice->reorderRefPicList (LIST_0);
-    if (noRefPicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
+    if (dpb->noRefPicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
       cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
                  slice->numRefIndexActive[LIST_0]-1, nonConformingStream ? "conform":"");
     else
@@ -2717,9 +2717,9 @@ void cDecoder264::reorderLists (cSlice* slice) {
   if (slice->sliceType == eSliceB) {
     if (slice->refPicReorderFlag[LIST_1])
       slice->reorderRefPicList (LIST_1);
-    if (noRefPicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
-       cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
-              slice->numRefIndexActive[LIST_0] - 1, nonConformingStream ? "conform" : "");
+    if (dpb->noRefPicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
+      cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
+                 slice->numRefIndexActive[LIST_0] - 1, nonConformingStream ? "conform" : "");
     else
       slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
     }
