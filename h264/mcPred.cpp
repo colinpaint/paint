@@ -1740,14 +1740,16 @@ namespace {
   }
 
 //{{{
-void getBlockLuma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int blockSizeY, sPixel** block,
-                     int shift_x, int maxold_x, int maxold_y, int** tempRes,
-                     int max_imgpel_value, sPixel no_ref_value, sMacroBlock* mb) {
+void getBlockLuma (sPicture* curRef, int x_pos, int y_pos,
+                   int blockSizeX, int blockSizeY, sPixel** block,
+                   int shift_x, int maxold_x, int maxold_y, int** tempRes,
+                   int max_imgpel_value, sPixel no_ref_value, sMacroBlock* mb) {
 
   if (curRef->noRef)
     memset (block[0], no_ref_value,blockSizeY * blockSizeX * sizeof(sPixel));
   else {
-    sPixel** curPixelY = (mb->decoder->coding.isSeperateColourPlane && mb->slice->colourPlaneId>PLANE_Y)? curRef->imgUV[mb->slice->colourPlaneId-1] : curRef->curPixelY;
+    sPixel** curPixelY = (mb->decoder->coding.isSeperateColourPlane && mb->slice->colourPlaneId > PLANE_Y) 
+                           ? curRef->imgUV[mb->slice->colourPlaneId-1] : curRef->curPixelY;
     int dx = (x_pos & 3);
     int dy = (y_pos & 3);
     x_pos >>= 2;
@@ -1758,7 +1760,8 @@ void getBlockLuma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int b
     if (dx == 0 && dy == 0)
       getBlock00 (&block[0][0], &curPixelY[y_pos][x_pos], curRef->lumaStride, blockSizeY);
     else {
-      if (dy == 0) { /* No vertical interpolation */
+      if (dy == 0) {
+        /* No vertical interpolation */
         if (dx == 1)
           getLuma10 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, max_imgpel_value);
         else if (dx == 2)
@@ -1766,7 +1769,8 @@ void getBlockLuma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int b
         else
           getLuma30 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, max_imgpel_value);
         }
-      else if (dx == 0) { /* No horizontal interpolation */
+      else if (dx == 0) { 
+        /* No horizontal interpolation */
         if (dy == 1)
           getLuma01 (block, &curPixelY[y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
         else if (dy == 2)
@@ -1774,7 +1778,8 @@ void getBlockLuma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int b
         else
           getLuma03 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
         }
-      else if (dx == 2) { /* Vertical & horizontal interpolation */
+      else if (dx == 2) { 
+        /* Vertical & horizontal interpolation */
         if (dy == 1)
           getLuma21 (block, &curPixelY[ y_pos], tempRes, blockSizeY, blockSizeX, x_pos, max_imgpel_value);
         else if (dy == 2)
@@ -1802,7 +1807,7 @@ void getBlockLuma (sPicture* curRef, int x_pos, int y_pos, int blockSizeX, int b
             getLuma33 (block, &curPixelY[ y_pos], blockSizeY, blockSizeX, x_pos, shift_x, max_imgpel_value);
           }
         }
-     }
+      }
     }
   }
 //}}}
@@ -1859,9 +1864,9 @@ bool getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
             frameStore = list1->botField->mvInfo[jdiv] + ii;
           }
         }
-      bool moving = !((((frameStore->refIndex[LIST_0] == 0) && 
+      bool moving = !((((frameStore->refIndex[LIST_0] == 0) &&
                         (iabs(frameStore->mv[LIST_0].mvX) >> 1 == 0) && (iabs(frameStore->mv[LIST_0].mvY) >> 1 == 0))) ||
-                       ((frameStore->refIndex[LIST_0] == -1) && (frameStore->refIndex[LIST_1] == 0) && 
+                       ((frameStore->refIndex[LIST_0] == -1) && (frameStore->refIndex[LIST_1] == 0) &&
                         (iabs(frameStore->mv[LIST_1].mvX) >> 1 == 0) && (iabs(frameStore->mv[LIST_1].mvY) >> 1 == 0)));
       return moving;
       }
@@ -1869,9 +1874,9 @@ bool getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
       sPicMotion *frameStore = &list1->mvInfo[RSD(j)][RSD(i)];
       if (mb->decoder->coding.isSeperateColourPlane && mb->decoder->coding.yuvFormat == YUV444)
         frameStore = &list1->mvInfoJV[mb->slice->colourPlaneId][RSD(j)][RSD(i)];
-      bool moving = !((((frameStore->refIndex[LIST_0] == 0) && 
+      bool moving = !((((frameStore->refIndex[LIST_0] == 0) &&
                         (iabs(frameStore->mv[LIST_0].mvX) >> 1 == 0) && (iabs(frameStore->mv[LIST_0].mvY) >> 1 == 0))) ||
-                       ((frameStore->refIndex[LIST_0] == -1) && (frameStore->refIndex[LIST_1] == 0) && 
+                       ((frameStore->refIndex[LIST_0] == -1) && (frameStore->refIndex[LIST_1] == 0) &&
                         (iabs(frameStore->mv[LIST_1].mvX) >> 1 == 0) && (iabs(frameStore->mv[LIST_1].mvY) >> 1 == 0)));
 
       return moving;
@@ -1879,6 +1884,7 @@ bool getColocatedInfo8x8 (sMacroBlock* mb, sPicture* list1, int i, int j) {
     }
   }
 //}}}
+
 //{{{
 void intraChromaDecode (sMacroBlock* mb, int yuv) {
 
@@ -1936,7 +1942,7 @@ void intraChromaDecode (sMacroBlock* mb, int yuv) {
   }
 //}}}
 //{{{
-void prepareDirectParam (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl0, sMotionVec* pmvl1,
+void prepareDirectParam (sMacroBlock* mb, sPicture* picture, sMotionVec* mvl0, sMotionVec* mvl1,
                          char* l0_rFrame, char* l1_rFrame) {
 
   cSlice* slice = mb->slice;
@@ -1970,10 +1976,10 @@ void prepareDirectParam (sMacroBlock* mb, sPicture* picture, sMotionVec* pmvl0, 
   *l1_rFrame = (char)imin (imin ((uint8_t)l1_refA, (uint8_t)l1_refB), (uint8_t)l1_refC);
 
   if (*l0_rFrame >= 0)
-    mb->GetMVPredictor (mb, pixelPos, pmvl0, *l0_rFrame, mvInfo, LIST_0, 0, 0, 16, 16);
+    mb->GetMVPredictor (mb, pixelPos, mvl0, *l0_rFrame, mvInfo, LIST_0, 0, 0, 16, 16);
 
   if (*l1_rFrame >= 0)
-    mb->GetMVPredictor (mb, pixelPos, pmvl1, *l1_rFrame, mvInfo, LIST_1, 0, 0, 16, 16);
+    mb->GetMVPredictor (mb, pixelPos, mvl1, *l1_rFrame, mvInfo, LIST_1, 0, 0, 16, 16);
   }
 //}}}
 //{{{
