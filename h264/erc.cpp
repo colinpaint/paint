@@ -1853,7 +1853,7 @@ void concealLostFrames (cDpb* dpb, cSlice *slice)
     picture->frameNum = UnusedShortTermFrameNum;
     picture->nonExisting = 0;
     picture->isOutput = 0;
-    picture->usedForReference = 1;
+    picture->usedForRef = 1;
 
     picture->adaptRefPicBufFlag = 0;
 
@@ -2006,7 +2006,7 @@ void writeLostNonRefPic (cDpb* dpb, int poc) {
     if ((poc - dpb->lastOutputPoc) > decoder->param.pocGap) {
       concealment_fs.frame = decoder->concealHead->picture;
       concealment_fs.isOutput = 0;
-      concealment_fs.usedReference = 0;
+      concealment_fs.usedRef = 0;
       concealment_fs.isUsed = 3;
 
       decoder->writeStoredFrame (&concealment_fs);

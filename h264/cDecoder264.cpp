@@ -1282,7 +1282,7 @@ namespace {
     dst->chromaQpOffset[1] = src->chromaQpOffset[1];
 
     dst->sliceType = src->sliceType;
-    dst->usedForReference = src->usedForReference;
+    dst->usedForRef = src->usedForRef;
     dst->isIDR = src->isIDR;
     dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
     dst->longTermRefFlag = src->longTermRefFlag;
@@ -2452,7 +2452,7 @@ void cDecoder264::readDecRefPicMarking (cBitStream& s, cSlice* slice) {
 //{{{
 void cDecoder264::initRefPicture (cSlice* slice) {
 
-  sPicture* vidRefPicture = noReferencePicture;
+  sPicture* vidRefPicture = noRefPicture;
   int noRef = slice->framePoc < recoveryPoc;
 
   if (coding.isSeperateColourPlane) {
@@ -2635,7 +2635,7 @@ void cDecoder264::initPicture (cSlice* slice) {
     }
 
   picture->sliceType = coding.sliceType;
-  picture->usedForReference = (slice->refId != 0);
+  picture->usedForRef = (slice->refId != 0);
   picture->isIDR = slice->isIDR;
   picture->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
   picture->longTermRefFlag = slice->longTermRefFlag;
@@ -2682,7 +2682,7 @@ void cDecoder264::initSlice (cSlice* slice) {
   reorderLists (slice);
 
   if (slice->picStructure == eFrame)
-    slice->initMbAffLists (noReferencePicture);
+    slice->initMbAffLists (noRefPicture);
 
   // update reference flags and set current refFlag
   if (!(slice->redundantPicCount && (prevFrameNum == slice->frameNum)))
@@ -2707,7 +2707,7 @@ void cDecoder264::reorderLists (cSlice* slice) {
   if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
     if (slice->refPicReorderFlag[LIST_0])
       slice->reorderRefPicList (LIST_0);
-    if (noReferencePicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
+    if (noRefPicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
       cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
                  slice->numRefIndexActive[LIST_0]-1, nonConformingStream ? "conform":"");
     else
@@ -2717,7 +2717,7 @@ void cDecoder264::reorderLists (cSlice* slice) {
   if (slice->sliceType == eSliceB) {
     if (slice->refPicReorderFlag[LIST_1])
       slice->reorderRefPicList (LIST_1);
-    if (noReferencePicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
+    if (noRefPicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
        cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
               slice->numRefIndexActive[LIST_0] - 1, nonConformingStream ? "conform" : "");
     else
@@ -3079,7 +3079,7 @@ void cDecoder264::makeFramePictureJV() {
   picture = decPictureJV[0];
 
   // copy;
-  if (picture->usedForReference) {
+  if (picture->usedForRef) {
     int nsize = (picture->sizeY/BLOCK_SIZE)*(picture->sizeX/BLOCK_SIZE)*sizeof(sPicMotion);
     memcpy (&(picture->mvInfoJV[PLANE_Y][0][0]), &(decPictureJV[PLANE_Y]->mvInfo[0][0]), nsize);
     memcpy (&(picture->mvInfoJV[PLANE_U][0][0]), &(decPictureJV[PLANE_U]->mvInfo[0][0]), nsize);
@@ -3857,7 +3857,7 @@ void cDecoder264::endDecodeFrame() {
   //}}}
   if (!deblockMode &&
       param.deblock &&
-      (deblockEnable & (1 << picture->usedForReference))) {
+      (deblockEnable & (1 << picture->usedForRef))) {
     if (coding.isSeperateColourPlane) {
       //{{{  deblockJV
       int colourPlaneId = sliceList[0]->colourPlaneId;
@@ -3880,13 +3880,13 @@ void cDecoder264::endDecodeFrame() {
     mbAffPostProc();
   if (coding.picStructure != eFrame)
      idrFrameNum /= 2;
-  if (picture->usedForReference)
+  if (picture->usedForRef)
     padPicture (picture);
 
   int picStructure = picture->picStructure;
   int sliceType = picture->sliceType;
   int pocNum = picture->framePoc;
-  int refpic = picture->usedForReference;
+  int refpic = picture->usedForRef;
   int qp = picture->qp;
   int picNum = picture->picNum;
   int isIdr = picture->isIDR;

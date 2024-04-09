@@ -3844,7 +3844,7 @@ namespace {
   // this at the MB level, and it really should be done at the slice level
 
     if (decoder->coding.isSeperateColourPlane == 0) {
-      sPicture* vidref = decoder->noReferencePicture;
+      sPicture* vidref = decoder->noRefPicture;
       int noref = (slice->framePoc < decoder->recoveryPoc);
 
       if (plane == PLANE_Y) {
@@ -3960,7 +3960,7 @@ namespace {
     if (slice->picStructure == eFrame) {
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
         if (dpb->frameStoreRef[i]->isUsed == 3)
-          if ((dpb->frameStoreRef[i]->frame->usedForReference) &&
+          if ((dpb->frameStoreRef[i]->frame->usedForRef) &&
               !dpb->frameStoreRef[i]->frame->usedLongTerm)
             slice->listX[0][list0idx++] = dpb->frameStoreRef[i]->frame;
 
@@ -3981,7 +3981,7 @@ namespace {
       frameStoreList0 = (cFrameStore**)calloc (dpb->size, sizeof(cFrameStore*));
       frameStoreListLongTerm = (cFrameStore**)calloc (dpb->size, sizeof(cFrameStore*));
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
-        if (dpb->frameStoreRef[i]->usedReference)
+        if (dpb->frameStoreRef[i]->usedRef)
           frameStoreList0[list0idx++] = dpb->frameStoreRef[i];
       qsort ((void*)frameStoreList0, list0idx, sizeof(cFrameStore*), compareFsByFrameNumDescending);
       slice->listXsize[0] = 0;
@@ -4004,9 +4004,9 @@ namespace {
 
     // set the unused list entries to NULL
     for (uint32_t i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
-      slice->listX[0][i] = decoder->noReferencePicture;
+      slice->listX[0][i] = decoder->noRefPicture;
     for (uint32_t i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
-      slice->listX[1][i] = decoder->noReferencePicture;
+      slice->listX[1][i] = decoder->noRefPicture;
     }
   //}}}
   //{{{
@@ -4027,7 +4027,7 @@ namespace {
       //{{{  frame
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
         if (dpb->frameStoreRef[i]->isUsed==3)
-          if ((dpb->frameStoreRef[i]->frame->usedForReference) && (!dpb->frameStoreRef[i]->frame->usedLongTerm))
+          if ((dpb->frameStoreRef[i]->frame->usedForRef) && (!dpb->frameStoreRef[i]->frame->usedLongTerm))
             if (slice->framePoc >= dpb->frameStoreRef[i]->frame->poc) // !KS use >= for error conceal
               slice->listX[0][list0idx++] = dpb->frameStoreRef[i]->frame;
       qsort ((void*)slice->listX[0], list0idx, sizeof(sPicture*), comparePicByPocdesc);
@@ -4036,7 +4036,7 @@ namespace {
       list0index1 = list0idx;
       for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++)
         if (dpb->frameStoreRef[i]->isUsed==3)
-          if ((dpb->frameStoreRef[i]->frame->usedForReference)&&(!dpb->frameStoreRef[i]->frame->usedLongTerm))
+          if ((dpb->frameStoreRef[i]->frame->usedForRef)&&(!dpb->frameStoreRef[i]->frame->usedLongTerm))
             if (slice->framePoc < dpb->frameStoreRef[i]->frame->poc)
               slice->listX[0][list0idx++] = dpb->frameStoreRef[i]->frame;
       qsort ((void*)&slice->listX[0][list0index1], list0idx-list0index1, sizeof(sPicture*), comparePicByPocAscending);
@@ -4131,9 +4131,9 @@ namespace {
 
     // set the unused list entries to NULL
     for (uint32_t i = slice->listXsize[0]; i < (MAX_LIST_SIZE) ; i++)
-      slice->listX[0][i] = decoder->noReferencePicture;
+      slice->listX[0][i] = decoder->noRefPicture;
     for (uint32_t i = slice->listXsize[1]; i < (MAX_LIST_SIZE) ; i++)
-      slice->listX[1][i] = decoder->noReferencePicture;
+      slice->listX[1][i] = decoder->noRefPicture;
     }
   //}}}
   }

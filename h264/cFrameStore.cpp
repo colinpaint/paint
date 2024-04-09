@@ -46,63 +46,63 @@ cFrameStore::~cFrameStore() {
 //}}}
 
 //{{{
-int cFrameStore::isReference() {
+int cFrameStore::isRef() {
 
-  if (usedReference)
+  if (usedRef)
     return 1;
 
   if (isUsed == 3) // frame
-    if (frame->usedForReference)
+    if (frame->usedForRef)
       return 1;
 
   if (isUsed & 1) // topField
     if (topField)
-      if (topField->usedForReference)
+      if (topField->usedForRef)
         return 1;
 
   if (isUsed & 2) // botField
     if (botField)
-      if (botField->usedForReference)
+      if (botField->usedForRef)
         return 1;
 
   return 0;
   }
 //}}}
 //{{{
-int cFrameStore::isShortTermReference() {
+int cFrameStore::isShortTermRef() {
 
   if (isUsed == 3) // frame
-    if ((frame->usedForReference) && (!frame->usedLongTerm))
+    if ((frame->usedForRef) && (!frame->usedLongTerm))
       return 1;
 
   if (isUsed & 1) // topField
     if (topField)
-      if ((topField->usedForReference) && (!topField->usedLongTerm))
+      if ((topField->usedForRef) && (!topField->usedLongTerm))
         return 1;
 
   if (isUsed & 2) // botField
     if (botField)
-      if ((botField->usedForReference) && (!botField->usedLongTerm))
+      if ((botField->usedForRef) && (!botField->usedLongTerm))
         return 1;
 
   return 0;
   }
 //}}}
 //{{{
-int cFrameStore::isLongTermReference() {
+int cFrameStore::isLongTermRef() {
 
   if (isUsed == 3) // frame
-    if ((frame->usedForReference) && (frame->usedLongTerm))
+    if ((frame->usedForRef) && (frame->usedLongTerm))
       return 1;
 
   if (isUsed & 1) // topField
     if (topField)
-      if ((topField->usedForReference) && (topField->usedLongTerm))
+      if ((topField->usedForRef) && (topField->usedLongTerm))
         return 1;
 
   if (isUsed & 2) // botField
     if (botField)
-      if ((botField->usedForReference) && (botField->usedLongTerm))
+      if ((botField->usedForRef) && (botField->usedLongTerm))
         return 1;
 
   return 0;
@@ -114,21 +114,21 @@ void cFrameStore::unmarkForRef() {
 
   if (isUsed & 1)
     if (topField)
-      topField->usedForReference = 0;
+      topField->usedForRef = 0;
 
   if (isUsed & 2)
     if (botField)
-      botField->usedForReference = 0;
+      botField->usedForRef = 0;
 
   if (isUsed == 3) {
     if (topField && botField) {
-      topField->usedForReference = 0;
-      botField->usedForReference = 0;
+      topField->usedForRef = 0;
+      botField->usedForRef = 0;
       }
-    frame->usedForReference = 0;
+    frame->usedForRef = 0;
     }
 
-  usedReference = 0;
+  usedRef = 0;
 
   if (frame)
     freePicMotion (&frame->motion);
@@ -145,30 +145,30 @@ void cFrameStore::unmarkForLongTermRef() {
 
   if (isUsed & 1) {
     if (topField) {
-      topField->usedForReference = 0;
+      topField->usedForRef = 0;
       topField->usedLongTerm = 0;
       }
     }
 
   if (isUsed & 2) {
     if (botField) {
-      botField->usedForReference = 0;
+      botField->usedForRef = 0;
       botField->usedLongTerm = 0;
       }
     }
 
   if (isUsed == 3) {
     if (topField && botField) {
-      topField->usedForReference = 0;
+      topField->usedForRef = 0;
       topField->usedLongTerm = 0;
-      botField->usedForReference = 0;
+      botField->usedForRef = 0;
       botField->usedLongTerm = 0;
       }
-    frame->usedForReference = 0;
+    frame->usedForRef = 0;
     frame->usedLongTerm = 0;
     }
 
-  usedReference = 0;
+  usedRef = 0;
   usedLongTerm = 0;
   }
 //}}}
@@ -197,7 +197,7 @@ void cFrameStore::dpbCombineField (cDecoder264* decoder) {
   botField->topPoc = frame->topPoc = topField->poc;
   topField->botPoc = frame->botPoc = botField->poc;
 
-  frame->usedForReference = (topField->usedForReference && botField->usedForReference );
+  frame->usedForRef = (topField->usedForRef && botField->usedForRef );
   frame->usedLongTerm = (topField->usedLongTerm && botField->usedLongTerm );
 
   if (frame->usedLongTerm)
@@ -222,7 +222,7 @@ void cFrameStore::dpbCombineField (cDecoder264* decoder) {
   topField->botField = botField;
   botField->topField = topField;
   botField->botField = botField;
-  if (topField->usedForReference || botField->usedForReference)
+  if (topField->usedForRef || botField->usedForRef)
     decoder->padPicture (frame);
   }
 //}}}
@@ -306,7 +306,7 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
     fsTop->topPoc = fsBot->topPoc =  frame->topPoc;
     fsBot->framePoc = frame->framePoc;
 
-    fsTop->usedForReference = fsBot->usedForReference = frame->usedForReference;
+    fsTop->usedForRef = fsBot->usedForRef = frame->usedForRef;
     fsTop->usedLongTerm = fsBot->usedLongTerm = frame->usedLongTerm;
     longTermFrameIndex = fsTop->longTermFrameIndex
                                    = fsBot->longTermFrameIndex
@@ -327,7 +327,7 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
 
     fsTop->chromaFormatIdc = fsBot->chromaFormatIdc = frame->chromaFormatIdc;
     fsTop->codingType = fsBot->codingType = frame->codingType;
-    if (frame->usedForReference)  {
+    if (frame->usedForRef)  {
       decoder->padPicture (fsTop);
       decoder->padPicture (fsBot);
       }
@@ -426,9 +426,9 @@ void cFrameStore::insertPictureDpb (cDecoder264* decoder, sPicture* picture) {
     case eFrame:
       frame = picture;
       isUsed = 3;
-      if (picture->usedForReference) {
-        usedReference = 3;
-        usedOrigReference = 3;
+      if (picture->usedForRef) {
+        usedRef = 3;
+        usedOrigRef = 3;
         if (picture->usedLongTerm) {
           usedLongTerm = 3;
           longTermFrameIndex = picture->longTermFrameIndex;
@@ -441,9 +441,9 @@ void cFrameStore::insertPictureDpb (cDecoder264* decoder, sPicture* picture) {
       topField = picture;
       isUsed |= 1;
 
-      if (picture->usedForReference) {
-        usedReference |= 1;
-        usedOrigReference |= 1;
+      if (picture->usedForRef) {
+        usedRef |= 1;
+        usedOrigRef |= 1;
         if (picture->usedLongTerm) {
           usedLongTerm |= 1;
           longTermFrameIndex = picture->longTermFrameIndex;
@@ -459,9 +459,9 @@ void cFrameStore::insertPictureDpb (cDecoder264* decoder, sPicture* picture) {
     case eBotField:
       botField = picture;
       isUsed |= 2;
-      if (picture->usedForReference) {
-        usedReference |= 2;
-        usedOrigReference |= 2;
+      if (picture->usedForRef) {
+        usedRef |= 2;
+        usedOrigRef |= 2;
         if (picture->usedLongTerm) {
           usedLongTerm |= 2;
           longTermFrameIndex = picture->longTermFrameIndex;

@@ -65,7 +65,7 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   s->frameNum = 0;
   s->longTermFrameIndex = 0;
   s->longTermPicNum = 0;
-  s->usedForReference  = 0;
+  s->usedForRef  = 0;
   s->usedLongTerm = 0;
   s->nonExisting = 0;
   s->isOutput = 0;
@@ -81,9 +81,9 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   s->size_x_cr_m1 = sizeXcr - 1;
   s->size_y_cr_m1 = sizeYcr - 1;
 
-  s->topField = decoder->noReferencePicture;
-  s->botField = decoder->noReferencePicture;
-  s->frame = decoder->noReferencePicture;
+  s->topField = decoder->noRefPicture;
+  s->botField = decoder->noRefPicture;
+  s->frame = decoder->noRefPicture;
 
   s->decRefPicMarkBuffer = NULL;
   s->codedFrame  = 0;
@@ -163,7 +163,7 @@ void fillFrameNumGap (cDecoder264* decoder, cSlice* slice) {
     picture->frameNum = unusedShortTermFrameNum;
     picture->nonExisting = 1;
     picture->isOutput = 1;
-    picture->usedForReference = 1;
+    picture->usedForRef = 1;
     picture->adaptRefPicBufFlag = 0;
 
     slice->frameNum = unusedShortTermFrameNum;

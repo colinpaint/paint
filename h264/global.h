@@ -664,7 +664,7 @@ public:
   int          dpbPoc[100] = {0};
   sPicture*    picture = nullptr;
   sPicture*    decPictureJV[MAX_PLANE] = {nullptr};  // picture to be used during 4:4:4 independent mode decoding
-  sPicture*    noReferencePicture = nullptr;         // dummy storable picture for recovery point
+  sPicture*    noRefPicture = nullptr;         // dummy storable picture for recovery point
   cFrameStore* lastOutFramestore = nullptr;
   sDecodedPic* outDecodedPics = nullptr;
   cFrameStore* outBuffer = nullptr;

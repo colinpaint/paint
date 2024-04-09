@@ -194,7 +194,7 @@ public:
   void fillWeightedPredParam();
   void resetWeightedPredParam();
 
-  void initMbAffLists (sPicture* noReferencePicture);
+  void initMbAffLists (sPicture* noRefPicture);
   void copyPoc (cSlice* toSlice);
   void updatePicNum();
 

@@ -2268,7 +2268,7 @@ void cSlice::resetWeightedPredParam() {
 //}}}
 
 //{{{
-void cSlice::initMbAffLists (sPicture* noReferencePicture) {
+void cSlice::initMbAffLists (sPicture* noRefPicture) {
 // Initialize listX[2..5] from lists 0 and 1
 //  listX[2]: list0 for current_field == top
 //  listX[3]: list1 for current_field == top
@@ -2277,7 +2277,7 @@ void cSlice::initMbAffLists (sPicture* noReferencePicture) {
 
   for (int i = 2; i < 6; i++) {
     for (uint32_t j = 0; j < MAX_LIST_SIZE; j++)
-      listX[i][j] = noReferencePicture;
+      listX[i][j] = noRefPicture;
     listXsize[i] = 0;
     }
 
@@ -2317,7 +2317,7 @@ void cSlice::updatePicNum() {
   if (picStructure == eFrame) {
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->frameStoreRef[i]->isUsed == 3 ) {
-        if (dpb->frameStoreRef[i]->frame->usedForReference &&
+        if (dpb->frameStoreRef[i]->frame->usedForRef &&
             !dpb->frameStoreRef[i]->frame->usedLongTerm) {
           if (dpb->frameStoreRef[i]->frameNum > frameNum )
             dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
@@ -2347,14 +2347,14 @@ void cSlice::updatePicNum() {
       }
 
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
-      if (dpb->frameStoreRef[i]->usedReference) {
+      if (dpb->frameStoreRef[i]->usedRef) {
         if (dpb->frameStoreRef[i]->frameNum > frameNum )
           dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum - maxFrameNum;
         else
           dpb->frameStoreRef[i]->frameNumWrap = dpb->frameStoreRef[i]->frameNum;
-        if (dpb->frameStoreRef[i]->usedReference & 1)
+        if (dpb->frameStoreRef[i]->usedRef & 1)
           dpb->frameStoreRef[i]->topField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addTop;
-        if (dpb->frameStoreRef[i]->usedReference & 2)
+        if (dpb->frameStoreRef[i]->usedRef & 2)
           dpb->frameStoreRef[i]->botField->picNum = (2 * dpb->frameStoreRef[i]->frameNumWrap) + addBot;
         }
       }
