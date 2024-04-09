@@ -1581,8 +1581,7 @@ void concealLostFrames (cDpb* dpb, cSlice *slice)
     copyPrevPicToConcealPic(picture, dpb);
 
     //if (UnusedShortTermFrameNum == 0)
-    if(decoder->idrConcealFlag == 1)
-    {
+    if(decoder->idrConcealFlag == 1) {
       picture->sliceType = eSliceI;
       picture->isIDR = true;
       dpb->flushDpb();
@@ -1591,62 +1590,58 @@ void concealLostFrames (cDpb* dpb, cSlice *slice)
       picture->framePoc = picture->topPoc;
       picture->poc = picture->topPoc;
       decoder->lastRefPicPoc = picture->poc;
-    }
+      }
 
     decoder->dpb->storePictureDpb (picture);
-
     picture = NULL;
 
     decoder->preFrameNum = UnusedShortTermFrameNum;
     UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % decoder->coding.maxFrameNum;
 
     // update reference flags and set current flag.
-    for(i=16;i>0;i--)
-    {
+    for (i = 16; i > 0; i--)
       slice->refFlag[i] = slice->refFlag[i-1];
-    }
     slice->refFlag[0] = 0;
-  }
+    }
+
   slice->deltaPicOrderCount[0] = tmp1;
   slice->deltaPicOrderCount[1] = tmp2;
   slice->frameNum = CurrFrameNum;
 }
 //}}}
 //{{{
-void concealNonRefPics (cDpb* dpb, int diff)
-{
+ void concealNonRefPics (cDpb* dpb, int diff) {
+
   cDecoder264* decoder = dpb->decoder;
+
   int missingpoc = 0;
   uint32_t i, pos = 0;
-  sPicture *conceal_from_picture = NULL;
-  sPicture *conceal_to_picture = NULL;
-  struct sConcealNode *concealment_ptr = NULL;
+  sPicture* conceal_from_picture = NULL;
+  sPicture* conceal_to_picture = NULL;
+  struct sConcealNode* concealment_ptr = NULL;
   int temp_used_size = dpb->usedSize;
 
-  if(dpb->usedSize == 0 )
+  if (dpb->usedSize == 0)
     return;
 
-  qsort(decoder->dpbPoc, dpb->size, sizeof(int), comp);
+  qsort (decoder->dpbPoc, dpb->allocatedSize, sizeof(int), comp);
 
-  for(i=0;i<dpb->size-diff;i++)
-  {
-    dpb->usedSize = dpb->size;
-    if((decoder->dpbPoc[i+1] - decoder->dpbPoc[i]) > decoder->param.pocGap)
-    {
+  for ( i =0; i < dpb->allocatedSize - diff; i++) {
+    dpb->usedSize = dpb->allocatedSize;
+    if((decoder->dpbPoc[i+1] - decoder->dpbPoc[i]) > decoder->param.pocGap)  {
       conceal_to_picture = allocPicture(decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
 
       missingpoc = decoder->dpbPoc[i] + decoder->param.pocGap;
       // Diagnostics
       // printf("\n missingpoc = %d\n",missingpoc);
 
-      if(missingpoc > decoder->earlierMissingPoc)
-      {
+      if (missingpoc > decoder->earlierMissingPoc) {
         decoder->earlierMissingPoc  = missingpoc;
         conceal_to_picture->topPoc = missingpoc;
         conceal_to_picture->botPoc = missingpoc;
         conceal_to_picture->framePoc = missingpoc;
         conceal_to_picture->poc = missingpoc;
-        conceal_from_picture = getPicFromDpb(dpb, missingpoc, &pos);
+        conceal_from_picture = getPicFromDpb (dpb, missingpoc, &pos);
 
         dpb->usedSize = pos + 1;
 
@@ -1657,26 +1652,23 @@ void concealNonRefPics (cDpb* dpb, int diff)
         copyToConceal (conceal_from_picture, conceal_to_picture, decoder);
         concealment_ptr = initNode (conceal_to_picture, missingpoc );
         addNode (decoder, concealment_ptr);
+        }
       }
     }
-  }
 
   //restore the original value
-  dpb->usedSize = temp_used_size;
-}
+  dpb->usedSize = temp_used_size; 
+  }
 //}}}
 //{{{
-void slidingWindowPocManagement (cDpb* dpb, sPicture *p)
-{
-  if (dpb->usedSize == dpb->size)
-  {
+void slidingWindowPocManagement (cDpb* dpb, sPicture* p) {
+  if (dpb->usedSize == dpb->allocatedSize) {
     cDecoder264* decoder = dpb->decoder;
     uint32_t i;
-
-    for(i=0;i<dpb->size-1; i++)
+    for (i = 0; i < dpb->allocatedSize-1; i++)
       decoder->dpbPoc[i] = decoder->dpbPoc[i+1];
+    }
   }
-}
 
 //}}}
 //{{{
@@ -1704,7 +1696,7 @@ void writeLostRefAfterIdr (cDpb* dpb, int pos) {
   int temp = 1;
   if (decoder->lastOutFramestore->frame == NULL) {
     decoder->lastOutFramestore->frame = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
-                                                 decoder->widthCr, decoder->heightCr, 1);
+                                                      decoder->widthCr, decoder->heightCr, 1);
     decoder->lastOutFramestore->isUsed = 3;
     }
 
@@ -1737,11 +1729,7 @@ void ercInit (cDecoder264* decoder, int pic_sizex, int pic_sizey, int flag) {
 //{{{
 sErcVariables* ercOpen() {
 
-  sErcVariables *errorVar = NULL;
-  errorVar = (sErcVariables*)malloc (sizeof(sErcVariables));
-  if ( errorVar == NULL )
-    noMemoryExit("ercOpen: errorVar");
-
+  sErcVariables* errorVar = (sErcVariables*)malloc (sizeof(sErcVariables));
   errorVar->nOfMBs = 0;
   errorVar->segments = NULL;
   errorVar->segment = 0;
@@ -1764,46 +1752,32 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
     sErcSegment* segments = NULL;
     if (nOfMBs != errorVar->nOfMBs && errorVar->yCondition != NULL) {
       //{{{  free conditions
-      free ( errorVar->yCondition );
+      free (errorVar->yCondition);
       errorVar->yCondition = NULL;
 
-      free ( errorVar->prevFrameYCondition );
+      free (errorVar->prevFrameYCondition);
       errorVar->prevFrameYCondition = NULL;
 
-      free ( errorVar->uCondition );
+      free (errorVar->uCondition);
       errorVar->uCondition = NULL;
 
-      free ( errorVar->vCondition );
+      free (errorVar->vCondition);
       errorVar->vCondition = NULL;
 
-      free ( errorVar->segments );
+      free (errorVar->segments);
       errorVar->segments = NULL;
       }
       //}}}
     if (errorVar->yCondition == NULL) {
       //{{{  allocate conditions, first frame, or frame size is changed)
       errorVar->segments = (sErcSegment*)malloc (numOfSegments*sizeof(sErcSegment) );
-      if ( errorVar->segments == NULL)
-        noMemoryExit ("ercReset: errorVar->segments");
       memset (errorVar->segments, 0, numOfSegments*sizeof(sErcSegment));
       errorVar->nOfSegments = numOfSegments;
 
       errorVar->yCondition = (char*)malloc (4*nOfMBs*sizeof(char) );
-      if (errorVar->yCondition == NULL )
-        noMemoryExit ("ercReset: errorVar->yCondition");
-
       errorVar->prevFrameYCondition = (char*)malloc (4*nOfMBs*sizeof(char) );
-      if (errorVar->prevFrameYCondition == NULL )
-        noMemoryExit ("ercReset: errorVar->prevFrameYCondition");
-
       errorVar->uCondition = (char*)malloc (nOfMBs*sizeof(char) );
-      if (errorVar->uCondition == NULL )
-        noMemoryExit ("ercReset: errorVar->uCondition");
-
       errorVar->vCondition = (char*)malloc (nOfMBs*sizeof(char) );
-      if (errorVar->vCondition == NULL )
-        noMemoryExit ("ercReset: errorVar->vCondition");
-
       errorVar->nOfMBs = nOfMBs;
       }
       //}}}
@@ -1823,8 +1797,6 @@ void ercReset (sErcVariables *errorVar, int nOfMBs, int numOfSegments, int picSi
       free (errorVar->segments);
       errorVar->segments = NULL;
       errorVar->segments = (sErcSegment*)malloc (numOfSegments*sizeof(sErcSegment) );
-      if (errorVar->segments == NULL)
-        noMemoryExit("ercReset: errorVar->segments");
       errorVar->nOfSegments = numOfSegments;
       }
 
@@ -1863,17 +1835,17 @@ void ercClose (cDecoder264* decoder,  sErcVariables *errorVar ) {
   }
 //}}}
 //{{{
-void ercSetErrorConcealment (sErcVariables *errorVar, int value ) {
+void ercSetErrorConcealment (sErcVariables* errorVar, int value ) {
 
-  if ( errorVar != NULL )
+  if (errorVar != NULL)
     errorVar->conceal = value;
   }
 //}}}
 
 //{{{
-void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables *errorVar ) {
+void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables* errorVar) {
 
-  if ( errorVar && errorVar->conceal ) {
+  if (errorVar && errorVar->conceal) {
     errorVar->segmentCorrupted = 0;
     errorVar->segments[ segment ].corrupted = 0;
     errorVar->segments[ segment ].startMBPos = (int16_t) currMBNum;
@@ -1881,22 +1853,22 @@ void ercStartSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables
   }
 //}}}
 //{{{
-void ercStopSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables *errorVar ) {
+void ercStopSegment (int currMBNum, int segment, uint32_t bitPos, sErcVariables* errorVar) {
 
-  if ( errorVar && errorVar->conceal ) {
+  if (errorVar && errorVar->conceal) {
     errorVar->segments[ segment ].endMBPos = (int16_t) currMBNum;
     errorVar->segment++;
     }
   }
 //}}}
 //{{{
-void ercMarksegmentLost (int picSizeX, sErcVariables *errorVar )
+void ercMarksegmentLost (int picSizeX, sErcVariables* errorVar)
 {
   int j = 0;
   int current_segment;
 
   current_segment = errorVar->segment-1;
-  if ( errorVar && errorVar->conceal ) {
+  if (errorVar && errorVar->conceal) {
     if (errorVar->segmentCorrupted == 0) {
       errorVar->numCorruptedSegments++;
       errorVar->segmentCorrupted = 1;
@@ -1916,7 +1888,7 @@ void ercMarksegmentLost (int picSizeX, sErcVariables *errorVar )
   }
 //}}}
 //{{{
-void ercMarksegmentOK (int picSizeX, sErcVariables *errorVar ) {
+void ercMarksegmentOK (int picSizeX, sErcVariables* errorVar) {
 
   int j = 0;
   int current_segment;
@@ -1938,11 +1910,11 @@ void ercMarksegmentOK (int picSizeX, sErcVariables *errorVar ) {
   }
 //}}}
 //{{{
-void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, sErcVariables *errorVar ) {
+void ercMarkCurrMBConcealed (int currMBNum, int comp, int picSizeX, sErcVariables* errorVar) {
 
   int setAll = 0;
 
-  if ( errorVar && errorVar->conceal ) {
+  if (errorVar && errorVar->conceal) {
     if (comp < 0) {
       setAll = 1;
       comp = 0;

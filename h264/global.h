@@ -553,6 +553,7 @@ struct sParam {
   int spsDebug;
   int ppsDebug;
   int seiDebug;
+  int dpbDebug;
   int outDebug;
   int deblock;
 

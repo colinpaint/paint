@@ -17,12 +17,17 @@ public:
   sPicture* getShortTermPic (cSlice* slice, int picNum);
   sPicture* getLongTermPic (cSlice* slice, int picNum);
 
+  uint32_t getSize() const { return usedSize; };
+  uint32_t getAllocatedSize() const { return allocatedSize; };
+  std::string getString() const;
+  std::string getIndexString (uint32_t index) const;
+
   //  vars
   cDecoder264*  decoder;
   bool          initDone;
 
-  uint32_t      size;
   uint32_t      usedSize;
+  uint32_t      allocatedSize;
 
   uint32_t      refFramesInBuffer;
   uint32_t      longTermRefFramesInBuffer;

@@ -2787,17 +2787,16 @@ void cDecoder264::useParameterSet (cSlice* slice) {
 
     setFormat (activeSps, &param.source, &param.output);
 
-    // debug spsStr
-    debug.profileString = fmt::format ("profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
-             coding.profileIdc,
-             param.source.width[0], param.source.height[0],
-             coding.width, coding.height,
-             coding.yuvFormat == YUV400 ? " 400 ":
-               coding.yuvFormat == YUV420 ? " 420":
-                 coding.yuvFormat == YUV422 ? " 422":" 4:4:4",
-             param.source.bitDepth[0], param.source.bitDepth[1], param.source.bitDepth[2]);
-
-    // print profile debug
+    debug.profileString = fmt::format ("Profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
+                                       coding.profileIdc,
+                                       param.source.width[0], param.source.height[0],
+                                       coding.width, coding.height,
+                                       coding.yuvFormat == YUV400 ? " 400 ":
+                                         coding.yuvFormat == YUV420 ? " 420":
+                                           coding.yuvFormat == YUV422 ? " 422":" 4:4:4",
+                                       param.source.bitDepth[0], 
+                                       param.source.bitDepth[1], 
+                                       param.source.bitDepth[2]);
     cLog::log (LOGINFO, debug.profileString);
     }
     //}}}

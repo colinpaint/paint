@@ -1211,17 +1211,28 @@ public:
     //}}}
 
     // draw menu child
-    float menuHeight = (2.5f + mDebugLines) * ImGui::GetTextLineHeight();
+    float menuHeight = mDebugLines * ImGui::GetTextLineHeight();
     ImGui::SetCursorPos ({3.f,ImGui::GetIO().DisplaySize.y - menuHeight});
     ImGui::BeginChild ("menu", {0.f,menuHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
 
+    // count debug lines for nextTime
+    mDebugLines = 0;
     cDecoder264* decoder = testApp.getDecoder();
     if (decoder) {
       //{{{  draw decoder info
       ImGui::PushFont (testApp.getMonoFont());
 
       ImGui::TextColored (kWhite, decoder->debug.profileString.c_str());
-      mDebugLines = 1;
+      mDebugLines++;
+
+      if (decoder->dpb) {
+        ImGui::TextColored (kWhite, decoder->dpb->getString().c_str());
+        for (uint32_t i = 0; i < decoder->dpb->getSize(); i++)
+          ImGui::TextColored (kWhite, decoder->dpb->getIndexString (i).c_str());
+        for (uint32_t i = decoder->dpb->getSize(); i < decoder->dpb->getAllocatedSize(); i++)
+          ImGui::TextColored (kWhite, "");
+        mDebugLines += decoder->dpb->getAllocatedSize() + 1;
+        }
 
       int spsIndex = 0;
       while (decoder->sps[spsIndex].ok) {
@@ -1249,7 +1260,7 @@ public:
       //}}}
 
     // menu line
-    ImGui::SetCursorPos ({0.f, menuHeight - 1.5f * ImGui::GetTextLineHeight()});
+    ImGui::SetCursorPos ({0.f, menuHeight - (1.5f * ImGui::GetTextLineHeight())});
     //{{{  draw fullScreen button
     if (toggleButton ("full", testApp.getPlatform().getFullScreen()))
       testApp.getPlatform().toggleFullScreen();
@@ -1263,7 +1274,6 @@ public:
     if (toggleButton ("play", testApp.getPlaying()))
       testApp.togglePlay();
     //}}}
-
     if (decoder) {
       //{{{  h264 debug menu buttons
       // draw NALUdebug button
@@ -1296,6 +1306,11 @@ public:
       if (toggleButton ("slc", decoder->param.sliceDebug))
         decoder->param.sliceDebug = !decoder->param.sliceDebug;
 
+      // draw dpbDebug button
+      ImGui::SameLine();
+      if (toggleButton ("dpb", decoder->param.dpbDebug))
+        decoder->param.dpbDebug = !decoder->param.dpbDebug;
+
       // draw outDebug button
       ImGui::SameLine();
       if (toggleButton ("out", decoder->param.outDebug))
@@ -1307,6 +1322,7 @@ public:
         decoder->param.deblock = !decoder->param.deblock;
       }
       //}}}
+    mDebugLines += 4;
 
     ImGui::EndChild();
 
@@ -1583,7 +1599,7 @@ private:
   // vars
   cView* mView;
   cTextureShader* mVideoShader = nullptr;
-  int mDebugLines = 3;
+  int mDebugLines = 0;
   };
 //}}}
 
