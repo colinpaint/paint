@@ -526,6 +526,9 @@ string cDpb::getIndexString (uint32_t index) const {
 
   debugString += fmt::format (" poc:{:3d}", frameStoreArray[index]->poc);
 
+  if (frameStoreArray[index]->isUsed == 3)
+    debugString += fmt::format (":frm:{:3d}", frameStoreArray[index]->frame->poc);
+
   if (frameStoreArray[index]->isUsed & 1)
     debugString += fmt::format (":top:{:3d}",
       frameStoreArray[index]->topField ? frameStoreArray[index]->topField->poc
@@ -534,8 +537,6 @@ string cDpb::getIndexString (uint32_t index) const {
     debugString += fmt::format (":bot:{:3d}",
       frameStoreArray[index]->botField ? frameStoreArray[index]->botField->poc
                                        : frameStoreArray[index]->frame->botPoc);
-  if (frameStoreArray[index]->isUsed == 3)
-    debugString += fmt::format (":frm:{:3d}", frameStoreArray[index]->frame->poc);
 
   if (frameStoreArray[index]->usedRef)
     debugString += fmt::format (" ref:{}", frameStoreArray[index]->usedRef);
