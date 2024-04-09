@@ -232,7 +232,7 @@ void cDpb::reInitDpb (cDecoder264* decoder, int type) {
 //{{{
 void cDpb::freeDpb () {
 
-  if (frameStore) 
+  if (frameStore)
     for (uint32_t i = 0; i < size; i++)
       delete frameStore[i];
   free (frameStore);
@@ -646,41 +646,41 @@ void cDpb::idrMemoryManagement (sPicture* picture) {
 //{{{
 void cDpb::adaptiveMemoryManagement (sPicture* picture) {
 
-  sDecodedRefPicMark* tmp_drpm;
-
   decoder->lastHasMmco5 = 0;
 
+  sDecodedRefPicMark* tempDecodedRefPicMark;
   while (picture->decRefPicMarkBuffer) {
-    tmp_drpm = picture->decRefPicMarkBuffer;
-    switch (tmp_drpm->memManagement) {
+    tempDecodedRefPicMark = picture->decRefPicMarkBuffer;
+    switch (tempDecodedRefPicMark->memManagement) {
       //{{{
       case 0:
-        if (tmp_drpm->next != NULL)
+        if (tempDecodedRefPicMark->next != NULL)
           cDecoder264::error ("memManagement = 0 not last operation in buffer");
         break;
       //}}}
       //{{{
       case 1:
-        unmarkShortTermForRef (picture, tmp_drpm->diffPicNumMinus1);
+        unmarkShortTermForRef (picture, tempDecodedRefPicMark->diffPicNumMinus1);
         updateRefList();
         break;
       //}}}
       //{{{
       case 2:
-        unmarkLongTermForRef (picture, tmp_drpm->longTermPicNum);
+        unmarkLongTermForRef (picture, tempDecodedRefPicMark->longTermPicNum);
         updateLongTermRefList();
         break;
       //}}}
       //{{{
       case 3:
-        assignLongTermFrameIndex (picture, tmp_drpm->diffPicNumMinus1, tmp_drpm->longTermFrameIndex);
+        assignLongTermFrameIndex (picture, tempDecodedRefPicMark->diffPicNumMinus1,
+                                           tempDecodedRefPicMark->longTermFrameIndex);
         updateRefList();
         updateLongTermRefList();
         break;
       //}}}
       //{{{
       case 4:
-        updateMaxLongTermFrameIndex (tmp_drpm->maxLongTermFrameIndexPlus1);
+        updateMaxLongTermFrameIndex (tempDecodedRefPicMark->maxLongTermFrameIndexPlus1);
         updateLongTermRefList();
         break;
       //}}}
@@ -693,7 +693,7 @@ void cDpb::adaptiveMemoryManagement (sPicture* picture) {
       //}}}
       //{{{
       case 6:
-        markCurPicLongTerm (picture, tmp_drpm->longTermFrameIndex);
+        markCurPicLongTerm (picture, tempDecodedRefPicMark->longTermFrameIndex);
         checkNumDpbFrames();
         break;
       //}}}
@@ -702,11 +702,11 @@ void cDpb::adaptiveMemoryManagement (sPicture* picture) {
         cDecoder264::error ("invalid memManagement in buffer");
       //}}}
       }
-    picture->decRefPicMarkBuffer = tmp_drpm->next;
-    free (tmp_drpm);
+    picture->decRefPicMarkBuffer = tempDecodedRefPicMark->next;
+    free (tempDecodedRefPicMark);
     }
 
-  if (decoder->lastHasMmco5 ) {
+  if (decoder->lastHasMmco5) {
     picture->picNum = picture->frameNum = 0;
     switch (picture->picStructure) {
       //{{{
@@ -727,7 +727,6 @@ void cDpb::adaptiveMemoryManagement (sPicture* picture) {
         break;
       //}}}
       }
-
     decoder->dpb->flushDpb();
     }
   }
@@ -738,7 +737,7 @@ void cDpb::slidingWindowMemoryManagement (sPicture* picture) {
   // if this is a refPic with sliding window, unmark first ref frame
   if (refFramesInBuffer == imax (1, numRefFrames) - longTermRefFramesInBuffer) {
     for (uint32_t i = 0; i < usedSize; i++) {
-      if (frameStore[i]->usedRef && (!(frameStore[i]->usedLongTermRef))) {
+      if (frameStore[i]->usedRef && (!frameStore[i]->usedLongTermRef)) {
         frameStore[i]->unmarkForRef();
         updateRefList();
         break;
@@ -753,7 +752,8 @@ void cDpb::slidingWindowMemoryManagement (sPicture* picture) {
 //{{{
 void cDpb::updateRefList() {
 
-  uint32_t i, j;
+  uint32_t i;
+  uint32_t j;
   for (i = 0, j = 0; i < usedSize; i++)
     if (frameStore[i]->isShortTermRef())
       frameStoreRef[j++] = frameStore[i];
@@ -767,7 +767,8 @@ void cDpb::updateRefList() {
 //{{{
 void cDpb::updateLongTermRefList() {
 
-  uint32_t i, j;
+  uint32_t i;
+  uint32_t j;
   for (i = 0, j = 0; i < usedSize; i++)
     if (frameStore[i]->isLongTermRef())
       frameStoreLongTermRef[j++] = frameStore[i];
@@ -795,6 +796,7 @@ void cDpb::unmarkAllShortTermForRef() {
 
   for (uint32_t i = 0; i < refFramesInBuffer; i++)
     frameStoreRef[i]->unmarkForRef();
+
   updateRefList();
   }
 //}}}
@@ -889,7 +891,7 @@ void cDpb::unmarkLongTermFieldRefFrameIndex (ePicStructure picStructure, int lon
                                               int markCur, uint32_t curFrameNum, int curPicNum) {
 
   if (curPicNum < 0)
-    curPicNum += (2 * decoder->coding.maxFrameNum);
+    curPicNum += 2 * decoder->coding.maxFrameNum;
 
   for (uint32_t i = 0; i < longTermRefFramesInBuffer; i++) {
     if (frameStoreLongTermRef[i]->longTermFrameIndex == longTermFrameIndex) {
@@ -968,12 +970,12 @@ void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNu
           frameStoreRef[i]->frame->usedLongTermRef = 1;
 
           if (frameStoreRef[i]->topField && frameStoreRef[i]->botField) {
-            frameStoreRef[i]->topField->longTermFrameIndex = frameStoreRef[i]->botField->longTermFrameIndex
-                                                          = longTermFrameIndex;
+            frameStoreRef[i]->topField->longTermFrameIndex = longTermFrameIndex;
+            frameStoreRef[i]->botField->longTermFrameIndex = longTermFrameIndex;
             frameStoreRef[i]->topField->longTermPicNum = longTermFrameIndex;
             frameStoreRef[i]->botField->longTermPicNum = longTermFrameIndex;
-
-            frameStoreRef[i]->topField->usedLongTermRef = frameStoreRef[i]->botField->usedLongTermRef = 1;
+            frameStoreRef[i]->topField->usedLongTermRef = 1;
+            frameStoreRef[i]->botField->usedLongTermRef = 1;
             }
           frameStoreRef[i]->usedLongTermRef = 3;
           return;
@@ -1002,13 +1004,15 @@ void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNu
             cLog::log (LOGERROR, "Warning: assigning longTermFrameIndex different from other field");
             }
 
-          frameStoreRef[i]->longTermFrameIndex = frameStoreRef[i]->topField->longTermFrameIndex = longTermFrameIndex;
+          frameStoreRef[i]->longTermFrameIndex = longTermFrameIndex;
+          frameStoreRef[i]->topField->longTermFrameIndex = longTermFrameIndex;
           frameStoreRef[i]->topField->longTermPicNum = 2 * longTermFrameIndex + addTop;
           frameStoreRef[i]->topField->usedLongTermRef = 1;
           frameStoreRef[i]->usedLongTermRef |= 1;
           if (frameStoreRef[i]->usedLongTermRef == 3) {
             frameStoreRef[i]->frame->usedLongTermRef = 1;
-            frameStoreRef[i]->frame->longTermFrameIndex = frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
+            frameStoreRef[i]->frame->longTermFrameIndex = longTermFrameIndex; 
+            frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
             }
           return;
           }
@@ -1021,20 +1025,21 @@ void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNu
               (frameStoreRef[i]->longTermFrameIndex != longTermFrameIndex))
             cLog::log (LOGERROR, "Warning: assigning longTermFrameIndex different from other field");
 
-          frameStoreRef[i]->longTermFrameIndex = frameStoreRef[i]->botField->longTermFrameIndex
-                                              = longTermFrameIndex;
+          frameStoreRef[i]->longTermFrameIndex = longTermFrameIndex;
+          frameStoreRef[i]->botField->longTermFrameIndex = longTermFrameIndex;
           frameStoreRef[i]->botField->longTermPicNum = 2 * longTermFrameIndex + addBot;
           frameStoreRef[i]->botField->usedLongTermRef = 1;
           frameStoreRef[i]->usedLongTermRef |= 2;
           if (frameStoreRef[i]->usedLongTermRef == 3) {
             frameStoreRef[i]->frame->usedLongTermRef = 1;
-            frameStoreRef[i]->frame->longTermFrameIndex = frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
+            frameStoreRef[i]->frame->longTermFrameIndex = longTermFrameIndex;
+            frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
             }
           return;
           }
         }
       }
-    cLog::log (LOGERROR, "Warning: refField for long term marking not found");
+    cLog::log (LOGERROR, "refField for long term marking not found");
     }
   }
 //}}}
