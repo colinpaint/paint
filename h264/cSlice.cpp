@@ -103,7 +103,7 @@ namespace {
   //}}}
 
   //{{{
-  void readCbpCoefs400cabac (sMacroBlock* mb) {
+  void readCbp400cabac (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -154,7 +154,7 @@ namespace {
 
       if (need_transform_sizeFlag) {
         se.type =  SE_HEADER;
-        dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
+        dataPartition = &slice->dataPartitions[dpMap[SE_HEADER]];
         se.reading = readMbTransformSizeFlagCabac;
 
         // read eCavlc transform_size_8x8Flag
@@ -255,7 +255,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefs444cabac (sMacroBlock* mb) {
+  void readCbp444cabac (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -482,7 +482,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefs422cabac (sMacroBlock* mb) {
+  void readCbp422cabac (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -807,7 +807,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefs420cabac (sMacroBlock* mb) {
+  void readCbp420cabac (sMacroBlock* mb) {
 
     int i,j;
     int level;
@@ -857,15 +857,15 @@ namespace {
 
       // Transform size flag for INTER MBs
       need_transform_sizeFlag = (((mb->mbType >= 1 && mb->mbType <= 3)||
-        (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
-        (mb->noMbPartLessThan8x8Flag))
-        && mb->mbType != I8MB && mb->mbType != I4MB
-        && (mb->codedBlockPattern&15)
-        && slice->transform8x8Mode);
+                                (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
+                                (mb->noMbPartLessThan8x8Flag))
+                                && mb->mbType != I8MB && mb->mbType != I4MB
+                                && (mb->codedBlockPattern&15)
+                                && slice->transform8x8Mode);
 
       if (need_transform_sizeFlag) {
-        se.type   =  SE_HEADER;
-        dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
+        se.type = SE_HEADER;
+        dataPartition = &slice->dataPartitions[dpMap[SE_HEADER]];
         se.reading = readMbTransformSizeFlagCabac;
 
         // read eCavlc transform_size_8x8Flag
@@ -1104,7 +1104,7 @@ namespace {
   //}}}
 
   //{{{
-  void readCbpCoefs400cavlc (sMacroBlock* mb) {
+  void readCbp400cavlc (sMacroBlock* mb) {
 
     int k;
     int mb_nr = mb->mbIndexX;
@@ -1233,7 +1233,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefs422cavlc (sMacroBlock* mb) {
+  void readCbp422cavlc (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -1507,7 +1507,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefs444cavlc (sMacroBlock* mb) {
+  void readCbp444cavlc (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -1683,7 +1683,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readCbpCoefs420cavlc (sMacroBlock* mb) {
+  void readCbp420cavlc (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -2004,21 +2004,21 @@ void cSlice::setReadCbpCabac() {
   switch (decoder->activeSps->chromaFormatIdc) {
     case YUV444:
       if (decoder->coding.isSeperateColourPlane == 0)
-        readCBPcoeffs = readCbpCoefs444cabac;
+        readCBPcoeffs = readCbp444cabac;
       else
-        readCBPcoeffs = readCbpCoefs400cabac;
+        readCBPcoeffs = readCbp400cabac;
       break;
 
     case YUV422:
-      readCBPcoeffs = readCbpCoefs422cabac;
+      readCBPcoeffs = readCbp422cabac;
       break;
 
     case YUV420:
-      readCBPcoeffs = readCbpCoefs420cabac;
+      readCBPcoeffs = readCbp420cabac;
       break;
 
     case YUV400:
-      readCBPcoeffs = readCbpCoefs400cabac;
+      readCBPcoeffs = readCbp400cabac;
       break;
 
     default:
@@ -2033,21 +2033,21 @@ void cSlice::setReadCbpCavlc() {
   switch (decoder->activeSps->chromaFormatIdc) {
     case YUV444:
       if (decoder->coding.isSeperateColourPlane == 0)
-        readCBPcoeffs = readCbpCoefs444cavlc;
+        readCBPcoeffs = readCbp444cavlc;
       else
-        readCBPcoeffs = readCbpCoefs400cavlc;
+        readCBPcoeffs = readCbp400cavlc;
       break;
 
     case YUV422:
-      readCBPcoeffs = readCbpCoefs422cavlc;
+      readCBPcoeffs = readCbp422cavlc;
       break;
 
     case YUV420:
-      readCBPcoeffs = readCbpCoefs420cavlc;
+      readCBPcoeffs = readCbp420cavlc;
       break;
 
     case YUV400:
-      readCBPcoeffs = readCbpCoefs400cavlc;
+      readCBPcoeffs = readCbp400cavlc;
       break;
 
     default:
@@ -2310,8 +2310,6 @@ void cSlice::copyPoc (cSlice* toSlice) {
 //{{{
 void cSlice::updatePicNum() {
 
-  int addTop = 0;
-  int addBot = 0;
   int maxFrameNum = 1 << (decoder->activeSps->log2maxFrameNumMinus4 + 4);
 
   if (picStructure == eFrame) {
@@ -2337,14 +2335,12 @@ void cSlice::updatePicNum() {
       }
     }
   else {
-    if (picStructure == eTopField) {
+    int addTop = 0;
+    int addBot = 0;
+    if (picStructure == eTopField) 
       addTop = 1;
-      addBot = 0;
-      }
-    else {
-      addTop = 0;
+    else
       addBot = 1;
-      }
 
     for (uint32_t i = 0; i < dpb->refFramesInBuffer; i++) {
       if (dpb->frameStoreRefArray[i]->usedRef) {
@@ -2403,26 +2399,22 @@ void cSlice::allocRefPicListReordeBuffer() {
 //{{{
 void cSlice::freeRefPicListReorderBuffer() {
 
-  if (modPicNumsIdc[LIST_0])
-    free (modPicNumsIdc[LIST_0]);
-  if (absDiffPicNumMinus1[LIST_0])
-    free (absDiffPicNumMinus1[LIST_0]);
-  if (longTermPicIndex[LIST_0])
-    free (longTermPicIndex[LIST_0]);
-
+  free (modPicNumsIdc[LIST_0]);
   modPicNumsIdc[LIST_0] = NULL;
+
+  free (absDiffPicNumMinus1[LIST_0]);
   absDiffPicNumMinus1[LIST_0] = NULL;
+
+  free (longTermPicIndex[LIST_0]);
   longTermPicIndex[LIST_0] = NULL;
 
-  if (modPicNumsIdc[LIST_1])
-    free (modPicNumsIdc[LIST_1]);
-  if (absDiffPicNumMinus1[LIST_1])
-    free (absDiffPicNumMinus1[LIST_1]);
-  if (longTermPicIndex[LIST_1])
-    free (longTermPicIndex[LIST_1]);
-
+  free (modPicNumsIdc[LIST_1]);
   modPicNumsIdc[LIST_1] = NULL;
+
+  free (absDiffPicNumMinus1[LIST_1]);
   absDiffPicNumMinus1[LIST_1] = NULL;
+
+  free (longTermPicIndex[LIST_1]);
   longTermPicIndex[LIST_1] = NULL;
   }
 //}}}
