@@ -12,9 +12,9 @@ public:
 
   void storePictureDpb (sPicture* picture);
 
-  sPicture* getLastPicRefFromDpb();
   sPicture* getShortTermPic (cSlice* slice, int picNum);
   sPicture* getLongTermPic (cSlice* slice, int picNum);
+  sPicture* getLastPicRefFromDpb();
 
   uint32_t getSize() const { return usedSize; };
   uint32_t getAllocatedSize() const { return allocatedSize; };

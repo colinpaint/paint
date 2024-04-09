@@ -37,5 +37,4 @@ int readSyntaxElementCabac(sMacroBlock* mb, sSyntaxElement* se, sDataPartition* 
 
 void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition);
 
-void setReadCbpCabac (cSlice* slice);
 void setReadStoreCodedBlockPattern(sMacroBlock** mb, int chromaFormatIdc);

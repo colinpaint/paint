@@ -385,18 +385,6 @@ void cDpb::storePictureDpb (sPicture* picture) {
 //}}}
 
 //{{{
-sPicture* cDpb::getLastPicRefFromDpb() {
-
-  int usedSize1 = usedSize - 1;
-  for (int i = usedSize1; i >= 0; i--)
-    if (frameStoreArray[i]->isUsed == 3)
-      if (frameStoreArray[i]->frame->usedForRef && !frameStoreArray[i]->frame->usedLongTermRef)
-        return frameStoreArray[i]->frame;
-
-  return NULL;
-  }
-//}}}
-//{{{
 sPicture* cDpb::getShortTermPic (cSlice* slice, int picNum) {
 
   for (uint32_t i = 0; i < refFramesInBuffer; i++) {
@@ -445,6 +433,18 @@ sPicture* cDpb::getLongTermPic (cSlice* slice, int picNum) {
           return frameStoreLongTermRefArray[i]->botField;
       }
     }
+
+  return NULL;
+  }
+//}}}
+//{{{
+sPicture* cDpb::getLastPicRefFromDpb() {
+
+  int usedSize1 = usedSize - 1;
+  for (int i = usedSize1; i >= 0; i--)
+    if (frameStoreArray[i]->isUsed == 3)
+      if (frameStoreArray[i]->frame->usedForRef && !frameStoreArray[i]->frame->usedLongTermRef)
+        return frameStoreArray[i]->frame;
 
   return NULL;
   }
