@@ -1199,9 +1199,9 @@ namespace {
       concealfrom = missingpoc + dpb->decoder->param.pocGap;
 
     for (int i = usedSize; i >= 0; i--) {
-      if (dpb->frameStore[i]->poc == concealfrom) {
+      if (dpb->frameStoreArray[i]->poc == concealfrom) {
         *pos = i;
-        return dpb->frameStore[i]->frame;
+        return dpb->frameStoreArray[i]->frame;
         }
       }
 
@@ -1243,8 +1243,8 @@ namespace {
 
     uint32_t j = 0;
     for (uint32_t i = 0; i < dpb->usedSize; i++)
-      if (dpb->frameStore[i]->concealRef)
-        dpb->frameStoreRefArray[j++] = dpb->frameStore[i];
+      if (dpb->frameStoreArray[i]->concealRef)
+        dpb->frameStoreRefArray[j++] = dpb->frameStoreArray[i];
 
     dpb->refFramesInBuffer = decoder->activePps->numRefIndexL0defaultActiveMinus1;
     }
@@ -1450,11 +1450,11 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
 
   if (currPicStructure == eFrame) {
     for (i = 0; i < dpb->refFramesInBuffer; i++) {
-      if (dpb->frameStore[i]->concealRef == 1) {
-        if (dpb->frameStore[i]->frameNum > decoder->concealFrame)
-          dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStore[i]->frameNum - maxFrameNum;
+      if (dpb->frameStoreArray[i]->concealRef == 1) {
+        if (dpb->frameStoreArray[i]->frameNum > decoder->concealFrame)
+          dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStoreArray[i]->frameNum - maxFrameNum;
         else
-          dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStore[i]->frameNum;
+          dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStoreArray[i]->frameNum;
         dpb->frameStoreRefArray[i]->frame->picNum = dpb->frameStoreRefArray[i]->frameNumWrap;
         }
       }
@@ -1464,8 +1464,8 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
     // Calculate FrameNumWrap and PicNum
     if (currPicStructure == eFrame) {
       for (i = 0; i < dpb->usedSize; i++)
-        if (dpb->frameStore[i]->concealRef == 1)
-          decoder->sliceList[0]->listX[0][list0idx++] = dpb->frameStore[i]->frame;
+        if (dpb->frameStoreArray[i]->concealRef == 1)
+          decoder->sliceList[0]->listX[0][list0idx++] = dpb->frameStoreArray[i]->frame;
       // order list 0 by PicNum
       qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), comparePicByPicNumDescending);
       decoder->sliceList[0]->listXsize[0] = (char) list0idx;
@@ -1475,16 +1475,16 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
   if (currSliceType == eSliceB) {
     if (currPicStructure == eFrame) {
       for (i = 0; i < dpb->usedSize; i++)
-        if (dpb->frameStore[i]->concealRef == 1)
-          if (decoder->earlierMissingPoc > dpb->frameStore[i]->frame->poc)
-            decoder->sliceList[0]->listX[0][list0idx++] = dpb->frameStore[i]->frame;
+        if (dpb->frameStoreArray[i]->concealRef == 1)
+          if (decoder->earlierMissingPoc > dpb->frameStoreArray[i]->frame->poc)
+            decoder->sliceList[0]->listX[0][list0idx++] = dpb->frameStoreArray[i]->frame;
 
       qsort ((void *)decoder->sliceList[0]->listX[0], list0idx, sizeof(sPicture*), comparePicByPocdesc);
       list0index1 = list0idx;
       for (i = 0; i < dpb->usedSize; i++)
-        if (dpb->frameStore[i]->concealRef == 1)
-          if (decoder->earlierMissingPoc < dpb->frameStore[i]->frame->poc)
-            decoder->sliceList[0]->listX[0][list0idx++] = dpb->frameStore[i]->frame;
+        if (dpb->frameStoreArray[i]->concealRef == 1)
+          if (decoder->earlierMissingPoc < dpb->frameStoreArray[i]->frame->poc)
+            decoder->sliceList[0]->listX[0][list0idx++] = dpb->frameStoreArray[i]->frame;
 
       qsort ((void*)&decoder->sliceList[0]->listX[0][list0index1], list0idx-list0index1,
              sizeof(sPicture*), comparePicByPocAscending);
@@ -1694,17 +1694,17 @@ void writeLostRefAfterIdr (cDpb* dpb, int pos) {
 
   cDecoder264* decoder = dpb->decoder;
   int temp = 1;
-  if (decoder->lastOutFramestore->frame == NULL) {
-    decoder->lastOutFramestore->frame = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
+  if (decoder->lastOutFrameStore->frame == NULL) {
+    decoder->lastOutFrameStore->frame = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
                                                       decoder->widthCr, decoder->heightCr, 1);
-    decoder->lastOutFramestore->isUsed = 3;
+    decoder->lastOutFrameStore->isUsed = 3;
     }
 
   if (decoder->concealMode == 2) {
     temp = 2;
     decoder->concealMode = 1;
     }
-  copyToConceal (dpb->frameStore[pos]->frame, decoder->lastOutFramestore->frame, decoder);
+  copyToConceal (dpb->frameStoreArray[pos]->frame, decoder->lastOutFrameStore->frame, decoder);
 
   decoder->concealMode = temp;
   }

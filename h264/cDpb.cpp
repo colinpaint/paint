@@ -176,11 +176,11 @@ void cDpb::initDpb (cDecoder264* decoder, int type) {
   longTermRefFramesInBuffer = 0;
   lastOutPoc = INT_MIN;
 
-  frameStore = (cFrameStore**)calloc (allocatedSize, sizeof (cFrameStore*));
+  frameStoreArray = (cFrameStore**)calloc (allocatedSize, sizeof (cFrameStore*));
   frameStoreRefArray = (cFrameStore**)calloc (allocatedSize, sizeof (cFrameStore*));
   frameStoreLongTermRefArray = (cFrameStore**)calloc (allocatedSize, sizeof (cFrameStore*));
   for (uint32_t i = 0; i < allocatedSize; i++) {
-    frameStore[i] = new cFrameStore();
+    frameStoreArray[i] = new cFrameStore();
     frameStoreRefArray[i] = NULL;
     frameStoreLongTermRefArray[i] = NULL;
     }
@@ -196,8 +196,8 @@ void cDpb::initDpb (cDecoder264* decoder, int type) {
   decoder->lastHasMmco5 = 0;
 
   // picture error conceal
-  if ((decoder->concealMode != 0) && !decoder->lastOutFramestore)
-    decoder->lastOutFramestore = new cFrameStore();
+  if ((decoder->concealMode != 0) && !decoder->lastOutFrameStore)
+    decoder->lastOutFrameStore = new cFrameStore();
 
   initDone = true;
   }
@@ -212,11 +212,11 @@ void cDpb::reInitDpb (cDecoder264* decoder, int type) {
     if (allocatedSize < decoder->activeSps->numRefFrames)
       cDecoder264::error ("DPB size at specified level is smaller than the specified number of refFrames");
 
-    frameStore = (cFrameStore**)realloc (frameStore, dpbSize * sizeof (cFrameStore*));
+    frameStoreArray = (cFrameStore**)realloc (frameStoreArray, dpbSize * sizeof (cFrameStore*));
     frameStoreRefArray = (cFrameStore**)realloc(frameStoreRefArray, dpbSize * sizeof (cFrameStore*));
     frameStoreLongTermRefArray = (cFrameStore**)realloc(frameStoreLongTermRefArray, dpbSize * sizeof (cFrameStore*));
     for (uint32_t i = allocatedSize; i < dpbSize; i++) {
-      frameStore[i] = new cFrameStore();
+      frameStoreArray[i] = new cFrameStore();
       frameStoreRefArray[i] = NULL;
       frameStoreLongTermRefArray[i] = NULL;
       }
@@ -232,11 +232,11 @@ void cDpb::reInitDpb (cDecoder264* decoder, int type) {
 //{{{
 void cDpb::freeDpb () {
 
-  if (frameStore)
+  if (frameStoreArray)
     for (uint32_t i = 0; i < allocatedSize; i++)
-      delete frameStore[i];
-  free (frameStore);
-  frameStore = NULL;
+      delete frameStoreArray[i];
+  free (frameStoreArray);
+  frameStoreArray = NULL;
 
   free (frameStoreRefArray);
   frameStoreRefArray = NULL;
@@ -247,8 +247,8 @@ void cDpb::freeDpb () {
   lastOutPoc = INT_MIN;
 
   // picture error conceal
-  if (decoder->concealMode != 0 || decoder->lastOutFramestore)
-    delete decoder->lastOutFramestore;
+  if (decoder->concealMode != 0 || decoder->lastOutFrameStore)
+    delete decoder->lastOutFrameStore;
 
   freePicture (decoder->noRefPicture);
   decoder->noRefPicture = NULL;
@@ -267,7 +267,7 @@ void cDpb::flushDpb() {
 
   // mark all frames unused
   for (uint32_t i = 0; i < usedSize; i++)
-    frameStore[i]->unmarkForRef();
+    frameStoreArray[i]->unmarkForRef();
 
   while (removeUnusedDpb());
 
@@ -282,7 +282,7 @@ int cDpb::removeUnusedDpb() {
 
   // check for frames that were already output and no longer used for ref
   for (uint32_t i = 0; i < usedSize; i++) {
-    if (frameStore[i]->isOutput && (!frameStore[i]->isRef())) {
+    if (frameStoreArray[i]->isOutput && (!frameStoreArray[i]->isRef())) {
       removeFrameDpb (i);
       return 1;
       }
@@ -294,7 +294,7 @@ int cDpb::removeUnusedDpb() {
 //{{{
 void cDpb::removeFrameDpb (int pos) {
 
-  cFrameStore* frameStore1 = frameStore[pos];
+  cFrameStore* frameStore1 = frameStoreArray[pos];
   switch (frameStore1->isUsed) {
     case 3:
       freePicture (frameStore1->frame);
@@ -329,9 +329,9 @@ void cDpb::removeFrameDpb (int pos) {
 
   // move empty framestore to end of buffer
   for (uint32_t i = pos; i < usedSize-1; i++)
-    frameStore[i] = frameStore[i+1];
+    frameStoreArray[i] = frameStoreArray[i+1];
 
-  frameStore[usedSize-1] = frameStore1;
+  frameStoreArray[usedSize-1] = frameStore1;
   usedSize--;
   }
 //}}}
@@ -384,8 +384,8 @@ void cDpb::storePictureDpb (sPicture* picture) {
   // picture error conceal
   if (decoder->concealMode != 0)
     for (uint32_t i = 0; i < allocatedSize; i++)
-      if (frameStore[i]->usedRef)
-        frameStore[i]->concealRef = 1;
+      if (frameStoreArray[i]->usedRef)
+        frameStoreArray[i]->concealRef = 1;
 
   // first try to remove unused frames
   if (usedSize == allocatedSize) {
@@ -421,14 +421,14 @@ void cDpb::storePictureDpb (sPicture* picture) {
         cDecoder264::error ("duplicate frameNum in int16_t-term ref picture buffer");
 
   // store at end of buffer
-  frameStore[usedSize]->insertPictureDpb (decoder,  picture);
+  frameStoreArray[usedSize]->insertPictureDpb (decoder,  picture);
 
   // picture error conceal
   if (picture->isIDR)
     decoder->earlierMissingPoc = 0;
 
   if (picture->picStructure != eFrame)
-    lastPictureFrameStore = frameStore[usedSize];
+    lastPictureFrameStore = frameStoreArray[usedSize];
   else
     lastPictureFrameStore = NULL;
 
@@ -450,9 +450,9 @@ sPicture* cDpb::getLastPicRefFromDpb() {
 
   int usedSize1 = usedSize - 1;
   for (int i = usedSize1; i >= 0; i--)
-    if (frameStore[i]->isUsed == 3)
-      if (frameStore[i]->frame->usedForRef && !frameStore[i]->frame->usedLongTermRef)
-        return frameStore[i]->frame;
+    if (frameStoreArray[i]->isUsed == 3)
+      if (frameStoreArray[i]->frame->usedForRef && !frameStoreArray[i]->frame->usedLongTermRef)
+        return frameStoreArray[i]->frame;
 
   return NULL;
   }
@@ -522,30 +522,30 @@ string cDpb::getString() const {
 //{{{
 string cDpb::getIndexString (uint32_t index) const {
 
-  string debugString = fmt::format ("- frame:{:2d} ", frameStore[index]->frameNum);
+  string debugString = fmt::format ("- frame:{:2d} ", frameStoreArray[index]->frameNum);
 
-  if (frameStore[index]->isUsed & 1)
-    debugString += fmt::format (" tPoc:{:3d}", frameStore[index]->topField ? frameStore[index]->topField->poc
-                                                                           : frameStore[index]->frame->topPoc);
-  if (frameStore[index]->isUsed & 2)
-    debugString += fmt::format (" bPoc:{:3d}", frameStore[index]->botField ? frameStore[index]->botField->poc
-                                                                           : frameStore[index]->frame->botPoc);
-  if (frameStore[index]->isUsed == 3)
-    debugString += fmt::format (" fPoc:{:3d}", frameStore[index]->frame->poc);
+  if (frameStoreArray[index]->isUsed & 1)
+    debugString += fmt::format (" tPoc:{:3d}", frameStoreArray[index]->topField ? frameStoreArray[index]->topField->poc
+                                                                           : frameStoreArray[index]->frame->topPoc);
+  if (frameStoreArray[index]->isUsed & 2)
+    debugString += fmt::format (" bPoc:{:3d}", frameStoreArray[index]->botField ? frameStoreArray[index]->botField->poc
+                                                                           : frameStoreArray[index]->frame->botPoc);
+  if (frameStoreArray[index]->isUsed == 3)
+    debugString += fmt::format (" fPoc:{:3d}", frameStoreArray[index]->frame->poc);
 
-  debugString += fmt::format (" poc:{:3d}", frameStore[index]->poc);
+  debugString += fmt::format (" poc:{:3d}", frameStoreArray[index]->poc);
 
-  if (frameStore[index]->usedRef)
-    debugString += fmt::format (" ref:{}", frameStore[index]->usedRef);
+  if (frameStoreArray[index]->usedRef)
+    debugString += fmt::format (" ref:{}", frameStoreArray[index]->usedRef);
 
-  if (frameStore[index]->usedLongTermRef)
-    debugString += fmt::format (" longTermRef:{}", frameStore[index]->usedRef);
+  if (frameStoreArray[index]->usedLongTermRef)
+    debugString += fmt::format (" longTermRef:{}", frameStoreArray[index]->usedRef);
 
   return fmt::format ("{}{}{}",
                       debugString,
-                      frameStore[index]->isOutput ? " out":"",
-                      (frameStore[index]->isUsed == 3) &&
-                        frameStore[index]->frame->nonExisting ? " nonExisiting":"");
+                      frameStoreArray[index]->isOutput ? " out":"",
+                      (frameStoreArray[index]->isUsed == 3) &&
+                        frameStoreArray[index]->frame->nonExisting ? " nonExisiting":"");
   }
 //}}}
 
@@ -577,7 +577,7 @@ int cDpb::outputDpbFrame() {
     writeLostNonRefPic (this, poc);
     }
 
-  decoder->writeStoredFrame (frameStore[pos]);
+  decoder->writeStoredFrame (frameStoreArray[pos]);
 
   // error conceal
   if(decoder->concealMode == 0)
@@ -587,7 +587,7 @@ int cDpb::outputDpbFrame() {
   lastOutPoc = poc;
 
   // free frameStore and move emptyStore to end of buffer
-  if (!frameStore[pos]->isRef())
+  if (!frameStoreArray[pos]->isRef())
     removeFrameDpb (pos);
 
   return 1;
@@ -610,8 +610,8 @@ void cDpb::getSmallestPoc (int* poc, int* pos) {
   *pos = -1;
   *poc = INT_MAX;
   for (uint32_t i = 0; i < usedSize; i++) {
-    if ((*poc > frameStore[i]->poc) && (!frameStore[i]->isOutput)) {
-      *poc = frameStore[i]->poc;
+    if ((*poc > frameStoreArray[i]->poc) && (!frameStoreArray[i]->isOutput)) {
+      *poc = frameStoreArray[i]->poc;
       *pos = i;
       }
     }
@@ -625,8 +625,8 @@ void cDpb::idrMemoryManagement (sPicture* picture) {
     // free all stored pictures
     for (uint32_t i = 0; i < usedSize; i++) {
       // reset all ref settings
-      delete frameStore[i];
-      frameStore[i] = new cFrameStore();
+      delete frameStoreArray[i];
+      frameStoreArray[i] = new cFrameStore();
       }
     for (uint32_t i = 0; i < refFramesInBuffer; i++)
       frameStoreRefArray[i] = NULL;
@@ -748,8 +748,8 @@ void cDpb::slidingWindowMemoryManagement (sPicture* picture) {
   // if this is a refPic with sliding window, unmark first ref frame
   if (refFramesInBuffer == imax (1, numRefFrames) - longTermRefFramesInBuffer) {
     for (uint32_t i = 0; i < usedSize; i++) {
-      if (frameStore[i]->usedRef && (!frameStore[i]->usedLongTermRef)) {
-        frameStore[i]->unmarkForRef();
+      if (frameStoreArray[i]->usedRef && (!frameStoreArray[i]->usedLongTermRef)) {
+        frameStoreArray[i]->unmarkForRef();
         updateRefList();
         break;
         }
@@ -766,8 +766,8 @@ void cDpb::updateRefList() {
   uint32_t i;
   uint32_t j;
   for (i = 0, j = 0; i < usedSize; i++)
-    if (frameStore[i]->isShortTermRef())
-      frameStoreRefArray[j++] = frameStore[i];
+    if (frameStoreArray[i]->isShortTermRef())
+      frameStoreRefArray[j++] = frameStoreArray[i];
 
   refFramesInBuffer = j;
 
@@ -781,8 +781,8 @@ void cDpb::updateLongTermRefList() {
   uint32_t i;
   uint32_t j;
   for (i = 0, j = 0; i < usedSize; i++)
-    if (frameStore[i]->isLongTermRef())
-      frameStoreLongTermRefArray[j++] = frameStore[i];
+    if (frameStoreArray[i]->isLongTermRef())
+      frameStoreLongTermRefArray[j++] = frameStoreArray[i];
 
   longTermRefFramesInBuffer = j;
 

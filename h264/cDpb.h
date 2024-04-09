@@ -33,7 +33,7 @@ public:
   uint32_t      longTermRefFramesInBuffer;
   int           lastOutPoc;
 
-  cFrameStore** frameStore;
+  cFrameStore** frameStoreArray;
   cFrameStore** frameStoreRefArray;
   cFrameStore** frameStoreLongTermRefArray;
 
