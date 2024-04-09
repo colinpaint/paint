@@ -12,18 +12,6 @@ using namespace std;
 //}}}
 namespace {
   //{{{
-  int getPicNumX (sPicture* p, int diffPicNumMinus1) {
-
-    int curPicNum;
-    if (p->picStructure == eFrame)
-      curPicNum = p->frameNum;
-    else
-      curPicNum = 2 * p->frameNum + 1;
-
-    return curPicNum - (diffPicNumMinus1 + 1);
-    }
-  //}}}
-  //{{{
   int getDpbSize (cDecoder264* decoder) {
 
     int pic_size_mb = (decoder->activeSps->picWidthMbsMinus1 + 1) *
@@ -154,6 +142,18 @@ namespace {
       }
 
     return size;
+    }
+  //}}}
+  //{{{
+  int getPicNumX (sPicture* p, int diffPicNumMinus1) {
+
+    int curPicNum;
+    if (p->picStructure == eFrame)
+      curPicNum = p->frameNum;
+    else
+      curPicNum = 2 * p->frameNum + 1;
+
+    return curPicNum - (diffPicNumMinus1 + 1);
     }
   //}}}
   }
@@ -548,18 +548,16 @@ void cDpb::dump() {
 //{{{
 int cDpb::outputDpbFrame() {
 
-  // diagnostics
   if (usedSize < 1)
     cDecoder264::error ("Cannot output frame, DPB empty");
 
-  // find smallest POC
   int poc;
   int pos;
   getSmallestPoc (&poc, &pos);
   if (pos == -1)
     return 0;
 
-  // picture error conceal
+  // error conceal
   if (decoder->concealMode != 0) {
     if (lastOutPoc == 0)
       writeLostRefAfterIdr (this, pos);
@@ -568,14 +566,14 @@ int cDpb::outputDpbFrame() {
 
   decoder->writeStoredFrame (frameStore[pos]);
 
-  // picture error conceal
+  // error conceal
   if(decoder->concealMode == 0)
     if (lastOutPoc >= poc)
       cDecoder264::error ("output POC must be in ascending order");
 
   lastOutPoc = poc;
 
-  // free frame store and move empty store to end of buffer
+  // free frameStore and move emptyStore to end of buffer
   if (!frameStore[pos]->isRef())
     removeFrameDpb (pos);
 
@@ -801,8 +799,8 @@ void cDpb::unmarkAllShortTermForRef() {
   }
 //}}}
 //{{{
-void cDpb::unmarkShortTermForRef (sPicture* picture, int diffPicNumMinus1)
-{
+void cDpb::unmarkShortTermForRef (sPicture* picture, int diffPicNumMinus1) {
+
   int picNumX = getPicNumX (picture, diffPicNumMinus1);
 
   for (uint32_t i = 0; i < refFramesInBuffer; i++) {
@@ -1011,7 +1009,7 @@ void cDpb::markPicLongTerm (sPicture* picture, int longTermFrameIndex, int picNu
           frameStoreRef[i]->usedLongTermRef |= 1;
           if (frameStoreRef[i]->usedLongTermRef == 3) {
             frameStoreRef[i]->frame->usedLongTermRef = 1;
-            frameStoreRef[i]->frame->longTermFrameIndex = longTermFrameIndex; 
+            frameStoreRef[i]->frame->longTermFrameIndex = longTermFrameIndex;
             frameStoreRef[i]->frame->longTermPicNum = longTermFrameIndex;
             }
           return;
