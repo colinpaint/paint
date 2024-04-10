@@ -192,13 +192,15 @@ void cFrameStore::dpbCombineField (cDecoder264* decoder) {
       memcpy (frame->imgUV[j][i*2 + 1], botField->imgUV[j][i], botField->sizeXcr*sizeof(sPixel));
       }
 
-  poc = frame->poc = frame->framePoc = imin (topField->poc, botField->poc);
-  botField->framePoc = topField->framePoc = frame->poc;
+  poc = imin(topField->poc, botField->poc);
+  frame->framePoc = poc;;
+  botField->framePoc = frame->poc;
+  topField->framePoc = frame->poc;
   botField->topPoc = frame->topPoc = topField->poc;
   topField->botPoc = frame->botPoc = botField->poc;
 
-  frame->usedForRef = (topField->usedForRef && botField->usedForRef );
-  frame->usedLongTermRef = (topField->usedLongTermRef && botField->usedLongTermRef );
+  frame->usedForRef = topField->usedForRef && botField->usedForRef;
+  frame->usedLongTermRef = topField->usedLongTermRef && botField->usedLongTermRef;
 
   if (frame->usedLongTermRef)
     frame->longTermFrameIndex = longTermFrameIndex;
@@ -264,9 +266,9 @@ void cFrameStore::dpbCombineField1 (cDecoder264* decoder) {
       frame->mvInfo[jj4][i].refPic[LIST_0] = k >= 0 ? botField->listX[l][LIST_0][k]: NULL;
       k = botField->mvInfo[j][i].refIndex[LIST_1];
       frame->mvInfo[jj4][i].refPic[LIST_1] = k >= 0 ? botField->listX[l][LIST_1][k]: NULL;
-    }
+      }
+    }  
   }
-}
 //}}}
 //{{{
 void cFrameStore::dpbSplitField (cDecoder264* decoder) {

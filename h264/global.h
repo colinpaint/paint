@@ -839,13 +839,13 @@ private:
   void setCodingParam (cSps* sps);
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
 
-  void allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* p,
+  void allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* picture,
                                int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
                                int chromaSizeX, int chromaSizeY);
-  void clearPicture (sPicture* p);
-  void writeOutPicture (sPicture* p);
+  void clearPicture (sPicture* picture);
+  void writeOutPicture (sPicture* picture);
   void flushPendingOut();
-  void writePicture (sPicture* p, int realStructure);
+  void writePicture (sPicture* picture, int realStructure);
   void writeUnpairedField (cFrameStore* frameStore);
   void flushDirectOutput();
 
