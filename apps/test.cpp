@@ -882,6 +882,7 @@ public:
   int64_t getPlayPts() const { return mPlayPts; }
 
   void togglePlay() { mPlaying = !mPlaying; }
+  void singleStep() { mSingleStep = true; mPlaying = false; }
   void skipPlay (int64_t skipPts) { (void)skipPts; }
   //{{{
   void read() {
@@ -975,9 +976,9 @@ public:
         else
           cLog::log (LOGERROR, "decoding  failed");
 
-        while (!mPlaying)
+        while (!mPlaying && !mSingleStep)
           this_thread::sleep_for (1ms);
-
+        mSingleStep = false;
         } while (ret == cDecoder264::DEC_SUCCEED);
 
       mDecoder->finish (&decodedPics);
@@ -1026,6 +1027,7 @@ private:
   // playing
   int64_t mPlayPts = -1;
   bool mPlaying = true;
+  bool mSingleStep = false;
 
   cDecoder264* mDecoder = nullptr;
   bool mDeblock = true;
@@ -1054,6 +1056,16 @@ public:
       mFilePlayer->togglePlay();
     else
       mPlaying = !mPlaying;
+    }
+  //}}}
+  //{{{
+  void singleStep() {
+    if (mFilePlayer)
+      mFilePlayer->singleStep();
+    else {
+      mPlaying = false;
+      mSingleStep = true;
+      }
     }
   //}}}
 
@@ -1110,9 +1122,9 @@ public:
         else
           cLog::log (LOGERROR, "decoding  failed");
 
-        while (!mPlaying)
+        while (!mPlaying && !mSingleStep)
           this_thread::sleep_for (1ms);
-
+        mSingleStep = false;
         } while (ret == cDecoder264::DEC_SUCCEED);
 
       mDecoder->finish (&decodedPics);
@@ -1172,6 +1184,7 @@ private:
   cDecoder264* mDecoder = nullptr;
 
   bool mPlaying = true;
+  bool mSingleStep = false;
 
   size_t mOutputFrame = 0;
   array <cSoftVideoFrame*,kVideoFrames> mVideoFrames = { nullptr };
@@ -1546,6 +1559,7 @@ private:
     const vector<sActionKey> kActionKeys = {
     //  alt    control shift  ImGuiKey             function
       { false, false,  false, ImGuiKey_Space,      [this,&testApp]{ testApp.togglePlay(); }},
+      { false, false,  false, ImGuiKey_Enter,      [this,&testApp]{ testApp.singleStep(); }},
 
       { false, false,  false, ImGuiKey_LeftArrow,  [this,&testApp]{ testApp.getFilePlayer()->skipPlay (-90000/25); }},
       { false, false,  false, ImGuiKey_RightArrow, [this,&testApp]{ testApp.getFilePlayer()->skipPlay (90000/25); }},
