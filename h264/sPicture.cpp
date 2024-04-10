@@ -35,12 +35,12 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   s->picSizeInMbs = (sizeX*sizeY)/256;
   s->imgUV = NULL;
 
-  getMem2DpelPad (&(s->imgY), sizeY, sizeX, decoder->coding.lumaPadY, decoder->coding.lumaPadX);
+  getMem2DpelPad (&s->imgY, sizeY, sizeX, decoder->coding.lumaPadY, decoder->coding.lumaPadX);
   s->lumaStride = sizeX + 2 * decoder->coding.lumaPadX;
   s->lumaExpandedHeight = sizeY + 2 * decoder->coding.lumaPadY;
 
   if (decoder->activeSps->chromaFormatIdc != YUV400)
-    getMem3DpelPad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->coding.chromaPadY, decoder->coding.chromaPadX);
+    getMem3DpelPad (&s->imgUV, 2, sizeYcr, sizeXcr, decoder->coding.chromaPadY, decoder->coding.chromaPadX);
 
   s->chromaStride = sizeXcr + 2*decoder->coding.chromaPadX;
   s->chromaExpandedHeight = sizeYcr + 2*decoder->coding.chromaPadY;
@@ -50,13 +50,13 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   s->chromaPadX = decoder->coding.chromaPadX;
   s->isSeperateColourPlane = decoder->coding.isSeperateColourPlane;
 
-  getMem2Dmp (&s->mvInfo, (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
-  allocPicMotion (&s->motion , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
+  getMem2Dmp (&s->mvInfo, sizeY >> BLOCK_SHIFT, sizeX >> BLOCK_SHIFT);
+  allocPicMotion (&s->motion , sizeY >> BLOCK_SHIFT, sizeX >> BLOCK_SHIFT);
 
   if (decoder->coding.isSeperateColourPlane != 0)
     for (int nplane = 0; nplane < MAX_PLANE; nplane++) {
-      getMem2Dmp (&s->mvInfoJV[nplane], (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
-      allocPicMotion (&s->motionJV[nplane] , (sizeY >> BLOCK_SHIFT), (sizeX >> BLOCK_SHIFT));
+      getMem2Dmp (&s->mvInfoJV[nplane], sizeY >> BLOCK_SHIFT, sizeX >> BLOCK_SHIFT);
+      allocPicMotion (&s->motionJV[nplane] , sizeY >> BLOCK_SHIFT, sizeX >> BLOCK_SHIFT);
       }
 
   s->picNum = 0;
@@ -106,7 +106,7 @@ void freePicture (sPicture* picture) {
       }
     freePicMotion (&picture->motion);
 
-    if ((picture->isSeperateColourPlane != 0) ) {
+    if (picture->isSeperateColourPlane != 0) {
       for (int nplane = 0; nplane < MAX_PLANE; nplane++ ) {
         if (picture->mvInfoJV[nplane]) {
           freeMem2Dmp (picture->mvInfoJV[nplane]);

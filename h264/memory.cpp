@@ -516,84 +516,55 @@ void freeMem1Dpel (sPixel* array1D)
 }
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 2D memory array
- *    which was allocated with getMem2Dpel()
-** **********************************************************************
- */
-void freeMem2Dpel (sPixel** array2D)
-{
-  if (array2D)
-  {
+void freeMem2Dpel (sPixel** array2D) {
+
+  if (array2D)  {
     if (*array2D)
       memFree (*array2D);
-
     memFree (array2D);
+    }
   }
-}
 //}}}
 //{{{
-void freeMem2DpelPad (sPixel** array2D, int iPadY, int iPadX)
-{
-  if (array2D)
-  {
+void freeMem2DpelPad (sPixel** array2D, int iPadY, int iPadX) {
+
+  if (array2D)  {
     if (*array2D)
       memFree (array2D[-iPadY]-iPadX);
     memFree (&array2D[-iPadY]);
+    }
   }
-}
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 3D memory array
- *    which was allocated with getMem3Dpel()
-** **********************************************************************
- */
-void freeMem3Dpel (sPixel*** array3D)
-{
-  if (array3D)
-  {
-    freeMem2Dpel(*array3D);
+void freeMem3Dpel (sPixel*** array3D) {
+
+  if (array3D) {
+    freeMem2Dpel (*array3D);
     memFree (array3D);
+    }
   }
-}
 //}}}
 //{{{
-void freeMem3DpelPad (sPixel*** array3D, int iDim12, int iPadY, int iPadX)
-{
-  if (array3D)
-  {
-    int i;
-    for(i=0; i<iDim12; i++)
-      if(array3D[i])
-      {
+void freeMem3DpelPad (sPixel*** array3D, int iDim12, int iPadY, int iPadX) {
+
+  if (array3D) {
+    for(int i = 0; i < iDim12; i++)
+      if (array3D[i]) {
         freeMem2DpelPad(array3D[i], iPadY, iPadX);
         array3D[i] = NULL;
-      }
+        }
     memFree (array3D);
+    }
   }
-}
 //}}}
 //{{{
-/*!
-** **********************************************************************
- * \brief
- *    free 4D memory array
- *    which was allocated with getMem4Dpel()
-** **********************************************************************
- */
-void freeMem4Dpel (sPixel**** array4D)
-{
-  if (array4D)
-  {
-    freeMem3Dpel(*array4D);
+void freeMem4Dpel (sPixel**** array4D) {
+
+  if (array4D) {
+    freeMem3Dpel (*array4D);
     memFree (array4D);
+    }
   }
-}
 //}}}
 //{{{
 void freeMem4DpelPad (sPixel**** array4D, int iFrames, int iPadY, int iPadX)
