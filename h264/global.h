@@ -401,7 +401,8 @@ struct sMacroBlock {
 
   // some storage of macroBlock syntax elements for global access
   int16_t mbType;
-  int16_t mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][blockY][blockX][x,y]
+  // indices correspond to [forw,backw][blockY][blockX][x,y]
+  int16_t mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2]; 
   int     codedBlockPattern;
   sCodedBlockPattern cbp[3];
 
@@ -411,6 +412,7 @@ struct sMacroBlock {
   char    dpcmMode;
   char    chromaPredMode;       // chroma intra prediction mode
   char    skipFlag;
+
   int16_t deblockFilterDisableIdc;
   int16_t deblockFilterC0Offset;
   int16_t deblockFilterBetaOffset;
@@ -427,7 +429,7 @@ struct sMacroBlock {
   bool    lumaTransformSize8x8flag;
   bool    noMbPartLessThan8x8Flag;
 
-  // virtual methods
+  // c style virtual functions
   void (*iTrans4x4) (sMacroBlock*, eColorPlane, int, int);
   void (*iTrans8x8) (sMacroBlock*, eColorPlane, int, int);
   void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, int16_t, sPicMotion**, int, int, int, int, int);
