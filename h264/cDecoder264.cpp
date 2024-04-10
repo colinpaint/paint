@@ -1489,7 +1489,6 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->coding.chromaPadY = MCBUF_CHROMA_PAD_Y;
 
   decoder->dpb.decoder = decoder;
-  decoder->dpb.initDone = false;
 
   decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
 
@@ -3196,12 +3195,12 @@ void cDecoder264::useParameterSet (cSlice* slice) {
 
   if (&sps[pps->spsId] != activeSps) {
     //{{{  new sps
-    if (picture)
+    if (picture) 
       endDecodeFrame();
 
     activeSps = &sps[pps->spsId];
 
-    if (activeSps->isBLprofile() && !dpb.initDone)
+    if (activeSps->hasBaseLine() && !dpb.isInitDone())
       setCodingParam (sps);
     setCoding();
     initGlobalBuffers();

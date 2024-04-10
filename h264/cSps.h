@@ -95,7 +95,7 @@ public:
   std::string getString();
   bool isEqual (cSps& sps);
   //{{{
-  bool isBLprofile() {
+  bool hasBaseLine() {
     return (profileIdc == BASELINE) ||
            (profileIdc == MAIN) ||
            (profileIdc == EXTENDED) ||

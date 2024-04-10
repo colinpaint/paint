@@ -12,17 +12,17 @@ public:
 
   void storePictureDpb (sPicture* picture);
 
+  bool isInitDone() const { return initDone; }
+  uint32_t getSize() const { return usedSize; };
+  uint32_t getAllocatedSize() const { return allocatedSize; };
+
   sPicture* getShortTermPic (cSlice* slice, int picNum);
   sPicture* getLongTermPic (cSlice* slice, int picNum);
   sPicture* getLastPicRefFromDpb();
 
-  uint32_t getSize() const { return usedSize; };
-  uint32_t getAllocatedSize() const { return allocatedSize; };
-
   void setSize (uint32_t size) { usedSize = size; };
 
   // vars
-  bool          initDone = false;
   cDecoder264*  decoder = nullptr;
 
   uint32_t      refFramesInBuffer = 0;
@@ -71,6 +71,8 @@ private:
   void assignLongTermFrameIndex (sPicture* picture, int diffPicNumMinus1, int longTermFrameIndex);
 
   // vars
+  bool          initDone = false;
+
   uint32_t      usedSize = 0;
   uint32_t      allocatedSize =0 ;
   int           numRefFrames = 0;
