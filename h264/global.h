@@ -630,14 +630,8 @@ public:
 
   void reset_ecFlags();
   int setEcFlag (int se);
-  int get_concealed_element (sSyntaxElement* se);
+  int getConcealElement (sSyntaxElement* se);
 
-  int initFmo (cSlice* slice);
-  int closeFmo();
-  int fmoGetNumberOfSliceGroup();
-  int fmoGetLastMBOfPicture();
-  int fmoGetLastMBInSliceGroup (int SliceGroup);
-  int fmoGetSliceGroupId (int mb);
   int fmoGetNextMBNr (int CurrentMbNr);
 
   int decodeOneFrame (sDecodedPic** decPicList);
@@ -819,6 +813,15 @@ private:
 
   void mbAffPostProc();
 
+  //{{{  fmo
+  void initFmo (cSlice* slice);
+  void closeFmo();
+
+  int fmoGetNumberOfSliceGroup();
+  int fmoGetLastMBOfPicture();
+  int fmoGetLastMBInSliceGroup (int SliceGroup);
+  int fmoGetSliceGroupId (int mb);
+
   void fmoGenerateType0MapUnitMap (uint32_t PicSizeInMapUnits);
   void fmoGenerateType1MapUnitMap (uint32_t PicSizeInMapUnits);
   void fmoGenerateType2MapUnitMap (uint32_t PicSizeInMapUnits);
@@ -828,6 +831,7 @@ private:
   void fmoGenerateType6MapUnitMap (uint32_t PicSizeInMapUnits);
   int fmoGenerateMapUnitToSliceGroupMap (cSlice* slice);
   int fmoGenerateMbToSliceGroupMap (cSlice* slice);
+  //}}}
 
   void setCoding();
   void setCodingParam (cSps* sps);

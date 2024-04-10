@@ -1,4 +1,7 @@
 #pragma once
+#include <string>
+#include <vector>
+
 class cFrameStore;
 class cDecoder;
 
@@ -18,8 +21,6 @@ public:
 
   uint32_t getSize() const { return usedSize; };
   uint32_t getAllocatedSize() const { return allocatedSize; };
-  std::string getString() const;
-  std::string getIndexString (uint32_t index) const;
 
   void setSize (uint32_t size) { usedSize = size; };
 
@@ -38,11 +39,15 @@ public:
 
   sPicture*     noRefPicture = nullptr;
 
+  std::vector <std::string> info;
+
 private:
   int removeUnusedDpb();
   void removeFrameDpb (int pos);
 
+  void updateInfo();
   void dump();
+
   int outputDpbFrame();
   void checkNumDpbFrames();
 

@@ -1225,12 +1225,9 @@ public:
       ImGui::TextColored (kWhite, decoder->debug.profileString.c_str());
       mDebugLines++;
 
-      ImGui::TextColored (kWhite, decoder->dpb.getString().c_str());
-      for (uint32_t i = 0; i < decoder->dpb.getSize(); i++)
-        ImGui::TextColored (kWhite, decoder->dpb.getIndexString (i).c_str());
-      for (uint32_t i = decoder->dpb.getSize(); i < decoder->dpb.getAllocatedSize(); i++)
-        ImGui::TextColored (kWhite, "");
-      mDebugLines += decoder->dpb.getAllocatedSize() + 1;
+      for (auto infoLine : decoder->dpb.info)
+        ImGui::TextColored (kWhite, infoLine.c_str());
+      mDebugLines += decoder->dpb.info.size();
 
       int spsIndex = 0;
       while (decoder->sps[spsIndex].ok) {
@@ -1597,7 +1594,7 @@ private:
   // vars
   cView* mView;
   cTextureShader* mVideoShader = nullptr;
-  int mDebugLines = 0;
+  size_t mDebugLines = 0;
   };
 //}}}
 

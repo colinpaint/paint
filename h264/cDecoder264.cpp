@@ -1534,6 +1534,7 @@ cDecoder264::~cDecoder264() {
   }
 //}}}
 
+//{{{  conceal
 //{{{
 void cDecoder264::reset_ecFlags () {
 
@@ -1626,7 +1627,7 @@ int cDecoder264::setEcFlag (int se) {
   }
 //}}}
 //{{{
-int cDecoder264::get_concealed_element (sSyntaxElement* se) {
+int cDecoder264::getConcealElement (sSyntaxElement* se) {
 
   if (ecFlag[se->type] == NO_EC)
     return NO_EC;
@@ -1709,79 +1710,8 @@ int cDecoder264::get_concealed_element (sSyntaxElement* se) {
   return EC_REQ;
   }
 //}}}
-
-//{{{
-int cDecoder264::initFmo (cSlice* slice) {
-
-  fmoGenerateMapUnitToSliceGroupMap (slice);
-  fmoGenerateMbToSliceGroupMap (slice);
-  sliceGroupsNum = activePps->numSliceGroupsMinus1 + 1;
-
-#ifdef PRINT_FMO_MAPS
-  printf ("\n");
-  printf ("FMO Map (Units):\n");
-
-  for (int j = 0; j < picHeightMapUnits; j++) {
-    for (int i = 0; i < picWidthMbs; i++) {
-      printf("%c",48 + mapUnitToSliceGroupMap[i+j * picWidthMbs]);
-      }
-    printf("\n");
-    }
-
-  printf("\n");
-  printf("FMO Map (Mb):\n");
-
-  for (int j = 0; j < picHeightInMbs; j++) {
-    for (int i = 0; i < picWidthMbs; i++) {
-      printf ("%c", 48 + mbToSliceGroupMap[i + j * picWidthMbs]);
-      }
-    printf ("\n");
-    }
-  printf ("\n");
-
-#endif
-
-  return 0;
-  }
 //}}}
-//{{{
-int cDecoder264::closeFmo() {
-
-  free (mbToSliceGroupMap);
-  mbToSliceGroupMap = NULL;
-
-  free (mapUnitToSliceGroupMap);
-  mapUnitToSliceGroupMap = NULL;
-
-  return 0;
-  }
-//}}}
-//{{{
-int cDecoder264::fmoGetNumberOfSliceGroup() {
-  return sliceGroupsNum;
-  }
-//}}}
-//{{{
-int cDecoder264::fmoGetLastMBOfPicture() {
-  return fmoGetLastMBInSliceGroup (fmoGetNumberOfSliceGroup() - 1);
-  }
-//}}}
-//{{{
-int cDecoder264::fmoGetLastMBInSliceGroup (int SliceGroup) {
-
-  int i;
-  for (i = picSizeInMbs-1; i >= 0; i--)
-    if (fmoGetSliceGroupId (i) == SliceGroup)
-      return i;
-  return -1;
-  }
-//}}}
-//{{{
-int cDecoder264::fmoGetSliceGroupId (int mb) {
-
-  return mbToSliceGroupMap[mb];
-  }
-//}}}
+//{{{  fmo
 //{{{
 int cDecoder264::fmoGetNextMBNr (int CurrentMbNr) {
 
@@ -1796,7 +1726,7 @@ int cDecoder264::fmoGetNextMBNr (int CurrentMbNr) {
     return CurrentMbNr;
   }
 //}}}
-
+//}}}
 //{{{
 void cDecoder264::padPicture (sPicture* picture) {
 
@@ -2116,7 +2046,6 @@ void cDecoder264::close() {
   }
 //}}}
 
-// private
 //{{{
 void cDecoder264::clearDecodedPics() {
 
@@ -2306,6 +2235,39 @@ void cDecoder264::mbAffPostProc() {
   }
 //}}}
 
+//{{{  fmo
+//{{{
+void cDecoder264::initFmo (cSlice* slice) {
+
+  fmoGenerateMapUnitToSliceGroupMap (slice);
+  fmoGenerateMbToSliceGroupMap (slice);
+  }
+//}}}
+//{{{
+void cDecoder264::closeFmo() {
+
+  free (mbToSliceGroupMap);
+  mbToSliceGroupMap = NULL;
+
+  free (mapUnitToSliceGroupMap);
+  mapUnitToSliceGroupMap = NULL;
+  }
+//}}}
+
+int cDecoder264::fmoGetNumberOfSliceGroup() { return sliceGroupsNum; }
+int cDecoder264::fmoGetLastMBOfPicture() { return fmoGetLastMBInSliceGroup (fmoGetNumberOfSliceGroup() - 1); }
+int cDecoder264::fmoGetSliceGroupId (int mb) { return mbToSliceGroupMap[mb]; }
+//{{{
+int cDecoder264::fmoGetLastMBInSliceGroup (int SliceGroup) {
+
+  for (int i = picSizeInMbs-1; i >= 0; i--)
+    if (fmoGetSliceGroupId (i) == SliceGroup)
+      return i;
+
+  return -1;
+  }
+//}}}
+
 //{{{
 void cDecoder264::fmoGenerateType0MapUnitMap (uint32_t PicSizeInMapUnits ) {
 // Generate interleaved slice group map type MapUnit map (type 0)
@@ -2316,20 +2278,19 @@ void cDecoder264::fmoGenerateType0MapUnitMap (uint32_t PicSizeInMapUnits ) {
     for (iGroup = 0;
          (iGroup <= activePps->numSliceGroupsMinus1) && (i < PicSizeInMapUnits);
          i += activePps->runLengthMinus1[iGroup++] + 1 )
-      for( j = 0; j <= activePps->runLengthMinus1[ iGroup ] && i + j < PicSizeInMapUnits; j++ )
+      for (j = 0; j <= activePps->runLengthMinus1[ iGroup ] && i + j < PicSizeInMapUnits; j++ )
         mapUnitToSliceGroupMap[i+j] = iGroup;
-    } while( i < PicSizeInMapUnits );
+    } while (i < PicSizeInMapUnits);
   }
 //}}}
 //{{{
 // Generate dispersed slice group map type MapUnit map (type 1)
 void cDecoder264::fmoGenerateType1MapUnitMap (uint32_t PicSizeInMapUnits ) {
 
-  uint32_t i;
-  for( i = 0; i < PicSizeInMapUnits; i++ )
+  for (uint32_t i = 0; i < PicSizeInMapUnits; i++ )
     mapUnitToSliceGroupMap[i] =
-      ((i%coding.picWidthMbs) + (((i/coding.picWidthMbs)*(activePps->numSliceGroupsMinus1+1))/2))
-      % (activePps->numSliceGroupsMinus1+1);
+      ((i%coding.picWidthMbs) + (((i/coding.picWidthMbs) * (activePps->numSliceGroupsMinus1+1)) / 2))
+        % (activePps->numSliceGroupsMinus1+1);
   }
 //}}}
 //{{{
@@ -2341,13 +2302,13 @@ void cDecoder264::fmoGenerateType2MapUnitMap (uint32_t PicSizeInMapUnits ) {
   uint32_t yTopLeft, xTopLeft, yBottomRight, xBottomRight;
 
   for (i = 0; i < PicSizeInMapUnits; i++ )
-    mapUnitToSliceGroupMap[ i ] = activePps->numSliceGroupsMinus1;
+    mapUnitToSliceGroupMap[i] = activePps->numSliceGroupsMinus1;
 
   for (iGroup = activePps->numSliceGroupsMinus1 - 1 ; iGroup >= 0; iGroup--) {
     yTopLeft = activePps->topLeft[ iGroup ] / coding.picWidthMbs;
     xTopLeft = activePps->topLeft[ iGroup ] % coding.picWidthMbs;
-    yBottomRight = activePps->botRight[ iGroup ] / coding.picWidthMbs;
-    xBottomRight = activePps->botRight[ iGroup ] % coding.picWidthMbs;
+    yBottomRight = activePps->botRight[iGroup] / coding.picWidthMbs;
+    xBottomRight = activePps->botRight[iGroup] % coding.picWidthMbs;
     for (y = yTopLeft; y <= yBottomRight; y++ )
       for (x = xTopLeft; x <= xBottomRight; x++ )
         mapUnitToSliceGroupMap[ y * coding.picWidthMbs + x ] = iGroup;
@@ -2379,12 +2340,12 @@ void cDecoder264::fmoGenerateType3MapUnitMap (uint32_t PicSizeInMapUnits, cSlice
   xDir = activePps->sliceGroupChangeDirectionFlag - 1;
   yDir = activePps->sliceGroupChangeDirectionFlag;
 
-  for( k = 0; k < PicSizeInMapUnits; k += mapUnitVacant ) {
+  for (k = 0; k < PicSizeInMapUnits; k += mapUnitVacant ) {
     mapUnitVacant = ( mapUnitToSliceGroupMap[ y * coding.picWidthMbs + x ]  ==  2 );
-    if( mapUnitVacant )
+    if (mapUnitVacant )
        mapUnitToSliceGroupMap[ y * coding.picWidthMbs + x ] = ( k >= mapUnitsInSliceGroup0 );
 
-    if( xDir  ==  -1  &&  x  ==  leftBound ) {
+    if (xDir  ==  -1  &&  x  ==  leftBound ) {
       leftBound = imax( leftBound - 1, 0 );
       x = leftBound;
       xDir = 0;
@@ -2422,23 +2383,22 @@ void cDecoder264::fmoGenerateType4MapUnitMap (uint32_t PicSizeInMapUnits, cSlice
   uint32_t mapUnitsInSliceGroup0 = imin((activePps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
   uint32_t sizeOfUpperLeftGroup = activePps->sliceGroupChangeDirectionFlag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
 
-  uint32_t i;
-
-  for (i = 0; i < PicSizeInMapUnits; i++ )
+  for (uint32_t i = 0; i < PicSizeInMapUnits; i++ )
     if (i < sizeOfUpperLeftGroup )
-      mapUnitToSliceGroupMap[ i ] = activePps->sliceGroupChangeDirectionFlag;
+      mapUnitToSliceGroupMap[i] = activePps->sliceGroupChangeDirectionFlag;
     else
-      mapUnitToSliceGroupMap[ i ] = 1 - activePps->sliceGroupChangeDirectionFlag;
+      mapUnitToSliceGroupMap[i] = 1 - activePps->sliceGroupChangeDirectionFlag;
   }
 //}}}
 //{{{
 // Generate wipe slice group map type MapUnit map (type 5) *
 void cDecoder264::fmoGenerateType5MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice ) {
 
-  uint32_t mapUnitsInSliceGroup0 = imin ((activePps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle,
-                                         PicSizeInMapUnits);
-  uint32_t sizeOfUpperLeftGroup = activePps->sliceGroupChangeDirectionFlag ? (PicSizeInMapUnits - mapUnitsInSliceGroup0)
-                                                                     : mapUnitsInSliceGroup0;
+  uint32_t mapUnitsInSliceGroup0 = imin (
+    (activePps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
+  uint32_t sizeOfUpperLeftGroup = activePps->sliceGroupChangeDirectionFlag 
+                                    ? (PicSizeInMapUnits - mapUnitsInSliceGroup0)
+                                    : mapUnitsInSliceGroup0;
 
   uint32_t k = 0;
   for (uint32_t j = 0; j < coding.picWidthMbs; j++)
@@ -2457,6 +2417,7 @@ void cDecoder264::fmoGenerateType6MapUnitMap (uint32_t PicSizeInMapUnits ) {
     mapUnitToSliceGroupMap[i] = activePps->sliceGroupId[i];
   }
 //}}}
+
 //{{{
 int cDecoder264::fmoGenerateMapUnitToSliceGroupMap (cSlice* slice) {
 // Generates mapUnitToSliceGroupMap
@@ -2509,22 +2470,17 @@ int cDecoder264::fmoGenerateMapUnitToSliceGroupMap (cSlice* slice) {
       printf ("Illegal sliceGroupMapType %d , exit \n", (int) activePps->sliceGroupMapType);
       exit (-1);
     }
+
   return 0;
   }
 //}}}
 //{{{
-// Generates mbToSliceGroupMap from mapUnitToSliceGroupMap
 int cDecoder264::fmoGenerateMbToSliceGroupMap (cSlice *slice) {
+// Generates mbToSliceGroupMap from mapUnitToSliceGroupMap
 
   // allocate memory for mbToSliceGroupMap
-  if (mbToSliceGroupMap)
-    free (mbToSliceGroupMap);
-
-  if ((mbToSliceGroupMap = (int*)malloc ((picSizeInMbs) * sizeof (int))) == NULL) {
-    printf ("cannot allocate %d bytes for mbToSliceGroupMap, exit\n",
-            (int) ((picSizeInMbs) * sizeof (int)));
-    exit (-1);
-    }
+  free (mbToSliceGroupMap);
+  mbToSliceGroupMap = (int*)malloc ((picSizeInMbs) * sizeof (int));
 
   if ((activeSps->frameMbOnly)|| slice->fieldPic) {
     int* mbToSliceGroupMap1 = mbToSliceGroupMap;
@@ -2539,13 +2495,13 @@ int cDecoder264::fmoGenerateMbToSliceGroupMap (cSlice *slice) {
     else
       for (uint32_t i = 0; i < picSizeInMbs; i++)
         mbToSliceGroupMap[i] = mapUnitToSliceGroupMap[(i/(2*coding.picWidthMbs)) *
-                                        coding.picWidthMbs + (i%coding.picWidthMbs)];
+                                 coding.picWidthMbs + (i%coding.picWidthMbs)];
     }
 
   return 0;
   }
 //}}}
-
+//}}}
 //{{{
 void cDecoder264::setCoding() {
 
