@@ -14,73 +14,73 @@ using namespace std;
 
 namespace {
   //{{{
-  int quant_org[16] = {
-  16,16,16,16,
-  16,16,16,16,
-  16,16,16,16,
-  16,16,16,16
-  };
+  int kQuantOrg[16] = {
+    16, 16, 16, 16,
+    16, 16, 16, 16,
+    16, 16, 16, 16,
+    16, 16, 16, 16
+    };
   //}}}
   //{{{
-  int quant8_org[64] = {
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16,
-  16,16,16,16,16,16,16,16
-  };
+  int kQuant8Org[64] = {
+    16, 16, 16, 16, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 16, 16
+    };
   //}}}
   //{{{
-  int quant_intra_default[16] = {
-     6,13,20,28,
-    13,20,28,32,
-    20,28,32,37,
-    28,32,37,42
-  };
+  int kQuantIntraDefault[16] = {
+     6, 13, 20, 28,
+    13, 20, 28, 32,
+    20, 28, 32, 37,
+    28, 32, 37, 42
+    };
   //}}}
   //{{{
-  int quant_inter_default[16] = {
-    10,14,20,24,
-    14,20,24,27,
-    20,24,27,30,
-    24,27,30,34
-  };
+  int kQuantInterDefault[16] = {
+    10, 14, 20, 24,
+    14, 20, 24, 27,
+    20, 24, 27, 30,
+    24, 27, 30, 34
+    };
   //}}}
   //{{{
-  int quant8_intra_default[64] = {
-   6,10,13,16,18,23,25,27,
-  10,11,16,18,23,25,27,29,
-  13,16,18,23,25,27,29,31,
-  16,18,23,25,27,29,31,33,
-  18,23,25,27,29,31,33,36,
-  23,25,27,29,31,33,36,38,
-  25,27,29,31,33,36,38,40,
-  27,29,31,33,36,38,40,42
-  };
+  int kQuant8IntraDefault[64] = {
+     6,10,13,16,18,23,25,27,
+    10,11,16,18,23,25,27,29,
+    13,16,18,23,25,27,29,31,
+    16,18,23,25,27,29,31,33,
+    18,23,25,27,29,31,33,36,
+    23,25,27,29,31,33,36,38,
+    25,27,29,31,33,36,38,40,
+    27,29,31,33,36,38,40,42
+    };
   //}}}
   //{{{
-  int quant8_inter_default[64] = {
-   9,13,15,17,19,21,22,24,
-  13,13,17,19,21,22,24,25,
-  15,17,19,21,22,24,25,27,
-  17,19,21,22,24,25,27,28,
-  19,21,22,24,25,27,28,30,
-  21,22,24,25,27,28,30,32,
-  22,24,25,27,28,30,32,33,
-  24,25,27,28,30,32,33,35
-  };
+  int kQuant8InterDefault[64] = {
+     9,13,15,17,19,21,22,24,
+    13,13,17,19,21,22,24,25,
+    15,17,19,21,22,24,25,27,
+    17,19,21,22,24,25,27,28,
+    19,21,22,24,25,27,28,30,
+    21,22,24,25,27,28,30,32,
+    22,24,25,27,28,30,32,33,
+    24,25,27,28,30,32,33,35
+    };
   //}}}
 
   //{{{
   void setDequant4x4 (int (*InvLevelScale4x4)[4], const int (*dequant)[4], int* qmatrix) {
 
     for (int j = 0; j < 4; j++) {
-      *(*InvLevelScale4x4      ) = *(*dequant      ) * *qmatrix++;
-      *(*InvLevelScale4x4   + 1) = *(*dequant   + 1) * *qmatrix++;
-      *(*InvLevelScale4x4   + 2) = *(*dequant   + 2) * *qmatrix++;
+      *(*InvLevelScale4x4) = *(*dequant) * *qmatrix++;
+      *(*InvLevelScale4x4 + 1) = *(*dequant + 1) * *qmatrix++;
+      *(*InvLevelScale4x4 + 2) = *(*dequant + 2) * *qmatrix++;
       *(*InvLevelScale4x4++ + 3) = *(*dequant++ + 3) * *qmatrix++;
       }
     }
@@ -89,13 +89,13 @@ namespace {
   void setDequant8x8 (int (*InvLevelScale8x8)[8], const int (*dequant)[8], int* qmatrix) {
 
     for (int j = 0; j < 8; j++) {
-      *(*InvLevelScale8x8      ) = *(*dequant      ) * *qmatrix++;
-      *(*InvLevelScale8x8   + 1) = *(*dequant   + 1) * *qmatrix++;
-      *(*InvLevelScale8x8   + 2) = *(*dequant   + 2) * *qmatrix++;
-      *(*InvLevelScale8x8   + 3) = *(*dequant   + 3) * *qmatrix++;
-      *(*InvLevelScale8x8   + 4) = *(*dequant   + 4) * *qmatrix++;
-      *(*InvLevelScale8x8   + 5) = *(*dequant   + 5) * *qmatrix++;
-      *(*InvLevelScale8x8   + 6) = *(*dequant   + 6) * *qmatrix++;
+      *(*InvLevelScale8x8) = *(*dequant      ) * *qmatrix++;
+      *(*InvLevelScale8x8 + 1) = *(*dequant + 1) * *qmatrix++;
+      *(*InvLevelScale8x8 + 2) = *(*dequant + 2) * *qmatrix++;
+      *(*InvLevelScale8x8 + 3) = *(*dequant + 3) * *qmatrix++;
+      *(*InvLevelScale8x8 + 4) = *(*dequant + 4) * *qmatrix++;
+      *(*InvLevelScale8x8 + 5) = *(*dequant + 5) * *qmatrix++;
+      *(*InvLevelScale8x8 + 6) = *(*dequant  + 6) * *qmatrix++;
       *(*InvLevelScale8x8++ + 7) = *(*dequant++ + 7) * *qmatrix++;
       }
     }
@@ -125,25 +125,19 @@ namespace {
     sSyntaxElement se;
     sDataPartition *dataPartition = NULL;
     if (!IS_I16MB (mb)) {
-      //=====   C B P   =====
-      se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-        ? SE_CBP_INTRA
-        : SE_CBP_INTER;
+      se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
 
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-
-      if (dataPartition->bitStream.errorFlag) {
+      if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-          ? slice->linfoCbpIntra
-          : slice->linfoCbpInter;
-        }
+          ? slice->linfoCbpIntra : slice->linfoCbpInter;
       else
         se.reading = readCbpCabac;
 
       dataPartition->readSyntaxElement(mb, &se, dataPartition);
       mb->codedBlockPattern = codedBlockPattern = se.value1;
 
-      //============= Transform size flag for INTER MBs =============
+      // Transform size flag for INTER MBs 
       need_transform_sizeFlag = (((mb->mbType >= 1 && mb->mbType <= 3)||
         (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
         (mb->noMbPartLessThan8x8Flag))
@@ -286,18 +280,13 @@ namespace {
     sSyntaxElement se;
     sDataPartition* dataPartition = NULL;
     if (!IS_I16MB (mb)) {
-      //=====   C B P   =====
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-        ? SE_CBP_INTRA
-        : SE_CBP_INTER;
+        ? SE_CBP_INTRA : SE_CBP_INTER;
 
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-
-      if (dataPartition->bitStream.errorFlag) {
+      if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-          ? slice->linfoCbpIntra
-          : slice->linfoCbpInter;
-        }
+          ? slice->linfoCbpIntra : slice->linfoCbpInter;
       else
         se.reading = readCbpCabac;
 
@@ -520,14 +509,11 @@ namespace {
     if (!IS_I16MB (mb)) {
       // codedBlockPattern
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-                  ? SE_CBP_INTRA
-                  : SE_CBP_INTER;
+                  ? SE_CBP_INTRA : SE_CBP_INTER;
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-      if (dataPartition->bitStream.errorFlag) {
+      if (dataPartition->bitStream.errorFlag) 
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-                       ? slice->linfoCbpIntra
-                       : slice->linfoCbpInter;
-        }
+                       ? slice->linfoCbpIntra : slice->linfoCbpInter;
       else
         se.reading = readCbpCabac;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -839,16 +825,12 @@ namespace {
     if (!IS_I16MB (mb)) {
       int need_transform_sizeFlag;
       // CBP
-      se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-        ? SE_CBP_INTRA
-        : SE_CBP_INTER;
+      se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
 
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-      if (dataPartition->bitStream.errorFlag) {
+      if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-          ? slice->linfoCbpIntra
-          : slice->linfoCbpInter;
-        }
+          ? slice->linfoCbpIntra : slice->linfoCbpInter;
       else
         se.reading = readCbpCabac;
       dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -1270,8 +1252,7 @@ namespace {
     sDataPartition* dataPartition = NULL;
 
     if (!IS_I16MB (mb)) {
-      se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-        ? SE_CBP_INTRA : SE_CBP_INTER;
+      se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->linfoCbpIntra : slice->linfoCbpInter;
@@ -2064,7 +2045,7 @@ void cSlice::setQuantParams() {
 
   if (!pps->hasPicScalingMatrix && !sps->hasSeqScalingMatrix) {
     for (int i = 0; i < 12; i++)
-      qmatrix[i] = (i < 6) ? quant_org : quant8_org;
+      qmatrix[i] = (i < 6) ? kQuantOrg : kQuant8Org;
     }
   else {
     int n_ScalingList = (sps->chromaFormatIdc != YUV444) ? 8 : 12;
@@ -2075,15 +2056,15 @@ void cSlice::setQuantParams() {
           if (!sps->hasSeqScalingList[i]) {
             // fall-back rule A
             if (i == 0)
-              qmatrix[i] = quant_intra_default;
+              qmatrix[i] = kQuantIntraDefault;
             else if (i == 3)
-              qmatrix[i] = quant_inter_default;
+              qmatrix[i] = kQuantInterDefault;
             else
               qmatrix[i] = qmatrix[i-1];
             }
           else {
             if (sps->useDefaultScalingMatrix4x4[i])
-              qmatrix[i] = (i<3) ? quant_intra_default : quant_inter_default;
+              qmatrix[i] = (i<3) ? kQuantIntraDefault : kQuantInterDefault;
             else
               qmatrix[i] = sps->scalingList4x4[i];
           }
@@ -2092,15 +2073,15 @@ void cSlice::setQuantParams() {
           if (!sps->hasSeqScalingList[i]) {
             // fall-back rule A
             if (i == 6)
-              qmatrix[i] = quant8_intra_default;
+              qmatrix[i] = kQuant8IntraDefault;
             else if (i == 7)
-              qmatrix[i] = quant8_inter_default;
+              qmatrix[i] = kQuant8InterDefault;
             else
               qmatrix[i] = qmatrix[i-2];
             }
           else {
             if (sps->useDefaultScalingMatrix8x8[i-6])
-              qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
+              qmatrix[i] = (i==6 || i==8 || i==10) ? kQuant8IntraDefault:kQuant8InterDefault;
             else
               qmatrix[i] = sps->scalingList8x8[i-6];
             }
@@ -2116,18 +2097,18 @@ void cSlice::setQuantParams() {
             // fall-back rule B
             if (i == 0) {
               if (!sps->hasSeqScalingMatrix)
-                qmatrix[i] = quant_intra_default;
+                qmatrix[i] = kQuantIntraDefault;
               }
             else if (i == 3) {
               if (!sps->hasSeqScalingMatrix)
-                qmatrix[i] = quant_inter_default;
+                qmatrix[i] = kQuantInterDefault;
               }
             else
               qmatrix[i] = qmatrix[i-1];
             }
           else {
             if (pps->useDefaultScalingMatrix4x4Flag[i])
-              qmatrix[i] = (i<3) ? quant_intra_default:quant_inter_default;
+              qmatrix[i] = (i<3) ? kQuantIntraDefault:kQuantInterDefault;
             else
               qmatrix[i] = pps->scalingList4x4[i];
             }
@@ -2137,18 +2118,18 @@ void cSlice::setQuantParams() {
             // fall-back rule B
             if (i == 6) {
               if (!sps->hasSeqScalingMatrix)
-                qmatrix[i] = quant8_intra_default;
+                qmatrix[i] = kQuant8IntraDefault;
               }
             else if (i == 7) {
               if (!sps->hasSeqScalingMatrix)
-                qmatrix[i] = quant8_inter_default;
+                qmatrix[i] = kQuant8InterDefault;
               }
             else
               qmatrix[i] = qmatrix[i-2];
             }
           else {
             if (pps->useDefaultScalingMatrix8x8Flag[i-6])
-              qmatrix[i] = (i==6 || i==8 || i==10) ? quant8_intra_default:quant8_inter_default;
+              qmatrix[i] = (i==6 || i==8 || i==10) ? kQuant8IntraDefault:kQuant8InterDefault;
             else
               qmatrix[i] = pps->scalingList8x8[i-6];
             }
