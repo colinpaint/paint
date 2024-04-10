@@ -2336,7 +2336,7 @@ void cSlice::updatePicNum() {
   else {
     int addTop = 0;
     int addBot = 0;
-    if (picStructure == eTopField) 
+    if (picStructure == eTopField)
       addTop = 1;
     else
       addBot = 1;
@@ -2347,10 +2347,18 @@ void cSlice::updatePicNum() {
           dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStoreRefArray[i]->frameNum - maxFrameNum;
         else
           dpb->frameStoreRefArray[i]->frameNumWrap = dpb->frameStoreRefArray[i]->frameNum;
-        if (dpb->frameStoreRefArray[i]->usedRef & 1)
-          dpb->frameStoreRefArray[i]->topField->picNum = (2 * dpb->frameStoreRefArray[i]->frameNumWrap) + addTop;
-        if (dpb->frameStoreRefArray[i]->usedRef & 2)
-          dpb->frameStoreRefArray[i]->botField->picNum = (2 * dpb->frameStoreRefArray[i]->frameNumWrap) + addBot;
+        if (dpb->frameStoreRefArray[i]->usedRef & 1) {
+          if (dpb->frameStoreRefArray[i]->topField)
+            dpb->frameStoreRefArray[i]->topField->picNum = (2 * dpb->frameStoreRefArray[i]->frameNumWrap) + addTop;
+          else
+            cLog::log (LOGERROR, fmt::format ("no topField for {}", i));
+          }
+        if (dpb->frameStoreRefArray[i]->usedRef & 2) {
+          if (dpb->frameStoreRefArray[i]->botField)
+            dpb->frameStoreRefArray[i]->botField->picNum = (2 * dpb->frameStoreRefArray[i]->frameNumWrap) + addBot;
+          else
+            cLog::log (LOGERROR, fmt::format ("no botField for {}", i));
+          }
         }
       }
 
