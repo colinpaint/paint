@@ -319,6 +319,28 @@ struct sCodedBlockPattern {
 //}}}
 //{{{
 struct sDataPartition {
+  // this are really dataPartitionArray routines
+  static const int MAX_CODED_FRAME_SIZE = 2000000;  // bytes for one frame
+  //{{{
+  static sDataPartition* allocDataPartitions (int numPartitions) {
+
+    sDataPartition* dataPartitions = (sDataPartition*)malloc (numPartitions * sizeof(sDataPartition));
+    for (int i = 0; i < numPartitions; ++i)
+      dataPartitions[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (MAX_CODED_FRAME_SIZE);
+
+    return dataPartitions;
+    }
+  //}}}
+  //{{{
+  static void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions) {
+
+    for (int i = 0; i < numPartitions; ++i)
+      free (dataPartitions[i].bitStream.bitStreamBuffer);
+
+    free (dataPartitions);
+    }
+  //}}}
+
   cBitStream   bitStream;
   cCabacDecode cabacDecode;
 
@@ -469,6 +491,7 @@ public:
   int      ppsId = INT_MAX;
   };
 //}}}
+
 //{{{
 struct sCoding {
   int profileIdc;
@@ -584,6 +607,7 @@ struct sDebug {
   std::string outString;
   };
 //}}}
+
 //{{{
 class cDecoder264 {
 public:
@@ -603,6 +627,18 @@ public:
   static cDecoder264* open (sParam* param, uint8_t* chunk, size_t chunkSize);
   static void error (const std::string& text);
   ~cDecoder264();
+
+  void reset_ecFlags();
+  int setEcFlag (int se);
+  int get_concealed_element (sSyntaxElement* se);
+
+  int initFmo (cSlice* slice);
+  int closeFmo();
+  int fmoGetNumberOfSliceGroup();
+  int fmoGetLastMBOfPicture();
+  int fmoGetLastMBInSliceGroup (int SliceGroup);
+  int fmoGetSliceGroupId (int mb);
+  int fmoGetNextMBNr (int CurrentMbNr);
 
   int decodeOneFrame (sDecodedPic** decPicList);
   void finish (sDecodedPic** decPicList);
@@ -783,6 +819,16 @@ private:
 
   void mbAffPostProc();
 
+  void fmoGenerateType0MapUnitMap (uint32_t PicSizeInMapUnits);
+  void fmoGenerateType1MapUnitMap (uint32_t PicSizeInMapUnits);
+  void fmoGenerateType2MapUnitMap (uint32_t PicSizeInMapUnits);
+  void fmoGenerateType3MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice);
+  void fmoGenerateType4MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice);
+  void fmoGenerateType5MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice);
+  void fmoGenerateType6MapUnitMap (uint32_t PicSizeInMapUnits);
+  int fmoGenerateMapUnitToSliceGroupMap (cSlice* slice);
+  int fmoGenerateMbToSliceGroupMap (cSlice* slice);
+
   void setCoding();
   void setCodingParam (cSps* sps);
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
@@ -815,5 +861,3 @@ private:
   void endDecodeFrame();
   };
 //}}}
-sDataPartition* allocDataPartitions (int numPartitions);
-void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions);

@@ -5,7 +5,6 @@
 #include "cCabacDecode.h"
 #include "cabac.h"
 #include "cavlcRead.h"
-#include "fmo.h"
 #include "intraPred.h"
 #include "macroblock.h"
 #include "mcPred.h"
@@ -5335,7 +5334,7 @@ bool cSlice::endMacroBlockDecode (int eos_bit) {
   if (mbIndex == decoder->picSizeInMbs - 1)
     return true;
   else {
-    mbIndex = FmoGetNextMBNr (decoder, mbIndex);
+    mbIndex = decoder->fmoGetNextMBNr (mbIndex);
     if (mbIndex == -1) // End of cSlice group, MUST be end of slice
       return true;
 

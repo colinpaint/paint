@@ -147,7 +147,7 @@ bool cPps::isEqual (cPps& pps) {
 //{{{
 int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
-  sDataPartition* dataPartition = allocDataPartitions (1);
+  sDataPartition* dataPartition = sDataPartition::allocDataPartitions (1);
   dataPartition->bitStream.errorFlag = 0;
   dataPartition->bitStream.readLen = dataPartition->bitStream.bitStreamOffset = 0;
   memcpy (dataPartition->bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
@@ -157,7 +157,7 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   cPps pps = { 0 };
   pps.naluLen = nalu->len;
   pps.readFromStream (decoder, dataPartition);
-  freeDataPartitions (dataPartition, 1);
+  sDataPartition::freeDataPartitions (dataPartition, 1);
 
   if (decoder->pps[pps.id].ok)
     if (!pps.isEqual (decoder->pps[pps.id]))

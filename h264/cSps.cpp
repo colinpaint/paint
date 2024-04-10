@@ -85,7 +85,7 @@ string cSps::getString() {
 //{{{
 int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
-  sDataPartition* dataPartition = allocDataPartitions (1);
+  sDataPartition* dataPartition = sDataPartition::allocDataPartitions (1);
   dataPartition->bitStream.errorFlag = 0;
   dataPartition->bitStream.readLen = dataPartition->bitStream.bitStreamOffset = 0;
   memcpy (dataPartition->bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len-1);
@@ -94,7 +94,7 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   cSps sps;
   sps.naluLen = nalu->len;
   sps.readFromStream (decoder, dataPartition);
-  freeDataPartitions (dataPartition, 1);
+  sDataPartition::freeDataPartitions (dataPartition, 1);
 
   if (!decoder->sps[sps.id].isEqual (sps))
     cLog::log (LOGINFO, fmt::format ("-----> cSps::readNalu new sps id:%d", sps.id));
