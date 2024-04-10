@@ -10,8 +10,6 @@ public:
   void flushDpb();
   void freeDpb();
 
-  void storePictureDpb (sPicture* picture);
-
   bool isInitDone() const { return initDone; }
   uint32_t getSize() const { return usedSize; };
   uint32_t getAllocatedSize() const { return allocatedSize; };
@@ -22,6 +20,8 @@ public:
 
   void setSize (uint32_t size) { usedSize = size; };
 
+  void storePicture (sPicture* picture);
+
   // vars
   cDecoder264*  decoder = nullptr;
 
@@ -30,11 +30,10 @@ public:
   int           lastOutPoc = 0;
   int           dpbPoc[100] = {0};
 
+  sPicture*     noRefPicture = nullptr;
   cFrameStore** frameStoreArray = nullptr;
   cFrameStore** frameStoreRefArray = nullptr;
   cFrameStore** frameStoreLongTermRefArray = nullptr;
-
-  sPicture*     noRefPicture = nullptr;
 
 private:
   int removeUnusedDpb();
@@ -78,5 +77,5 @@ private:
   int           numRefFrames = 0;
   int           maxLongTermPicIndex = 0;
 
-  cFrameStore* lastPictureFrameStore = nullptr;
+  cFrameStore*  lastPictureFrameStore = nullptr;
   };

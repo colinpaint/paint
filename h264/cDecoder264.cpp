@@ -4320,7 +4320,7 @@ void cDecoder264::endDecodeFrame() {
   int qp = picture->qp;
   int picNum = picture->picNum;
   int isIdr = picture->isIDR;
-  dpb.storePictureDpb (picture);
+  dpb.storePicture (picture);
   picture = NULL;
 
   if (lastHasMmco5)

@@ -283,8 +283,74 @@ void cDpb::flushDpb() {
   updateInfo();
   }
 //}}}
+
 //{{{
-void cDpb::storePictureDpb (sPicture* picture) {
+sPicture* cDpb::getShortTermPic (cSlice* slice, int picNum) {
+
+  for (uint32_t i = 0; i < refFramesInBuffer; i++) {
+    if (slice->picStructure == eFrame) {
+      if (frameStoreRefArray[i]->usedRef == 3)
+        if (!frameStoreRefArray[i]->frame->usedLongTermRef &&
+            (frameStoreRefArray[i]->frame->picNum == picNum))
+          return frameStoreRefArray[i]->frame;
+      }
+    else {
+      if (frameStoreRefArray[i]->usedRef & 1)
+        if (!frameStoreRefArray[i]->topField->usedLongTermRef &&
+            (frameStoreRefArray[i]->topField->picNum == picNum))
+          return frameStoreRefArray[i]->topField;
+
+      if (frameStoreRefArray[i]->usedRef & 2)
+        if (!frameStoreRefArray[i]->botField->usedLongTermRef &&
+            (frameStoreRefArray[i]->botField->picNum == picNum))
+          return frameStoreRefArray[i]->botField;
+      }
+    }
+
+  return slice->decoder->dpb.noRefPicture;
+  }
+//}}}
+//{{{
+sPicture* cDpb::getLongTermPic (cSlice* slice, int picNum) {
+
+  for (uint32_t i = 0; i < longTermRefFramesInBuffer; i++) {
+    if (slice->picStructure == eFrame) {
+      if (frameStoreLongTermRefArray[i]->usedRef == 3)
+        if ((frameStoreLongTermRefArray[i]->frame->usedLongTermRef) &&
+            (frameStoreLongTermRefArray[i]->frame->longTermPicNum == picNum))
+          return frameStoreLongTermRefArray[i]->frame;
+      }
+
+    else {
+      if (frameStoreLongTermRefArray[i]->usedRef & 1)
+        if ((frameStoreLongTermRefArray[i]->topField->usedLongTermRef) &&
+            (frameStoreLongTermRefArray[i]->topField->longTermPicNum == picNum))
+          return frameStoreLongTermRefArray[i]->topField;
+
+      if (frameStoreLongTermRefArray[i]->usedRef & 2)
+        if ((frameStoreLongTermRefArray[i]->botField->usedLongTermRef) &&
+            (frameStoreLongTermRefArray[i]->botField->longTermPicNum == picNum))
+          return frameStoreLongTermRefArray[i]->botField;
+      }
+    }
+
+  return NULL;
+  }
+//}}}
+//{{{
+sPicture* cDpb::getLastPicRefFromDpb() {
+
+  for (int i = usedSize-1; i >= 0; i--)
+    if (frameStoreArray[i]->isUsed == 3)
+      if (frameStoreArray[i]->frame->usedForRef && !frameStoreArray[i]->frame->usedLongTermRef)
+        return frameStoreArray[i]->frame;
+
+  return NULL;
+  }
+//}}}
+
+//{{{
+void cDpb::storePicture (sPicture* picture) {
 
   // if frame, check for new store,
   decoder->lastHasMmco5 = 0;
@@ -392,71 +458,6 @@ void cDpb::storePictureDpb (sPicture* picture) {
    updateInfo();
   if (decoder->param.dpbDebug)
     dump();
-  }
-//}}}
-
-//{{{
-sPicture* cDpb::getShortTermPic (cSlice* slice, int picNum) {
-
-  for (uint32_t i = 0; i < refFramesInBuffer; i++) {
-    if (slice->picStructure == eFrame) {
-      if (frameStoreRefArray[i]->usedRef == 3)
-        if (!frameStoreRefArray[i]->frame->usedLongTermRef &&
-            (frameStoreRefArray[i]->frame->picNum == picNum))
-          return frameStoreRefArray[i]->frame;
-      }
-    else {
-      if (frameStoreRefArray[i]->usedRef & 1)
-        if (!frameStoreRefArray[i]->topField->usedLongTermRef &&
-            (frameStoreRefArray[i]->topField->picNum == picNum))
-          return frameStoreRefArray[i]->topField;
-
-      if (frameStoreRefArray[i]->usedRef & 2)
-        if (!frameStoreRefArray[i]->botField->usedLongTermRef &&
-            (frameStoreRefArray[i]->botField->picNum == picNum))
-          return frameStoreRefArray[i]->botField;
-      }
-    }
-
-  return slice->decoder->dpb.noRefPicture;
-  }
-//}}}
-//{{{
-sPicture* cDpb::getLongTermPic (cSlice* slice, int picNum) {
-
-  for (uint32_t i = 0; i < longTermRefFramesInBuffer; i++) {
-    if (slice->picStructure == eFrame) {
-      if (frameStoreLongTermRefArray[i]->usedRef == 3)
-        if ((frameStoreLongTermRefArray[i]->frame->usedLongTermRef) &&
-            (frameStoreLongTermRefArray[i]->frame->longTermPicNum == picNum))
-          return frameStoreLongTermRefArray[i]->frame;
-      }
-
-    else {
-      if (frameStoreLongTermRefArray[i]->usedRef & 1)
-        if ((frameStoreLongTermRefArray[i]->topField->usedLongTermRef) &&
-            (frameStoreLongTermRefArray[i]->topField->longTermPicNum == picNum))
-          return frameStoreLongTermRefArray[i]->topField;
-
-      if (frameStoreLongTermRefArray[i]->usedRef & 2)
-        if ((frameStoreLongTermRefArray[i]->botField->usedLongTermRef) &&
-            (frameStoreLongTermRefArray[i]->botField->longTermPicNum == picNum))
-          return frameStoreLongTermRefArray[i]->botField;
-      }
-    }
-
-  return NULL;
-  }
-//}}}
-//{{{
-sPicture* cDpb::getLastPicRefFromDpb() {
-
-  for (int i = usedSize-1; i >= 0; i--)
-    if (frameStoreArray[i]->isUsed == 3)
-      if (frameStoreArray[i]->frame->usedForRef && !frameStoreArray[i]->frame->usedLongTermRef)
-        return frameStoreArray[i]->frame;
-
-  return NULL;
   }
 //}}}
 

@@ -173,7 +173,7 @@ void fillFrameNumGap (cDecoder264* decoder, cSlice* slice) {
     picture->botPoc = slice->botPoc;
     picture->framePoc = slice->framePoc;
     picture->poc = slice->framePoc;
-    slice->dpb->storePictureDpb (picture);
+    slice->dpb->storePicture (picture);
 
     decoder->preFrameNum = unusedShortTermFrameNum;
     unusedShortTermFrameNum = (unusedShortTermFrameNum + 1) % decoder->coding.maxFrameNum;

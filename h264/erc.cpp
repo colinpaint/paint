@@ -1502,7 +1502,7 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
       decoder->lastRefPicPoc = picture->poc;
       }
 
-    decoder->dpb.storePictureDpb (picture);
+    decoder->dpb.storePicture (picture);
     picture = NULL;
 
     decoder->preFrameNum = UnusedShortTermFrameNum;
