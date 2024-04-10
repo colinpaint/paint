@@ -3488,15 +3488,16 @@ void cDecoder264::writeUnpairedField (cFrameStore* frameStore) {
 void cDecoder264::flushDirectOutput() {
 
   writeUnpairedField (outBuffer);
+
   freePicture (outBuffer->frame);
-
   outBuffer->frame = NULL;
+  
   freePicture (outBuffer->topField);
-
   outBuffer->topField = NULL;
+  
   freePicture (outBuffer->botField);
-
   outBuffer->botField = NULL;
+  
   outBuffer->isUsed = 0;
   }
 //}}}

@@ -1215,25 +1215,20 @@ public:
     ImGui::SetCursorPos ({3.f,ImGui::GetIO().DisplaySize.y - menuHeight});
     ImGui::BeginChild ("menu", {0.f,menuHeight}, ImGuiChildFlags_None, ImGuiWindowFlags_NoBackground);
 
-    // count debug lines for nextTime
-    mDebugLines = 0;
+    size_t debugLines = 0;
     cDecoder264* decoder = testApp.getDecoder();
     if (decoder) {
       //{{{  draw decoder info
       ImGui::PushFont (testApp.getMonoFont());
 
       ImGui::TextColored (kWhite, decoder->debug.profileString.c_str());
-      mDebugLines++;
-
-      for (auto infoLine : decoder->debug.dpbStrings)
-        ImGui::TextColored (kWhite, infoLine.c_str());
-      mDebugLines += decoder->debug.dpbStrings.size();
+      debugLines++;
 
       int spsIndex = 0;
       while (decoder->sps[spsIndex].ok) {
         bool active = &decoder->sps[spsIndex] == decoder->activeSps;
         ImGui::TextColored (active ? kYellow : kGrey, decoder->sps[spsIndex].getString().c_str());
-        mDebugLines++;
+        debugLines++;
         spsIndex++;
         }
 
@@ -1241,14 +1236,18 @@ public:
       while (decoder->pps[ppsIndex].ok) {
         bool active = &decoder->pps[ppsIndex] == decoder->activePps;
         ImGui::TextColored (active ? kYellow : kGrey, decoder->pps[ppsIndex].getString().c_str());
-        mDebugLines++;
+        debugLines++;
         ppsIndex++;
         }
 
       ImGui::TextColored (getSliceColor (decoder->debug.sliceType), decoder->debug.sliceString.c_str());
       ImGui::SameLine();
       ImGui::TextColored (getSliceColor (decoder->debug.outSliceType), decoder->debug.outString.c_str());
-      mDebugLines++;
+      debugLines++;
+
+      for (auto infoLine : decoder->debug.dpbStrings)
+        ImGui::TextColored (kWhite, infoLine.c_str());
+      debugLines += decoder->debug.dpbStrings.size();
 
       ImGui::PopFont();
       }
@@ -1317,9 +1316,9 @@ public:
         decoder->param.deblock = !decoder->param.deblock;
       }
       //}}}
-    mDebugLines += 4;
-
     ImGui::EndChild();
+
+    mDebugLines = max (mDebugLines, debugLines+4);
 
     ImGui::End();
     keyboard (testApp);
