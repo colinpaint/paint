@@ -154,7 +154,7 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   dataPartition->bitStream.bitStreamLen = nalu->RBSPtoSODB (dataPartition->bitStream.bitStreamBuffer);
   dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
 
-  cPps pps = { 0 };
+  cPps pps;
   pps.naluLen = nalu->len;
   pps.readFromStream (decoder, dataPartition);
   sDataPartition::freeDataPartitions (dataPartition, 1);

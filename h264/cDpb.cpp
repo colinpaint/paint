@@ -166,9 +166,10 @@ void cDpb::initDpb (cDecoder264* decoder, int type) {
     freeDpb();
 
   allocatedSize = getDpbSize (decoder) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
-  numRefFrames = decoder->activeSps->numRefFrames;
   if (allocatedSize < decoder->activeSps->numRefFrames)
     cDecoder264::error ("DPB size at specified level is smaller than the specified number of refFrames");
+
+  numRefFrames = decoder->activeSps->numRefFrames;
 
   usedSize = 0;
   lastPictureFrameStore = NULL;
@@ -187,7 +188,8 @@ void cDpb::initDpb (cDecoder264* decoder, int type) {
 
   // allocate dummyRefPicture
   if (!noRefPicture) {
-    noRefPicture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
+    noRefPicture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, 
+                                 decoder->widthCr, decoder->heightCr, 1);
     noRefPicture->topField = noRefPicture;
     noRefPicture->botField = noRefPicture;
     noRefPicture->frame = noRefPicture;
@@ -195,8 +197,7 @@ void cDpb::initDpb (cDecoder264* decoder, int type) {
 
   decoder->lastHasMmco5 = 0;
 
-  // picture error conceal
-  if ((decoder->concealMode != 0) && !decoder->lastOutFrameStore)
+  if (decoder->concealMode && !decoder->lastOutFrameStore)
     decoder->lastOutFrameStore = new cFrameStore();
 
   updateInfo();

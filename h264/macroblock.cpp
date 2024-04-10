@@ -4252,7 +4252,7 @@ void checkNeighboursNormal (sMacroBlock* mb) {
   const int mb_nr = mb->mbIndexX;
   sBlockPos* picPos = mb->decoder->picPos;
 
-  sBlockPos* p_pic_pos = &picPos[mb_nr    ];
+  sBlockPos* p_pic_pos = &picPos[mb_nr];
   mb->mbIndexA = mb_nr - 1;
   mb->mbIndexD = mb->mbIndexA - picture->picWidthMbs;
   mb->mbIndexB = mb->mbIndexD + 1;
@@ -4282,10 +4282,10 @@ void checkNeighboursMbAff (sMacroBlock* mb) {
   mb->mbIndexC = 2 * (cur_mb_pair - picture->picWidthMbs + 1);
   mb->mbIndexD = 2 * (cur_mb_pair - picture->picWidthMbs - 1);
 
-  mb->mbAvailA = (bool) (isMbAvailable(mb->mbIndexA, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+  mb->mbAvailA = (bool) (isMbAvailable(mb->mbIndexA, mb) && ((picPos[cur_mb_pair].x)!=0));
   mb->mbAvailB = (bool) (isMbAvailable(mb->mbIndexB, mb));
-  mb->mbAvailC = (bool) (isMbAvailable(mb->mbIndexC, mb) && ((picPos[cur_mb_pair + 1].x)!=0));
-  mb->mbAvailD = (bool) (isMbAvailable(mb->mbIndexD, mb) && ((picPos[cur_mb_pair    ].x)!=0));
+  mb->mbAvailC = (bool) (isMbAvailable(mb->mbIndexC, mb) && ((picPos[cur_mb_pair+1].x)!=0));
+  mb->mbAvailD = (bool) (isMbAvailable(mb->mbIndexD, mb) && ((picPos[cur_mb_pair].x)!=0));
 
   mb->mbCabacLeft = (mb->mbAvailA) ? &(slice->mbData[mb->mbIndexA]) : NULL;
   mb->mbCabacUp   = (mb->mbAvailB) ? &(slice->mbData[mb->mbIndexB]) : NULL;
@@ -4648,6 +4648,7 @@ void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 void itrans4x4Lossless (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   cSlice* slice = mb->slice;
+
   sPixel** mbPred = slice->mbPred[plane];
   sPixel** mbRec = slice->mbRec[plane];
   int** mbRess = slice->mbRess [plane];
@@ -4663,6 +4664,7 @@ void itrans4x4Lossless (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) 
 void invResidualTransChroma (sMacroBlock* mb, int uv) {
 
   cSlice* slice = mb->slice;
+
   int** mbRess = slice->mbRess[uv+1];
   int** cof = slice->cof[uv+1];
 
@@ -4698,8 +4700,8 @@ void invResidualTransChroma (sMacroBlock* mb, int uv) {
 //{{{
 void itrans2 (sMacroBlock* mb, eColorPlane plane) {
 
-  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
+  cSlice* slice = mb->slice;
 
   int transform_pl = (decoder->coding.isSeperateColourPlane != 0) ? PLANE_Y : plane;
   int** cof = slice->cof[transform_pl];
@@ -4800,8 +4802,8 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 //{{{
 void itransSpChroma (sMacroBlock* mb, int uv) {
 
-  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
+  cSlice* slice = mb->slice;
 
   int mp1[BLOCK_SIZE];
 
@@ -4895,9 +4897,10 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
 //{{{
 void iTransform (sMacroBlock* mb, eColorPlane plane, int smb) {
 
-  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
+  cSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
+
   sPixel** curr_img;
   int uv = plane-1;
 
@@ -5041,6 +5044,7 @@ void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int 
 void checkDpNeighbours (sMacroBlock* mb) {
 
   cDecoder264* decoder = mb->decoder;
+
   sPixelPos up, left;
   decoder->getNeighbour (mb, -1,  0, decoder->mbSize[1], &left);
   decoder->getNeighbour (mb,  0, -1, decoder->mbSize[1], &up);
