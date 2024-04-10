@@ -21,12 +21,10 @@ namespace {
   //}}}
   }
 
-// picture
 //{{{
 sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
                         int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput) {
 
-  cSps* activeSps = decoder->activeSps;
   sPicture* s = (sPicture*)calloc (1, sizeof(sPicture));
 
   if (picStructure != eFrame) {
@@ -41,7 +39,7 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   s->lumaStride = sizeX + 2 * decoder->coding.lumaPadX;
   s->lumaExpandedHeight = sizeY + 2 * decoder->coding.lumaPadY;
 
-  if (activeSps->chromaFormatIdc != YUV400)
+  if (decoder->activeSps->chromaFormatIdc != YUV400)
     getMem3DpelPad (&(s->imgUV), 2, sizeYcr, sizeXcr, decoder->coding.chromaPadY, decoder->coding.chromaPadX);
 
   s->chromaStride = sizeXcr + 2*decoder->coding.chromaPadX;
@@ -90,10 +88,10 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   s->mbAffFrame = 0;
   s->topPoc = s->botPoc = s->poc = 0;
 
-  if (!decoder->activeSps->frameMbOnly && picStructure != eFrame)
+  if (!decoder->activeSps->frameMbOnly && (picStructure != eFrame))
     for (int j = 0; j < MAX_NUM_SLICES; j++)
       for (int i = 0; i < 2; i++)
-        s->listX[j][i] = (sPicture**)calloc (MAX_LIST_SIZE, sizeof (sPicture*)); // +1 for reordering
+        s->listX[j][i] = (sPicture**)calloc (MAX_LIST_SIZE, sizeof(sPicture*)); // +1 for reordering
 
   return s;
   }
