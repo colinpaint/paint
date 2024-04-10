@@ -527,11 +527,12 @@ void cDpb::removeFrameDpb (int pos) {
 //{{{
 void cDpb::updateInfo() {
 
-  info.clear();
+  decoder->debug.dpbStrings.clear();
 
-  info.push_back (fmt::format ("DPB:{}:{} numRef:{} refFramesInBuffer:{} numLongTerm:{} max:{} last:{}",
-                               usedSize, allocatedSize, numRefFrames, refFramesInBuffer,
-                               longTermRefFramesInBuffer, maxLongTermPicIndex, lastOutPoc));
+  decoder->debug.dpbStrings.push_back (
+    fmt::format ("DPB:{}:{} numRef:{} refFramesInBuffer:{} numLongTerm:{} max:{} last:{}",
+    usedSize, allocatedSize, numRefFrames, refFramesInBuffer,
+    longTermRefFramesInBuffer, maxLongTermPicIndex, lastOutPoc));
 
   for (uint32_t index = 0; index < usedSize; index++) {
     string debugString = fmt::format ("- frame:{:2d} ", frameStoreArray[index]->frameNum);
@@ -556,18 +557,19 @@ void cDpb::updateInfo() {
     if (frameStoreArray[index]->usedLongTermRef)
       debugString += fmt::format (" longTermRef:{}", frameStoreArray[index]->usedRef);
 
-    info.push_back (fmt::format ("{}{}{}",
-                                 debugString,
-                                 frameStoreArray[index]->isOutput ? " out":"",
-                                 (frameStoreArray[index]->isUsed == 3) &&
-                                   frameStoreArray[index]->frame->nonExisting ? " nonExisiting":""));
+    decoder->debug.dpbStrings.push_back (
+      fmt::format ("{}{}{}",
+      debugString,
+      frameStoreArray[index]->isOutput ? " out":"",
+      (frameStoreArray[index]->isUsed == 3) &&
+        frameStoreArray[index]->frame->nonExisting ? " nonExisiting":""));
     }
   }
 //}}}
 //{{{
 void cDpb::dump() {
 
-  for (auto infoLine : info)
+  for (auto infoLine : decoder->debug.dpbStrings)
     cLog::log (LOGINFO, infoLine);
   }
 //}}}

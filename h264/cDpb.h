@@ -1,7 +1,4 @@
 #pragma once
-#include <string>
-#include <vector>
-
 class cFrameStore;
 class cDecoder;
 
@@ -38,8 +35,6 @@ public:
   cFrameStore** frameStoreLongTermRefArray = nullptr;
 
   sPicture*     noRefPicture = nullptr;
-
-  std::vector <std::string> info;
 
 private:
   int removeUnusedDpb();

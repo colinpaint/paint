@@ -5,7 +5,7 @@
 
 #include <cstdint>
 #include <string>
-
+#include <vector>
 #include <string.h> // for memset
 
 #include "win32.h"
@@ -598,6 +598,8 @@ struct sDebug {
   TIME_T      endTime;
 
   std::string profileString;
+
+  std::vector <std::string> dpbStrings;
 
   eSliceType  sliceType;
   std::string sliceTypeString;

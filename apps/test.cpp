@@ -1225,9 +1225,9 @@ public:
       ImGui::TextColored (kWhite, decoder->debug.profileString.c_str());
       mDebugLines++;
 
-      for (auto infoLine : decoder->dpb.info)
+      for (auto infoLine : decoder->debug.dpbStrings)
         ImGui::TextColored (kWhite, infoLine.c_str());
-      mDebugLines += decoder->dpb.info.size();
+      mDebugLines += decoder->debug.dpbStrings.size();
 
       int spsIndex = 0;
       while (decoder->sps[spsIndex].ok) {
