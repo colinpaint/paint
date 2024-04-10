@@ -446,8 +446,9 @@ namespace {
       int upper_bit = default_bit;
       int left_bit = default_bit;
 
-      sPixelPos block_a, block_b;
+      sPixelPos block_a;
       get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      sPixelPos block_b;
       get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
       // get bits from neighboring blocks
@@ -487,8 +488,9 @@ namespace {
       int upper_bit = default_bit;
       int left_bit = default_bit;
 
-      sPixelPos block_a, block_b;
+      sPixelPos block_a;
       get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+      sPixelPos block_b;
       get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
 
       //--- get bits from neighboring blocks ---
@@ -496,14 +498,14 @@ namespace {
         if (mbData[block_b.mbIndex].mbType==IPCM)
           upper_bit = 1;
         else
-          upper_bit = getBit(mbData[block_b.mbIndex].cbp[0].bits, bit);
+          upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits, bit);
         }
 
       if (block_a.ok) {
         if (mbData[block_a.mbIndex].mbType==IPCM)
           left_bit = 1;
         else
-          left_bit = getBit(mbData[block_a.mbIndex].cbp[0].bits, bit);
+          left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits, bit);
         }
 
       int ctx = 2 * upper_bit + left_bit;
@@ -512,23 +514,24 @@ namespace {
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
-        bit = (u_dc ? 17 : 18);
-        mb->cbp[0].bits   |= i64power2(bit);
+        bit = u_dc ? 17 : 18;
+        mb->cbp[0].bits |= i64power2(bit);
         }
       }
       //}}}
     else {
       //{{{  others
-      int u_ac = (!mb->isVblock);
+      int u_ac = !mb->isVblock;
       int j = mb->subblockY;
       int i = mb->subblockX;
-      int bit = (u_ac ? 19 : 35);
+      int bit = u_ac ? 19 : 35;
       int default_bit = (mb->isIntraBlock ? 1 : 0);
       int upper_bit = default_bit;
       int left_bit = default_bit;
 
-      sPixelPos block_a, block_b;
+      sPixelPos block_a;
       get4x4NeighbourBase (mb, i - 1, j, decoder->mbSize[eChroma], &block_a);
+      sPixelPos block_b;
       get4x4NeighbourBase (mb, i, j - 1, decoder->mbSize[eChroma], &block_b);
 
       // get bits from neighboring blocks ---

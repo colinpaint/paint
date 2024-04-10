@@ -1,6 +1,6 @@
 #pragma once
-struct sPicture;
 class cDecoder;
+struct sPicture;
 
 //{{{
 enum eYuvFormat {
@@ -238,13 +238,13 @@ static inline int comparefsByPocdesc (const void* arg1, const void* arg2) {
   }
 //}}}
 //{{{
-static inline int isLongRef (sPicture* picture) { 
-  return picture->usedForRef && picture->usedLongTermRef; 
+static inline int isLongRef (sPicture* picture) {
+  return picture->usedForRef && picture->usedLongTermRef;
   }
 //}}}
 //{{{
-static inline int isShortRef (sPicture* picture) { 
-  return picture->usedForRef && !picture->usedLongTermRef; 
+static inline int isShortRef (sPicture* picture) {
+  return picture->usedForRef && !picture->usedLongTermRef;
   }
 //}}}
 
