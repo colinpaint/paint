@@ -137,7 +137,7 @@ namespace {
       dataPartition->readSyntaxElement(mb, &se, dataPartition);
       mb->codedBlockPattern = codedBlockPattern = se.value1;
 
-      // Transform size flag for INTER MBs 
+      // Transform size flag for INTER MBs
       need_transform_sizeFlag = (((mb->mbType >= 1 && mb->mbType <= 3)||
         (IS_DIRECT(mb) && decoder->activeSps->isDirect8x8inference) ||
         (mb->noMbPartLessThan8x8Flag))
@@ -511,7 +511,7 @@ namespace {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
                   ? SE_CBP_INTRA : SE_CBP_INTER;
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
-      if (dataPartition->bitStream.errorFlag) 
+      if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
                        ? slice->linfoCbpIntra : slice->linfoCbpInter;
       else
@@ -2544,6 +2544,7 @@ void cSlice::reorderShortTerm (int curList, int numRefIndexIXactiveMinus1, int p
 
   sPicture** refPicListX = listX[curList];
   sPicture* picLX = dpb->getShortTermPic (this, picNumLX);
+
   for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
     refPicListX[cIdx] = refPicListX[cIdx - 1];
   refPicListX[(*refIdxLX)++] = picLX;
@@ -2560,6 +2561,7 @@ void cSlice::reorderLongTerm (sPicture** refPicListX, int numRefIndexIXactiveMin
                               int LongTermPicNum, int* refIdxLX) {
 
   sPicture* picLX = dpb->getLongTermPic (this, LongTermPicNum);
+
   for (int cIdx = numRefIndexIXactiveMinus1+1; cIdx > *refIdxLX; cIdx--)
     refPicListX[cIdx] = refPicListX[cIdx - 1];
   refPicListX[(*refIdxLX)++] = picLX;
