@@ -16,7 +16,7 @@ namespace {
       cSlice* slice = mb->slice;
 
       int64_t cbp_mask = (int64_t) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
-      int64_t *cur_cbp = &mb->codedBlockPatterns[plane].blk;
+      int64_t *cur_cbp = &mb->cbp[plane].blk;
 
       // select scan type
       const uint8_t* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
@@ -150,7 +150,7 @@ namespace {
     else
       se->context = (IS_I16MB(mb) ? CR_16AC: CR_4x4);
 
-    int64_t* cbp_blk = &mb->codedBlockPatterns[plane].blk;
+    int64_t* cbp_blk = &mb->cbp[plane].blk;
     for (int blockY = 0; blockY < MB_BLOCK_SIZE; blockY += BLOCK_SIZE_8x8) /* all modes */
       for (int blockX = 0; blockX < MB_BLOCK_SIZE; blockX += BLOCK_SIZE_8x8)
         if (codedBlockPattern & (1 << ((blockY >> 2) + (blockX >> 3))))  // are there any coeff in current block at all
@@ -167,7 +167,7 @@ namespace {
     int start_scan = IS_I16MB (mb)? 1 : 0;
     int blockY, blockX;
     int i, j;
-    int64_t *cbp_blk = &mb->codedBlockPatterns[plane].blk;
+    int64_t *cbp_blk = &mb->cbp[plane].blk;
 
     if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
       se->context = (IS_I16MB(mb) ? LUMA_16AC: LUMA_4x4);
@@ -241,7 +241,7 @@ namespace {
       cSlice* slice = mb->slice;
 
       int64_t cbp_mask = (int64_t) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
-      int64_t* cur_cbp = &mb->codedBlockPatterns[plane].blk;
+      int64_t* cur_cbp = &mb->cbp[plane].blk;
 
       // select scan type
       const uint8_t* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0]

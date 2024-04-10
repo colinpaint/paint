@@ -485,7 +485,7 @@ namespace {
             blkQ = (int16_t) ((idx & 0xFFFC) + (edge >> 2));
             blkP = (int16_t) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
 
-            if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
+            if (((mb->cbp[0].blk & i64power2(blkQ)) != 0) || ((MbP->cbp[0].blk & i64power2(blkP)) != 0))
               StrValue = 2;
             else if (edge && ((mb->mbType == 1)  || (mb->mbType == 2)))
               StrValue = 0; // if internal edge of certain types, we already know StrValue should be 0
@@ -555,7 +555,7 @@ namespace {
                            ((p->mbAffFrame || (p->picStructure!=eFrame))))) ? 4 : 3;
 
           if (mb->isIntraBlock == false && MbP->isIntraBlock == false) {
-            if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
+            if (((mb->cbp[0].blk & i64power2(blkQ)) != 0) || ((MbP->cbp[0].blk & i64power2(blkP)) != 0))
               Strength[idx] = 2 ;
             else {
               // if no coefs, but vector difference >= 1 set Strength=1
@@ -662,7 +662,7 @@ namespace {
           getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[eLuma], &pixP);
           blkQ = (int16_t) ((yQ & 0xFFFC) + (xQ >> 2));
           blkP = (int16_t) ((pixP.y & 0xFFFC) + (pixP.x >> 2));
-          if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
+          if (((mb->cbp[0].blk & i64power2(blkQ)) != 0) || ((MbP->cbp[0].blk & i64power2(blkP)) != 0))
             StrValue = 2;
           else {
             // if no coefs, but vector difference >= 1 set Strength=1
@@ -766,7 +766,7 @@ namespace {
             for (idx = 0 ; idx < MB_BLOCK_SIZE ; idx += BLOCK_SIZE ) {
               blkQ = idx + (edge);
               blkP = idx + (get_x_luma(xQ) >> 2);
-              if ((mb->codedBlockPatterns[0].blk & (i64power2(blkQ) | i64power2(blkP))) != 0)
+              if ((mb->cbp[0].blk & (i64power2(blkQ) | i64power2(blkP))) != 0)
                 StrValue = 2;
               else
                 StrValue = 0; // if internal edge of certain types, then we already know StrValue should be 0
@@ -783,7 +783,7 @@ namespace {
             for (idx = 0 ; idx < MB_BLOCK_SIZE ; idx += BLOCK_SIZE ) {
               blkQ = idx  + (edge);
               blkP = idx  + (get_x_luma(xQ) >> 2);
-              if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
+              if (((mb->cbp[0].blk & i64power2(blkQ)) != 0) || ((MbP->cbp[0].blk & i64power2(blkP)) != 0))
                 StrValue = 2;
               else {
                 // for everything else, if no coefs, but vector difference >= 1 set Strength=1
@@ -875,7 +875,7 @@ namespace {
             for (idx = 0 ; idx < BLOCK_SIZE ; idx ++ ) {
               blkQ = (yQ + 1) + idx;
               blkP = (get_y_luma(yQ) & 0xFFFC) + idx;
-              if ((mb->codedBlockPatterns[0].blk & (i64power2(blkQ) | i64power2(blkP))) != 0)
+              if ((mb->cbp[0].blk & (i64power2(blkQ) | i64power2(blkP))) != 0)
                 StrValue = 2;
               else
                 StrValue = 0; // if internal edge of certain types, we already know StrValue should be 0
@@ -891,7 +891,7 @@ namespace {
             for (idx = 0 ; idx < BLOCK_SIZE ; idx ++) {
               blkQ = (yQ + 1) + idx;
               blkP = (get_y_luma(yQ) & 0xFFFC) + idx;
-              if (((mb->codedBlockPatterns[0].blk & i64power2(blkQ)) != 0) || ((MbP->codedBlockPatterns[0].blk & i64power2(blkP)) != 0))
+              if (((mb->cbp[0].blk & i64power2(blkQ)) != 0) || ((MbP->cbp[0].blk & i64power2(blkP)) != 0))
                 StrValue = 2;
               else {
                 // for everything else, if no coefs, but vector difference >= 1 set Strength=1

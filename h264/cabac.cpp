@@ -90,12 +90,12 @@ namespace {
                                            pos2ctx_last8x4, pos2ctx_last4x4};
   //}}}
   //{{{
-  int readStoreCbpBlockBit444 (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type) {
+  int readCbp444 (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
     sPicture* picture = slice->picture;
-    sTextureContexts* textureInfoContexts = slice->textureInfoContexts;
+    sTextureContexts* textureContexts = slice->textureContexts;
     sMacroBlock* mbData = slice->mbData;
 
     int y_ac        = (type==LUMA_16AC || type==LUMA_8x8 || type==LUMA_8x4 || type==LUMA_4x8 || type==LUMA_4x4
@@ -151,20 +151,20 @@ namespace {
           if(mbData[block_b.mbIndex].mbType==IPCM)
             upper_bit = 1;
           else
-            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_b);
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits, bit + bit_pos_b);
           }
 
         if (block_a.ok) {
           if (mbData[block_a.mbIndex].mbType==IPCM)
             left_bit = 1;
           else
-            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_a);
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits, bit + bit_pos_a);
           }
 
 
         ctx = 2 * upper_bit + left_bit;
         // encode symbol =====
-        codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+        codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
         }
       }
     else if (decoder->coding.isSeperateColourPlane != 0) {
@@ -174,7 +174,7 @@ namespace {
           if(mbData[block_b.mbIndex].mbType == IPCM)
             upper_bit = 1;
           else
-            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_b);
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits,bit+bit_pos_b);
           }
 
 
@@ -182,11 +182,11 @@ namespace {
           if(mbData[block_a.mbIndex].mbType==IPCM)
             left_bit = 1;
           else
-            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_a);
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits,bit+bit_pos_a);
           }
 
         ctx = 2 * upper_bit + left_bit;
-        codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+        codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
         }
       }
 
@@ -199,17 +199,17 @@ namespace {
           upper_bit = 0;
         else {
           if (type == LUMA_8x8)
-            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits8x8, bit + bit_pos_b);
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits8x8, bit + bit_pos_b);
           else if (type == CB_8x8)
-            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[1].bits8x8, bit + bit_pos_b);
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[1].bits8x8, bit + bit_pos_b);
           else if (type == CR_8x8)
-            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[2].bits8x8, bit + bit_pos_b);
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[2].bits8x8, bit + bit_pos_b);
           else if ((type == CB_4x4)||(type == CB_4x8) || (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
-            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[1].bits,bit+bit_pos_b);
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[1].bits,bit+bit_pos_b);
           else if ((type == CR_4x4)||(type == CR_4x8) || (type == CR_8x4) || (type == CR_16AC)||(type == CR_16DC))
-            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[2].bits,bit+bit_pos_b);
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[2].bits,bit+bit_pos_b);
           else
-            upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_b);
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits,bit+bit_pos_b);
           }
         }
 
@@ -222,94 +222,94 @@ namespace {
           left_bit = 0;
         else {
           if (type == LUMA_8x8)
-            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits8x8,bit+bit_pos_a);
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits8x8,bit+bit_pos_a);
           else if (type == CB_8x8)
-            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[1].bits8x8,bit+bit_pos_a);
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[1].bits8x8,bit+bit_pos_a);
           else if (type == CR_8x8)
-            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[2].bits8x8,bit+bit_pos_a);
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[2].bits8x8,bit+bit_pos_a);
           else if ((type == CB_4x4) || (type == CB_4x8) ||
                    (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
-            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[1].bits,bit+bit_pos_a);
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[1].bits,bit+bit_pos_a);
           else if ((type == CR_4x4) || (type==CR_4x8) ||
                    (type == CR_8x4) || (type == CR_16AC) || (type == CR_16DC))
-            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[2].bits,bit+bit_pos_a);
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[2].bits,bit+bit_pos_a);
           else
-            left_bit = getBit (mbData[block_a.mbIndex].codedBlockPatterns[0].bits,bit+bit_pos_a);
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits,bit+bit_pos_a);
           }
         }
 
       ctx = 2 * upper_bit + left_bit;
-      codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
       }
 
     // set bits for current block ---
     bit = (y_dc ? 0 : y_ac ? 1 + j + (i >> 2) : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
     if (codedBlockPatternBit) {
-      sCodedBlockPattern * codedBlockPatterns = mb->codedBlockPatterns;
+      sCodedBlockPattern * cbp = mb->cbp;
       if (type == LUMA_8x8) {
-        codedBlockPatterns[0].bits |= ((int64_t) 0x33 << bit);
+        cbp[0].bits |= ((int64_t) 0x33 << bit);
         if (picture->chromaFormatIdc == YUV444)
-          codedBlockPatterns[0].bits8x8 |= ((int64_t) 0x33 << bit);
+          cbp[0].bits8x8 |= ((int64_t) 0x33 << bit);
         }
       else if (type == CB_8x8) {
-        codedBlockPatterns[1].bits8x8 |= ((int64_t) 0x33 << bit);
-        codedBlockPatterns[1].bits |= ((int64_t) 0x33 << bit);
+        cbp[1].bits8x8 |= ((int64_t) 0x33 << bit);
+        cbp[1].bits |= ((int64_t) 0x33 << bit);
         }
       else if (type == CR_8x8) {
-        codedBlockPatterns[2].bits8x8 |= ((int64_t) 0x33 << bit);
-        codedBlockPatterns[2].bits |= ((int64_t) 0x33 << bit);
+        cbp[2].bits8x8 |= ((int64_t) 0x33 << bit);
+        cbp[2].bits |= ((int64_t) 0x33 << bit);
         }
       else if (type == LUMA_8x4)
-        codedBlockPatterns[0].bits |= ((int64_t) 0x03 << bit);
+        cbp[0].bits |= ((int64_t) 0x03 << bit);
       else if (type == CB_8x4)
-        codedBlockPatterns[1].bits |= ((int64_t) 0x03 << bit);
+        cbp[1].bits |= ((int64_t) 0x03 << bit);
       else if (type == CR_8x4)
-        codedBlockPatterns[2].bits |= ((int64_t) 0x03 << bit);
+        cbp[2].bits |= ((int64_t) 0x03 << bit);
       else if (type == LUMA_4x8)
-        codedBlockPatterns[0].bits |= ((int64_t) 0x11<< bit);
+        cbp[0].bits |= ((int64_t) 0x11<< bit);
       else if (type == CB_4x8)
-        codedBlockPatterns[1].bits |= ((int64_t)0x11<< bit);
+        cbp[1].bits |= ((int64_t)0x11<< bit);
       else if (type == CR_4x8)
-        codedBlockPatterns[2].bits |= ((int64_t)0x11<< bit);
+        cbp[2].bits |= ((int64_t)0x11<< bit);
       else if ((type == CB_4x4) || (type == CB_16AC) || (type == CB_16DC))
-        codedBlockPatterns[1].bits |= i64power2 (bit);
+        cbp[1].bits |= i64power2 (bit);
       else if ((type == CR_4x4) || (type == CR_16AC) || (type == CR_16DC))
-        codedBlockPatterns[2].bits |= i64power2 (bit);
+        cbp[2].bits |= i64power2 (bit);
       else
-        codedBlockPatterns[0].bits |= i64power2 (bit);
+        cbp[0].bits |= i64power2 (bit);
       }
 
     return codedBlockPatternBit;
     }
   //}}}
   //{{{
-  int setCodedBlockPatternBit (sMacroBlock* neighbor_mb) {
+  int setCbp (sMacroBlock* neighbourMb) {
 
-    if (neighbor_mb->mbType == IPCM)
+    if (neighbourMb->mbType == IPCM)
       return 1;
     else
-      return (int)(neighbor_mb->codedBlockPatterns[0].bits & 0x01);
+      return (int)(neighbourMb->cbp[0].bits & 0x01);
     }
   //}}}
   //{{{
-  int setCodedBlockPatternBitAC (sMacroBlock* neighbor_mb, sPixelPos* block) {
+  int setCbpAC (sMacroBlock* neighbourMb, sPixelPos* block) {
 
-    if (neighbor_mb->mbType == IPCM)
+    if (neighbourMb->mbType == IPCM)
       return 1;
     else {
       int bit_pos = 1 + (block->y << 2) + block->x;
-      return getBit (neighbor_mb->codedBlockPatterns[0].bits, bit_pos);
+      return getBit (neighbourMb->cbp[0].bits, bit_pos);
       }
     }
   //}}}
   //{{{
-  int readStoreCbpBlockBitNormal (sMacroBlock* mb, cCabacDecode* cabacDecode, int type) {
+  int readCbpNormal (sMacroBlock* mb, cCabacDecode* cabacDecode, int type) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
-    sMacroBlock* mbData = slice->mbData;
 
-    sTextureContexts* textureInfoContexts = slice->textureInfoContexts;
+    sMacroBlock* mbData = slice->mbData;
+    sTextureContexts* textureContexts = slice->textureContexts;
 
     int codedBlockPatternBit = 1;  // always one for 8x8 mode
     if (type == LUMA_16DC) {
@@ -324,19 +324,19 @@ namespace {
 
       //--- get bits from neighboring blocks ---
       if (block_b.ok)
-        upper_bit = setCodedBlockPatternBit (&mbData[block_b.mbIndex]);
+        upper_bit = setCbp (&mbData[block_b.mbIndex]);
 
       if (block_a.ok)
-        left_bit = setCodedBlockPatternBit (&mbData[block_a.mbIndex]);
+        left_bit = setCbp (&mbData[block_a.mbIndex]);
 
       ctx = 2 * upper_bit + left_bit;
 
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       // set bits for current block ---
       if (codedBlockPatternBit)
-        mb->codedBlockPatterns[0].bits |= 1;
+        mb->cbp[0].bits |= 1;
       }
       //}}}
     else if (type == LUMA_16AC) {
@@ -355,19 +355,19 @@ namespace {
 
       // get bits from neighboring blocks ---
       if (block_b.ok)
-        upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
+        upper_bit = setCbpAC (&mbData[block_b.mbIndex], &block_b);
       if (block_a.ok)
-        left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
+        left_bit = setCbpAC (&mbData[block_a.mbIndex], &block_a);
 
       ctx = 2 * upper_bit + left_bit;
 
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
         bit = 1 + j + (i >> 2);
-        mb->codedBlockPatterns[0].bits |= i64power2(bit);
+        mb->cbp[0].bits |= i64power2(bit);
         }
       }
       //}}}
@@ -388,19 +388,19 @@ namespace {
 
       // get bits from neighboring blocks ---
       if (block_b.ok)
-        upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
+        upper_bit = setCbpAC (&mbData[block_b.mbIndex], &block_b);
 
       if (block_a.ok)
-        left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
+        left_bit = setCbpAC (&mbData[block_a.mbIndex], &block_a);
 
       ctx = 2 * upper_bit + left_bit;
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
         bit = 1 + j + (i >> 2);
-        mb->codedBlockPatterns[0].bits |= ((int64_t) 0x03 << bit   );
+        mb->cbp[0].bits |= ((int64_t) 0x03 << bit   );
         }
       }
       //}}}
@@ -421,19 +421,19 @@ namespace {
 
       // get bits from neighboring blocks ---
       if (block_b.ok)
-        upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
+        upper_bit = setCbpAC (&mbData[block_b.mbIndex], &block_b);
 
       if (block_a.ok)
-        left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
+        left_bit = setCbpAC (&mbData[block_a.mbIndex], &block_a);
 
       ctx = 2 * upper_bit + left_bit;
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
         bit = 1 + j + (i >> 2);
-        mb->codedBlockPatterns[0].bits   |= ((int64_t) 0x11 << bit   );
+        mb->cbp[0].bits   |= ((int64_t) 0x11 << bit   );
         }
       }
       //}}}
@@ -450,21 +450,20 @@ namespace {
       get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
       get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
-      // get bits from neighboring blocks ---
+      // get bits from neighboring blocks
       if (block_b.ok)
-        upper_bit = setCodedBlockPatternBitAC (&mbData[block_b.mbIndex], &block_b);
-
+        upper_bit = setCbpAC (&mbData[block_b.mbIndex], &block_b);
       if (block_a.ok)
-        left_bit = setCodedBlockPatternBitAC (&mbData[block_a.mbIndex], &block_a);
+        left_bit = setCbpAC (&mbData[block_a.mbIndex], &block_a);
 
       int ctx = 2 * upper_bit + left_bit;
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
         bit = 1 + j + (i >> 2);
-        mb->codedBlockPatterns[0].bits   |= i64power2(bit);
+        mb->cbp[0].bits   |= i64power2(bit);
         }
       }
       //}}}
@@ -475,7 +474,7 @@ namespace {
 
       // set bits for current block ---
       int bit = 1 + j + (i >> 2);
-      mb->codedBlockPatterns[0].bits |= ((int64_t) 0x33 << bit   );
+      mb->cbp[0].bits |= ((int64_t) 0x33 << bit   );
       }
       //}}}
     else if (type == CHROMA_DC || type == CHROMA_DC_2x4 || type == CHROMA_DC_4x4) {
@@ -497,24 +496,24 @@ namespace {
         if (mbData[block_b.mbIndex].mbType==IPCM)
           upper_bit = 1;
         else
-          upper_bit = getBit(mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit);
+          upper_bit = getBit(mbData[block_b.mbIndex].cbp[0].bits, bit);
         }
 
       if (block_a.ok) {
         if (mbData[block_a.mbIndex].mbType==IPCM)
           left_bit = 1;
         else
-          left_bit = getBit(mbData[block_a.mbIndex].codedBlockPatterns[0].bits, bit);
+          left_bit = getBit(mbData[block_a.mbIndex].cbp[0].bits, bit);
         }
 
       int ctx = 2 * upper_bit + left_bit;
       // encode symbol =====
-      codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
         // set bits for current block ---
         bit = (u_dc ? 17 : 18);
-        mb->codedBlockPatterns[0].bits   |= i64power2(bit);
+        mb->cbp[0].bits   |= i64power2(bit);
         }
       }
       //}}}
@@ -538,7 +537,7 @@ namespace {
           upper_bit = 1;
         else {
           int bit_pos_b = 4*block_b.y + block_b.x;
-          upper_bit = getBit (mbData[block_b.mbIndex].codedBlockPatterns[0].bits, bit + bit_pos_b);
+          upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits, bit + bit_pos_b);
           }
         }
 
@@ -547,18 +546,18 @@ namespace {
           left_bit = 1;
         else {
           int bit_pos_a = 4*block_a.y + block_a.x;
-          left_bit = getBit(mbData[block_a.mbIndex].codedBlockPatterns[0].bits,bit + bit_pos_a);
+          left_bit = getBit(mbData[block_a.mbIndex].cbp[0].bits,bit + bit_pos_a);
           }
         }
 
       int ctx = 2 * upper_bit + left_bit;
 
       // encode symbol
-      codedBlockPatternBit = cabacDecode->getSymbol (textureInfoContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
       if (codedBlockPatternBit) {
         // set bits for current block ---
         bit = (u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
-        mb->codedBlockPatterns[0].bits |= i64power2(bit);
+        mb->cbp[0].bits |= i64power2(bit);
         }
       }
       //}}}
@@ -567,21 +566,21 @@ namespace {
     }
   //}}}
   //{{{
-  int read_significance_map (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type, int coeff[]) {
+  int readSignificanceMap (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type, int coeff[]) {
 
     cSlice* slice = mb->slice;
+
     int fld = ( slice->picStructure!=eFrame || mb->mbField );
     const uint8_t* pos2ctx_Map = (fld) ? pos2ctx_map_int[type] : pos2ctx_map[type];
     const uint8_t* pos2ctx_Last = pos2ctx_last[type];
 
-    sBiContext*  map_ctx  = slice->textureInfoContexts->mapContexts [fld][type2ctx_map [type]];
-    sBiContext*  last_ctx = slice->textureInfoContexts->lastContexts[fld][type2ctx_last[type]];
+    sBiContext*  map_ctx  = slice->textureContexts->mapContexts [fld][type2ctx_map [type]];
+    sBiContext*  last_ctx = slice->textureContexts->lastContexts[fld][type2ctx_last[type]];
 
     int i;
     int coefCount = 0;
     int i0 = 0;
     int i1 = maxpos[type];
-
 
     if (!c1isdc[type]) {
       ++i0;
@@ -614,11 +613,10 @@ namespace {
     }
   //}}}
   //{{{
-  void read_significant_coefficients (cCabacDecode* cabacDecode, sTextureContexts* textureInfoContexts,
-                                             int type, int* coeff) {
+  void readSignificantCoefs (cCabacDecode* cabacDecode, sTextureContexts* textureContexts, int type, int* coeff) {
 
-    sBiContext* oneContexts = textureInfoContexts->oneContexts[type2ctx_one[type]];
-    sBiContext* absContexts = textureInfoContexts->absContexts[type2ctx_abs[type]];
+    sBiContext* oneContexts = textureContexts->oneContexts[type2ctx_one[type]];
+    sBiContext* absContexts = textureContexts->absContexts[type2ctx_abs[type]];
 
     const int16_t max_type = max_c2[type];
     int i = maxpos[type];
@@ -696,7 +694,7 @@ int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sData
   sBiContext* mbTypeContextCopy[3];
   sBiContext* mbAffContextCopy;
   cCabacDecode* cabacDecodeCopy;
-  sMotionContexts* motionInfoContexts  = slice->motionInfoContexts;
+  sMotionContexts* motionContexts  = slice->motionContexts;
 
   int length;
   cCabacDecode* cabacDecode = &act_dp->cabacDecode;
@@ -721,15 +719,15 @@ int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sData
   // create
   cabacDecodeCopy = (cCabacDecode*)calloc (1, sizeof(cCabacDecode));
   for (int i = 0; i < 3;++i)
-    mbTypeContextCopy[i] = (sBiContext*)calloc(NUM_MB_TYPE_CTX, sizeof(sBiContext));
-  mbAffContextCopy = (sBiContext*)calloc(NUM_MB_AFF_CTX, sizeof(sBiContext));
+    mbTypeContextCopy[i] = (sBiContext*)calloc (NUM_MB_TYPE_CTX, sizeof(sBiContext));
+  mbAffContextCopy = (sBiContext*)calloc (NUM_MB_AFF_CTX, sizeof(sBiContext));
 
   // copy
   memcpy (cabacDecodeCopy,cabacDecode,sizeof(cCabacDecode));
   length = *(cabacDecodeCopy->codeStreamLen) = *(cabacDecode->codeStreamLen);
   for (int i = 0; i < 3;++i)
-    memcpy (mbTypeContextCopy[i], motionInfoContexts->mbTypeContexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContext) );
-  memcpy (mbAffContextCopy, motionInfoContexts->mbAffContexts,NUM_MB_AFF_CTX*sizeof(sBiContext) );
+    memcpy (mbTypeContextCopy[i], motionContexts->mbTypeContexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContext) );
+  memcpy (mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX*sizeof(sBiContext) );
 
   // check_next_mb
   slice->lastDquant = 0;
@@ -747,8 +745,8 @@ int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sData
   memcpy (cabacDecode, cabacDecodeCopy, sizeof(cCabacDecode));
   *(cabacDecode->codeStreamLen) = length;
   for (int i = 0; i < 3; ++i)
-    memcpy (motionInfoContexts->mbTypeContexts[i], mbTypeContextCopy[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
-  memcpy (motionInfoContexts->mbAffContexts, mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext));
+    memcpy (motionContexts->mbTypeContexts[i], mbTypeContextCopy[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
+  memcpy (motionContexts->mbAffContexts, mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext));
 
   checkNeighbourCabac (mb);
 
@@ -770,7 +768,7 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
 
   int length;
   cCabacDecode* cabacDecode = &act_dp->cabacDecode;
-  sMotionContexts* motionInfoContexts = slice->motionInfoContexts;
+  sMotionContexts* motionContexts = slice->motionContexts;
 
   int skip = 0;
   int field = 0;
@@ -791,7 +789,7 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
   checkNeighbourCabac (mb);
 
   // create
-  cabacDecodeCopy = (cCabacDecode*) calloc(1, sizeof(cCabacDecode) );
+  cabacDecodeCopy = (cCabacDecode*)calloc(1, sizeof(cCabacDecode));
   for (int i = 0; i < 3; ++i)
     mbTypeContextCopy[i] = (sBiContext*)calloc (NUM_MB_TYPE_CTX, sizeof(sBiContext) );
   mbAffContextCopy = (sBiContext*)calloc (NUM_MB_AFF_CTX, sizeof(sBiContext) );
@@ -801,8 +799,8 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
   length = *(cabacDecodeCopy->codeStreamLen) = *(cabacDecode->codeStreamLen);
 
   for (int i = 0; i < 3;++i)
-    memcpy (mbTypeContextCopy[i], motionInfoContexts->mbTypeContexts[i], NUM_MB_TYPE_CTX * sizeof(sBiContext) );
-  memcpy (mbAffContextCopy, motionInfoContexts->mbAffContexts, NUM_MB_AFF_CTX * sizeof(sBiContext) );
+    memcpy (mbTypeContextCopy[i], motionContexts->mbTypeContexts[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
+  memcpy (mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX * sizeof(sBiContext));
 
   //  check_next_mb
   slice->lastDquant = 0;
@@ -821,8 +819,8 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
   *(cabacDecode->codeStreamLen) = length;
 
   for (int i = 0; i < 3; ++i)
-    memcpy (motionInfoContexts->mbTypeContexts[i], mbTypeContextCopy[i], NUM_MB_TYPE_CTX * sizeof(sBiContext) );
-  memcpy (motionInfoContexts->mbAffContexts, mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext) );
+    memcpy (motionContexts->mbTypeContexts[i], mbTypeContextCopy[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
+  memcpy (motionContexts->mbAffContexts, mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext));
 
   checkNeighbourCabac (mb);
 
@@ -840,7 +838,7 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
 void readMbTypeInfoCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
-  sMotionContexts* context = slice->motionInfoContexts;
+  sMotionContexts* context = slice->motionContexts;
 
   int actContext;
   int actSym;
@@ -965,29 +963,29 @@ void readMbTypeInfoCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
 void readMbTypeInfoCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
-  sMotionContexts* ctx = slice->motionInfoContexts;
+  sMotionContexts* motionContexts = slice->motionContexts;
 
   int actContext;
   int actSym;
   int modeSym;
   int curMbType;
 
-  sBiContext* mbTypeContexts = ctx->mbTypeContexts[1];
-  if (cabacDecode->getSymbol (&mbTypeContexts[4] )) {
-    if (cabacDecode->getSymbol (&mbTypeContexts[7] ))
+  sBiContext* mbTypeContexts = motionContexts->mbTypeContexts[1];
+  if (cabacDecode->getSymbol (&mbTypeContexts[4])) {
+    if (cabacDecode->getSymbol (&mbTypeContexts[7]))
       actSym = 7;
     else
       actSym = 6;
     }
   else {
-    if (cabacDecode->getSymbol (&mbTypeContexts[5] )) {
-      if (cabacDecode->getSymbol (&mbTypeContexts[7] ))
+    if (cabacDecode->getSymbol (&mbTypeContexts[5])) {
+      if (cabacDecode->getSymbol (&mbTypeContexts[7]))
         actSym = 2;
       else
         actSym = 3;
       }
     else {
-      if (cabacDecode->getSymbol (&mbTypeContexts[6] ))
+      if (cabacDecode->getSymbol (&mbTypeContexts[6]))
         actSym = 4;
       else
         actSym = 1;
@@ -1033,13 +1031,13 @@ void readMbTypeInfoCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
 void readMbTypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
-  sMotionContexts* ctx = slice->motionInfoContexts;
+  sMotionContexts* motionContexts = slice->motionContexts;
 
   int actContext;
   int actSym;
   int modeSym;
   int curMbType;
-  sBiContext* mbTypeContexts = ctx->mbTypeContexts[2];
+  sBiContext* mbTypeContexts = motionContexts->mbTypeContexts[2];
 
   int b = 0;
   if (mb->mbCabacUp)
@@ -1098,7 +1096,7 @@ void readMbTypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
     if (modeSym == 1)
       curMbType = 48;
     else {
-      mbTypeContexts = ctx->mbTypeContexts[1];
+      mbTypeContexts = motionContexts->mbTypeContexts[1];
       actContext = 8;
       modeSym = cabacDecode->getSymbol (mbTypeContexts + actContext ); // decoding of AC/no AC
       actSym += modeSym*12;
@@ -1130,8 +1128,8 @@ void readMbTypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
 void readB8TypeInfoCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
-  sMotionContexts* ctx = slice->motionInfoContexts;
-  sBiContext* b8TypeContexts = &ctx->b8TypeContexts[0][1];
+  sMotionContexts* motionContexts = slice->motionContexts;
+  sBiContext* b8TypeContexts = &motionContexts->b8TypeContexts[0][1];
 
   int actSym = 0;
   if (cabacDecode->getSymbol (b8TypeContexts++))
@@ -1152,8 +1150,9 @@ void readB8TypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
   cSlice* slice = mb->slice;
 
   int actSym = 0;
-  sMotionContexts* ctx = slice->motionInfoContexts;
-  sBiContext* b8TypeContexts = ctx->b8TypeContexts[1];
+  sMotionContexts* motionContexts = slice->motionContexts;
+  sBiContext* b8TypeContexts = motionContexts->b8TypeContexts[1];
+
   if (cabacDecode->getSymbol (b8TypeContexts++)) {
     if (cabacDecode->getSymbol (b8TypeContexts++)) {
       if (cabacDecode->getSymbol (b8TypeContexts++)) {
@@ -1193,7 +1192,7 @@ void readB8TypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
 void readIntraPredModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
-  sTextureContexts* context = slice->textureInfoContexts;
+  sTextureContexts* context = slice->textureContexts;
 
   // use_most_probable_mode
   int actSym = cabacDecode->getSymbol (context->iprContexts);
@@ -1214,7 +1213,7 @@ void readRefFrameCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
   cDecoder264* decoder = mb->decoder;
   cSlice* slice = mb->slice;
   sPicture* picture = slice->picture;
-  sMotionContexts* ctx = slice->motionInfoContexts;
+  sMotionContexts* motionContexts = slice->motionContexts;
 
   sMacroBlock* neighborMB = NULL;
 
@@ -1259,10 +1258,10 @@ void readRefFrameCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
   actContext = a + b;
   se->context = actContext;
 
-  actSym = cabacDecode->getSymbol (ctx->refNoContexts[addctx] + actContext );
+  actSym = cabacDecode->getSymbol (motionContexts->refNoContexts[addctx] + actContext );
   if (actSym != 0) {
     actContext = 4;
-    actSym = cabacDecode->unaryBin (ctx->refNoContexts[addctx] + actContext,1);
+    actSym = cabacDecode->unaryBin (motionContexts->refNoContexts[addctx] + actContext,1);
     ++actSym;
     }
 
@@ -1275,7 +1274,7 @@ void readMvdCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecod
 
   int* mbSize = mb->decoder->mbSize[eLuma];
   cSlice* slice = mb->slice;
-  sMotionContexts* ctx = slice->motionInfoContexts;
+  sMotionContexts* motionContexts = slice->motionContexts;
 
   int i = mb->subblockX;
   int j = mb->subblockY;
@@ -1303,10 +1302,10 @@ void readMvdCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecod
 
   se->context = a;
 
-  actSym = cabacDecode->getSymbol (ctx->mvResContexts[0] + a );
+  actSym = cabacDecode->getSymbol (motionContexts->mvResContexts[0] + a );
   if (actSym != 0) {
     a = 5 * k;
-    actSym = cabacDecode->unaryExpGolombMv (ctx->mvResContexts[1] + a, 3) + 1;
+    actSym = cabacDecode->unaryExpGolombMv (motionContexts->mvResContexts[1] + a, 3) + 1;
     if (cabacDecode->getSymbolEqProb())
       actSym = -actSym;
     }
@@ -1319,7 +1318,7 @@ void readMvdCabacMbAff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
 
   cDecoder264* decoder = mb->decoder;
   cSlice* slice = mb->slice;
-  sMotionContexts *ctx = slice->motionInfoContexts;
+  sMotionContexts* motionContexts = slice->motionContexts;
 
   int i = mb->subblockX;
   int j = mb->subblockY;
@@ -1363,10 +1362,10 @@ void readMvdCabacMbAff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
     actContext = 5 * k + 2;
   se->context = actContext;
 
-  int actSym = cabacDecode->getSymbol (&ctx->mvResContexts[0][actContext]);
+  int actSym = cabacDecode->getSymbol (&motionContexts->mvResContexts[0][actContext]);
   if (actSym != 0) {
     actContext = 5 * k;
-    actSym = cabacDecode->unaryExpGolombMv (ctx->mvResContexts[1] + actContext, 3) + 1;
+    actSym = cabacDecode->unaryExpGolombMv (motionContexts->mvResContexts[1] + actContext, 3) + 1;
     if (cabacDecode->getSymbolEqProb())
       actSym = -actSym;
     }
@@ -1381,7 +1380,7 @@ void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecod
   sPicture* picture = mb->slice->picture;
   cSlice* slice = mb->slice;
 
-  sTextureContexts* ctx = slice->textureInfoContexts;
+  sTextureContexts* textureContexts = slice->textureContexts;
   sMacroBlock* neighborMB = NULL;
 
   int mb_x;
@@ -1426,7 +1425,7 @@ void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecod
 
       curr_cbp_ctx = a + b;
       mask = (1 << (mb_y + (mb_x >> 1)));
-      codedBlockPatternBit = cabacDecode->getSymbol (ctx->cbpContexts[0] + curr_cbp_ctx );
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->cbpContexts[0] + curr_cbp_ctx);
       if (codedBlockPatternBit)
         codedBlockPattern += mask;
       }
@@ -1447,7 +1446,7 @@ void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecod
         a = 1;
 
     curr_cbp_ctx = a + b;
-    codedBlockPatternBit = cabacDecode->getSymbol (ctx->cbpContexts[1] + curr_cbp_ctx );
+    codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->cbpContexts[1] + curr_cbp_ctx);
 
     // cabac decoding for BinIdx 1
     if (codedBlockPatternBit) {
@@ -1465,7 +1464,7 @@ void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecod
           a = 1;
 
       curr_cbp_ctx = a + b;
-      codedBlockPatternBit = cabacDecode->getSymbol (ctx->cbpContexts[2] + curr_cbp_ctx );
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->cbpContexts[2] + curr_cbp_ctx);
       codedBlockPattern += (codedBlockPatternBit == 1) ? 32 : 16;
       }
     }
@@ -1487,12 +1486,12 @@ void readRunLevelCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
   // read coefficients for whole block
   if (*coefCount < 0) {
     // decode CBP-BIT
-    if ((*coefCount = mb->readStoreCBPblockBit (mb, cabacDecode, se->context) ) != 0) {
+    if ((*coefCount = mb->readCbp (mb, cabacDecode, se->context) ) != 0) {
       // decode significance map
-      *coefCount = read_significance_map (mb, cabacDecode, se->context, coeff);
+      *coefCount = readSignificanceMap (mb, cabacDecode, se->context, coeff);
 
       // decode significant coefficients
-      read_significant_coefficients (cabacDecode, slice->textureInfoContexts, se->context, coeff);
+      readSignificantCoefs (cabacDecode, slice->textureContexts, se->context, coeff);
       }
     }
 
@@ -1515,7 +1514,7 @@ void readRunLevelCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
 void readQuantCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
-  sMotionContexts* context = slice->motionInfoContexts;
+  sMotionContexts* context = slice->motionContexts;
 
   int* dquant = &se->value1;
   int actContext = (slice->lastDquant != 0) ? 1 : 0;
@@ -1540,7 +1539,7 @@ void readCiPredModCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* caba
 
   cSlice* slice = mb->slice;
 
-  sTextureContexts* context = slice->textureInfoContexts;
+  sTextureContexts* context = slice->textureContexts;
   int* actSym = &se->value1;
 
   sMacroBlock* MbUp = mb->mbCabacUp;
@@ -1562,9 +1561,8 @@ void readSkipFlagCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode*
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp  ->skipFlag == 0) : 0;
 
-  sBiContext* mbTypeContexts = &mb->slice->motionInfoContexts->mbTypeContexts[1][a + b];
+  sBiContext* mbTypeContexts = &mb->slice->motionContexts->mbTypeContexts[1][a + b];
   se->value1 = cabacDecode->getSymbol (mbTypeContexts) != 1;
-
   if (!se->value1)
     mb->slice->lastDquant = 0;
   }
@@ -1574,7 +1572,7 @@ void readSkipFlagCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode*
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp->skipFlag == 0) : 0;
-  sBiContext* mbTypeContexts = &mb->slice->motionInfoContexts->mbTypeContexts[2][7 + a + b];
+  sBiContext* mbTypeContexts = &mb->slice->motionContexts->mbTypeContexts[2][7 + a + b];
 
   se->value1 = se->value2 = (cabacDecode->getSymbol (mbTypeContexts) != 1);
   if (!se->value1)
@@ -1585,7 +1583,7 @@ void readSkipFlagCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode*
 void readFieldModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
-  sMotionContexts* context  = slice->motionInfoContexts;
+  sMotionContexts* context  = slice->motionContexts;
 
   int a = mb->mbAvailA ? slice->mbData[mb->mbIndexA].mbField : 0;
   int b = mb->mbAvailB ? slice->mbData[mb->mbIndexB].mbField : 0;
@@ -1598,12 +1596,12 @@ void readFieldModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* caba
 void readMbTransformSizeFlagCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
-  sTextureContexts*ctx = slice->textureInfoContexts;
+  sTextureContexts* textureContexts = slice->textureContexts;
 
   int b = (mb->mbCabacUp == NULL) ? 0 : mb->mbCabacUp->lumaTransformSize8x8flag;
   int a = (mb->mbCabacLeft == NULL) ? 0 : mb->mbCabacLeft->lumaTransformSize8x8flag;
 
-  int actSym = cabacDecode->getSymbol (ctx->transformSizeContexts + a + b );
+  int actSym = cabacDecode->getSymbol (textureContexts->transformSizeContexts + a + b );
   se->value1 = actSym;
   }
 //}}}
@@ -1677,11 +1675,11 @@ void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition) {
 //}}}
 
 //{{{
-void setReadStoreCodedBlockPattern (sMacroBlock** mb, int chromaFormatIdc) {
+void setReadCbp (sMacroBlock** mb, int chromaFormatIdc) {
 
   if (chromaFormatIdc == YUV444)
-    (*mb)->readStoreCBPblockBit = readStoreCbpBlockBit444;
+    (*mb)->readCbp = readCbp444;
   else
-    (*mb)->readStoreCBPblockBit = readStoreCbpBlockBitNormal;
+    (*mb)->readCbp = readCbpNormal;
   }
 //}}}

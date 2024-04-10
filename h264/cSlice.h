@@ -283,8 +283,8 @@ public:
   sPicture** listX[6];
 
   sDataPartition*   dataPartitions;      // array of dataPartition
-  sMotionContexts*  motionInfoContexts;  // pointer to struct of context models for use in eCabac
-  sTextureContexts* textureInfoContexts; // pointer to struct of context models for use in eCabac
+  sMotionContexts*  motionContexts;  // pointer to struct of context models for use in eCabac
+  sTextureContexts* textureContexts; // pointer to struct of context models for use in eCabac
 
   int mvscale[6][MAX_REFERENCE_PICTURES];
   int refPicReorderFlag[2];

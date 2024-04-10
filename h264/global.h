@@ -403,7 +403,7 @@ struct sMacroBlock {
   int16_t mbType;
   int16_t mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];      //!< indices correspond to [forw,backw][blockY][blockX][x,y]
   int     codedBlockPattern;
-  sCodedBlockPattern codedBlockPatterns[3];
+  sCodedBlockPattern cbp[3];
 
   int     i16mode;
   char    b8mode[4];
@@ -431,7 +431,7 @@ struct sMacroBlock {
   void (*iTrans4x4) (sMacroBlock*, eColorPlane, int, int);
   void (*iTrans8x8) (sMacroBlock*, eColorPlane, int, int);
   void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, int16_t, sPicMotion**, int, int, int, int, int);
-  int  (*readStoreCBPblockBit) (sMacroBlock*, cCabacDecode*, int);
+  int  (*readCbp) (sMacroBlock*, cCabacDecode*, int);
   char (*readRefPictureIndex) (sMacroBlock*, sSyntaxElement*, sDataPartition*, char, int);
   void (*readCompCoef4x4cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane);

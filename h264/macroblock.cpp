@@ -1582,7 +1582,7 @@ namespace {
     mb->skipFlag = 0;
 
     // for deblocking filter cabac
-    mb->codedBlockPatterns[0].blk = 0xFFFF;
+    mb->cbp[0].blk = 0xFFFF;
 
     // for cabac decoding of Dquant
     slice->lastDquant = 0;
@@ -5035,7 +5035,7 @@ void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int 
     i0 = pos_scan4x4[coef_ctr][0];
     j0 = pos_scan4x4[coef_ctr][1];
 
-    mb->codedBlockPatterns[0].blk |= i64power2((j << 2) + i) ;
+    mb->cbp[0].blk |= i64power2((j << 2) + i) ;
     mb->slice->cof[0][(j<<2) + j0][(i<<2) + i0]= rshift_rnd_sf((level * InvLevelScale4x4[j0][i0]) << qp_per, 4);
     }
   }
@@ -5292,7 +5292,7 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
 
   // Select appropriate MV predictor function
   initMotionVectorPrediction (*mb, mbAffFrame);
-  setReadStoreCodedBlockPattern (mb, activeSps->chromaFormatIdc);
+  setReadCbp (mb, activeSps->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
   if (sliceType != eSliceI) {
@@ -5302,7 +5302,7 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
       memset ((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(int16_t));
     }
 
-  memset ((*mb)->codedBlockPatterns, 0, 3 * sizeof(sCodedBlockPattern));
+  memset ((*mb)->cbp, 0, 3 * sizeof(sCodedBlockPattern));
 
   // initialize mbRess
   if (!isResetCoef) {

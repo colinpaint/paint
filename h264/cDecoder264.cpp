@@ -1187,8 +1187,8 @@ namespace {
       }
     //}}}
 
-    sMotionContexts* mc = slice->motionInfoContexts;
-    sTextureContexts* tc = slice->textureInfoContexts;
+    sMotionContexts* mc = slice->motionContexts;
+    sTextureContexts* tc = slice->textureContexts;
 
     int i, j;
     int qp = imax (0, slice->qp);

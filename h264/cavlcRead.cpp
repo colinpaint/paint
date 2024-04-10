@@ -166,7 +166,7 @@ namespace {
     const uint8_t (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
     const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
     int start_scan = IS_I16MB(mb) ? 1 : 0;
-    int64_t *cur_cbp = &mb->codedBlockPatterns[plane].blk;
+    int64_t *cur_cbp = &mb->cbp[plane].blk;
     int cur_context;
 
     if (IS_I16MB(mb)) {
@@ -232,7 +232,7 @@ namespace {
 
     const uint8_t (*pos_scan4x4)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
     int start_scan = IS_I16MB(mb) ? 1 : 0;
-    int64_t* cur_cbp = &mb->codedBlockPatterns[plane].blk;
+    int64_t* cur_cbp = &mb->cbp[plane].blk;
 
     int coef_ctr, cur_context;
     if (IS_I16MB(mb)) {
@@ -294,7 +294,7 @@ namespace {
 
     const uint8_t (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
     int start_scan = IS_I16MB(mb) ? 1 : 0;
-    int64_t *cur_cbp = &mb->codedBlockPatterns[plane].blk;
+    int64_t *cur_cbp = &mb->cbp[plane].blk;
     int coef_ctr, cur_context;
 
     if (IS_I16MB(mb)) {
@@ -361,7 +361,7 @@ namespace {
 
     const uint8_t (*pos_scan8x8)[2] = ((decoder->coding.picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8 : FIELD_SCAN8x8;
     int start_scan = IS_I16MB(mb) ? 1 : 0;
-    int64_t*cur_cbp = &mb->codedBlockPatterns[plane].blk;
+    int64_t*cur_cbp = &mb->cbp[plane].blk;
 
     int coef_ctr, cur_context;
     if (IS_I16MB(mb)) {

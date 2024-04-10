@@ -665,7 +665,7 @@ namespace {
 
           // CHROMA DC YUV422
           {
-            sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
+            sCodedBlockPattern* cbp = &mb->cbp[0];
             coef_ctr = -1;
             level = 1;
             for (k = 0; (k < 9) && (level != 0); ++k) {
@@ -682,7 +682,7 @@ namespace {
 
               level = se.value1;
               if (level != 0) {
-                codedBlockPatterns->blk |= ((int64_t)0xff0000) << (ll<<2) ;
+                cbp->blk |= ((int64_t)0xff0000) << (ll<<2) ;
                 coef_ctr += se.value2 + 1;
                 i0 = SCAN_YUV422[coef_ctr][0];
                 j0 = SCAN_YUV422[coef_ctr][1];
@@ -743,7 +743,7 @@ namespace {
           se.reading = readRunLevelCabac;
 
         if (mb->isLossless == false) {
-          sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
+          sCodedBlockPattern* cbp = &mb->cbp[0];
           for (b8 = 0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
             uv = b8 > (decoder->coding.numUvBlocks - 1);
             mb->isVblock = uv;
@@ -761,7 +761,7 @@ namespace {
                 level = se.value1;
 
                 if (level != 0) {
-                  codedBlockPatterns->blk |= i64power2(cbp_blk_chroma[b8][b4]);
+                  cbp->blk |= i64power2(cbp_blk_chroma[b8][b4]);
                   pos_scan_4x4 += (se.value2 << 1);
                   i0 = *pos_scan_4x4++;
                   j0 = *pos_scan_4x4++;
@@ -772,7 +772,7 @@ namespace {
            }
           }
         else {
-          sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
+          sCodedBlockPattern* cbp = &mb->cbp[0];
           for (b8 = 0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
             uv = b8 > (decoder->coding.numUvBlocks - 1);
             mb->isVblock = uv;
@@ -790,7 +790,7 @@ namespace {
                 dataPartition->readSyntaxElement (mb, &se, dataPartition);
                 level = se.value1;
                 if (level != 0) {
-                  codedBlockPatterns->blk |= i64power2(cbp_blk_chroma[b8][b4]);
+                  cbp->blk |= i64power2(cbp_blk_chroma[b8][b4]);
                   pos_scan_4x4 += (se.value2 << 1);
                   i0 = *pos_scan_4x4++;
                   j0 = *pos_scan_4x4++;
@@ -963,7 +963,7 @@ namespace {
       }
     //{{{  chroma DC coeff
     if (codedBlockPattern > 15) {
-      sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
+      sCodedBlockPattern* cbp = &mb->cbp[0];
       int uv, ll, k, coef_ctr;
 
       for (ll = 0; ll < 3; ll += 2) {
@@ -988,7 +988,7 @@ namespace {
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
           level = se.value1;
           if (level != 0) {
-            codedBlockPatterns->blk |= 0xf0000 << (ll<<1) ;
+            cbp->blk |= 0xf0000 << (ll<<1) ;
             coef_ctr += se.value2 + 1;
             // Bug: slice->cofu has only 4 entries, hence coef_ctr MUST be <4 (which is
             // caught by the assert().  If it is bigger than 4, it starts patching the
@@ -1034,7 +1034,7 @@ namespace {
       if (mb->isLossless == false) {
         int b4, b8, uv, k;
         int** cof;
-        sCodedBlockPattern  *codedBlockPatterns = &mb->codedBlockPatterns[0];
+        sCodedBlockPattern  *cbp = &mb->cbp[0];
         for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
           uv = b8 > (decoder->coding.numUvBlocks - 1);
           mb->isVblock = uv;
@@ -1056,7 +1056,7 @@ namespace {
               level = se.value1;
 
               if (level != 0) {
-                codedBlockPatterns->blk |= i64power2(cbp_blk_chroma[b8][b4]);
+                cbp->blk |= i64power2(cbp_blk_chroma[b8][b4]);
                 pos_scan_4x4 += (se.value2 << 1);
 
                 i0 = *pos_scan_4x4++;
@@ -1069,7 +1069,7 @@ namespace {
           }
         }
       else {
-        sCodedBlockPattern* codedBlockPatterns = &mb->codedBlockPatterns[0];
+        sCodedBlockPattern* cbp = &mb->cbp[0];
         int b4, b8, k;
         int uv;
         for (b8 = 0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
@@ -1087,7 +1087,7 @@ namespace {
               level = se.value1;
 
               if (level != 0) {
-                codedBlockPatterns->blk |= i64power2(cbp_blk_chroma[b8][b4]);
+                cbp->blk |= i64power2(cbp_blk_chroma[b8][b4]);
                 pos_scan_4x4 += (se.value2 << 1);
                 i0 = *pos_scan_4x4++;
                 j0 = *pos_scan_4x4++;
@@ -1398,7 +1398,7 @@ namespace {
           coef_ctr=-1;
           for(k = 0; k < numcoeff; ++k) {
             if (levarr[k] != 0) {
-              mb->codedBlockPatterns[0].blk |= ((int64_t)0xff0000) << (ll<<2);
+              mb->cbp[0].blk |= ((int64_t)0xff0000) << (ll<<2);
               coef_ctr += runarr[k]+1;
               i0 = SCAN_YUV422[coef_ctr][0];
               j0 = SCAN_YUV422[coef_ctr][1];
@@ -1466,7 +1466,7 @@ namespace {
 
             for(k = 0; k < numcoeff;++k) {
               if (levarr[k] != 0) {
-                mb->codedBlockPatterns[0].blk |= i64power2(cbp_blk_chroma[b8][b4]);
+                mb->cbp[0].blk |= i64power2(cbp_blk_chroma[b8][b4]);
                 coef_ctr += runarr[k] + 1;
 
                 i0=pos_scan4x4[coef_ctr][0];
@@ -1491,7 +1491,7 @@ namespace {
 
             for(k = 0; k < numcoeff;++k) {
               if (levarr[k] != 0) {
-                mb->codedBlockPatterns[0].blk |= i64power2(cbp_blk_chroma[b8][b4]);
+                mb->cbp[0].blk |= i64power2(cbp_blk_chroma[b8][b4]);
                 coef_ctr += runarr[k] + 1;
                 i0=pos_scan4x4[coef_ctr][0];
                 j0=pos_scan4x4[coef_ctr][1];
@@ -1833,7 +1833,7 @@ namespace {
         slice->readCoef4x4cavlc(mb, CHROMA_DC, 0, 0, levarr, runarr, &numcoeff);
         for(k = 0; k < numcoeff; ++k) {
           if (levarr[k] != 0) {
-            mb->codedBlockPatterns[0].blk |= 0xf0000 << (ll<<1) ;
+            mb->cbp[0].blk |= 0xf0000 << (ll<<1) ;
             coef_ctr += runarr[k] + 1;
             slice->cofu[coef_ctr]=levarr[k];
           }
@@ -1874,7 +1874,7 @@ namespace {
             coef_ctr = 0;
             for(k = 0; k < numcoeff;++k) {
               if (levarr[k] != 0) {
-                mb->codedBlockPatterns[0].blk |= i64power2(cbp_blk_chroma[b8][b4]);
+                mb->cbp[0].blk |= i64power2(cbp_blk_chroma[b8][b4]);
                 coef_ctr += runarr[k] + 1;
                 i0=pos_scan4x4[coef_ctr][0];
                 j0=pos_scan4x4[coef_ctr][1];
@@ -1895,7 +1895,7 @@ namespace {
             coef_ctr = 0;
             for (k = 0; k < numcoeff;++k) {
               if (levarr[k] != 0) {
-                mb->codedBlockPatterns[0].blk |= i64power2(cbp_blk_chroma[b8][b4]);
+                mb->cbp[0].blk |= i64power2(cbp_blk_chroma[b8][b4]);
                 coef_ctr += runarr[k] + 1;
 
                 i0=pos_scan4x4[coef_ctr][0];
@@ -1920,8 +1920,8 @@ cSlice* cSlice::allocSlice() {
   memset (slice, 0, sizeof(cSlice));
 
   // create all context models
-  slice->motionInfoContexts = (sMotionContexts*)calloc (1, sizeof(sMotionContexts));
-  slice->textureInfoContexts = (sTextureContexts*)calloc (1, sizeof(sTextureContexts));
+  slice->motionContexts = (sMotionContexts*)calloc (1, sizeof(sMotionContexts));
+  slice->textureContexts = (sTextureContexts*)calloc (1, sizeof(sTextureContexts));
 
   slice->maxDataPartitions = 3;
   slice->dataPartitions = sDataPartition::allocDataPartitions (slice->maxDataPartitions);
@@ -1979,8 +1979,8 @@ cSlice::~cSlice() {
 
   sDataPartition::freeDataPartitions (dataPartitions, 3);
 
-  free (motionInfoContexts);
-  free (textureInfoContexts);
+  free (motionContexts);
+  free (textureContexts);
 
   for (int i = 0; i < 6; i++) {
     if (listX[i]) {
