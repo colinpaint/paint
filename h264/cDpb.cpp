@@ -168,7 +168,7 @@ void cDpb::init (cDecoder264* decoder, int type) {
 
   allocatedSize = getDpbSize (decoder) + decoder->param.dpbPlus[type == 2 ? 1 : 0];
   if (allocatedSize < decoder->activeSps->numRefFrames)
-    cDecoder264::error ("DPB size at specified level is smaller than the specified number of refFrames");
+    cDecoder264::error ("DPB init size at level is smaller than numRefFrames");
 
   numRefFrames = decoder->activeSps->numRefFrames;
 
@@ -189,7 +189,7 @@ void cDpb::init (cDecoder264* decoder, int type) {
 
   // allocate dummyRefPicture
   if (!noRefPicture) {
-    noRefPicture = sPicture::allocPicture (decoder, eFrame, 
+    noRefPicture = sPicture::allocPicture (decoder, eFrame,
                                            decoder->coding.width, decoder->coding.height,
                                            decoder->widthCr, decoder->heightCr, 1);
     noRefPicture->topField = noRefPicture;
@@ -214,7 +214,7 @@ void cDpb::reInit (cDecoder264* decoder, int type) {
 
   if (dpbSize > allocatedSize) {
     if (allocatedSize < decoder->activeSps->numRefFrames)
-      cDecoder264::error ("DPB size at level is smaller than numRefFrames");
+      cDecoder264::error ("DPB reinit size at level is smaller than numRefFrames");
 
     frameStoreArray = (cFrameStore**)realloc (frameStoreArray, dpbSize * sizeof (cFrameStore*));
     frameStoreRefArray = (cFrameStore**)realloc(frameStoreRefArray, dpbSize * sizeof (cFrameStore*));
@@ -381,7 +381,7 @@ void cDpb::storePicture (sPicture* picture) {
             if (decoder->param.dpbDebug)
               dump();
 
-            lastPictureFrameStore = NULL;
+            lastPictureFrameStore = nullptr;
             return;
             }
           }
@@ -442,7 +442,7 @@ void cDpb::storePicture (sPicture* picture) {
   if (picture->picStructure != eFrame)
     lastPictureFrameStore = frameStoreArray[usedSize];
   else
-    lastPictureFrameStore = NULL;
+    lastPictureFrameStore = nullptr;
 
   usedSize++;
 
@@ -522,8 +522,8 @@ void cDpb::updateInfo() {
 
   decoder->debug.dpbStrings.push_back (
     fmt::format ("DPB:{}:{} numRef:{} refFramesInBuffer:{} numLongTerm:{} max:{} last:{}",
-    usedSize, allocatedSize, numRefFrames, refFramesInBuffer,
-    longTermRefFramesInBuffer, maxLongTermPicIndex, lastOutPoc));
+                 usedSize, allocatedSize, numRefFrames, refFramesInBuffer,
+                 longTermRefFramesInBuffer, maxLongTermPicIndex, lastOutPoc));
 
   for (uint32_t index = 0; index < usedSize; index++) {
     string debugString = fmt::format ("- frame:{:2d} ", frameStoreArray[index]->frameNum);
@@ -550,10 +550,10 @@ void cDpb::updateInfo() {
 
     decoder->debug.dpbStrings.push_back (
       fmt::format ("{}{}{}",
-      debugString,
-      frameStoreArray[index]->isOutput ? " out":"",
-      (frameStoreArray[index]->isUsed == 3) &&
-        frameStoreArray[index]->frame->nonExisting ? " nonExisiting":""));
+                   debugString,
+                   frameStoreArray[index]->isOutput ? " out":"",
+                   (frameStoreArray[index]->isUsed == 3) &&
+                     frameStoreArray[index]->frame->nonExisting ? " nonExisiting":""));
     }
   }
 //}}}
@@ -635,15 +635,15 @@ void cDpb::idrManage (sPicture* picture) {
       frameStoreArray[i] = new cFrameStore();
       }
     for (uint32_t i = 0; i < refFramesInBuffer; i++)
-      frameStoreRefArray[i] = NULL;
+      frameStoreRefArray[i] = nullptr;
     for (uint32_t i = 0; i < longTermRefFramesInBuffer; i++)
-      frameStoreLongTermRefArray[i] = NULL;
+      frameStoreLongTermRefArray[i] = nullptr;
     usedSize = 0;
     }
   else
     flush();
 
-  lastPictureFrameStore = NULL;
+  lastPictureFrameStore = nullptr;
 
   updateRefList();
   updateLongTermRefList();
@@ -671,8 +671,8 @@ void cDpb::adaptiveManage (sPicture* picture) {
     switch (tempDecodedRefPicMark->memManagement) {
       //{{{
       case 0:
-        if (tempDecodedRefPicMark->next != NULL)
-          cDecoder264::error ("memManagement = 0 not last operation in buffer");
+        if (tempDecodedRefPicMark->next)
+          cDecoder264::error ("adaptiveManage - not last operation in buffer");
         break;
       //}}}
       //{{{
@@ -778,7 +778,7 @@ void cDpb::updateRefList() {
   refFramesInBuffer = j;
 
   while (j < allocatedSize)
-    frameStoreRefArray[j++] = NULL;
+    frameStoreRefArray[j++] = nullptr;
   }
 //}}}
 //{{{
@@ -793,7 +793,7 @@ void cDpb::updateLongTermRefList() {
   longTermRefFramesInBuffer = j;
 
   while (j < allocatedSize)
-    frameStoreLongTermRefArray[j++] = NULL;
+    frameStoreLongTermRefArray[j++] = nullptr;
   }
 //}}}
 //{{{
