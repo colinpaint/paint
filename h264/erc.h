@@ -78,7 +78,7 @@ struct sConcealNode* initNode (sPicture* , int);
 void initListsForNonRefLoss (cDpb* dpb, int , ePicStructure );
 void concealLostFrames (cDpb* dpb, cSlice *slice);
 void concealNonRefPics (cDpb* dpb, int diff);
-void slidingWindowPocManagement (cDpb* dpb, sPicture* p);
+void slidingWindowPocManage (cDpb* dpb, sPicture* p);
 void writeLostNonRefPic (cDpb* dpb, int poc);
 void writeLostRefAfterIdr (cDpb* dpb, int pos);
 

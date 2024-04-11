@@ -189,8 +189,9 @@ void cDpb::init (cDecoder264* decoder, int type) {
 
   // allocate dummyRefPicture
   if (!noRefPicture) {
-    noRefPicture = sPicture::allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
-                                 decoder->widthCr, decoder->heightCr, 1);
+    noRefPicture = sPicture::allocPicture (decoder, eFrame, 
+                                           decoder->coding.width, decoder->coding.height,
+                                           decoder->widthCr, decoder->heightCr, 1);
     noRefPicture->topField = noRefPicture;
     noRefPicture->botField = noRefPicture;
     noRefPicture->frame = noRefPicture;
@@ -213,7 +214,7 @@ void cDpb::reInit (cDecoder264* decoder, int type) {
 
   if (dpbSize > allocatedSize) {
     if (allocatedSize < decoder->activeSps->numRefFrames)
-      cDecoder264::error ("DPB size at specified level is smaller than the specified number of refFrames");
+      cDecoder264::error ("DPB size at level is smaller than numRefFrames");
 
     frameStoreArray = (cFrameStore**)realloc (frameStoreArray, dpbSize * sizeof (cFrameStore*));
     frameStoreRefArray = (cFrameStore**)realloc(frameStoreRefArray, dpbSize * sizeof (cFrameStore*));
@@ -234,6 +235,29 @@ void cDpb::reInit (cDecoder264* decoder, int type) {
   }
 //}}}
 
+//{{{
+void cDpb::flush() {
+
+  if (!initDone)
+    return;
+
+  if (decoder->concealMode != 0)
+    concealNonRefPics (this, 0);
+
+  // mark all frames unused
+  for (uint32_t i = 0; i < usedSize; i++)
+    frameStoreArray[i]->unmarkForRef();
+
+  while (removeUnusedFrame());
+
+  // output frames in POC order
+  while (usedSize && outputFrame());
+
+  lastOutPoc = INT_MIN;
+
+  updateInfo();
+  }
+//}}}
 //{{{
 void cDpb::freeResources() {
 
@@ -258,30 +282,8 @@ void cDpb::freeResources() {
   sPicture::freePicture (noRefPicture);
 
   updateInfo();
+
   initDone = false;
-  }
-//}}}
-//{{{
-void cDpb::flush() {
-
-  if (!initDone)
-    return;
-
-  if (decoder->concealMode != 0)
-    concealNonRefPics (this, 0);
-
-  // mark all frames unused
-  for (uint32_t i = 0; i < usedSize; i++)
-    frameStoreArray[i]->unmarkForRef();
-
-  while (removeUnusedFrame());
-
-  // output frames in POC order
-  while (usedSize && outputFrame());
-
-  lastOutPoc = INT_MIN;
-
-  updateInfo();
   }
 //}}}
 
@@ -321,7 +323,6 @@ sPicture* cDpb::getLongTermPic (cSlice* slice, int picNum) {
             (frameStoreLongTermRefArray[i]->frame->longTermPicNum == picNum))
           return frameStoreLongTermRefArray[i]->frame;
       }
-
     else {
       if (frameStoreLongTermRefArray[i]->usedRef & 1)
         if ((frameStoreLongTermRefArray[i]->topField->usedLongTermRef) &&
@@ -359,14 +360,10 @@ void cDpb::storePicture (sPicture* picture) {
 
   if (picture->isIDR) {
     idrManage (picture);
-    // picture error conceal
     memset (&decoder->dpb.dpbPoc, 0, sizeof(int)*100);
     }
-  else {
-    // adaptive memory management
-    if (picture->usedForRef && (picture->adaptRefPicBufFlag))
-      adaptiveManage (picture);
-    }
+  else if (picture->usedForRef && picture->adaptRefPicBufFlag)
+    adaptiveManage (picture);
 
   if ((picture->picStructure == eTopField) || (picture->picStructure == eBotField)) {
     // check for frame store with same pic_number
@@ -411,7 +408,7 @@ void cDpb::storePicture (sPicture* picture) {
     removeUnusedFrame();
 
     if (decoder->concealMode != 0)
-      slidingWindowPocManagement (this, picture);
+      slidingWindowPocManage (this, picture);
     }
 
   // then output frames until one can be removed

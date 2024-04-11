@@ -1562,7 +1562,7 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
   }
 //}}}
 //{{{
-void slidingWindowPocManagement (cDpb* dpb, sPicture* p) {
+void slidingWindowPocManage (cDpb* dpb, sPicture* p) {
 
   if (dpb->getSize() == dpb->getAllocatedSize()) {
     cDecoder264* decoder = dpb->decoder;
