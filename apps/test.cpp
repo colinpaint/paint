@@ -522,6 +522,7 @@ namespace {
   //}}}
   }
 
+enum ePlayState { ePlaying, eStopped, eSingleStep };
 //{{{
 class cSoftVideoFrame : public cVideoFrame {
 public:
@@ -675,7 +676,27 @@ public:
   int64_t getPlayPts() const { return mPlayPts; }
   cVideoFrame* getVideoFrame() { return mVideoFrame; }
 
-  void togglePlay() { mPlaying = !mPlaying; }
+  //{{{
+  void togglePlay() {
+    if (mPlayState == ePlaying)
+      mPlayState = eStopped;
+    else
+      mPlayState = ePlaying;
+     }
+  //}}}
+  //{{{
+  void singleStep() {
+    mPlayState = eSingleStep;
+    }
+  //}}}
+  //{{{
+  void pause() {
+    while (mPlayState == eStopped)
+      this_thread::sleep_for (1ms);
+    if (mPlayState == eSingleStep)
+      mPlayState = eStopped;
+    }
+  //}}}
   void skipPlay (int64_t skipPts) { (void)skipPts; }
   //{{{
   void read() {
@@ -784,8 +805,7 @@ public:
         pesIndex++;
         this_thread::sleep_for (20ms);
 
-        while (!mPlaying)
-          this_thread::sleep_for (1ms);
+        pause();
         }
 
       cLog::log (LOGERROR, "exit");
@@ -855,7 +875,7 @@ private:
 
   // playing
   int64_t mPlayPts = -1;
-  bool mPlaying = true;
+  ePlayState mPlayState = ePlaying;
 
   // videoDecoder
   int mVideoFrameIndex = -1;
@@ -876,11 +896,31 @@ public:
   cTransportStream::cService* getService() { return mService; }
   cDecoder264* getDecoder() { return mDecoder; }
   cVideoFrame* getVideoFrame() { return mVideoFrame; }
-  bool getPlaying() const { return mPlaying; }
+  bool getPlaying() const { return mPlayState == ePlaying; }
   int64_t getPlayPts() const { return mPlayPts; }
 
-  void togglePlay() { mPlaying = !mPlaying; }
-  void singleStep() { mSingleStep = true; mPlaying = false; }
+  //{{{
+  void togglePlay() {
+    if (mPlayState == ePlaying)
+      mPlayState = eStopped;
+    else
+      mPlayState = ePlaying;
+     }
+  //}}}
+  //{{{
+  void singleStep() {
+    mPlayState = eSingleStep;
+    }
+  //}}}
+  //{{{
+  void pause() {
+    while (mPlayState == eStopped)
+      this_thread::sleep_for (1ms);
+    if (mPlayState == eSingleStep)
+      mPlayState = eStopped;
+    }
+  //}}}
+
   void skipPlay (int64_t skipPts) { (void)skipPts; }
 
   //{{{
@@ -971,12 +1011,6 @@ public:
         sDecodedPic* decodePics = mDecoder->decodeOneFrame (result);
         if (result == cDecoder264::DEC_SUCCEED)
           outputDecodedPics (decodePics);
-        else if (result != cDecoder264::DEC_EOS)
-          cLog::log (LOGERROR, "decoding  failed");
-
-        while (!mPlaying && !mSingleStep)
-          this_thread::sleep_for (1ms);
-        mSingleStep = false;
         } while (result == cDecoder264::DEC_SUCCEED);
 
       outputDecodedPics (mDecoder->finish());
@@ -992,6 +1026,9 @@ public:
 private:
   //{{{
   void outputDecodedPics (sDecodedPic* decodedPic) {
+
+    if (!decodedPic)
+      pause();
 
     while (decodedPic && decodedPic->ok) {
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
@@ -1009,19 +1046,11 @@ private:
       mVideoFrame = videoFrame;
 
       mOutputFrame++;
+      pause();
+
       decodedPic->ok = 0;
       decodedPic = decodedPic->next;
-
-      if (decodedPic && decodedPic->ok) {
-        while (!mPlaying && !mSingleStep)
-          this_thread::sleep_for (1ms);
-        mSingleStep = false;
-        }
       }
-
-    while (!mPlaying && !mSingleStep)
-      this_thread::sleep_for (1ms);
-    mSingleStep = false;
     }
   //}}}
 
@@ -1033,8 +1062,7 @@ private:
 
   // playing
   int64_t mPlayPts = -1;
-  bool mPlaying = true;
-  bool mSingleStep = false;
+  ePlayState mPlayState = ePlaying;
 
   cDecoder264* mDecoder = nullptr;
   bool mDeblock = true;
@@ -1052,26 +1080,29 @@ public:
 
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
-  bool getPlaying() { return mFilePlayer ? mFilePlayer->getPlaying() : mPlaying; }
+  bool getPlaying() { return mFilePlayer ? mFilePlayer->getPlaying() : mPlayState == ePlaying; }
   cDecoder264* getDecoder() { return mFilePlayer ? mFilePlayer->getDecoder() : mDecoder; }
   cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
 
   //{{{
   void togglePlay() {
-    if (mFilePlayer)
-      mFilePlayer->togglePlay();
+    if (mPlayState == ePlaying)
+      mPlayState = eStopped;
     else
-      mPlaying = !mPlaying;
-    }
+      mPlayState = ePlaying;
+     }
   //}}}
   //{{{
   void singleStep() {
-    if (mFilePlayer)
-      mFilePlayer->singleStep();
-    else {
-      mPlaying = false;
-      mSingleStep = true;
-      }
+    mPlayState = eSingleStep;
+    }
+  //}}}
+  //{{{
+  void pause() {
+    while (mPlayState == eStopped)
+      this_thread::sleep_for (1ms);
+    if (mPlayState == eSingleStep)
+      mPlayState = eStopped;
     }
   //}}}
 
@@ -1124,8 +1155,6 @@ public:
         sDecodedPic* decodedPics = mDecoder->decodeOneFrame (result);
         if (result == cDecoder264::DEC_SUCCEED)
           outputDecodedPics (decodedPics);
-        else if (result != cDecoder264::DEC_EOS)
-          cLog::log (LOGERROR, "decoder failed");
         } while (result == cDecoder264::DEC_SUCCEED);
 
       outputDecodedPics (mDecoder->finish());
@@ -1156,6 +1185,9 @@ private:
   //{{{
   void outputDecodedPics (sDecodedPic* decodedPic) {
 
+    if (!decodedPic)
+      pause();
+
     while (decodedPic && decodedPic->ok) {
       mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
       cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
@@ -1172,19 +1204,11 @@ private:
       mVideoFrame = videoFrame;
 
       mOutputFrame++;
+      pause();
+
       decodedPic->ok = 0;
       decodedPic = decodedPic->next;
-
-      if (decodedPic && decodedPic->ok) {
-        while (!mPlaying && !mSingleStep)
-          this_thread::sleep_for (1ms);
-        mSingleStep = false;
-        }
       }
-
-    while (!mPlaying && !mSingleStep)
-      this_thread::sleep_for (1ms);
-    mSingleStep = false;
     }
   //}}}
 
@@ -1192,9 +1216,7 @@ private:
   cFilePlayer* mFilePlayer = nullptr;
 
   cDecoder264* mDecoder = nullptr;
-
-  bool mPlaying = true;
-  bool mSingleStep = false;
+  ePlayState mPlayState = eStopped;
 
   size_t mOutputFrame = 0;
   array <cSoftVideoFrame*,kVideoFrames> mVideoFrames = { nullptr };
