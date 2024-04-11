@@ -1932,7 +1932,7 @@ void cDecoder264::changePlaneJV (int nplane, cSlice* slice) {
 //{{{
 void cDecoder264::directOutput (sPicture* picture) {
 
-  switch (picture->picStructure) { 
+  switch (picture->picStructure) {
     case eFrame:
       flushDirectOutput();
       writePicture (picture, eFrame);
@@ -3523,10 +3523,10 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
 
   slice->startMbNum = s.readUeV ("SLC first_mb_in_slice");
 
-  int tmp = s.readUeV ("SLC sliceType");
-  if (tmp > 4)
-    tmp -= 5;
-  slice->sliceType = (eSliceType)tmp;
+  int sliceType = s.readUeV ("SLC sliceType");
+  if (sliceType > 4)
+    sliceType -= 5;
+  slice->sliceType = (eSliceType)sliceType;
   coding.sliceType = slice->sliceType;
 
   slice->ppsId = s.readUeV ("SLC ppsId");
@@ -3542,7 +3542,6 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
   slice->activePps = activePps;
   slice->transform8x8Mode = activePps->hasTransform8x8mode;
   slice->chroma444notSeparate = (activeSps->chromaFormatIdc == YUV444) && !coding.isSeperateColourPlane;
-
   slice->frameNum = s.readUv (activeSps->log2maxFrameNumMinus4 + 4, "SLC frameNum");
   if (slice->isIDR) {
     preFrameNum = slice->frameNum;
@@ -3553,7 +3552,6 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
     slice->fieldPic = 0;
     coding.picStructure = eFrame;
     }
-
   else {
     slice->fieldPic = s.readU1 ("SLC fieldPic");
     if (slice->fieldPic) {
@@ -3580,8 +3578,7 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
     else
       slice->deltaPicOrderCountBot = 0;
     }
-
-  if (activeSps->pocType == 1) {
+  else if (activeSps->pocType == 1) {
     if (!activeSps->deltaPicOrderAlwaysZero) {
       slice->deltaPicOrderCount[0] = s.readSeV ("SLC deltaPicOrderCount[0]");
       if ((activePps->frameBotField == 1) && !slice->fieldPic)
@@ -3598,11 +3595,10 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
 
   if (activePps->redundantPicCountPresent)
     slice->redundantPicCount = s.readUeV ("SLC redundantPicCount");
-
   if (slice->sliceType == eSliceB)
     slice->directSpatialMvPredFlag = s.readU1 ("SLC directSpatialMvPredFlag");
 
-  // read refPics
+  // read refPicLists
   slice->numRefIndexActive[LIST_0] = activePps->numRefIndexL0defaultActiveMinus1 + 1;
   slice->numRefIndexActive[LIST_1] = activePps->numRefIndexL1defaultActiveMinus1 + 1;
   if ((slice->sliceType == eSliceP) || (slice->sliceType == eSliceSP) || (slice->sliceType == eSliceB)) {
@@ -3780,6 +3776,7 @@ void cDecoder264::readSliceHeader (cSlice* slice) {
     slice->deblockFilterBetaOffset = 0;
     }
     //}}}
+
   //{{{  read sliceGroup
   if ((activePps->numSliceGroupsMinus1 > 0) &&
       (activePps->sliceGroupMapType >= 3) &&
@@ -4082,6 +4079,7 @@ void cDecoder264::decodeSlice (cSlice* slice) {
     }
   }
 //}}}
+
 //{{{
 int cDecoder264::decodeFrame() {
 
