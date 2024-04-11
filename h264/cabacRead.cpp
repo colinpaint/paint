@@ -8,70 +8,8 @@
 
 namespace {
   //{{{
-  void readCompCoef8x8Lossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane, int b8) {
-
-    if (mb->codedBlockPattern & (1 << b8)) {
-      // are there any coefficients in the current block
-      cDecoder264* decoder = mb->decoder;
-      cSlice* slice = mb->slice;
-
-      int64_t cbp_mask = (int64_t) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
-      int64_t *cur_cbp = &mb->cbp[plane].blk;
-
-      // select scan type
-      const uint8_t* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
-
-      // === set offset in current macroBlock ===
-      int boff_x = (b8&0x01) << 3;
-      int boff_y = (b8 >> 1) << 3;
-      int** tcoeffs = &slice->mbRess[plane][boff_y];
-
-      mb->subblockX = boff_x; // position for coeff_count ctx
-      mb->subblockY = boff_y; // position for coeff_count ctx
-
-      sDataPartition* dataPartition;
-      const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-      if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
-        se->context = LUMA_8x8;
-      else if (plane==PLANE_U)
-        se->context = CB_8x8;
-      else
-        se->context = CR_8x8;
-      se->reading = readRunLevelCabac;
-
-      int level = 1;
-      for (int k = 0; (k < 65) && (level != 0);++k) {
-        // make distinction between INTRA and INTER codedluminance coefficients
-        se->type  = ((mb->isIntraBlock == 1) ? (k == 0 ? SE_LUM_DC_INTRA : SE_LUM_AC_INTRA)
-                                             : (k == 0 ? SE_LUM_DC_INTER : SE_LUM_AC_INTER));
-        dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
-        se->reading = readRunLevelCabac;
-        dataPartition->readSyntaxElement (mb, se, dataPartition);
-        level = se->value1;
-        if (level != 0) {
-          pos_scan8x8 += 2 * (se->value2);
-          int i = *pos_scan8x8++;
-          int j = *pos_scan8x8++;
-          *cur_cbp |= cbp_mask;
-          tcoeffs[j][boff_x + i] = level;
-          }
-        }
-     }
-    }
-  //}}}
-  //{{{
-  void readCompCoef8x8mbLossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane) {
-
-    // 8x8 transform size & eCabac
-    readCompCoef8x8Lossless (mb, se, plane, 0);
-    readCompCoef8x8Lossless (mb, se, plane, 1);
-    readCompCoef8x8Lossless (mb, se, plane, 2);
-    readCompCoef8x8Lossless (mb, se, plane, 3);
-    }
-  //}}}
-  //{{{
-  void readCompCoefx4smb (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
-                               int blockY, int blockX, int start_scan, int64_t *cbp_blk) {
+  void readCompCoef4x4smb (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
+                           int blockY, int blockX, int start_scan, int64_t *cbp_blk) {
 
     int i,j,k;
     int i0, j0;
@@ -137,27 +75,6 @@ namespace {
     }
   //}}}
   //{{{
-  void readCompCoef4x4Lossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
-                                            int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern) {
-
-    cDecoder264* decoder = mb->decoder;
-    int start_scan = IS_I16MB (mb)? 1 : 0;
-
-    if( plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0) )
-      se->context = (IS_I16MB(mb) ? LUMA_16AC: LUMA_4x4);
-    else if (plane == PLANE_U)
-      se->context = (IS_I16MB(mb) ? CB_16AC: CB_4x4);
-    else
-      se->context = (IS_I16MB(mb) ? CR_16AC: CR_4x4);
-
-    int64_t* cbp_blk = &mb->cbp[plane].blk;
-    for (int blockY = 0; blockY < MB_BLOCK_SIZE; blockY += BLOCK_SIZE_8x8) /* all modes */
-      for (int blockX = 0; blockX < MB_BLOCK_SIZE; blockX += BLOCK_SIZE_8x8)
-        if (codedBlockPattern & (1 << ((blockY >> 2) + (blockX >> 3))))  // are there any coeff in current block at all
-          readCompCoefx4smb (mb, se, plane, blockY, blockX, start_scan, cbp_blk);
-    }
-  //}}}
-  //{{{
   void readCompCoef4x4 (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
                                     int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern) {
 
@@ -182,7 +99,7 @@ namespace {
       for (blockX = 0; blockX < MB_BLOCK_SIZE; blockX += BLOCK_SIZE_8x8) {
         if (codedBlockPattern & (1 << ((blockY >> 2) + (blockX >> 3)))) {
           // are there any coeff in current block at all
-          readCompCoefx4smb (mb, se, plane, blockY, blockX, start_scan, cbp_blk);
+          readCompCoef4x4smb (mb, se, plane, blockY, blockX, start_scan, cbp_blk);
           if (start_scan == 0) {
             for (j = 0; j < BLOCK_SIZE_8x8; ++j) {
               int* coef = &cof[j][blockX];
@@ -228,6 +145,28 @@ namespace {
       }
     }
   //}}}
+  //{{{
+  void readCompCoef4x4Lossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
+                                            int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern) {
+
+    cDecoder264* decoder = mb->decoder;
+    int start_scan = IS_I16MB (mb)? 1 : 0;
+
+    if( plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0) )
+      se->context = (IS_I16MB(mb) ? LUMA_16AC: LUMA_4x4);
+    else if (plane == PLANE_U)
+      se->context = (IS_I16MB(mb) ? CB_16AC: CB_4x4);
+    else
+      se->context = (IS_I16MB(mb) ? CR_16AC: CR_4x4);
+
+    int64_t* cbp_blk = &mb->cbp[plane].blk;
+    for (int blockY = 0; blockY < MB_BLOCK_SIZE; blockY += BLOCK_SIZE_8x8) /* all modes */
+      for (int blockX = 0; blockX < MB_BLOCK_SIZE; blockX += BLOCK_SIZE_8x8)
+        if (codedBlockPattern & (1 << ((blockY >> 2) + (blockX >> 3))))  // are there any coeff in current block at all
+          readCompCoef4x4smb (mb, se, plane, blockY, blockX, start_scan, cbp_blk);
+    }
+  //}}}
+
   //{{{
   void readCompCoef8x8 (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane, int b8) {
 
@@ -307,6 +246,68 @@ namespace {
     readCompCoef8x8 (mb, se, plane, 1);
     readCompCoef8x8 (mb, se, plane, 2);
     readCompCoef8x8 (mb, se, plane, 3);
+    }
+  //}}}
+  //{{{
+  void readCompCoef8x8Lossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane, int b8) {
+
+    if (mb->codedBlockPattern & (1 << b8)) {
+      // are there any coefficients in the current block
+      cDecoder264* decoder = mb->decoder;
+      cSlice* slice = mb->slice;
+
+      int64_t cbp_mask = (int64_t) 51 << (4 * b8 - 2 * (b8 & 0x01)); // corresponds to 110011, as if all four 4x4 blocks contain coeff, shifted to block position
+      int64_t *cur_cbp = &mb->cbp[plane].blk;
+
+      // select scan type
+      const uint8_t* pos_scan8x8 = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN8x8[0] : FIELD_SCAN8x8[0];
+
+      // === set offset in current macroBlock ===
+      int boff_x = (b8&0x01) << 3;
+      int boff_y = (b8 >> 1) << 3;
+      int** tcoeffs = &slice->mbRess[plane][boff_y];
+
+      mb->subblockX = boff_x; // position for coeff_count ctx
+      mb->subblockY = boff_y; // position for coeff_count ctx
+
+      sDataPartition* dataPartition;
+      const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+      if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
+        se->context = LUMA_8x8;
+      else if (plane==PLANE_U)
+        se->context = CB_8x8;
+      else
+        se->context = CR_8x8;
+      se->reading = readRunLevelCabac;
+
+      int level = 1;
+      for (int k = 0; (k < 65) && (level != 0);++k) {
+        // make distinction between INTRA and INTER codedluminance coefficients
+        se->type  = ((mb->isIntraBlock == 1) ? (k == 0 ? SE_LUM_DC_INTRA : SE_LUM_AC_INTRA)
+                                             : (k == 0 ? SE_LUM_DC_INTER : SE_LUM_AC_INTER));
+        dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
+        se->reading = readRunLevelCabac;
+        dataPartition->readSyntaxElement (mb, se, dataPartition);
+        level = se->value1;
+        if (level != 0) {
+          pos_scan8x8 += 2 * (se->value2);
+          int i = *pos_scan8x8++;
+          int j = *pos_scan8x8++;
+          *cur_cbp |= cbp_mask;
+          tcoeffs[j][boff_x + i] = level;
+          }
+        }
+     }
+    }
+  //}}}
+  //{{{
+  void readCompCoef8x8mbLossless (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane) {
+
+    // 8x8 transform size & eCabac
+    readCompCoef8x8Lossless (mb, se, plane, 0);
+    readCompCoef8x8Lossless (mb, se, plane, 1);
+    readCompCoef8x8Lossless (mb, se, plane, 2);
+    readCompCoef8x8Lossless (mb, se, plane, 3);
     }
   //}}}
   }

@@ -45,7 +45,7 @@ private:
   int outputFrame();
   void checkNumFrames();
 
-  void getSmallestPoc (int& poc, int& pos);
+  void getSmallestPoc (int& poc, int& index);
 
   void idrManage (sPicture* picture);
   void adaptiveManage (sPicture* picture);

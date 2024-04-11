@@ -569,22 +569,22 @@ void cDpb::dump() {
 int cDpb::outputFrame() {
 
   if (usedSize < 1)
-    cDecoder264::error ("Cannot output frame, DPB empty");
+    cDecoder264::error ("no output frame, DPB empty");
 
   int poc;
-  int pos;
-  getSmallestPoc (poc, pos);
-  if (pos == -1)
+  int index;
+  getSmallestPoc (poc, index);
+  if (index == -1)
     return 0;
 
   // error conceal
   if (decoder->concealMode != 0) {
     if (lastOutPoc == 0)
-      writeLostRefAfterIdr (this, pos);
+      writeLostRefAfterIdr (this, index);
     writeLostNonRefPic (this, poc);
     }
 
-  decoder->writeStoredFrame (frameStoreArray[pos]);
+  decoder->writeStoredFrame (frameStoreArray[index]);
 
   // error conceal
   if (decoder->concealMode == 0)
@@ -593,8 +593,8 @@ int cDpb::outputFrame() {
   lastOutPoc = poc;
 
   // free frameStore and move emptyStore to end of buffer
-  if (!frameStoreArray[pos]->isRef())
-    removeFrameByIndex (pos);
+  if (!frameStoreArray[index]->isRef())
+    removeFrameByIndex (index);
 
   return 1;
   }
@@ -603,22 +603,22 @@ int cDpb::outputFrame() {
 void cDpb::checkNumFrames() {
 
   if ((int)(longTermRefFramesInBuffer + refFramesInBuffer) > imax (1, numRefFrames))
-    cDecoder264::error ("Max. number of refFrames exceeded. Invalid stream");
+    cDecoder264::error ("maxNum refFrames exceeded");
   }
 //}}}
 
 //{{{
-void cDpb::getSmallestPoc (int& poc, int& pos) {
+void cDpb::getSmallestPoc (int& poc, int& index) {
 
   if (usedSize < 1)
     cDecoder264::error ("cannot getSmallestPoc, DPB empty");
 
-  pos = -1;
+  index = -1;
   poc = INT_MAX;
   for (uint32_t i = 0; i < usedSize; i++) {
     if ((poc > frameStoreArray[i]->poc) && !frameStoreArray[i]->isOutput) {
       poc = frameStoreArray[i]->poc;
-      pos = i;
+      index = i;
       }
     }
   }
@@ -716,7 +716,7 @@ void cDpb::adaptiveManage (sPicture* picture) {
       //}}}
       //{{{
       default:
-        cDecoder264::error ("invalid memManagement in buffer");
+        cDecoder264::error ("unknown buffer manage");
       //}}}
       }
     picture->decRefPicMarkBuffer = tempDecodedRefPicMark->next;
