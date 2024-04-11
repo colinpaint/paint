@@ -522,7 +522,7 @@ namespace {
   //}}}
   }
 
-enum ePlayState { ePlaying, eStopped, eSingleStep };
+enum ePlayState { eStopped, ePlaying, eSingleStep };
 //{{{
 class cSoftVideoFrame : public cVideoFrame {
 public:
