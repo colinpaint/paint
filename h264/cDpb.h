@@ -47,9 +47,9 @@ private:
 
   void getSmallestPoc (int& poc, int& pos);
 
-  void idrMemoryManagement (sPicture* picture);
-  void adaptiveMemoryManagement (sPicture* picture);
-  void slidingWindowMemoryManagement (sPicture* picture);
+  void idrManage (sPicture* picture);
+  void adaptiveManage (sPicture* picture);
+  void slidingWindowManage (sPicture* picture);
 
   void updateRefList();
   void updateLongTermRefList();

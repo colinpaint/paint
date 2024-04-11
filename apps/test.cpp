@@ -1268,7 +1268,7 @@ public:
       ImGui::TextColored (getSliceColor (decoder->debug.outSliceType), decoder->debug.outString.c_str());
       debugLines++;
 
-      for (auto infoLine : decoder->debug.dpbStrings)
+      for (auto& infoLine : decoder->debug.dpbStrings)
         ImGui::TextColored (kWhite, infoLine.c_str());
       debugLines += decoder->debug.dpbStrings.size();
 

@@ -358,14 +358,14 @@ void cDpb::storePicture (sPicture* picture) {
   decoder->lastPicBotField = (picture->picStructure == eBotField);
 
   if (picture->isIDR) {
-    idrMemoryManagement (picture);
+    idrManage (picture);
     // picture error conceal
     memset (&decoder->dpb.dpbPoc, 0, sizeof(int)*100);
     }
   else {
     // adaptive memory management
     if (picture->usedForRef && (picture->adaptRefPicBufFlag))
-      adaptiveMemoryManagement (picture);
+      adaptiveManage (picture);
     }
 
   if ((picture->picStructure == eTopField) || (picture->picStructure == eBotField)) {
@@ -394,7 +394,7 @@ void cDpb::storePicture (sPicture* picture) {
 
   // this is a frame or a field which has no stored complementary field sliding window, if necessary
   if (!picture->isIDR && (picture->usedForRef && !picture->adaptRefPicBufFlag))
-    slidingWindowMemoryManagement (picture);
+    slidingWindowManage (picture);
 
   // picture error conceal
   if (decoder->concealMode != 0)
@@ -563,7 +563,7 @@ void cDpb::updateInfo() {
 //{{{
 void cDpb::dump() {
 
-  for (auto infoLine : decoder->debug.dpbStrings)
+  for (auto& infoLine : decoder->debug.dpbStrings)
     cLog::log (LOGINFO, infoLine);
   }
 //}}}
@@ -628,7 +628,7 @@ void cDpb::getSmallestPoc (int& poc, int& pos) {
 //}}}
 
 //{{{
-void cDpb::idrMemoryManagement (sPicture* picture) {
+void cDpb::idrManage (sPicture* picture) {
 
   if (picture->noOutputPriorPicFlag) {
     // free all stored pictures
@@ -664,7 +664,7 @@ void cDpb::idrMemoryManagement (sPicture* picture) {
   }
 //}}}
 //{{{
-void cDpb::adaptiveMemoryManagement (sPicture* picture) {
+void cDpb::adaptiveManage (sPicture* picture) {
 
   decoder->lastHasMmco5 = 0;
 
@@ -752,7 +752,7 @@ void cDpb::adaptiveMemoryManagement (sPicture* picture) {
   }
 //}}}
 //{{{
-void cDpb::slidingWindowMemoryManagement (sPicture* picture) {
+void cDpb::slidingWindowManage (sPicture* picture) {
 // if this is a refPic with sliding window, unmark first ref frame
 
   if (refFramesInBuffer == imax (1, numRefFrames) - longTermRefFramesInBuffer) {

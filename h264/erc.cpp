@@ -346,7 +346,7 @@ namespace {
                 firstCorruptedRow += step;
                 }
 
-              if (smoothColumn > 0) 
+              if (smoothColumn > 0)
                 ercCollectColumnBlocks( predBlocks, currRow, column, condition, lastRow, lastColumn, step );
               else
                 ercCollect8PredBlocks( predBlocks, currRow, column, condition, lastRow, lastColumn, step, 1 );
@@ -950,7 +950,7 @@ namespace {
           }
         }
 
-        for (j = 0; j < 2; j++) 
+        for (j = 0; j < 2; j++)
           for (i = 0; i < 2; i++)
             pMB[j*2+i] = slice->mbPred[uv + 1][j][i];
         pMB += 4;
@@ -1334,28 +1334,24 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
 
 // conceal
 //{{{
-struct sConcealNode* initNode (sPicture* picture, int missingpoc ) {
+sConcealNode* initNode (sPicture* picture, int missingpoc) {
 
-  struct sConcealNode* ptr = (struct sConcealNode *) calloc( 1, sizeof(struct sConcealNode ) );
-  if ( ptr == NULL )
-    return (struct sConcealNode *) NULL;
-  else {
-    ptr->picture = picture;
-    ptr->missingpocs = missingpoc;
-    ptr->next = NULL;
-    return ptr;
-    }
+  sConcealNode* concealNode = (sConcealNode*) calloc (1, sizeof(sConcealNode));
+  concealNode->picture = picture;
+  concealNode->missingpocs = missingpoc;
+  concealNode->next = NULL;
+
+  return concealNode;
   }
 //}}}
 //{{{
-void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPicStructure)
-{
+void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPicStructure) {
+
   cDecoder264* decoder = dpb->decoder;
-  cSps *activeSps = decoder->activeSps;
 
   uint32_t i;
   int j;
-  int maxFrameNum = 1 << (activeSps->log2maxFrameNumMinus4 + 4);
+  int maxFrameNum = 1 << (decoder->activeSps->log2maxFrameNumMinus4 + 4);
 
   int list0idx = 0;
   int list0index1 = 0;
@@ -1431,14 +1427,16 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
     }
 
   // set max size
-  decoder->sliceList[0]->listXsize[0] = (char) imin (decoder->sliceList[0]->listXsize[0], (int)activeSps->numRefFrames);
-  decoder->sliceList[0]->listXsize[1] = (char) imin (decoder->sliceList[0]->listXsize[1], (int)activeSps->numRefFrames);
+  decoder->sliceList[0]->listXsize[0] = 
+    (char)imin (decoder->sliceList[0]->listXsize[0], (int)decoder->activeSps->numRefFrames);
+  decoder->sliceList[0]->listXsize[1] = 
+    (char)imin (decoder->sliceList[0]->listXsize[1], (int)decoder->activeSps->numRefFrames);
   decoder->sliceList[0]->listXsize[1] = 0;
 
   // set the unused list entries to NULL
-  for (i = decoder->sliceList[0]->listXsize[0]; i< (MAX_LIST_SIZE) ; i++)
+  for (int i = decoder->sliceList[0]->listXsize[0]; i< (MAX_LIST_SIZE) ; i++)
     decoder->sliceList[0]->listX[0][i] = NULL;
-  for (i = decoder->sliceList[0]->listXsize[1]; i< (MAX_LIST_SIZE) ; i++)
+  for (int i = decoder->sliceList[0]->listXsize[1]; i< (MAX_LIST_SIZE) ; i++)
     decoder->sliceList[0]->listX[1][i] = NULL;
   }
 //}}}
@@ -1446,19 +1444,17 @@ void initListsForNonRefLoss (cDpb* dpb, int currSliceType, ePicStructure currPic
 void concealLostFrames (cDpb* dpb, cSlice* slice) {
 
   cDecoder264* decoder = dpb->decoder;
+
   int CurrFrameNum;
   int UnusedShortTermFrameNum;
-  sPicture *picture = NULL;
+  sPicture* picture = NULL;
   int tmp1 = slice->deltaPicOrderCount[0];
   int tmp2 = slice->deltaPicOrderCount[1];
-  int i;
 
   slice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[1] = 0;
 
-  // printf("A gap in frame number is found, try to fill it.\n");
-  if(decoder->idrConcealFlag == 1) {
-    // Conceals an IDR frame loss. Uses the reference frame in the previous
-    // GOP for conceal.
+  if (decoder->idrConcealFlag == 1) {
+    // Conceals an IDR frame loss. Uses the reference frame in the previous GOP for conceal.
     UnusedShortTermFrameNum = 0;
     decoder->lastRefPicPoc = -decoder->param.pocGap;
     decoder->earlierMissingPoc = 0;
@@ -1470,7 +1466,6 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
 
   while (CurrFrameNum != UnusedShortTermFrameNum) {
     picture = sPicture::allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
-
     picture->codedFrame = 1;
     picture->picNum = UnusedShortTermFrameNum;
     picture->frameNum = UnusedShortTermFrameNum;
@@ -1488,13 +1483,12 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
     picture->poc = picture->topPoc;
     decoder->lastRefPicPoc = picture->poc;
 
-    copyPrevPicToConcealPic(picture, dpb);
+    copyPrevPicToConcealPic (picture, dpb);
 
-    //if (UnusedShortTermFrameNum == 0)
-    if(decoder->idrConcealFlag == 1) {
+    if (decoder->idrConcealFlag == 1) {
       picture->sliceType = eSliceI;
       picture->isIDR = true;
-      dpb->flushDpb();
+      dpb->flush();
       picture->topPoc = 0;
       picture->botPoc =picture->topPoc;
       picture->framePoc = picture->topPoc;
@@ -1509,7 +1503,7 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
     UnusedShortTermFrameNum = (UnusedShortTermFrameNum + 1) % decoder->coding.maxFrameNum;
 
     // update reference flags and set current flag.
-    for (i = 16; i > 0; i--)
+    for (int i = 16; i > 0; i--)
       slice->refFlag[i] = slice->refFlag[i-1];
     slice->refFlag[0] = 0;
     }
@@ -1572,17 +1566,16 @@ void slidingWindowPocManagement (cDpb* dpb, sPicture* p) {
 
   if (dpb->getSize() == dpb->getAllocatedSize()) {
     cDecoder264* decoder = dpb->decoder;
-    uint32_t i;
-    for (i = 0; i < dpb->getAllocatedSize() -1; i++)
+    for (uint32_t i = 0; i < dpb->getAllocatedSize() -1; i++)
       decoder->dpb.dpbPoc[i] = decoder->dpb.dpbPoc[i+1];
     }
   }
-
 //}}}
 //{{{
 void writeLostNonRefPic (cDpb* dpb, int poc) {
 
   cDecoder264* decoder = dpb->decoder;
+
   cFrameStore concealment_fs;
   if (poc > 0) {
     if ((poc - dpb->lastOutPoc) > decoder->param.pocGap) {
@@ -1601,10 +1594,12 @@ void writeLostNonRefPic (cDpb* dpb, int poc) {
 void writeLostRefAfterIdr (cDpb* dpb, int pos) {
 
   cDecoder264* decoder = dpb->decoder;
+
   int temp = 1;
   if (decoder->lastOutFrameStore->frame == NULL) {
-    decoder->lastOutFrameStore->frame = sPicture::allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
-                                                      decoder->widthCr, decoder->heightCr, 1);
+    decoder->lastOutFrameStore->frame = sPicture::allocPicture (decoder, eFrame, 
+                                                                decoder->coding.width, decoder->coding.height,
+                                                                decoder->widthCr, decoder->heightCr, 1);
     decoder->lastOutFrameStore->isUsed = 3;
     }
 
@@ -1624,8 +1619,6 @@ void ercInit (cDecoder264* decoder, int pic_sizex, int pic_sizey, int flag) {
 
   ercClose(decoder, decoder->ercErrorVar);
   decoder->ercObjectList = (sObjectBuffer*)calloc ((pic_sizex * pic_sizey) >> 6, sizeof(sObjectBuffer));
-  if (decoder->ercObjectList == NULL)
-    noMemoryExit ("ercInit: ercObjectList");
 
   // the error conceal instance is allocated
   decoder->ercErrorVar = ercOpen();
