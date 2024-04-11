@@ -874,16 +874,15 @@ public:
 
   string getFileName() const { return mFileName; }
   cTransportStream::cService* getService() { return mService; }
-
   cDecoder264* getDecoder() { return mDecoder; }
   cVideoFrame* getVideoFrame() { return mVideoFrame; }
-
   bool getPlaying() const { return mPlaying; }
   int64_t getPlayPts() const { return mPlayPts; }
 
   void togglePlay() { mPlaying = !mPlaying; }
   void singleStep() { mSingleStep = true; mPlaying = false; }
   void skipPlay (int64_t skipPts) { (void)skipPts; }
+
   //{{{
   void read() {
 
@@ -1013,7 +1012,7 @@ private:
       decodedPic->ok = 0;
       decodedPic = decodedPic->next;
 
-      if (decodedPic) {
+      if (decodedPic && decodedPic->ok) {
         while (!mPlaying && !mSingleStep)
           this_thread::sleep_for (1ms);
         mSingleStep = false;
@@ -1053,11 +1052,10 @@ public:
 
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
-
+  bool getPlaying() { return mFilePlayer ? mFilePlayer->getPlaying() : mPlaying; }
   cDecoder264* getDecoder() { return mFilePlayer ? mFilePlayer->getDecoder() : mDecoder; }
   cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
 
-  bool getPlaying() { return mFilePlayer ? mFilePlayer->getPlaying() : mPlaying; }
   //{{{
   void togglePlay() {
     if (mFilePlayer)
@@ -1177,7 +1175,7 @@ private:
       decodedPic->ok = 0;
       decodedPic = decodedPic->next;
 
-      if (decodedPic) {
+      if (decodedPic && decodedPic->ok) {
         while (!mPlaying && !mSingleStep)
           this_thread::sleep_for (1ms);
         mSingleStep = false;

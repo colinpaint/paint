@@ -1427,7 +1427,7 @@ namespace {
   sDecodedPic* allocDecodedPicture (sDecodedPic* decodedPic) {
 
     sDecodedPic* prevDecodedPicture = NULL;
-    while (decodedPic && (decodedPic->ok)) {
+    while (decodedPic && decodedPic->ok) {
       prevDecodedPicture = decodedPic;
       decodedPic = decodedPic->next;
       }
