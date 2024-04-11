@@ -9,12 +9,12 @@ using namespace std;
 
 namespace {
   //{{{
-  int ShowBitsThres (int inf, int numbits) {
+  int showBitsThreshold (int inf, int numbits) {
     return ((inf) >> ((sizeof(uint8_t) * 24) - (numbits)));
     }
   //}}}
   //{{{
-  int code_from_bitstream_2d (sSyntaxElement* se, cBitStream* s, const uint8_t* lentab, const uint8_t* codtab,
+  int code2d (sSyntaxElement* se, cBitStream* s, const uint8_t* lentab, const uint8_t* codtab,
                                      int tabwidth, int tabheight, int *code) {
 
     const uint8_t* len = &lentab[0], *cod = &codtab[0];
@@ -22,18 +22,18 @@ namespace {
     int* bitStreamOffset = &s->bitStreamOffset;
     uint8_t* buf = &s->bitStreamBuffer[*bitStreamOffset >> 3];
 
-    // Apply bitOffset to three bytes (maximum that may be traversed by ShowBitsThres)
+    // Apply bitOffset to three bytes (maximum that may be traversed by showBitsThreshold)
     // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
     uint32_t inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
     // Offset is constant so apply before extracting different numbers of bits
     inf <<= (*bitStreamOffset & 0x07);
-    // Arithmetic shift so wipe any sign which may be extended inside ShowBitsThres
+    // Arithmetic shift so wipe any sign which may be extended inside showBitsThreshold
     inf  &= 0xFFFFFF;
 
     // this VLC decoding method is not optimized for speed
     for (int j = 0; j < tabheight; j++) {
       for (int i = 0; i < tabwidth; i++) {
-        if ((*len == 0) || (ShowBitsThres(inf, (int) *len) != *cod)) {
+        if ((*len == 0) || (showBitsThreshold(inf, (int) *len) != *cod)) {
           ++len;
           ++cod;
           }
@@ -53,14 +53,14 @@ namespace {
   //}}}
   }
 
-// static
+// statics
 //{{{
-void cBitStream::linfo_ue (int len, int info, int* value1, int* dummy) {
+void cBitStream::infoUe (int len, int info, int* value1, int* dummy) {
   *value1 = (int) (((uint32_t) 1 << (len >> 1)) + (uint32_t) (info) - 1);
   }
 //}}}
 //{{{
-void cBitStream::linfo_se (int len, int info, int* value1, int* dummy) {
+void cBitStream::infoSe (int len, int info, int* value1, int* dummy) {
 
   uint32_t n = ((uint32_t) 1 << (len >> 1)) + (uint32_t) info - 1;
   *value1 = (n + 1) >> 1;
@@ -71,39 +71,39 @@ void cBitStream::linfo_se (int len, int info, int* value1, int* dummy) {
   }
 //}}}
 //{{{
-void cBitStream::linfo_cbp_intra_normal (int len, int info, int* codedBlockPattern, int* dummy) {
+void cBitStream::infoCbpIntraNormal (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
-  linfo_ue (len, info, &cbp_idx, dummy);
+  infoUe (len, info, &cbp_idx, dummy);
   *codedBlockPattern = cBitStream::NCBP[1][cbp_idx][0];
   }
 //}}}
 //{{{
-void cBitStream::linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy) {
+void cBitStream::infoCbpIntraOther (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
-  linfo_ue (len, info, &cbp_idx, dummy);
+  infoUe (len, info, &cbp_idx, dummy);
   *codedBlockPattern = cBitStream::NCBP[0][cbp_idx][0];
   }
 //}}}
 //{{{
-void cBitStream::linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy) {
+void cBitStream::infoCbpInterNormal (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
-  linfo_ue (len, info, &cbp_idx, dummy);
+  infoUe (len, info, &cbp_idx, dummy);
   *codedBlockPattern = cBitStream::NCBP[1][cbp_idx][1];
   }
 //}}}
 //{{{
-void cBitStream::linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int *dummy) {
+void cBitStream::infoCbpInterOther (int len, int info, int* codedBlockPattern, int *dummy) {
 
   int cbp_idx;
-  linfo_ue (len, info, &cbp_idx, dummy);
+  infoUe (len, info, &cbp_idx, dummy);
   *codedBlockPattern = cBitStream::NCBP[0][cbp_idx][1];
   }
 //}}}
 //{{{
-void cBitStream::linfo_levrun_inter (int len, int info, int* level, int* irun) {
+void cBitStream::infoLevRunInter (int len, int info, int* level, int* irun) {
 
   if (len <= 9) {
     int l2 = imax(0,(len >> 1)-1);
@@ -111,7 +111,7 @@ void cBitStream::linfo_levrun_inter (int len, int info, int* level, int* irun) {
     *level = cBitStream::NTAB1[l2][inf][0];
     *irun = cBitStream::NTAB1[l2][inf][1];
     if ((info & 0x01) == 1)
-      *level = -*level;                   // make sign
+      *level = -*level; // make sign
     }
   else {
     // if len > 9, skip using the array
@@ -126,7 +126,7 @@ void cBitStream::linfo_levrun_inter (int len, int info, int* level, int* irun) {
   }
 //}}}
 //{{{
-void cBitStream::linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
+void cBitStream::infoLevRunc2x2 (int len, int info, int* level, int* irun) {
 
   if (len <= 5) {
     int l2 = imax(0, (len >> 1) - 1);
@@ -134,7 +134,7 @@ void cBitStream::linfo_levrun_c2x2 (int len, int info, int* level, int* irun) {
     *level = cBitStream::NTAB3[l2][inf][0];
     *irun = cBitStream::NTAB3[l2][inf][1];
     if ((info & 0x01) == 1)
-      *level = -*level;                 // make sign
+      *level = -*level; // make sign
     }
   else {
     // if len > 5, skip using the array
@@ -316,7 +316,7 @@ int cBitStream::readUeV (const string& label) {
   sSyntaxElement symbol;
   symbol.value1 = 0;
   symbol.type = SE_HEADER;
-  symbol.mapping = linfo_ue;
+  symbol.mapping = infoUe;
   readSyntaxElement_VLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
@@ -331,7 +331,7 @@ int cBitStream::readSeV (const string& label) {
   sSyntaxElement symbol;
   symbol.value1 = 0;
   symbol.type = SE_HEADER;
-  symbol.mapping = linfo_se;
+  symbol.mapping = infoSe;
   readSyntaxElement_VLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
@@ -347,7 +347,7 @@ int cBitStream::readUv (int LenInBits, const string& label) {
   symbol.value1 = 0;
   symbol.inf = 0;
   symbol.type = SE_HEADER;
-  symbol.mapping = linfo_ue;
+  symbol.mapping = infoUe;
   symbol.len = LenInBits;
   readSyntaxElement_FLC (&symbol);
 
@@ -364,7 +364,7 @@ int cBitStream::readIv (int LenInBits, const string& label) {
   symbol.value1 = 0;
   symbol.inf = 0;
   symbol.type = SE_HEADER;
-  symbol.mapping = linfo_ue;
+  symbol.mapping = infoUe;
   symbol.len = LenInBits;
   readSyntaxElement_FLC (&symbol);
 
@@ -499,7 +499,7 @@ int cBitStream::readSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se, char
     se->len = 6;
     }
   else {
-    retval = code_from_bitstream_2d (se, this, lentab[vlcnum][0], codtab[vlcnum][0], 17, 4, &code);
+    retval = code2d (se, this, lentab[vlcnum][0], codtab[vlcnum][0], 17, 4, &code);
     if (retval)
       cDecoder264::error ("ERROR: failed to find NumCoeff/TrailingOnes\n");
     }
@@ -554,7 +554,7 @@ int cBitStream::readSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* dec
 
   int code;
   int yuv = decoder->activeSps->chromaFormatIdc - 1;
-  int retval = code_from_bitstream_2d (se, this, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
+  int retval = code2d (se, this, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
 
   if (retval)
     cDecoder264::error ("ERROR: failed to find NumCoeff/TrailingOnes ChromaDC\n");
@@ -721,7 +721,7 @@ int cBitStream::readSyntaxElement_TotalZeros (sSyntaxElement* se) {
 
   int code;
   int vlcnum = se->value1;
-  int retval = code_from_bitstream_2d (se, this, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
+  int retval = code2d (se, this, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
   if (retval)
     cDecoder264::error ("failed to find Total Zeros !cdc\n");
 
@@ -801,7 +801,7 @@ int cBitStream::readSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyn
   int code;
   int yuv = decoder->activeSps->chromaFormatIdc - 1;
   int vlcnum = se->value1;
-  int retval = code_from_bitstream_2d(se, this, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
+  int retval = code2d(se, this, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
   if (retval)
     cDecoder264::error ("failed to find Total Zeros\n");
 
@@ -838,7 +838,7 @@ int cBitStream::readSyntaxElement_Run (sSyntaxElement* se) {
 
   int code;
   int vlcnum = se->value1;
-  int retval = code_from_bitstream_2d (se, this, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
+  int retval = code2d (se, this, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
   if (retval)
     cDecoder264::error ("failed to find Run\n");
 

@@ -141,7 +141,7 @@ public:
   };
   //}}}
   //{{{
-  //! for the linfo_levrun_inter routine
+  //! for the infoLevRunInter routine
   static inline const uint8_t NTAB1[4][8][2] =
   {
     {{1,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
@@ -181,14 +181,14 @@ public:
   //}}}
 
   // statics
-  static void linfo_ue (int len, int info, int* value1, int* dummy);
-  static void linfo_se (int len, int info, int* value1, int* dummy);
-  static void linfo_cbp_intra_normal (int len, int info,int* codedBlockPattern, int* dummy);
-  static void linfo_cbp_inter_normal (int len, int info, int* codedBlockPattern, int* dummy);
-  static void linfo_cbp_intra_other (int len, int info, int* codedBlockPattern, int* dummy);
-  static void linfo_cbp_inter_other (int len, int info, int* codedBlockPattern, int* dummy);
-  static void linfo_levrun_inter (int len, int info, int* level, int* irun);
-  static void linfo_levrun_c2x2 (int len, int info, int* level, int* irun);
+  static void infoUe (int len, int info, int* value1, int* dummy);
+  static void infoSe (int len, int info, int* value1, int* dummy);
+  static void infoCbpIntraNormal (int len, int info,int* codedBlockPattern, int* dummy);
+  static void infoCbpInterNormal (int len, int info, int* codedBlockPattern, int* dummy);
+  static void infoCbpIntraOther (int len, int info, int* codedBlockPattern, int* dummy);
+  static void infoCbpInterOther (int len, int info, int* codedBlockPattern, int* dummy);
+  static void infoLevRunInter (int len, int info, int* level, int* irun);
+  static void infoLevRunc2x2 (int len, int info, int* level, int* irun);
 
   static int vlcStartCode (cSlice* slice, int dummy);
   static int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);

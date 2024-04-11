@@ -3119,12 +3119,12 @@ void cDecoder264::initSlice (cSlice* slice) {
 
   if (!slice->activeSps->chromaFormatIdc ||
       (slice->activeSps->chromaFormatIdc == 3)) {
-    slice->linfoCbpIntra = cBitStream::linfo_cbp_intra_other;
-    slice->linfoCbpInter = cBitStream::linfo_cbp_inter_other;
+    slice->linfoCbpIntra = cBitStream::infoCbpIntraOther;
+    slice->linfoCbpInter = cBitStream::infoCbpInterOther;
     }
   else {
-    slice->linfoCbpIntra = cBitStream::linfo_cbp_intra_normal;
-    slice->linfoCbpInter = cBitStream::linfo_cbp_inter_normal;
+    slice->linfoCbpIntra = cBitStream::infoCbpIntraNormal;
+    slice->linfoCbpInter = cBitStream::infoCbpInterNormal;
     }
   }
 //}}}
@@ -3326,7 +3326,7 @@ void cDecoder264::writeOutPicture (sPicture* picture) {
   if (!decodedPic->yBuf || (decodedPic->bufSize < frameSize))
     allocDecodedPicBuffers (decodedPic, picture, lumaSize, frameSize,
                             lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
-  decodedPic->ok = 1;
+  decodedPic->ok = true;
   decodedPic->poc = picture->framePoc;
   copyCropped (decodedPic->ok ? decodedPic->yBuf : decodedPic->yBuf + lumaSizeX * symbolSizeInBytes,
                picture->imgY, picture->sizeX, picture->sizeY, symbolSizeInBytes,

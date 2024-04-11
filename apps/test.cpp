@@ -1027,30 +1027,31 @@ private:
   //{{{
   void outputDecodedPics (sDecodedPic* decodedPic) {
 
-    if (!decodedPic)
-      pause();
+    if (decodedPic) {
+      while (decodedPic && decodedPic->ok) {
+        mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
+        cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
 
-    while (decodedPic && decodedPic->ok) {
-      mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
-      cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
+        videoFrame->setWidth (decodedPic->width * ((decodedPic->bitDepth + 7) >> 3));
+        videoFrame->setHeight (decodedPic->height);
+        videoFrame->mStrideY = decodedPic->yStride;
+        videoFrame->mStrideUV = decodedPic->uvStride;
+        videoFrame->mInterlaced = 0;
+        videoFrame->mTopFieldFirst = 0;
+        videoFrame->setPixels (decodedPic->yBuf, decodedPic->uBuf, decodedPic->vBuf,
+                               decodedPic->yStride, decodedPic->uvStride, decodedPic->height);
+        videoFrame->mTextureDirty = true;
+        mVideoFrame = videoFrame;
 
-      videoFrame->setWidth (decodedPic->width * ((decodedPic->bitDepth + 7) >> 3));
-      videoFrame->setHeight (decodedPic->height);
-      videoFrame->mStrideY = decodedPic->yStride;
-      videoFrame->mStrideUV = decodedPic->uvStride;
-      videoFrame->mInterlaced = 0;
-      videoFrame->mTopFieldFirst = 0;
-      videoFrame->setPixels (decodedPic->yBuf, decodedPic->uBuf, decodedPic->vBuf,
-                             decodedPic->yStride, decodedPic->uvStride, decodedPic->height);
-      videoFrame->mTextureDirty = true;
-      mVideoFrame = videoFrame;
+        mOutputFrame++;
+        pause();
 
-      mOutputFrame++;
-      pause();
-
-      decodedPic->ok = 0;
-      decodedPic = decodedPic->next;
+        decodedPic->ok = false;
+        decodedPic = decodedPic->next;
+        }
       }
+    else
+      pause();
     }
   //}}}
 
@@ -1185,30 +1186,31 @@ private:
   //{{{
   void outputDecodedPics (sDecodedPic* decodedPic) {
 
-    if (!decodedPic)
-      pause();
+    if (decodedPic) {
+      while (decodedPic && decodedPic->ok) {
+        mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
+        cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
 
-    while (decodedPic && decodedPic->ok) {
-      mVideoFrames[mOutputFrame % kVideoFrames]->releaseResources();
-      cSoftVideoFrame* videoFrame = mVideoFrames[mOutputFrame % kVideoFrames];
+        videoFrame->setWidth (decodedPic->width * ((decodedPic->bitDepth + 7) >> 3));
+        videoFrame->setHeight (decodedPic->height);
+        videoFrame->mStrideY = decodedPic->yStride;
+        videoFrame->mStrideUV = decodedPic->uvStride;
+        videoFrame->mInterlaced = 0;
+        videoFrame->mTopFieldFirst = 0;
+        videoFrame->setPixels (decodedPic->yBuf, decodedPic->uBuf, decodedPic->vBuf,
+                               decodedPic->yStride, decodedPic->uvStride, decodedPic->height);
+        videoFrame->mTextureDirty = true;
+        mVideoFrame = videoFrame;
 
-      videoFrame->setWidth (decodedPic->width * ((decodedPic->bitDepth + 7) >> 3));
-      videoFrame->setHeight (decodedPic->height);
-      videoFrame->mStrideY = decodedPic->yStride;
-      videoFrame->mStrideUV = decodedPic->uvStride;
-      videoFrame->mInterlaced = 0;
-      videoFrame->mTopFieldFirst = 0;
-      videoFrame->setPixels (decodedPic->yBuf, decodedPic->uBuf, decodedPic->vBuf,
-                             decodedPic->yStride, decodedPic->uvStride, decodedPic->height);
-      videoFrame->mTextureDirty = true;
-      mVideoFrame = videoFrame;
+        mOutputFrame++;
+        pause();
 
-      mOutputFrame++;
-      pause();
-
-      decodedPic->ok = 0;
-      decodedPic = decodedPic->next;
+        decodedPic->ok = false;
+        decodedPic = decodedPic->next;
+        }
       }
+    else
+      pause();
     }
   //}}}
 
@@ -1216,7 +1218,7 @@ private:
   cFilePlayer* mFilePlayer = nullptr;
 
   cDecoder264* mDecoder = nullptr;
-  ePlayState mPlayState = eStopped;
+  ePlayState mPlayState = ePlaying;
 
   size_t mOutputFrame = 0;
   array <cSoftVideoFrame*,kVideoFrames> mVideoFrames = { nullptr };

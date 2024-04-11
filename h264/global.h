@@ -443,7 +443,7 @@ struct sMacroBlock {
 //}}}
 //{{{
 struct sDecodedPic {
-  int ok;
+  bool ok;
 
   int yuvFormat; // 4:0:0, 4:2:0, 4:2:2, 4:4:4
   int bitDepth;
@@ -700,9 +700,11 @@ public:
 
   // out
   sPicture*    picture = nullptr;
+
+  cFrameStore* outBuffer = nullptr;
   sPicture*    pendingOut = nullptr;
   int          pendingOutPicStructure;
-  cFrameStore* outBuffer = nullptr;
+
   sDecodedPic* outDecodedPics = nullptr;
 
   // conceal
