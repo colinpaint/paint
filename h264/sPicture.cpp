@@ -4,7 +4,9 @@
 #include "global.h"
 #include "memory.h"
 
-#include "erc.h"
+#include "../common/cLog.h"
+
+using namespace std;
 //}}}
 namespace {
   //{{{
@@ -21,8 +23,9 @@ namespace {
   //}}}
   }
 
+// static
 //{{{
-sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
+sPicture* sPicture::allocPicture (cDecoder264* decoder, ePicStructure picStructure,
                         int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput) {
 
   sPicture* s = (sPicture*)calloc (1, sizeof(sPicture));
@@ -32,7 +35,7 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
     sizeYcr /= 2;
     }
 
-  s->picSizeInMbs = (sizeX*sizeY)/256;
+  s->picSizeInMbs = (sizeX*sizeY) / 256;
   s->imgUV = NULL;
 
   getMem2DpelPad (&s->imgY, sizeY, sizeX, decoder->coding.lumaPadY, decoder->coding.lumaPadX);
@@ -97,7 +100,7 @@ sPicture* allocPicture (cDecoder264* decoder, ePicStructure picStructure,
   }
 //}}}
 //{{{
-void freePicture (sPicture* picture) {
+void sPicture::freePicture (sPicture*& picture) {
 
   if (picture) {
     if (picture->mvInfo) {
@@ -132,30 +135,29 @@ void freePicture (sPicture* picture) {
           free (picture->listX[j][i]);
           picture->listX[j][i] = NULL;
           }
-
-    free (picture);
-    picture = NULL;
     }
+
+  free (picture);
+  picture = NULL;
   }
 //}}}
 
+// no idea
 //{{{
 void fillFrameNumGap (cDecoder264* decoder, cSlice* slice) {
 
-  cSps* activeSps = decoder->activeSps;
+  cLog::log (LOGERROR, "gap in frame number is found, try to fill it");
 
   int tmp1 = slice->deltaPicOrderCount[0];
   int tmp2 = slice->deltaPicOrderCount[1];
   slice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[1] = 0;
 
-  printf ("A gap in frame number is found, try to fill it.\n");
-
   int unusedShortTermFrameNum = (decoder->preFrameNum + 1) % decoder->coding.maxFrameNum;
   int curFrameNum = slice->frameNum;
 
-  sPicture* picture = NULL;
   while (curFrameNum != unusedShortTermFrameNum) {
-    picture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
+    sPicture* picture = sPicture::allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, 
+                                                decoder->widthCr, decoder->heightCr, 1);
     picture->codedFrame = 1;
     picture->picNum = unusedShortTermFrameNum;
     picture->frameNum = unusedShortTermFrameNum;
@@ -165,7 +167,7 @@ void fillFrameNumGap (cDecoder264* decoder, cSlice* slice) {
     picture->adaptRefPicBufFlag = 0;
 
     slice->frameNum = unusedShortTermFrameNum;
-    if (activeSps->pocType != 0)
+    if (decoder->activeSps->pocType != 0)
       decoder->decodePOC (decoder->sliceList[0]);
     picture->topPoc = slice->topPoc;
     picture->botPoc = slice->botPoc;

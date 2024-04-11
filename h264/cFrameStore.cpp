@@ -39,9 +39,9 @@ namespace {
 //{{{
 cFrameStore::~cFrameStore() {
 
-  freePicture (frame);
-  freePicture (topField);
-  freePicture (botField);
+  sPicture::freePicture (frame);
+  sPicture::freePicture (topField);
+  sPicture::freePicture (botField);
   }
 //}}}
 
@@ -177,7 +177,7 @@ void cFrameStore::unmarkForLongTermRef() {
 void cFrameStore::dpbCombineField (cDecoder264* decoder) {
 
   if (!frame)
-    frame = allocPicture (decoder, eFrame,
+    frame = sPicture::allocPicture (decoder, eFrame,
                           topField->sizeX, topField->sizeY*2,
                           topField->sizeXcr, topField->sizeYcr*2, 1);
 
@@ -279,10 +279,10 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
 
   poc = frame->poc;
   if (!frame->frameMbOnly) {
-    fsTop = topField = allocPicture (decoder, eTopField,
+    fsTop = topField = sPicture::allocPicture (decoder, eTopField,
                                                  frame->sizeX, frame->sizeY, frame->sizeXcr,
                                                  frame->sizeYcr, 1);
-    fsBot = botField = allocPicture (decoder, eBotField,
+    fsBot = botField = sPicture::allocPicture (decoder, eBotField,
                                                  frame->sizeX, frame->sizeY,
                                                  frame->sizeXcr, frame->sizeYcr, 1);
     for (int i = 0; i < (frame->sizeY >> 1); i++)

@@ -1936,7 +1936,7 @@ void cDecoder264::directOutput (sPicture* picture) {
     // we have a frame (or complementary field pair), so output it directly
     flushDirectOutput();
     writePicture (picture, eFrame);
-    freePicture (picture);
+    sPicture::freePicture (picture);
     return;
     }
 
@@ -1958,15 +1958,11 @@ void cDecoder264::directOutput (sPicture* picture) {
     // we have both fields, so output them
     outBuffer->dpbCombineField (this);
     writePicture (outBuffer->frame, eFrame);
-    freePicture (outBuffer->frame);
 
-    outBuffer->frame = NULL;
-    freePicture (outBuffer->topField);
-
-    outBuffer->topField = NULL;
-    freePicture (outBuffer->botField);
-
-    outBuffer->botField = NULL;
+    sPicture::freePicture (outBuffer->frame);
+    sPicture::freePicture (outBuffer->topField);
+    sPicture::freePicture (outBuffer->botField);
+    
     outBuffer->isUsed = 0;
     }
   }
@@ -2161,8 +2157,7 @@ void cDecoder264::initGlobalBuffers() {
 //{{{
 void cDecoder264::freeGlobalBuffers() {
 
-  freePicture (picture);
-  picture = NULL;
+  sPicture::freePicture (picture);
   }
 //}}}
 //{{{
@@ -2982,7 +2977,7 @@ void cDecoder264::initPicture (cSlice* slice) {
   if ((slice->picStructure == eFrame) || (slice->picStructure == eTopField))
     getTime (&debug.startTime);
 
-  picture = allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+  picture = sPicture::allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
   picture->topPoc = slice->topPoc;
   picture->botPoc = slice->botPoc;
   picture->framePoc = slice->framePoc;
@@ -3099,9 +3094,9 @@ void cDecoder264::initPicture (cSlice* slice) {
 
   if (coding.isSeperateColourPlane) {
     decPictureJV[0] = picture;
-    decPictureJV[1] = allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+    decPictureJV[1] = sPicture::allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
     copyDecPictureJV (decPictureJV[1], decPictureJV[0] );
-    decPictureJV[2] = allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+    decPictureJV[2] = sPicture::allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
     copyDecPictureJV (decPictureJV[2], decPictureJV[0] );
     }
   }
@@ -3448,7 +3443,7 @@ void cDecoder264::writeUnpairedField (cFrameStore* frameStore) {
   if (frameStore->isUsed & 0x01) {
     // we have a top field, construct an empty bottom field
     sPicture* picture = frameStore->topField;
-    frameStore->botField = allocPicture (this, eBotField, picture->sizeX, 2 * picture->sizeY,
+    frameStore->botField = sPicture::allocPicture (this, eBotField, picture->sizeX, 2 * picture->sizeY,
                                                           picture->sizeXcr, 2 * picture->sizeYcr, 1);
     frameStore->botField->chromaFormatIdc = picture->chromaFormatIdc;
 
@@ -3460,7 +3455,7 @@ void cDecoder264::writeUnpairedField (cFrameStore* frameStore) {
   if (frameStore->isUsed & 0x02) {
     // we have a bottom field, construct an empty top field
     sPicture* picture = frameStore->botField;
-    frameStore->topField = allocPicture (this, eTopField, picture->sizeX, 2*picture->sizeY,
+    frameStore->topField = sPicture::allocPicture (this, eTopField, picture->sizeX, 2*picture->sizeY,
                                          picture->sizeXcr, 2*picture->sizeYcr, 1);
     frameStore->topField->chromaFormatIdc = picture->chromaFormatIdc;
     clearPicture (frameStore->topField);
@@ -3485,14 +3480,9 @@ void cDecoder264::flushDirectOutput() {
 
   writeUnpairedField (outBuffer);
 
-  freePicture (outBuffer->frame);
-  outBuffer->frame = NULL;
-
-  freePicture (outBuffer->topField);
-  outBuffer->topField = NULL;
-
-  freePicture (outBuffer->botField);
-  outBuffer->botField = NULL;
+  sPicture::freePicture (outBuffer->frame);
+  sPicture::freePicture (outBuffer->topField);
+  sPicture::freePicture (outBuffer->botField);
 
   outBuffer->isUsed = 0;
   }
@@ -3517,7 +3507,7 @@ void cDecoder264::makeFramePictureJV() {
       int nsize = sizeof(sPixel) * coding.width;
       memcpy (picture->imgUV[uv][line], decPictureJV[uv+1]->imgY[line], nsize );
       }
-    freePicture (decPictureJV[uv+1]);
+    sPicture::freePicture (decPictureJV[uv+1]);
     }
   }
 //}}}

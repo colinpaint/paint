@@ -1,3 +1,4 @@
+// cDPb.cpp - decoded picture buffer
 //{{{  includes
 #include <limits.h>
 
@@ -188,7 +189,7 @@ void cDpb::initDpb (cDecoder264* decoder, int type) {
 
   // allocate dummyRefPicture
   if (!noRefPicture) {
-    noRefPicture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, 
+    noRefPicture = sPicture::allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
                                  decoder->widthCr, decoder->heightCr, 1);
     noRefPicture->topField = noRefPicture;
     noRefPicture->botField = noRefPicture;
@@ -254,8 +255,7 @@ void cDpb::freeDpb () {
   if (decoder->concealMode != 0 || decoder->lastOutFrameStore)
     delete decoder->lastOutFrameStore;
 
-  freePicture (noRefPicture);
-  noRefPicture = NULL;
+  sPicture::freePicture (noRefPicture);
 
   updateInfo();
   initDone = false;
@@ -483,24 +483,17 @@ void cDpb::removeFrameDpb (int pos) {
   cFrameStore* frameStore = frameStoreArray[pos];
   switch (frameStore->isUsed) {
     case 3:
-      freePicture (frameStore->frame);
-      frameStore->frame = NULL;
-
-      freePicture (frameStore->topField);
-      frameStore->topField = NULL;
-
-      freePicture (frameStore->botField);
-      frameStore->botField = NULL;
+      sPicture::freePicture (frameStore->frame);
+      sPicture::freePicture (frameStore->topField);
+      sPicture::freePicture (frameStore->botField);
       break;
 
     case 2:
-      freePicture (frameStore->botField);
-      frameStore->botField = NULL;
+      sPicture::freePicture (frameStore->botField);
       break;
 
     case 1:
-      freePicture (frameStore->topField);
-      frameStore->topField = NULL;
+      sPicture::freePicture (frameStore->topField);
       break;
 
     case 0:

@@ -1469,7 +1469,7 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
   CurrFrameNum = slice->frameNum;
 
   while (CurrFrameNum != UnusedShortTermFrameNum) {
-    picture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
+    picture = sPicture::allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
 
     picture->codedFrame = 1;
     picture->picNum = UnusedShortTermFrameNum;
@@ -1539,7 +1539,7 @@ void concealLostFrames (cDpb* dpb, cSlice* slice) {
   for (i = 0; i < dpb->getAllocatedSize() - diff; i++) {
     dpb->setSize (dpb->getAllocatedSize());
     if((decoder->dpb.dpbPoc[i+1] - decoder->dpb.dpbPoc[i]) > decoder->param.pocGap)  {
-      conceal_to_picture = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
+      conceal_to_picture = sPicture::allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height, decoder->widthCr, decoder->heightCr, 1);
 
       missingpoc = decoder->dpb.dpbPoc[i] + decoder->param.pocGap;
       if (missingpoc > decoder->earlierMissingPoc) {
@@ -1603,7 +1603,7 @@ void writeLostRefAfterIdr (cDpb* dpb, int pos) {
   cDecoder264* decoder = dpb->decoder;
   int temp = 1;
   if (decoder->lastOutFrameStore->frame == NULL) {
-    decoder->lastOutFrameStore->frame = allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
+    decoder->lastOutFrameStore->frame = sPicture::allocPicture (decoder, eFrame, decoder->coding.width, decoder->coding.height,
                                                       decoder->widthCr, decoder->heightCr, 1);
     decoder->lastOutFrameStore->isUsed = 3;
     }

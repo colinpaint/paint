@@ -33,6 +33,10 @@ struct sPicMotion {
 //}}}
 //{{{
 struct sPicture {
+  static sPicture* allocPicture (cDecoder264* decoder, ePicStructure type,
+                                 int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
+  static void freePicture (sPicture*& picture);
+
   ePicStructure picStructure;
 
   int           poc;
@@ -247,8 +251,5 @@ static inline int isShortRef (sPicture* picture) {
   return picture->usedForRef && !picture->usedLongTermRef;
   }
 //}}}
-
-sPicture* allocPicture (cDecoder264* decoder, ePicStructure type, int sizeX, int sizeY, int sizeXcr, int sizeYcr, int isOutput);
-void freePicture (sPicture* picture);
 
 void fillFrameNumGap (cDecoder264* decoder, cSlice *slice);
