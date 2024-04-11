@@ -36,8 +36,8 @@ public:
   cFrameStore** frameStoreLongTermRefArray = nullptr;
 
 private:
-  int removeUnusedDpb();
-  void removeFrameDpb (int pos);
+  bool removeUnusedFrame();
+  void removeFrameByIndex (int index);
 
   void updateInfo();
   void dump();

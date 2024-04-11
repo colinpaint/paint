@@ -274,7 +274,7 @@ void cDpb::flushDpb() {
   for (uint32_t i = 0; i < usedSize; i++)
     frameStoreArray[i]->unmarkForRef();
 
-  while (removeUnusedDpb());
+  while (removeUnusedFrame());
 
   // output frames in POC order
   while (usedSize && outputDpbFrame());
@@ -408,7 +408,7 @@ void cDpb::storePicture (sPicture* picture) {
     if (decoder->concealMode != 0)
       concealNonRefPics (this, 2);
 
-    removeUnusedDpb();
+    removeUnusedFrame();
 
     if (decoder->concealMode != 0)
       slidingWindowPocManagement (this, picture);
@@ -464,23 +464,23 @@ void cDpb::storePicture (sPicture* picture) {
 
 // private
 //{{{
-int cDpb::removeUnusedDpb() {
+bool cDpb::removeUnusedFrame() {
 // check for frames that were already output and no longer used for ref
 
   for (uint32_t i = 0; i < usedSize; i++) {
-    if (frameStoreArray[i]->isOutput && (!frameStoreArray[i]->isRef())) {
-      removeFrameDpb (i);
-      return 1;
+    if (frameStoreArray[i]->isOutput && !frameStoreArray[i]->isRef()) {
+      removeFrameByIndex (i);
+      return true;
       }
     }
 
-  return 0;
+  return false;
   }
 //}}}
 //{{{
-void cDpb::removeFrameDpb (int pos) {
+void cDpb::removeFrameByIndex (int index) {
 
-  cFrameStore* frameStore = frameStoreArray[pos];
+  cFrameStore* frameStore = frameStoreArray[index];
   switch (frameStore->isUsed) {
     case 3:
       sPicture::freePicture (frameStore->frame);
@@ -509,7 +509,7 @@ void cDpb::removeFrameDpb (int pos) {
   frameStore->usedOrigRef = 0;
 
   // move empty framestore to end of buffer
-  for (uint32_t i = pos; i < usedSize-1; i++)
+  for (uint32_t i = index; i < usedSize-1; i++)
     frameStoreArray[i] = frameStoreArray[i+1];
 
   frameStoreArray[usedSize-1] = frameStore;
@@ -590,15 +590,14 @@ int cDpb::outputDpbFrame() {
   decoder->writeStoredFrame (frameStoreArray[pos]);
 
   // error conceal
-  if(decoder->concealMode == 0)
+  if (decoder->concealMode == 0)
     if (lastOutPoc >= poc)
       cDecoder264::error ("output POC must be in ascending order");
-
   lastOutPoc = poc;
 
   // free frameStore and move emptyStore to end of buffer
   if (!frameStoreArray[pos]->isRef())
-    removeFrameDpb (pos);
+    removeFrameByIndex (pos);
 
   return 1;
   }
@@ -615,12 +614,12 @@ void cDpb::checkNumDpbFrames() {
 void cDpb::getSmallestPoc (int& poc, int& pos) {
 
   if (usedSize < 1)
-    cDecoder264::error ("Cannot determine smallest POC, DPB empty");
+    cDecoder264::error ("cannot getSmallestPoc, DPB empty");
 
   pos = -1;
   poc = INT_MAX;
   for (uint32_t i = 0; i < usedSize; i++) {
-    if ((poc > frameStoreArray[i]->poc) && (!frameStoreArray[i]->isOutput)) {
+    if ((poc > frameStoreArray[i]->poc) && !frameStoreArray[i]->isOutput) {
       poc = frameStoreArray[i]->poc;
       pos = i;
       }
