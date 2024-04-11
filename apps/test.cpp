@@ -967,22 +967,20 @@ public:
 
       mDecoder = cDecoder264::open (&param, h264Chunk, h264ChunkSize);
 
-      sDecodedPic* decodedPics;
-      int ret = 0;
+      int result = 0;
       do {
-        ret = mDecoder->decodeOneFrame (&decodedPics);
-        if (ret == cDecoder264::DEC_EOS || ret == cDecoder264::DEC_SUCCEED)
-          outputDecodedPics (decodedPics);
-        else
+        sDecodedPic* decodePics = mDecoder->decodeOneFrame (result);
+        if (result == cDecoder264::DEC_SUCCEED)
+          outputDecodedPics (decodePics);
+        else if (result != cDecoder264::DEC_EOS)
           cLog::log (LOGERROR, "decoding  failed");
 
         while (!mPlaying && !mSingleStep)
           this_thread::sleep_for (1ms);
         mSingleStep = false;
-        } while (ret == cDecoder264::DEC_SUCCEED);
+        } while (result == cDecoder264::DEC_SUCCEED);
 
-      mDecoder->finish (&decodedPics);
-      outputDecodedPics (decodedPics);
+      outputDecodedPics (mDecoder->finish());
       mDecoder->close();
 
       delete[] h264Chunk;
@@ -1014,7 +1012,17 @@ private:
       mOutputFrame++;
       decodedPic->ok = 0;
       decodedPic = decodedPic->next;
+
+      if (decodedPic) {
+        while (!mPlaying && !mSingleStep)
+          this_thread::sleep_for (1ms);
+        mSingleStep = false;
+        }
       }
+
+    while (!mPlaying && !mSingleStep)
+      this_thread::sleep_for (1ms);
+    mSingleStep = false;
     }
   //}}}
 
@@ -1113,22 +1121,16 @@ public:
       param.intraProfileDeblocking = 1;
       mDecoder = cDecoder264::open (&param, chunk, fileSize);
 
-      int ret = 0;
-      sDecodedPic* decodedPics;
+      int result = 0;
       do {
-        ret = mDecoder->decodeOneFrame (&decodedPics);
-        if (ret == cDecoder264::DEC_EOS || ret == cDecoder264::DEC_SUCCEED)
+        sDecodedPic* decodedPics = mDecoder->decodeOneFrame (result);
+        if (result == cDecoder264::DEC_SUCCEED)
           outputDecodedPics (decodedPics);
-        else
-          cLog::log (LOGERROR, "decoding  failed");
+        else if (result != cDecoder264::DEC_EOS)
+          cLog::log (LOGERROR, "decoder failed");
+        } while (result == cDecoder264::DEC_SUCCEED);
 
-        while (!mPlaying && !mSingleStep)
-          this_thread::sleep_for (1ms);
-        mSingleStep = false;
-        } while (ret == cDecoder264::DEC_SUCCEED);
-
-      mDecoder->finish (&decodedPics);
-      outputDecodedPics (decodedPics);
+      outputDecodedPics (mDecoder->finish());
       mDecoder->close();
 
       delete[] chunk;
@@ -1174,7 +1176,17 @@ private:
       mOutputFrame++;
       decodedPic->ok = 0;
       decodedPic = decodedPic->next;
+
+      if (decodedPic) {
+        while (!mPlaying && !mSingleStep)
+          this_thread::sleep_for (1ms);
+        mSingleStep = false;
+        }
       }
+
+    while (!mPlaying && !mSingleStep)
+      this_thread::sleep_for (1ms);
+    mSingleStep = false;
     }
   //}}}
 

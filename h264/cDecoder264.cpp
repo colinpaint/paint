@@ -1962,7 +1962,7 @@ void cDecoder264::directOutput (sPicture* picture) {
     sPicture::freePicture (outBuffer->frame);
     sPicture::freePicture (outBuffer->topField);
     sPicture::freePicture (outBuffer->botField);
-    
+
     outBuffer->isUsed = 0;
     }
   }
@@ -1987,9 +1987,7 @@ void cDecoder264::writeStoredFrame (cFrameStore* frameStore) {
 //}}}
 
 //{{{
-int cDecoder264::decodeOneFrame (sDecodedPic** decPicList) {
-
-  int result = 0;
+sDecodedPic* cDecoder264::decodeOneFrame (int& result) {
 
   clearDecodedPics();
 
@@ -2001,12 +1999,11 @@ int cDecoder264::decodeOneFrame (sDecodedPic** decPicList) {
   else
     result |= DEC_ERRMASK;
 
-  *decPicList = outDecodedPics;
-  return result;
+  return outDecodedPics;
   }
 //}}}
 //{{{
-void cDecoder264::finish (sDecodedPic** decPicList) {
+sDecodedPic* cDecoder264::finish() {
 
   clearDecodedPics();
   dpb.flushDpb();
@@ -2015,7 +2012,8 @@ void cDecoder264::finish (sDecodedPic** decPicList) {
 
   newFrame = 0;
   prevFrameNum = 0;
-  *decPicList = outDecodedPics;
+
+  return outDecodedPics;
   }
 //}}}
 //{{{

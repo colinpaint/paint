@@ -402,7 +402,7 @@ struct sMacroBlock {
   // some storage of macroBlock syntax elements for global access
   int16_t mbType;
   // indices correspond to [forw,backw][blockY][blockX][x,y]
-  int16_t mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2]; 
+  int16_t mvd[2][BLOCK_MULTIPLE][BLOCK_MULTIPLE][2];
   int     codedBlockPattern;
   sCodedBlockPattern cbp[3];
 
@@ -638,8 +638,8 @@ public:
 
   int fmoGetNextMBNr (int CurrentMbNr);
 
-  int decodeOneFrame (sDecodedPic** decPicList);
-  void finish (sDecodedPic** decPicList);
+  sDecodedPic* decodeOneFrame (int& result);
+  sDecodedPic* finish();
   void close();
 
   void decodePOC (cSlice* slice);
