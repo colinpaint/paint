@@ -1511,7 +1511,7 @@ void cDecoder264::error (const string& text) {
 
   cLog::log (LOGERROR, text);
   if (cDecoder264::gDecoder)
-    cDecoder264::gDecoder->dpb.flushDpb();
+    cDecoder264::gDecoder->dpb.flush();
 
   exit (0);
   }
@@ -1932,30 +1932,30 @@ void cDecoder264::changePlaneJV (int nplane, cSlice* slice) {
 //{{{
 void cDecoder264::directOutput (sPicture* picture) {
 
-  if (picture->picStructure == eFrame) {
-    // we have a frame (or complementary field pair), so output it directly
-    flushDirectOutput();
-    writePicture (picture, eFrame);
-    sPicture::freePicture (picture);
-    return;
-    }
-
-  if (picture->picStructure == eTopField) {
-    if (outBuffer->isUsed & 1)
+  switch (picture->picStructure) { 
+    case eFrame:
       flushDirectOutput();
-    outBuffer->topField = picture;
-    outBuffer->isUsed |= 1;
-    }
+      writePicture (picture, eFrame);
+      sPicture::freePicture (picture);
+      return;
 
-  if (picture->picStructure == eBotField) {
-    if (outBuffer->isUsed & 2)
-      flushDirectOutput();
-    outBuffer->botField = picture;
-    outBuffer->isUsed |= 2;
+    case eTopField:
+      if (outBuffer->isUsed & 1)
+        flushDirectOutput();
+      outBuffer->topField = picture;
+      outBuffer->isUsed |= 1;
+      break;
+
+    case eBotField:
+      if (outBuffer->isUsed & 2)
+        flushDirectOutput();
+      outBuffer->botField = picture;
+      outBuffer->isUsed |= 2;
+      break;
     }
 
   if (outBuffer->isUsed == 3) {
-    // we have both fields, so output them
+    // output both fields
     outBuffer->dpbCombineField (this);
     writePicture (outBuffer->frame, eFrame);
 
@@ -2006,7 +2006,7 @@ sDecodedPic* cDecoder264::decodeOneFrame (int& result) {
 sDecodedPic* cDecoder264::finish() {
 
   clearDecodedPics();
-  dpb.flushDpb();
+  dpb.flush();
 
   annexB->reset();
 
@@ -2031,7 +2031,7 @@ void cDecoder264::close() {
     pps[i].ok = false;
     }
 
-  dpb.freeDpb();
+  dpb.freeResources();
 
   // free output
   delete outBuffer;
@@ -3202,8 +3202,8 @@ void cDecoder264::useParameterSet (cSlice* slice) {
     initGlobalBuffers();
 
     if (!noOutputPriorPicFlag)
-      dpb.flushDpb();
-    dpb.initDpb (this, 0);
+      dpb.flush();
+    dpb.init (this, 0);
 
     // enable error conceal
     ercInit (this, coding.width, coding.height, 1);

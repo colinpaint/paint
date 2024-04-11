@@ -4,11 +4,11 @@ class cDecoder;
 
 class cDpb {
 public:
-  void initDpb (cDecoder264* decoder, int type);
-  void reInitDpb (cDecoder264* decoder, int type);
+  void init (cDecoder264* decoder, int type);
+  void reInit (cDecoder264* decoder, int type);
 
-  void flushDpb();
-  void freeDpb();
+  void flush();
+  void freeResources();
 
   bool isInitDone() const { return initDone; }
   uint32_t getSize() const { return usedSize; };
@@ -42,8 +42,8 @@ private:
   void updateInfo();
   void dump();
 
-  int outputDpbFrame();
-  void checkNumDpbFrames();
+  int outputFrame();
+  void checkNumFrames();
 
   void getSmallestPoc (int& poc, int& pos);
 
