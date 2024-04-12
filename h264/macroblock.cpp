@@ -3879,7 +3879,7 @@ namespace {
     int top_idx = 0;
     int bot_idx = 0;
 
-    int (*is_ref)(sPicture*s) = (long_term) ? isLongRef : isShortRef;
+    int (*is_ref)(sPicture*s) = long_term ? isLongRef : isShortRef;
 
     if (currStructure == eTopField) {
       while ((top_idx<list_idx)||(bot_idx<list_idx)) {
@@ -4140,20 +4140,20 @@ namespace {
 //{{{
 void copyImage4x4 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 
-  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
-  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
-  memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE * sizeof (sPixel));
-  memcpy ((*imgBuf1   + off1), (*imgBuf2   + off2), BLOCK_SIZE * sizeof (sPixel));
+  memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE * sizeof (sPixel));
+  memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE * sizeof (sPixel));
+  memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE * sizeof (sPixel));
+  memcpy (*imgBuf1   + off1, *imgBuf2   + off2, BLOCK_SIZE * sizeof (sPixel));
   }
 //}}}
 //{{{
 void copyImage8x8 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 
   for (int j = 0; j < BLOCK_SIZE_8x8; j+=4) {
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE_8x8 * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, BLOCK_SIZE_8x8 * sizeof (sPixel));
     }
   }
 //}}}
@@ -4161,10 +4161,10 @@ void copyImage8x8 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 void copyImage16x16 (sPixel** imgBuf1, sPixel** imgBuf2, int off1, int off2) {
 
   for (int j = 0; j < MB_BLOCK_SIZE; j += 4) {
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
-    memcpy ((*imgBuf1++ + off1), (*imgBuf2++ + off2), MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, MB_BLOCK_SIZE * sizeof (sPixel));
+    memcpy (*imgBuf1++ + off1, *imgBuf2++ + off2, MB_BLOCK_SIZE * sizeof (sPixel));
     }
   }
 //}}}
@@ -4203,7 +4203,8 @@ bool checkVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
   int y_pos = vec1_y>>2;
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
 
-  return y_pos < (-decoder->coding.lumaPadY + 2) || y_pos > (maxold_y + decoder->coding.lumaPadY - blockSizeY - 2);
+  return y_pos < (-decoder->coding.lumaPadY + 2) || 
+                 y_pos > (maxold_y + decoder->coding.lumaPadY - blockSizeY - 2);
   }
 //}}}
 //{{{
@@ -4211,6 +4212,7 @@ void checkNeighbours (sMacroBlock* mb) {
 
   cSlice* slice = mb->slice;
   sPicture* picture = slice->picture; //decoder->picture;
+
   const int mb_nr = mb->mbIndexX;
   sBlockPos* picPos = mb->decoder->picPos;
 
@@ -4249,6 +4251,7 @@ void checkNeighboursNormal (sMacroBlock* mb) {
 
   cSlice* slice = mb->slice;
   sPicture* picture = slice->picture; //decoder->picture;
+
   const int mb_nr = mb->mbIndexX;
   sBlockPos* picPos = mb->decoder->picPos;
 
@@ -4295,11 +4298,10 @@ void checkNeighboursMbAff (sMacroBlock* mb) {
 void getAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos* pixelPos) {
 
   cDecoder264* decoder = mb->decoder;
-  int maxW, maxH;
-  int yM = -1;
 
-  maxW = mbSize[0];
-  maxH = mbSize[1];
+  int yM = -1;
+  int maxW = mbSize[0];
+  int maxH = mbSize[1];
 
   // initialize to "not ok"
   pixelPos->ok = false;
@@ -4311,7 +4313,7 @@ void getAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos*
 
   if (xN < 0) {
     if (yN < 0) {
-      if(!mb->mbField) {
+      if (!mb->mbField) {
         //{{{  frame
         if ((mb->mbIndexX & 0x01) == 0) {
           //  top
@@ -4557,8 +4559,8 @@ void getAffNeighbour (sMacroBlock* mb, int xN, int yN, int mbSize[2], sPixelPos*
     }
 
   if (pixelPos->ok || mb->DeblockCall) {
-    pixelPos->x = (int16_t) (xN & (maxW - 1));
-    pixelPos->y = (int16_t) (yM & (maxH - 1));
+    pixelPos->x = (int16_t)(xN & (maxW - 1));
+    pixelPos->y = (int16_t)(yM & (maxH - 1));
     getMbPos (decoder, pixelPos->mbIndex, mbSize, &(pixelPos->posX), &(pixelPos->posY));
     pixelPos->posX = pixelPos->posX + pixelPos->x;
     pixelPos->posY = pixelPos->posY + pixelPos->y;
@@ -4641,7 +4643,9 @@ void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   int** mbRess = slice->mbRess[plane];
   inverse4x4 (slice->cof[plane],mbRess,joff,ioff);
 
-  sample_reconstruct (&slice->mbRec[plane][joff], &slice->mbPred[plane][joff], &mbRess[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE, mb->decoder->coding.maxPelValueComp[plane], DQ_BITS);
+  sample_reconstruct (&slice->mbRec[plane][joff], &slice->mbPred[plane][joff], 
+                      &mbRess[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE,
+                      mb->decoder->coding.maxPelValueComp[plane], DQ_BITS);
   }
 //}}}
 //{{{
@@ -4657,7 +4661,7 @@ void itrans4x4Lossless (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) 
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
   for (int j = joff; j < joff + BLOCK_SIZE; ++j)
     for (int i = ioff; i < ioff + BLOCK_SIZE; ++i)
-      mbRec[j][i] = (sPixel) iClip1(max_imgpel_value, mbPred[j][i] + mbRess[j][i]);
+      mbRec[j][i] = (sPixel)iClip1(max_imgpel_value, mbPred[j][i] + mbRess[j][i]);
   }
 //}}}
 //{{{
@@ -4731,7 +4735,7 @@ void itrans2 (sMacroBlock* mb, eColorPlane plane) {
     cof[j<<2][12] = rshift_rnd((( M4[j][3] * invLevelScale) << qp_per), 6);
     }
 
-  freeMem2Dint(M4);
+  freeMem2Dint (M4);
   }
 //}}}
 //{{{
@@ -4855,7 +4859,6 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
           for (int i = 0; i < BLOCK_SIZE; ++i) {
             // recovering coefficient since they are already dequantized earlier
             cof[n2 + j][n1 + i] = (cof[n2 + j][n1 + i] >> qp_per) / kDequantCoef[qp_rem][j][i];
-
             // quantization of the predicted block
             int ilev = rshift_rnd_sf (iabs(PBlock[n2 + j][n1 + i]) * kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
             // addition of the residual
@@ -4979,12 +4982,13 @@ void setChromaQp (sMacroBlock* mb) {
 
   cDecoder264* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
+
   for (int i = 0; i < 2; ++i) {
     mb->qpc[i] = iClip3 (-decoder->coding.bitDepthChromaQpScale, 51, mb->qp + picture->chromaQpOffset[i] );
     mb->qpc[i] = mb->qpc[i] < 0 ? mb->qpc[i] : QP_SCALE_CR[mb->qpc[i]];
     mb->qpScaled[i+1] = mb->qpc[i] + decoder->coding.bitDepthChromaQpScale;
+    }
   }
-}
 //}}}
 //{{{
 void updateQp (sMacroBlock* mb, int qp) {
@@ -5026,8 +5030,9 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition* dataPartition, sMacroBl
   }
 //}}}
 //{{{
-void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int j, int i0, int j0, int coef_ctr, const uint8_t (*pos_scan4x4)[2], int (*InvLevelScale4x4)[4])
-{
+void invScaleCoeff (sMacroBlock* mb, int level, int run, int qp_per, int i, int j, int i0, int j0,
+                    int coef_ctr, const uint8_t (*pos_scan4x4)[2], int (*InvLevelScale4x4)[4]) {
+
   if (level != 0) {
     /* leave if level == 0 */
     coef_ctr += run + 1;
@@ -5090,8 +5095,8 @@ void getNeighbours (sMacroBlock* mb, sPixelPos* block, int mb_x, int mb_y, int b
 //{{{
 int decodeMacroBlock (sMacroBlock* mb, sPicture* picture) {
 
-  cSlice* slice = mb->slice;
   cDecoder264* decoder = mb->decoder;
+  cSlice* slice = mb->slice;
 
   if (slice->chroma444notSeparate) {
     if (!mb->isIntraBlock) {
