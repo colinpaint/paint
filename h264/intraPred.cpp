@@ -4,57 +4,57 @@
 #include "intraPred.h"
 #include "macroblock.h"
 //}}}
-//{{{
-// Notation for comments regarding prediction and predictors.
-// The pels of the 4x4 block are labelled a..p. The predictor pels above
-// are labelled A..H, from the left I..L, and from above left X, as follows:
-//
-//  X A B C D E F G H
-//  I a b c d
-//  J e f g h
-//  K i j k l
-//  L m n o p
-#define P_Z (predPel[0])
+ //{{{  defines
+ // Notation for comments regarding prediction and predictors.
+ // The pels of the 4x4 block are labelled a..p. The predictor pels above
+ // are labelled A..H, from the left I..L, and from above left X, as follows:
+ //
+ //  X A B C D E F G H
+ //  I a b c d
+ //  J e f g h
+ //  K i j k l
+ //  L m n o p
+ #define P_Z (predPel[0])
 
-#define P_A (predPel[1])
-#define P_B (predPel[2])
-#define P_C (predPel[3])
-#define P_D (predPel[4])
-#define P_E (predPel[5])
-#define P_F (predPel[6])
-#define P_G (predPel[7])
-#define P_H (predPel[8])
-#define P_I (predPel[9])
-#define P_J (predPel[10])
-#define P_K (predPel[11])
-#define P_L (predPel[12])
+ #define P_A (predPel[1])
+ #define P_B (predPel[2])
+ #define P_C (predPel[3])
+ #define P_D (predPel[4])
+ #define P_E (predPel[5])
+ #define P_F (predPel[6])
+ #define P_G (predPel[7])
+ #define P_H (predPel[8])
+ #define P_I (predPel[9])
+ #define P_J (predPel[10])
+ #define P_K (predPel[11])
+ #define P_L (predPel[12])
 
-// Notation for comments regarding prediction and predictors.
-// The pels of the 8x8 block are labeled a..p. The predictor pels above
-// are labeled A..H, from the left I..P, and from above left X, as follows:
-//
-//  Z  A  B  C  D  E  F  G  H  I  J  K  L  M   N  O  P
-//  Q  a1 b1 c1 d1 e1 f1 g1 h1
-//  R  a2 b2 c2 d2 e2 f2 g2 h2
-//  S  a3 b3 c3 d3 e3 f3 g3 h3
-//  T  a4 b4 c4 d4 e4 f4 g4 h4
-//  U  a5 b5 c5 d5 e5 f5 g5 h5
-//  V  a6 b6 c6 d6 e6 f6 g6 h6
-//  W  a7 b7 c7 d7 e7 f7 g7 h7
-//  X  a8 b8 c8 d8 e8 f8 g8 h8
-#define P_M (predPel[13])
-#define P_N (predPel[14])
-#define P_O (predPel[15])
-#define P_P (predPel[16])
-#define P_Q (predPel[17])
-#define P_R (predPel[18])
-#define P_S (predPel[19])
-#define P_T (predPel[20])
-#define P_U (predPel[21])
-#define P_V (predPel[22])
-#define P_W (predPel[23])
-#define P_X (predPel[24])
-//}}}
+ // Notation for comments regarding prediction and predictors.
+ // The pels of the 8x8 block are labeled a..p. The predictor pels above
+ // are labeled A..H, from the left I..P, and from above left X, as follows:
+ //
+ //  Z  A  B  C  D  E  F  G  H  I  J  K  L  M   N  O  P
+ //  Q  a1 b1 c1 d1 e1 f1 g1 h1
+ //  R  a2 b2 c2 d2 e2 f2 g2 h2
+ //  S  a3 b3 c3 d3 e3 f3 g3 h3
+ //  T  a4 b4 c4 d4 e4 f4 g4 h4
+ //  U  a5 b5 c5 d5 e5 f5 g5 h5
+ //  V  a6 b6 c6 d6 e6 f6 g6 h6
+ //  W  a7 b7 c7 d7 e7 f7 g7 h7
+ //  X  a8 b8 c8 d8 e8 f8 g8 h8
+ #define P_M (predPel[13])
+ #define P_N (predPel[14])
+ #define P_O (predPel[15])
+ #define P_P (predPel[16])
+ #define P_Q (predPel[17])
+ #define P_R (predPel[18])
+ #define P_S (predPel[19])
+ #define P_T (predPel[20])
+ #define P_U (predPel[21])
+ #define P_V (predPel[22])
+ #define P_W (predPel[23])
+ #define P_X (predPel[24])
+ //}}}
 namespace {
   //{{{  intra4x4normal
   //{{{
@@ -1192,6 +1192,7 @@ namespace {
     }
   //}}}
   //}}}
+
   //{{{  intra8x8normal
   //{{{
   void lowPassForIntra8x8Pred (sPixel* predPel, int block_up_left, int block_up, int block_left) {
@@ -3382,6 +3383,7 @@ namespace {
     }
   //}}}
   //}}}
+
   //{{{  intra16x16normal
   //{{{
   int intra16x16DcPred (sMacroBlock* mb, eColorPlane plane)
@@ -3837,7 +3839,8 @@ namespace {
     }
   //}}}
   //}}}
-  //{{{  intraPredChroma
+
+  // intraPredChroma
   //{{{
   void intraPredChromaDcAll (sPixel** pixels, int upOk, int leftOk,
                          sPixelPos up, sPixelPos left, int blk_x, int blk_y, int* pred) {
@@ -3965,7 +3968,6 @@ namespace {
       }
     }
   //}}}
-
   //{{{
   void intraPredChromaH (sMacroBlock* mb) {
 
@@ -4037,17 +4039,16 @@ namespace {
       }
     }
   //}}}
-
   //{{{
   void intraPredChromaPlane (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
-    cSlice *slice = mb->slice;
+    cSlice* slice = mb->slice;
     sPicture* picture = slice->picture;
 
-    sPixelPos up;        //!< pixel position  p(0,-1)
+    sPixelPos up;  // pixel position  p(0,-1)
     sPixelPos up_left;
-    sPixelPos left;  //!< pixel positions p(-1, -1..16)
+    sPixelPos left;  // pixel positions p(-1, -1..16)
     int upOk, leftOk, left_upOk;
 
     getNonAffNeighbour(mb, -1, -1, decoder->mbSize[eChroma], &up_left);
@@ -4108,6 +4109,32 @@ namespace {
             mbPred[j][i]=(sPixel) iClip1(max_imgpel_value, ((i * ib + plane) >> 5));
           }
         }
+      }
+    }
+  //}}}
+  //{{{
+  void intraPredChromaNormal (sMacroBlock* mb) {
+
+    switch (mb->chromaPredMode) {
+      case DC_PRED_8:
+        intraPredChromaDc (mb);
+        break;
+
+      case HOR_PRED_8:
+        intraPredChromaH (mb);
+        break;
+
+      case VERT_PRED_8:
+        intraPredChromaV (mb);
+        break;
+
+      case PLANE_8:
+        intraPredChromaPlane (mb);
+        break;
+
+      default:
+        cDecoder264::cDecoder264::error ("illegal chroma intra prediction mode");
+        break;
       }
     }
   //}}}
@@ -4407,34 +4434,6 @@ namespace {
       //}}}
       }
     }
-  //}}}
-
-  //{{{
-  void intraPredChromaNormal (sMacroBlock* mb) {
-
-    switch (mb->chromaPredMode) {
-      case DC_PRED_8:
-        intraPredChromaDc (mb);
-        break;
-
-      case HOR_PRED_8:
-        intraPredChromaH (mb);
-        break;
-
-      case VERT_PRED_8:
-        intraPredChromaV (mb);
-        break;
-
-      case PLANE_8:
-        intraPredChromaPlane (mb);
-        break;
-
-      default:
-        cDecoder264::cDecoder264::error ("illegal chroma intra prediction mode");
-        break;
-      }
-    }
-  //}}}
   //}}}
   }
 
