@@ -3260,10 +3260,10 @@ void cDecoder264::allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* p,
                                           int chromaSizeX, int chromaSizeY) {
 
   if (decodedPic->bufSize != frameSize) {
-    memFree (decodedPic->yBuf);
+    free (decodedPic->yBuf);
 
     decodedPic->bufSize = frameSize;
-    decodedPic->yBuf = (uint8_t*)memAlloc (decodedPic->bufSize);
+    decodedPic->yBuf = (uint8_t*)malloc (decodedPic->bufSize);
     decodedPic->uBuf = decodedPic->yBuf + lumaSize;
     decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
 

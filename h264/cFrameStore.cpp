@@ -11,7 +11,7 @@ namespace {
   void freePicMotion (sPicMotionOld* motion) {
 
     free (motion->mbField);
-    motion->mbField = NULL;
+    motion->mbField = nullptr;
     }
   //}}}
   //{{{
@@ -72,17 +72,17 @@ int cFrameStore::isRef() {
 int cFrameStore::isShortTermRef() {
 
   if (isUsed == 3) // frame
-    if ((frame->usedForRef) && (!frame->usedLongTermRef))
+    if (frame->usedForRef && !frame->usedLongTermRef)
       return 1;
 
   if (isUsed & 1) // topField
     if (topField)
-      if ((topField->usedForRef) && (!topField->usedLongTermRef))
+      if (topField->usedForRef && !topField->usedLongTermRef)
         return 1;
 
   if (isUsed & 2) // botField
     if (botField)
-      if ((botField->usedForRef) && (!botField->usedLongTermRef))
+      if (botField->usedForRef && !botField->usedLongTermRef)
         return 1;
 
   return 0;
@@ -92,17 +92,17 @@ int cFrameStore::isShortTermRef() {
 int cFrameStore::isLongTermRef() {
 
   if (isUsed == 3) // frame
-    if ((frame->usedForRef) && (frame->usedLongTermRef))
+    if (frame->usedForRef && frame->usedLongTermRef)
       return 1;
 
   if (isUsed & 1) // topField
     if (topField)
-      if ((topField->usedForRef) && (topField->usedLongTermRef))
+      if (topField->usedForRef && topField->usedLongTermRef)
         return 1;
 
   if (isUsed & 2) // botField
     if (botField)
-      if ((botField->usedForRef) && (botField->usedLongTermRef))
+      if (botField->usedForRef && botField->usedLongTermRef)
         return 1;
 
   return 0;
@@ -178,8 +178,8 @@ void cFrameStore::dpbCombineField (cDecoder264* decoder) {
 
   if (!frame)
     frame = sPicture::allocPicture (decoder, eFrame,
-                          topField->sizeX, topField->sizeY*2,
-                          topField->sizeXcr, topField->sizeYcr*2, 1);
+                                    topField->sizeX, topField->sizeY*2,
+                                    topField->sizeXcr, topField->sizeYcr*2, 1);
 
   for (int i = 0; i < topField->sizeY; i++) {
     memcpy (frame->imgY[i*2], topField->imgY[i], topField->sizeX * sizeof(sPixel)); // top field
@@ -250,9 +250,9 @@ void cFrameStore::dpbCombineField1 (cDecoder264* decoder) {
       // bug: top field list doesnot exist.*/
       int l = topField->mvInfo[j][i].slice_no;
       int k = topField->mvInfo[j][i].refIndex[LIST_0];
-      frame->mvInfo[jj][i].refPic[LIST_0] = k>=0? topField->listX[l][LIST_0][k]: NULL;
+      frame->mvInfo[jj][i].refPic[LIST_0] = k >= 0 ? topField->listX[l][LIST_0][k] : nullptr;
       k = topField->mvInfo[j][i].refIndex[LIST_1];
-      frame->mvInfo[jj][i].refPic[LIST_1] = k>=0? topField->listX[l][LIST_1][k]: NULL;
+      frame->mvInfo[jj][i].refPic[LIST_1] = k >= 0 ? topField->listX[l][LIST_1][k] : nullptr;
 
       // association with id already known for fields.
       frame->mvInfo[jj4][i].mv[LIST_0] = botField->mvInfo[j][i].mv[LIST_0];
@@ -263,28 +263,28 @@ void cFrameStore::dpbCombineField1 (cDecoder264* decoder) {
       l = botField->mvInfo[j][i].slice_no;
 
       k = botField->mvInfo[j][i].refIndex[LIST_0];
-      frame->mvInfo[jj4][i].refPic[LIST_0] = k >= 0 ? botField->listX[l][LIST_0][k]: NULL;
+      frame->mvInfo[jj4][i].refPic[LIST_0] = k >= 0 ? botField->listX[l][LIST_0][k] : nullptr;
       k = botField->mvInfo[j][i].refIndex[LIST_1];
-      frame->mvInfo[jj4][i].refPic[LIST_1] = k >= 0 ? botField->listX[l][LIST_1][k]: NULL;
+      frame->mvInfo[jj4][i].refPic[LIST_1] = k >= 0 ? botField->listX[l][LIST_1][k] : nullptr;
       }
-    }  
+    }
   }
 //}}}
 //{{{
 void cFrameStore::dpbSplitField (cDecoder264* decoder) {
 
   int twosz16 = 2 * (frame->sizeX >> 4);
-  sPicture* fsTop = NULL;
-  sPicture* fsBot = NULL;
+  sPicture* fsTop = nullptr;
+  sPicture* fsBot = nullptr;
 
   poc = frame->poc;
   if (!frame->frameMbOnly) {
     fsTop = topField = sPicture::allocPicture (decoder, eTopField,
-                                                 frame->sizeX, frame->sizeY, frame->sizeXcr,
-                                                 frame->sizeYcr, 1);
+                                               frame->sizeX, frame->sizeY, frame->sizeXcr,
+                                               frame->sizeYcr, 1);
     fsBot = botField = sPicture::allocPicture (decoder, eBotField,
-                                                 frame->sizeX, frame->sizeY,
-                                                 frame->sizeXcr, frame->sizeYcr, 1);
+                                               frame->sizeX, frame->sizeY,
+                                               frame->sizeXcr, frame->sizeYcr, 1);
     for (int i = 0; i < (frame->sizeY >> 1); i++)
       memcpy (fsTop->imgY[i], frame->imgY[i*2], frame->sizeX*sizeof(sPixel));
 
@@ -310,9 +310,7 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
 
     fsTop->usedForRef = fsBot->usedForRef = frame->usedForRef;
     fsTop->usedLongTermRef = fsBot->usedLongTermRef = frame->usedLongTermRef;
-    longTermFrameIndex = fsTop->longTermFrameIndex
-                                   = fsBot->longTermFrameIndex
-                                   = frame->longTermFrameIndex;
+    longTermFrameIndex = fsTop->longTermFrameIndex = fsBot->longTermFrameIndex = frame->longTermFrameIndex;
 
     fsTop->codedFrame = fsBot->codedFrame = 1;
     fsTop->mbAffFrame = fsBot->mbAffFrame = frame->mbAffFrame;
@@ -335,10 +333,10 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
       }
     }
   else {
-    topField = NULL;
-    botField = NULL;
-    frame->topField = NULL;
-    frame->botField = NULL;
+    topField = nullptr;
+    botField = nullptr;
+    frame->topField = nullptr;
+    frame->botField = nullptr;
     frame->frame = frame;
     }
 
@@ -361,12 +359,12 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
             if (fsBot->mvInfo[j][i].refIndex[LIST_0] >=0)
               fsBot->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[4][(int16_t) fsBot->mvInfo[j][i].refIndex[LIST_0]];
             else
-              fsBot->mvInfo[j][i].refPic[LIST_0] = NULL;
+              fsBot->mvInfo[j][i].refPic[LIST_0] = nullptr;
             fsBot->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj4][i].refIndex[LIST_1];
             if (fsBot->mvInfo[j][i].refIndex[LIST_1] >=0)
               fsBot->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj4][i].slice_no]->listX[5][(int16_t) fsBot->mvInfo[j][i].refIndex[LIST_1]];
             else
-              fsBot->mvInfo[j][i].refPic[LIST_1] = NULL;
+              fsBot->mvInfo[j][i].refPic[LIST_1] = nullptr;
 
             fsTop->mvInfo[j][i].mv[LIST_0] = frame->mvInfo[jj][i].mv[LIST_0];
             fsTop->mvInfo[j][i].mv[LIST_1] = frame->mvInfo[jj][i].mv[LIST_1];
@@ -374,12 +372,12 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
             if (fsTop->mvInfo[j][i].refIndex[LIST_0] >=0)
               fsTop->mvInfo[j][i].refPic[LIST_0] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[2][(int16_t) fsTop->mvInfo[j][i].refIndex[LIST_0]];
             else
-              fsTop->mvInfo[j][i].refPic[LIST_0] = NULL;
+              fsTop->mvInfo[j][i].refPic[LIST_0] = nullptr;
             fsTop->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj][i].refIndex[LIST_1];
             if (fsTop->mvInfo[j][i].refIndex[LIST_1] >=0)
               fsTop->mvInfo[j][i].refPic[LIST_1] = decoder->sliceList[frame->mvInfo[jj][i].slice_no]->listX[3][(int16_t) fsTop->mvInfo[j][i].refIndex[LIST_1]];
             else
-              fsTop->mvInfo[j][i].refPic[LIST_1] = NULL;
+              fsTop->mvInfo[j][i].refPic[LIST_1] = nullptr;
             }
           }
         }
@@ -400,7 +398,7 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
           // Scaling of references is done here since it will not affect spatial direct (2*0 =0)
           if (frame->mvInfo[jj][ii].refIndex[LIST_0] == -1) {
             fsTop->mvInfo[j][i].refIndex[LIST_0] = fsBot->mvInfo[j][i].refIndex[LIST_0] = - 1;
-            fsTop->mvInfo[j][i].refPic[LIST_0] = fsBot->mvInfo[j][i].refPic[LIST_0] = NULL;
+            fsTop->mvInfo[j][i].refPic[LIST_0] = fsBot->mvInfo[j][i].refPic[LIST_0] = nullptr;
             }
           else {
             fsTop->mvInfo[j][i].refIndex[LIST_0] = fsBot->mvInfo[j][i].refIndex[LIST_0] = frame->mvInfo[jj][ii].refIndex[LIST_0];
@@ -409,7 +407,7 @@ void cFrameStore::dpbSplitField (cDecoder264* decoder) {
 
           if (frame->mvInfo[jj][ii].refIndex[LIST_1] == -1) {
             fsTop->mvInfo[j][i].refIndex[LIST_1] = fsBot->mvInfo[j][i].refIndex[LIST_1] = - 1;
-            fsTop->mvInfo[j][i].refPic[LIST_1] = fsBot->mvInfo[j][i].refPic[LIST_1] = NULL;
+            fsTop->mvInfo[j][i].refPic[LIST_1] = fsBot->mvInfo[j][i].refPic[LIST_1] = nullptr;
             }
           else {
             fsTop->mvInfo[j][i].refIndex[LIST_1] = fsBot->mvInfo[j][i].refIndex[LIST_1] = frame->mvInfo[jj][ii].refIndex[LIST_1];

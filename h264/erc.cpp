@@ -1155,9 +1155,6 @@ int ercConcealInterFrame (frame *recfr, sObjectBuffer *object_list,
       else
         predMB = (sPixel*)malloc (256 * sizeof (sPixel));
 
-      if (predMB == NULL )
-        noMemoryExit ("ercConcealInterFrame: predMB");
-
       lastRow = (int) (picSizeY>>4);
       lastColumn = (int) (picSizeX>>4);
       for (columnInd = 0; columnInd < lastColumn; columnInd ++) {
