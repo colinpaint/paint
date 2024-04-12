@@ -2,7 +2,6 @@
 #include "global.h"
 #include "memory.h"
 //}}}
-
 namespace {
   //{{{
   void* mem_calloc (size_t nitems, size_t size) {
@@ -14,79 +13,12 @@ namespace {
     }
   //}}}
   //{{{
-  static void noMemoryExit (const char* where) {
+  void noMemoryExit (const char* where) {
     cDecoder264::error ("no more memory");
     }
   //}}}
   }
 
-//{{{
-int getMem2Dmp (sPicMotion*** array2D, int dim0, int dim1) {
-
-  if ((*array2D = (sPicMotion**)malloc(dim0 *      sizeof(sPicMotion*))) == NULL)
-    noMemoryExit ("getMem2Dmp: array2D");
-  if ((*(*array2D) = (sPicMotion* )mem_calloc(dim0 * dim1, sizeof(sPicMotion ))) == NULL)
-    noMemoryExit ("getMem2Dmp: array2D");
-
-  for (int i = 1 ; i < dim0; i++)
-    (*array2D)[i] = (*array2D)[i-1] + dim1;
-
-  return dim0 * (sizeof(sPicMotion*) + dim1 * sizeof(sPicMotion));
-  }
-//}}}
-//{{{
-int getMem3Dmp (sPicMotion**** array3D, int dim0, int dim1, int dim2) {
-
-  int mem_size = dim0 * sizeof(sPicMotion**);
-
-  if (((*array3D) = (sPicMotion***)malloc(dim0 * sizeof(sPicMotion**))) == NULL)
-    noMemoryExit ("getMem3Dmp: array3D");
-
-  mem_size += getMem2Dmp (*array3D, dim0 * dim1, dim2);
-  for (int i = 1; i < dim0; i++)
-    (*array3D)[i] = (*array3D)[i - 1] + dim1;
-
-  return mem_size;
-  }
-//}}}
-//{{{
-void freeMem2Dmp (sPicMotion** array2D)
-{
-  if (array2D) {
-    if (*array2D)
-      free (*array2D);
-    free (array2D);
-    }
-  }
-//}}}
-//{{{
-void freeMem3Dmp (sPicMotion*** array3D)
-{
-  if (array3D)
-  {
-    freeMem2Dmp(*array3D);
-    free (array3D);
-  }
-}
-//}}}
-
-//{{{
-uint8_t** new_mem2D (int dim0, int dim1) {
-
-  int i;
-  uint8_t** array2D;
-
-  if ((array2D  = (uint8_t**)malloc(dim0 *      sizeof(uint8_t*))) == NULL)
-    noMemoryExit("getMem2D: array2D");
-  if ((*(array2D) = (uint8_t* )mem_calloc(dim0 * dim1,sizeof(uint8_t ))) == NULL)
-    noMemoryExit("getMem2D: array2D");
-
-  for(i = 1; i < dim0; i++)
-    array2D[i] = array2D[i-1] + dim1;
-
-  return (array2D);
-  }
-//}}}
 //{{{
 int** new_mem2Dint (int dim0, int dim1) {
 
@@ -320,6 +252,56 @@ void freeMem3Dshort (int16_t*** array3D) {
 //}}}
 
 //{{{
+int getMem2Dmp (sPicMotion*** array2D, int dim0, int dim1) {
+
+  if ((*array2D = (sPicMotion**)malloc(dim0 *      sizeof(sPicMotion*))) == NULL)
+    noMemoryExit ("getMem2Dmp: array2D");
+  if ((*(*array2D) = (sPicMotion* )mem_calloc(dim0 * dim1, sizeof(sPicMotion ))) == NULL)
+    noMemoryExit ("getMem2Dmp: array2D");
+
+  for (int i = 1 ; i < dim0; i++)
+    (*array2D)[i] = (*array2D)[i-1] + dim1;
+
+  return dim0 * (sizeof(sPicMotion*) + dim1 * sizeof(sPicMotion));
+  }
+//}}}
+//{{{
+int getMem3Dmp (sPicMotion**** array3D, int dim0, int dim1, int dim2) {
+
+  int mem_size = dim0 * sizeof(sPicMotion**);
+
+  if (((*array3D) = (sPicMotion***)malloc(dim0 * sizeof(sPicMotion**))) == NULL)
+    noMemoryExit ("getMem3Dmp: array3D");
+
+  mem_size += getMem2Dmp (*array3D, dim0 * dim1, dim2);
+  for (int i = 1; i < dim0; i++)
+    (*array3D)[i] = (*array3D)[i - 1] + dim1;
+
+  return mem_size;
+  }
+//}}}
+//{{{
+void freeMem2Dmp (sPicMotion** array2D)
+{
+  if (array2D) {
+    if (*array2D)
+      free (*array2D);
+    free (array2D);
+    }
+  }
+//}}}
+//{{{
+void freeMem3Dmp (sPicMotion*** array3D)
+{
+  if (array3D)
+  {
+    freeMem2Dmp(*array3D);
+    free (array3D);
+  }
+}
+//}}}
+
+//{{{
 int getMem2Dpel (sPixel*** array2D, int dim0, int dim1) {
 
   int i;
@@ -431,32 +413,4 @@ void freeMem3DpelPad (sPixel*** array3D, int iDim12, int iPadY, int iPadX) {
     free (array3D);
     }
   }
-//}}}
-
-//{{{
-void freeMem2Ddouble (double** array2D)
-{
-  if (array2D)
-  {
-    if (*array2D)
-      free (*array2D);
-
-    free (array2D);
-
-  }
-}
-//}}}
-//{{{
-void freeMem2Dodouble (double** array2D, int offset)
-{
-  if (array2D)
-  {
-    array2D[0] -= offset;
-    if (array2D[0])
-      free (array2D[0]);
-
-    free (array2D);
-
-  }
-}
 //}}}
