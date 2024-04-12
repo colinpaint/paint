@@ -45,23 +45,56 @@ namespace {
   //}}}
   }
 
+// static
+//{{{
+int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
+
+  sDataPartition* dataPartition = sDataPartition::allocDataPartitions (1);
+  dataPartition->bitStream.errorFlag = 0;
+  dataPartition->bitStream.readLen = dataPartition->bitStream.bitStreamOffset = 0;
+  memcpy (dataPartition->bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
+  dataPartition->bitStream.bitStreamLen = nalu->RBSPtoSODB (dataPartition->bitStream.bitStreamBuffer);
+  dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
+
+  cPps pps;
+  pps.naluLen = nalu->len;
+  pps.readFromStream (decoder, dataPartition);
+  sDataPartition::freeDataPartitions (dataPartition, 1);
+
+  if (decoder->pps[pps.id].ok)
+    if (!pps.isEqual (decoder->pps[pps.id]))
+      cLog::log (LOGINFO, fmt::format ("-----> cPps::readNalu new pps id:{}", pps.id));
+
+  // free any sliceGroupId calloc
+  if (decoder->pps[pps.id].ok && decoder->pps[pps.id].sliceGroupId)
+    free (decoder->pps[pps.id].sliceGroupId);
+
+  // - takes ownership, if any, of pps->sliceGroupId calloc
+  memcpy (&decoder->pps[pps.id], &pps, sizeof (cPps));
+
+  return pps.id;
+  }
+//}}}
+
 //{{{
 string cPps::getString() {
 
-  return fmt::format ("PPS:{}:{} -> sps:{}{} sliceGroups:{} L:{}:{}{}{}{}{}{}{} biPredIdc:{}{}",
-                      id,
-                      naluLen,
+  return fmt::format ("PPS:{}:{} -> sps:{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                      id, naluLen,
                       spsId,
                       entropyCoding ? " cabac":" cavlc",
-                      numSliceGroupsMinus1,
-                      numRefIndexL0defaultActiveMinus1, numRefIndexL1defaultActiveMinus1,
+                      numSliceGroupsMinus1 ? fmt::format(" sliceGroups:{}", numSliceGroupsMinus1):"",
+                      numRefIndexL0defaultActiveMinus1
+                        ? fmt::format (" short:{}", numRefIndexL0defaultActiveMinus1):"",
+                      numRefIndexL1defaultActiveMinus1
+                        ? fmt::format (" long:{}", numRefIndexL1defaultActiveMinus1):"",
                       hasDeblockFilterControl ? " deblock":"",
                       hasWeightedPred ? " pred":"",
                       hasConstrainedIntraPred ? " intra":"",
                       redundantPicCountPresent ? " redundant":"",
                       hasMoreData && hasTransform8x8mode ? " 8x8":"",
                       hasMoreData && hasPicScalingMatrix ? " scaling":"",
-                      weightedBiPredIdc,
+                      weightedBiPredIdc ? fmt::format(" weightedBiPredIdc:{}", weightedBiPredIdc):"",
                       frameBotField ? " botField":""
                       );
   }
@@ -141,36 +174,6 @@ bool cPps::isEqual (cPps& pps) {
   equal &= (chromaQpOffset2 == pps.chromaQpOffset2);
 
   return equal;
-  }
-//}}}
-
-//{{{
-int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
-
-  sDataPartition* dataPartition = sDataPartition::allocDataPartitions (1);
-  dataPartition->bitStream.errorFlag = 0;
-  dataPartition->bitStream.readLen = dataPartition->bitStream.bitStreamOffset = 0;
-  memcpy (dataPartition->bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
-  dataPartition->bitStream.bitStreamLen = nalu->RBSPtoSODB (dataPartition->bitStream.bitStreamBuffer);
-  dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
-
-  cPps pps;
-  pps.naluLen = nalu->len;
-  pps.readFromStream (decoder, dataPartition);
-  sDataPartition::freeDataPartitions (dataPartition, 1);
-
-  if (decoder->pps[pps.id].ok)
-    if (!pps.isEqual (decoder->pps[pps.id]))
-      cLog::log (LOGINFO, fmt::format ("-----> cPps::readNalu new pps id:{}", pps.id));
-
-  // free any sliceGroupId calloc
-  if (decoder->pps[pps.id].ok && decoder->pps[pps.id].sliceGroupId)
-    free (decoder->pps[pps.id].sliceGroupId);
-
-  // - takes ownership, if any, of pps->sliceGroupId calloc
-  memcpy (&decoder->pps[pps.id], &pps, sizeof (cPps));
-
-  return pps.id;
   }
 //}}}
 

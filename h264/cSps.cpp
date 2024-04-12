@@ -67,20 +67,6 @@ namespace {
   //}}}
   }
 
-//{{{
-string cSps::getString() {
-
-  return fmt::format ("SPS:{}:{} -> mb:{}x{} {}:{}:{}:{} refFrames:{} pocType:{} {}",
-                      id, naluLen,
-                      picWidthMbsMinus1, picHeightMapUnitsMinus1,
-                      cropLeft, cropRight, cropTop, cropBot,
-                      numRefFrames,
-                      pocType,
-                      frameMbOnly ? (mbAffFlag ? "mbAff":"frame"):"field"
-                      );
-  }
-//}}}
-
 // static
 //{{{
 int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
@@ -105,6 +91,19 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   }
 //}}}
 
+//{{{
+string cSps::getString() {
+
+  return fmt::format ("SPS:{}:{} -> mb:{}x{}{}{}{}{}",
+                      id, naluLen,
+                      picWidthMbsMinus1, picHeightMapUnitsMinus1,
+                      hasCrop ? fmt::format (" crop:{}:{}:{}:{}", cropLeft, cropRight, cropTop, cropBot):"",
+                      numRefFrames ? fmt::format (" refFrames:{}", numRefFrames):"",
+                      pocType ? fmt::format (" pocType:{}", pocType):"",
+                      frameMbOnly ? (mbAffFlag ? " mbAff":" frame"):" field"
+                      );
+  }
+//}}}
 //{{{
 void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) {
 
