@@ -89,20 +89,6 @@ enum eColorModel {
   };
 //}}}
 //{{{
-enum eStartEnd {
-  eEOS = 1, // End Of Sequence
-  eSOP = 2, // Start Of Picture
-  eSOS = 3, // Start Of cSlice
-  };
-//}}}
-//{{{
-enum eDecodeResult {
-  eDecodingOk     = 0,
-  eSearchSync     = 1,
-  ePictureDecoded = 2
-  };
-//}}}
-//{{{
 enum eComponentType {
   eLuma =   0,
   eChroma = 1
@@ -116,18 +102,6 @@ enum eColorComponent {
   };
 //}}}
 //{{{
-enum eDataPartitionType {
-  eDataPartition1, // no dataPartiton
-  eDataPartition3  // 3 dataPartitions
-  };
-//}}}
-//{{{
-enum eEntropyCodingType {
-  eCavlc = 0,
-  eCabac = 1
-  };
-//}}}
-//{{{
 enum eCodingType {
   eFrameCoding       = 0,
   eFieldCoding       = 1,
@@ -135,22 +109,7 @@ enum eCodingType {
   eFrameMbPairCoding = 3
   };
 //}}}
-//{{{
-enum ePredListType {
-  LIST_0 = 0,
-  LIST_1 = 1,
-  BI_PRED = 2,
-  BI_PRED_L0 = 3,
-  BI_PRED_L1 = 4
-  };
-//}}}
-//{{{
-enum eMotionEstimationType {
-  eFullPel,
-  eHalfPel,
-  eQuarterPel
-  };
-//}}}
+
 //{{{
 enum eRcModelType {
   RC_MODE_0 = 0,
@@ -160,26 +119,9 @@ enum eRcModelType {
   };
 //}}}
 //{{{
-enum eWeightedPredictionType {
-  WP_MCPREC_PLUS0 =       4,
-  WP_MCPREC_PLUS1 =       5,
-  WP_MCPREC_MINUS0 =      6,
-  WP_MCPREC_MINUS1 =      7,
-  WP_MCPREC_MINUS_PLUS0 = 8,
-  WP_REGULAR =            9
-  };
-//}}}
-//{{{
-enum eCavlcBlockType {
-  LUMA              =  0,
-  LUMA_INTRA16x16DC =  1,
-  LUMA_INTRA16x16AC =  2,
-  CB                =  3,
-  CB_INTRA16x16DC   =  4,
-  CB_INTRA16x16AC   =  5,
-  CR                =  8,
-  CR_INTRA16x16DC   =  9,
-  CR_INTRA16x16AC   = 10
+enum eEntropyCodingType {
+  eCavlc = 0,
+  eCabac = 1
   };
 //}}}
 //{{{
@@ -206,6 +148,29 @@ enum eCabacBlockType {
   CR_8x4        =  19,
   CR_4x8        =  20,
   CR_4x4        =  21
+  };
+//}}}
+//{{{
+enum eCavlcBlockType {
+  LUMA              =  0,
+  LUMA_INTRA16x16DC =  1,
+  LUMA_INTRA16x16AC =  2,
+  CB                =  3,
+  CB_INTRA16x16DC   =  4,
+  CB_INTRA16x16AC   =  5,
+  CR                =  8,
+  CR_INTRA16x16DC   =  9,
+  CR_INTRA16x16AC   = 10
+  };
+//}}}
+
+//{{{
+enum ePredListType {
+  LIST_0 = 0,
+  LIST_1 = 1,
+  BI_PRED = 2,
+  BI_PRED_L0 = 3,
+  BI_PRED_L1 = 4
   };
 //}}}
 //{{{
@@ -238,6 +203,13 @@ enum eI16x16PredMode {
   };
 //}}}
 //{{{
+enum eMotionEstimationType {
+  eFullPel,
+  eHalfPel,
+  eQuarterPel
+  };
+//}}}
+//{{{
 enum eMvPredType {
   MVPRED_MEDIAN   = 0,
   MVPRED_L        = 1,
@@ -245,8 +217,69 @@ enum eMvPredType {
   MVPRED_UR       = 3
   };
 //}}}
+//{{{
+enum eWeightedPredictionType {
+  WP_MCPREC_PLUS0 =       4,
+  WP_MCPREC_PLUS1 =       5,
+  WP_MCPREC_MINUS0 =      6,
+  WP_MCPREC_MINUS1 =      7,
+  WP_MCPREC_MINUS_PLUS0 = 8,
+  WP_REGULAR =            9
+  };
+//}}}
+
+//{{{
+enum eDataPartitionType {
+  eDataPartition1, // no dataPartiton
+  eDataPartition3  // 3 dataPartitions
+  };
+//}}}
+//{{{
+enum eStartEnd {
+  eEOS = 1, // End Of Sequence
+  eSOP = 2, // Start Of Picture
+  eSOS = 3, // Start Of cSlice
+  };
+//}}}
+//{{{
+enum eDecodeResult {
+  eDecodingOk     = 0,
+  eSearchSync     = 1,
+  ePictureDecoded = 2
+  };
+//}}}
 
 struct sMacroBlock;
+//{{{
+struct sDataPartition {
+  // this are really dataPartitionArray routines
+  static const int MAX_CODED_FRAME_SIZE = 2000000;  // bytes for one frame
+  //{{{
+  static sDataPartition* allocDataPartitions (int numPartitions) {
+
+    sDataPartition* dataPartitions = (sDataPartition*)malloc (numPartitions * sizeof(sDataPartition));
+    for (int i = 0; i < numPartitions; ++i)
+      dataPartitions[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (MAX_CODED_FRAME_SIZE);
+
+    return dataPartitions;
+    }
+  //}}}
+  //{{{
+  static void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions) {
+
+    for (int i = 0; i < numPartitions; ++i)
+      free (dataPartitions[i].bitStream.bitStreamBuffer);
+
+    free (dataPartitions);
+    }
+  //}}}
+
+  cBitStream   bitStream;
+  cCabacDecode cabacDecode;
+
+  int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
+  };
+//}}}
 //{{{
 struct sConcealNode {
   sPicture* picture;
@@ -315,36 +348,6 @@ struct sCodedBlockPattern {
   int64_t blk;
   int64_t bits;
   int64_t bits8x8;
-  };
-//}}}
-//{{{
-struct sDataPartition {
-  // this are really dataPartitionArray routines
-  static const int MAX_CODED_FRAME_SIZE = 2000000;  // bytes for one frame
-  //{{{
-  static sDataPartition* allocDataPartitions (int numPartitions) {
-
-    sDataPartition* dataPartitions = (sDataPartition*)malloc (numPartitions * sizeof(sDataPartition));
-    for (int i = 0; i < numPartitions; ++i)
-      dataPartitions[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (MAX_CODED_FRAME_SIZE);
-
-    return dataPartitions;
-    }
-  //}}}
-  //{{{
-  static void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions) {
-
-    for (int i = 0; i < numPartitions; ++i)
-      free (dataPartitions[i].bitStream.bitStreamBuffer);
-
-    free (dataPartitions);
-    }
-  //}}}
-
-  cBitStream   bitStream;
-  cCabacDecode cabacDecode;
-
-  int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
   };
 //}}}
 //{{{

@@ -1746,7 +1746,7 @@ void cDecoder264::padPicture (sPicture* picture) {
 //{{{
 void cDecoder264::decodePOC (cSlice* slice) {
 
-  uint32_t maxPicOrderCntLsb = (1<<(activeSps->log2maxPocLsbMinus4+4));
+  uint32_t maxPicOrderCntLsb = 1 << (activeSps->log2maxPocLsbMinus4+4);
 
   switch (activeSps->pocType) {
     //{{{
