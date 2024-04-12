@@ -1,15 +1,18 @@
 //{{{  includes
 #include <math.h>
-
 #include "global.h"
 #include "memory.h"
 
 #include "sei.h"
+
+#include "../common/cLog.h"
+
+using namespace std;
 //}}}
 
 #define MAX_FN  256
 //{{{
-typedef enum {
+enum eSeqType {
   SEI_BUFFERING_PERIOD = 0,
   SEI_PIC_TIMING,
   SEI_PAN_SCAN_RECT,
@@ -56,31 +59,30 @@ typedef enum {
   SEI_OPERATION_POINTS_NOT_PRESENT,
   SEI_BASE_VIEW_TEMPORAL_HRD,
   SEI_FRAME_PACKING_ARRANGEMENT,
-  SEI_GREEN_METADATA=56,
-
-  SEI_MAX_ELEMENTS  //!< number of maximum syntax elements
+  SEI_GREEN_METADATA = 56,
+  SEI_MAX_ELEMENTS
   } SEI_type;
 //}}}
 //{{{  frame_packing_arrangement_information_struct
 typedef struct {
-  uint32_t  frame_packing_arrangement_id;
-  bool       frame_packing_arrangement_cancelFlag;
-  uint8_t frame_packing_arrangement_type;
-  bool       quincunx_samplingFlag;
-  uint8_t content_interpretation_type;
-  bool       spatial_flippingFlag;
-  bool       frame0_flippedFlag;
-  bool       field_viewsFlag;
-  bool       current_frame_is_frame0Flag;
-  bool       frame0_self_containedFlag;
-  bool       frame1_self_containedFlag;
-  uint8_t frame0_grid_position_x;
-  uint8_t frame0_grid_position_y;
-  uint8_t frame1_grid_position_x;
-  uint8_t frame1_grid_position_y;
-  uint8_t frame_packing_arrangement_reserved_byte;
-  uint32_t  frame_packing_arrangement_repetition_period;
-  bool       frame_packing_arrangement_extensionFlag;
+  uint32_t frame_packing_arrangement_id;
+  bool     frame_packing_arrangement_cancelFlag;
+  uint8_t  frame_packing_arrangement_type;
+  bool     quincunx_samplingFlag;
+  uint8_t  content_interpretation_type;
+  bool     spatial_flippingFlag;
+  bool     frame0_flippedFlag;
+  bool     field_viewsFlag;
+  bool     current_frame_is_frame0Flag;
+  bool     frame0_self_containedFlag;
+  bool     frame1_self_containedFlag;
+  uint8_t  frame0_grid_position_x;
+  uint8_t  frame0_grid_position_y;
+  uint8_t  frame1_grid_position_x;
+  uint8_t  frame1_grid_position_y;
+  uint8_t  frame_packing_arrangement_reserved_byte;
+  uint32_t frame_packing_arrangement_repetition_period;
+  bool     frame_packing_arrangement_extensionFlag;
   } frame_packing_arrangement_information_struct;
 //}}}
 //{{{  Green_metadata_information_struct
@@ -89,11 +91,11 @@ typedef struct {
   uint8_t  period_type;
   uint16_t num_seconds;
   uint16_t num_pictures;
-  uint8_t percent_non_zero_macroBlocks;
-  uint8_t percent_intra_coded_macroBlocks;
-  uint8_t percent_six_tap_filtering;
-  uint8_t percent_alpha_point_deblocking_instance;
-  uint8_t xsd_metric_type;
+  uint8_t  percent_non_zero_macroBlocks;
+  uint8_t  percent_intra_coded_macroBlocks;
+  uint8_t  percent_six_tap_filtering;
+  uint8_t  percent_alpha_point_deblocking_instance;
+  uint8_t  xsd_metric_type;
   uint16_t xsd_metric_value;
   } Green_metadata_information_struct;
 //}}}
@@ -1138,7 +1140,7 @@ namespace {
       seiGreenMetadataInfo.xsd_metric_value = (uint16_t)s->readUv(16, "SEI xsd_metric_value");
       printf ("xsd_metric_type      = %d\n", seiGreenMetadataInfo.xsd_metric_type);
       if (seiGreenMetadataInfo.xsd_metric_type == 0)
-        printf("xsd_metric_value      = %f\n", (float)seiGreenMetadataInfo.xsd_metric_value/100);
+        printf ("xsd_metric_value      = %f\n", (float)seiGreenMetadataInfo.xsd_metric_value/100);
       }
 
     free (s);
@@ -1150,7 +1152,7 @@ namespace {
 void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, cSlice* slice) {
 
   if (decoder->param.seiDebug)
-    printf ("SEI:%d -> ", naluLen);
+    cLog::log (LOGINFO, fmt::format ("SEI:%d -> ", naluLen));
 
   int offset = 1;
   do {
