@@ -2492,7 +2492,7 @@ void cSlice::computeColocated (sPicture** listX[6]) {
 //{{{
 void cSlice::calculateQuant4x4Param() {
 
-  const int (*p_dequant_coef)[4][4] = dequant_coef;
+  const int (*p_dequant_coef)[4][4] = kDequantCoef;
   int (*InvLevelScale4x4_Intra_0)[4][4] = InvLevelScale4x4_Intra[0];
   int (*InvLevelScale4x4_Intra_1)[4][4] = InvLevelScale4x4_Intra[1];
   int (*InvLevelScale4x4_Intra_2)[4][4] = InvLevelScale4x4_Intra[2];
@@ -2513,7 +2513,7 @@ void cSlice::calculateQuant4x4Param() {
 //{{{
 void cSlice::calculateQuant8x8Param() {
 
-  const int (*p_dequant_coef)[8][8] = dequant_coef8;
+  const int (*p_dequant_coef)[8][8] = kDequantCoef8;
   int (*InvLevelScale8x8_Intra_0)[8][8] = InvLevelScale8x8_Intra[0];
   int (*InvLevelScale8x8_Intra_1)[8][8] = InvLevelScale8x8_Intra[1];
   int (*InvLevelScale8x8_Intra_2)[8][8] = InvLevelScale8x8_Intra[2];
@@ -2526,7 +2526,7 @@ void cSlice::calculateQuant8x8Param() {
     setDequant8x8 (*InvLevelScale8x8_Inter_0++, *p_dequant_coef++, qmatrix[7]);
     }
 
-  p_dequant_coef = dequant_coef8;
+  p_dequant_coef = kDequantCoef8;
   if (activeSps->chromaFormatIdc == 3) {
     // 4:4:4
     for (int k = 0; k < 6; k++) {

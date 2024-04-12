@@ -38,7 +38,7 @@ enum eColorPlane {
 //}}}
 
 //{{{
-static const int dequant_coef8[6][8][8] = {
+static const int kDequantCoef8[6][8][8] = {
   {
     {20,  19, 25, 19, 20, 19, 25, 19},
     {19,  18, 24, 18, 19, 18, 24, 18},
@@ -103,7 +103,7 @@ static const int dequant_coef8[6][8][8] = {
 //}}}
 //{{{
 //! Dequantization coefficients
-static const int dequant_coef[6][4][4] = {
+static const int kDequantCoef[6][4][4] = {
   {
     { 10, 13, 10, 13},
     { 13, 16, 13, 16},
@@ -137,7 +137,7 @@ static const int dequant_coef[6][4][4] = {
 };
 //}}}
 //{{{
-static const int quant_coef[6][4][4] = {
+static const int kQuantCoef[6][4][4] = {
   {
     { 13107,  8066, 13107,  8066},
     {  8066,  5243,  8066,  5243},
@@ -171,7 +171,7 @@ static const int quant_coef[6][4][4] = {
 };
 //}}}
 //{{{
-static const int A[4][4] = {
+static const int kQuantA[4][4] = {
   { 16, 20, 16, 20},
   { 20, 25, 20, 25},
   { 16, 20, 16, 20},

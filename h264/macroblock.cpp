@@ -4753,13 +4753,13 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   int** cof = slice->cof[plane];
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
-  const int (*InvLevelScale4x4)[4] = dequant_coef[qp_rem];
-  const int (*InvLevelScale4x4SP)[4] = dequant_coef[qp_rem_sp];
+  const int (*InvLevelScale4x4)[4] = kDequantCoef[qp_rem];
+  const int (*InvLevelScale4x4SP)[4] = kDequantCoef[qp_rem_sp];
 
   int** PBlock;
   getMem2Dint (&PBlock, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
   for (int j = 0; j < BLOCK_SIZE; ++j) {
-    PBlock[j][0] = mbPred[j+joff][ioff    ];
+    PBlock[j][0] = mbPred[j+joff][ioff];
     PBlock[j][1] = mbPred[j+joff][ioff + 1];
     PBlock[j][2] = mbPred[j+joff][ioff + 2];
     PBlock[j][3] = mbPred[j+joff][ioff + 3];
@@ -4772,7 +4772,7 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
       for (int i = 0; i < BLOCK_SIZE;++i) {
         // recovering coefficient since they are already dequantized earlier
         int icof = (cof[joff + j][ioff + i] >> qp_per) / InvLevelScale4x4[j][i];
-        int ilev  = rshift_rnd_sf (iabs(PBlock[j][i]) * quant_coef[qp_rem_sp][j][i], q_bits_sp);
+        int ilev  = rshift_rnd_sf (iabs(PBlock[j][i]) * kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
         ilev  = isignab (ilev, PBlock[j][i]) + icof;
         cof[joff + j][ioff + i] = ilev * InvLevelScale4x4SP[j][i] << qp_per_sp;
         }
@@ -4782,18 +4782,18 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
       for (int i = 0; i < BLOCK_SIZE; ++i) {
         // recovering coefficient since they are already dequantized earlier
         int icof = (cof[joff + j][ioff + i] >> qp_per) / InvLevelScale4x4[j][i];
-        int ilev = PBlock[j][i] + ((icof * InvLevelScale4x4[j][i] * A[j][i] <<  qp_per) >> 6);
-        ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * quant_coef[qp_rem_sp][j][i], q_bits_sp);
+        int ilev = PBlock[j][i] + ((icof * InvLevelScale4x4[j][i] * kQuantA[j][i] <<  qp_per) >> 6);
+        ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
         cof[joff + j][ioff + i] = ilev * InvLevelScale4x4SP[j][i] << qp_per_sp;
         }
 
   inverse4x4 (cof, mbRess, joff, ioff);
 
   for (int j = joff; j < joff +BLOCK_SIZE; ++j) {
-    mbRec[j][ioff   ] = (sPixel) iClip1(max_imgpel_value,rshift_rnd_sf(mbRess[j][ioff   ], DQ_BITS));
-    mbRec[j][ioff+ 1] = (sPixel) iClip1(max_imgpel_value,rshift_rnd_sf(mbRess[j][ioff+ 1], DQ_BITS));
-    mbRec[j][ioff+ 2] = (sPixel) iClip1(max_imgpel_value,rshift_rnd_sf(mbRess[j][ioff+ 2], DQ_BITS));
-    mbRec[j][ioff+ 3] = (sPixel) iClip1(max_imgpel_value,rshift_rnd_sf(mbRess[j][ioff+ 3], DQ_BITS));
+    mbRec[j][ioff   ] = (sPixel)iClip1(max_imgpel_value,rshift_rnd_sf(mbRess[j][ioff   ], DQ_BITS));
+    mbRec[j][ioff+ 1] = (sPixel)iClip1(max_imgpel_value,rshift_rnd_sf(mbRess[j][ioff+ 1], DQ_BITS));
+    mbRec[j][ioff+ 2] = (sPixel)iClip1(max_imgpel_value,rshift_rnd_sf(mbRess[j][ioff+ 2], DQ_BITS));
+    mbRec[j][ioff+ 3] = (sPixel)iClip1(max_imgpel_value,rshift_rnd_sf(mbRess[j][ioff+ 3], DQ_BITS));
     }
 
   freeMem2Dint (PBlock);
@@ -4811,10 +4811,10 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
   int** cof = slice->cof[uv + 1];
   int** PBlock = new_mem2Dint(MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
-  int qp_per = decoder->qpPerMatrix[((slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]))];
-  int qp_rem = decoder->qpRemMatrix[((slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]))];
-  int qp_per_sp = decoder->qpPerMatrix[((slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]))];
-  int qp_rem_sp = decoder->qpRemMatrix[((slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]))];
+  int qp_per = decoder->qpPerMatrix[slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]];
+  int qp_rem = decoder->qpRemMatrix[slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]];
+  int qp_per_sp = decoder->qpPerMatrix[slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]];
+  int qp_rem_sp = decoder->qpRemMatrix[slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]];
   int q_bits_sp = Q_BITS + qp_per_sp;
 
   if (slice->sliceType == eSliceSI) {
@@ -4833,20 +4833,20 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
       forward4x4 (PBlock, PBlock, n2, n1);
 
   // 2X2 transform of DC coeffs.
-  mp1[0] = (PBlock[0][0] + PBlock[4][0] + PBlock[0][4] + PBlock[4][4]);
-  mp1[1] = (PBlock[0][0] - PBlock[4][0] + PBlock[0][4] - PBlock[4][4]);
-  mp1[2] = (PBlock[0][0] + PBlock[4][0] - PBlock[0][4] - PBlock[4][4]);
-  mp1[3] = (PBlock[0][0] - PBlock[4][0] - PBlock[0][4] + PBlock[4][4]);
+  mp1[0] = PBlock[0][0] + PBlock[4][0] + PBlock[0][4] + PBlock[4][4];
+  mp1[1] = PBlock[0][0] - PBlock[4][0] + PBlock[0][4] - PBlock[4][4];
+  mp1[2] = PBlock[0][0] + PBlock[4][0] - PBlock[0][4] - PBlock[4][4];
+  mp1[3] = PBlock[0][0] - PBlock[4][0] - PBlock[0][4] + PBlock[4][4];
 
   if (slice->spSwitch || slice->sliceType == eSliceSI) {
     for (int n2 = 0; n2 < 2; ++n2 )
       for (int n1 = 0; n1 < 2; ++n1 ) {
         // quantization fo predicted block
-        int ilev = rshift_rnd_sf (iabs (mp1[n1+n2*2]) * quant_coef[qp_rem_sp][0][0], q_bits_sp + 1);
+        int ilev = rshift_rnd_sf (iabs (mp1[n1+n2*2]) * kQuantCoef[qp_rem_sp][0][0], q_bits_sp + 1);
         // addition
         ilev = isignab (ilev, mp1[n1+n2*2]) + cof[n2<<2][n1<<2];
         // dequanti  zation
-        mp1[n1+n2*2] = ilev * dequant_coef[qp_rem_sp][0][0] << qp_per_sp;
+        mp1[n1+n2*2] = ilev * kDequantCoef[qp_rem_sp][0][0] << qp_per_sp;
         }
 
     for (int n2 = 0; n2 < decoder->mbCrSizeY; n2 += BLOCK_SIZE)
@@ -4854,22 +4854,22 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
         for (int j = 0; j < BLOCK_SIZE; ++j)
           for (int i = 0; i < BLOCK_SIZE; ++i) {
             // recovering coefficient since they are already dequantized earlier
-            cof[n2 + j][n1 + i] = (cof[n2 + j][n1 + i] >> qp_per) / dequant_coef[qp_rem][j][i];
+            cof[n2 + j][n1 + i] = (cof[n2 + j][n1 + i] >> qp_per) / kDequantCoef[qp_rem][j][i];
 
             // quantization of the predicted block
-            int ilev = rshift_rnd_sf (iabs(PBlock[n2 + j][n1 + i]) * quant_coef[qp_rem_sp][j][i], q_bits_sp);
+            int ilev = rshift_rnd_sf (iabs(PBlock[n2 + j][n1 + i]) * kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
             // addition of the residual
             ilev = isignab (ilev,PBlock[n2 + j][n1 + i]) + cof[n2 + j][n1 + i];
             // Inverse quantization
-            cof[n2 + j][n1 + i] = ilev * dequant_coef[qp_rem_sp][j][i] << qp_per_sp;
+            cof[n2 + j][n1 + i] = ilev * kDequantCoef[qp_rem_sp][j][i] << qp_per_sp;
             }
     }
   else {
     for (int n2 = 0; n2 < 2; ++n2 )
       for (int n1 = 0; n1 < 2; ++n1 ) {
-        int ilev = mp1[n1+n2*2] + (((cof[n2<<2][n1<<2] * dequant_coef[qp_rem][0][0] * A[0][0]) << qp_per) >> 5);
-        ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * quant_coef[qp_rem_sp][0][0], q_bits_sp + 1);
-        mp1[n1+n2*2] = ilev * dequant_coef[qp_rem_sp][0][0] << qp_per_sp;
+        int ilev = mp1[n1+n2*2] + (((cof[n2<<2][n1<<2] * kDequantCoef[qp_rem][0][0] * kQuantA[0][0]) << qp_per) >> 5);
+        ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * kQuantCoef[qp_rem_sp][0][0], q_bits_sp + 1);
+        mp1[n1+n2*2] = ilev * kDequantCoef[qp_rem_sp][0][0] << qp_per_sp;
         }
 
     for (int n2 = 0; n2 < decoder->mbCrSizeY; n2 += BLOCK_SIZE)
@@ -4877,12 +4877,12 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
         for (int j = 0; j < BLOCK_SIZE; ++j)
           for (int i = 0; i < BLOCK_SIZE; ++i) {
             // recovering coefficient since they are already dequantized earlier
-            int icof = (cof[n2 + j][n1 + i] >> qp_per) / dequant_coef[qp_rem][j][i];
+            int icof = (cof[n2 + j][n1 + i] >> qp_per) / kDequantCoef[qp_rem][j][i];
             // dequantization and addition of the predicted block
-            int ilev = PBlock[n2 + j][n1 + i] + ((icof * dequant_coef[qp_rem][j][i] * A[j][i] << qp_per) >> 6);
+            int ilev = PBlock[n2 + j][n1 + i] + ((icof * kDequantCoef[qp_rem][j][i] * kQuantA[j][i] << qp_per) >> 6);
             // quantization and dequantization
-            ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * quant_coef[qp_rem_sp][j][i], q_bits_sp);
-            cof[n2 + j][n1 + i] = ilev * dequant_coef[qp_rem_sp][j][i] << qp_per_sp;
+            ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
+            cof[n2 + j][n1 + i] = ilev * kDequantCoef[qp_rem_sp][j][i] << qp_per_sp;
             }
     }
 
