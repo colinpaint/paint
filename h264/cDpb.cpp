@@ -528,25 +528,24 @@ void cDpb::updateInfo() {
   for (uint32_t index = 0; index < usedSize; index++) {
     string debugString = fmt::format ("- frame:{:2d} ", frameStoreArray[index]->frameNum);
 
+    // poc
     debugString += fmt::format (" poc:{:3d}", frameStoreArray[index]->poc);
-
     if (frameStoreArray[index]->isUsed == 3)
-      debugString += fmt::format (":frm:{:3d}", frameStoreArray[index]->frame->poc);
-
+      debugString += fmt::format (":f:{:3d}", frameStoreArray[index]->frame->poc);
     if (frameStoreArray[index]->isUsed & 1)
-      debugString += fmt::format (":top:{:3d}",
+      debugString += fmt::format (":t:{:3d}",
         frameStoreArray[index]->topField ? frameStoreArray[index]->topField->poc
                                          : frameStoreArray[index]->frame->topPoc);
     if (frameStoreArray[index]->isUsed & 2)
-      debugString += fmt::format (":bot:{:3d}",
+      debugString += fmt::format (":b:{:3d}",
         frameStoreArray[index]->botField ? frameStoreArray[index]->botField->poc
                                          : frameStoreArray[index]->frame->botPoc);
 
+    // ref
     if (frameStoreArray[index]->usedRef)
       debugString += fmt::format (" ref:{}", frameStoreArray[index]->usedRef);
-
     if (frameStoreArray[index]->usedLongTermRef)
-      debugString += fmt::format (" longTermRef:{}", frameStoreArray[index]->usedRef);
+      debugString += fmt::format (" longTermRef:{}", frameStoreArray[index]->usedLongTermRef);
 
     decoder->debug.dpbStrings.push_back (
       fmt::format ("{}{}{}",
