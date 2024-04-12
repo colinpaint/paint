@@ -4,7 +4,6 @@
 
 #include "cCabacDecode.h"
 //}}}
-
 //{{{  defines
 #define B_BITS    10      // Number of bits to represent the whole coding interval
 #define HALF      0x01FE  //(1 << (B_BITS-1)) - 2

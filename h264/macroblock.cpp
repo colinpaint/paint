@@ -13,7 +13,8 @@
 #include <math.h>
 //}}}
 namespace {
-  static const sMotionVec kZeroMv = {0, 0};
+  //{{{  tables
+  const sMotionVec kZeroMv = {0, 0};
   //{{{
   const uint8_t QP_SCALE_CR[52] = {
       0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,
@@ -28,7 +29,7 @@ namespace {
     0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15
     };
   //}}}
-
+  //}}}
   //{{{
   void getMotionVectorPredictorMBAFF (sMacroBlock* mb, sPixelPos* block,
                                       sMotionVec *pmv, int16_t  ref_frame, sPicMotion** mvInfo,
@@ -4203,7 +4204,7 @@ bool checkVertMV (sMacroBlock* mb, int vec1_y, int blockSizeY) {
   int y_pos = vec1_y>>2;
   int maxold_y = (mb->mbField) ? (picture->sizeY >> 1) - 1 : picture->size_y_m1;
 
-  return y_pos < (-decoder->coding.lumaPadY + 2) || 
+  return y_pos < (-decoder->coding.lumaPadY + 2) ||
                  y_pos > (maxold_y + decoder->coding.lumaPadY - blockSizeY - 2);
   }
 //}}}
@@ -4643,7 +4644,7 @@ void itrans4x4 (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   int** mbRess = slice->mbRess[plane];
   inverse4x4 (slice->cof[plane],mbRess,joff,ioff);
 
-  sample_reconstruct (&slice->mbRec[plane][joff], &slice->mbPred[plane][joff], 
+  sample_reconstruct (&slice->mbRec[plane][joff], &slice->mbPred[plane][joff],
                       &mbRess[joff], ioff, ioff, BLOCK_SIZE, BLOCK_SIZE,
                       mb->decoder->coding.maxPelValueComp[plane], DQ_BITS);
   }

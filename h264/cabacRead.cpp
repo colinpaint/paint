@@ -5,7 +5,6 @@
 #include "macroblock.h"
 #include "transform.h"
 //}}}
-
 namespace {
   //{{{
   void readCompCoef4x4smb (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,

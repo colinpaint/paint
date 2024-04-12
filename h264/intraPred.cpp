@@ -55,7 +55,6 @@
 #define P_W (predPel[23])
 #define P_X (predPel[24])
 //}}}
-
 namespace {
   //{{{  intra4x4normal
   //{{{

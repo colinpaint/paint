@@ -9,7 +9,6 @@
 
 using namespace std;
 //}}}
-
 namespace {
   //{{{
   void readHrdFromStream (sDataPartition* dataPartition, cHrd* hrd) {

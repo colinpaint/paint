@@ -8,7 +8,6 @@
 
 using namespace std;
 //}}}
-
 namespace {
   //{{{
   static void scalingList (cBitStream& s, int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix) {

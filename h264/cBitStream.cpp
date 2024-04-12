@@ -6,7 +6,6 @@
 
 using namespace std;
 //}}}
-
 namespace {
   //{{{
   int showBitsThreshold (int inf, int numbits) {

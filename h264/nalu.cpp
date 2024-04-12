@@ -8,7 +8,6 @@
 
 using namespace std;
 //}}}
-
 namespace {
   //{{{
   int findStartCode (uint8_t* buf, int zerosInStartcode) {

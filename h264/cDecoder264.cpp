@@ -16,7 +16,7 @@
 using namespace std;
 //}}}
 namespace {
-  //{{{  const tables
+  //{{{  tables
   #define CTX_UNUSED {0,64}
   #define CTX_UNDEF  {0,63}
 

@@ -50,7 +50,6 @@
   MBxy2YBlock(xPosMB((currMBNum),(picSizeX)),yPosMB((currMBNum),(picSizeX)),(comp),(picSizeX))
 //}}}
 //}}}
-
 namespace {
   const int uv_div[2][4] = {{0, 1, 1, 0}, {0, 1, 0, 0}}; //[x/y][yuvFormat]
 
@@ -676,7 +675,7 @@ namespace {
       currRegion->xMin = (xPosYBlock(MBNum2YBlock(currMBNum,comp,picSizeX),picSizeX)<<3);
       currRegion->yMin = (yPosYBlock(MBNum2YBlock(currMBNum,comp,picSizeX),picSizeX)<<3);
 
-      do { 
+      do {
         /* reliability loop */
         minDist = 0;
         fInterNeighborExists = 0;
