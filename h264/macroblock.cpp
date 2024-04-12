@@ -1730,7 +1730,7 @@ namespace {
   {
     se->context = BType2CtxRef (b8mode);
     se->len = 1;
-    dataPartition->bitStream.readSyntaxElement_FLC (se);
+    dataPartition->bitStream.readSyntaxElementFLC (se);
     se->value1 = 1 - se->value1;
     return (char)se->value1;
     }
@@ -2020,7 +2020,7 @@ namespace {
       bi = mb->blockX + bx;
       // get from stream
       if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
-        dataPartition->bitStream.readSyntaxElement_Intra4x4PredictionMode (&se);
+        dataPartition->bitStream.readSyntaxElementIntra4x4PredictionMode (&se);
       else {
         se.context = b8 << 2;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -2083,7 +2083,7 @@ namespace {
 
       //get from stream
       if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
-        dataPartition->bitStream.readSyntaxElement_Intra4x4PredictionMode (&se);
+        dataPartition->bitStream.readSyntaxElementIntra4x4PredictionMode (&se);
       else {
         se.context = (b8 << 2);
         dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -2145,7 +2145,7 @@ namespace {
           bi = mb->blockX + bx;
           //get from stream
           if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
-            dataPartition->bitStream.readSyntaxElement_Intra4x4PredictionMode (&se);
+            dataPartition->bitStream.readSyntaxElementIntra4x4PredictionMode (&se);
           else {
             se.context = (b8<<2) + (j<<1) +i;
             dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -2219,7 +2219,7 @@ namespace {
 
           // get from stream
           if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
-            dataPartition->bitStream.readSyntaxElement_Intra4x4PredictionMode (&se);
+            dataPartition->bitStream.readSyntaxElementIntra4x4PredictionMode (&se);
           else {
             se.context = (b8 << 2) + (j << 1) + i;
             dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -2404,14 +2404,14 @@ namespace {
       sSyntaxElement se;
       if (((dataPartition->bitStream.bitStreamOffset) & 0x07) != 0) {
         se.len = (8 - ((dataPartition->bitStream.bitStreamOffset) & 0x07));
-        dataPartition->bitStream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElementFLC (&se);
         }
 
       //read luma and chroma IPCM coefficients
       se.len = decoder->bitDepthLuma;
       for (int i = 0; i < MB_BLOCK_SIZE;++i)
         for (int j = 0; j < MB_BLOCK_SIZE;++j) {
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           slice->cof[0][i][j] = se.value1;
           }
 
@@ -2420,13 +2420,13 @@ namespace {
       if ((picture->chromaFormatIdc != YUV400) && (decoder->coding.isSeperateColourPlane == 0)) {
         for (int i = 0; i < decoder->mbCrSizeY; ++i)
           for (int j = 0; j < decoder->mbCrSizeX; ++j) {
-            dataPartition->bitStream.readSyntaxElement_FLC (&se);
+            dataPartition->bitStream.readSyntaxElementFLC (&se);
             slice->cof[1][i][j] = se.value1;
             }
 
         for (int i = 0; i < decoder->mbCrSizeY; ++i)
           for (int j = 0; j < decoder->mbCrSizeX; ++j) {
-            dataPartition->bitStream.readSyntaxElement_FLC (&se);
+            dataPartition->bitStream.readSyntaxElementFLC (&se);
             slice->cof[2][i][j] = se.value1;
             }
         }
@@ -2646,7 +2646,7 @@ namespace {
 
       // read eCavlc transform_size_8x8Flag
       se.len = (int64_t)1;
-      dataPartition->bitStream.readSyntaxElement_FLC (&se);
+      dataPartition->bitStream.readSyntaxElementFLC (&se);
       mb->lumaTransformSize8x8flag = (bool)se.value1;
       if (mb->lumaTransformSize8x8flag) {
         mb->mbType = I8MB;
@@ -2676,7 +2676,7 @@ namespace {
       // read eCavlc transform_size_8x8Flag
       if (dataPartition->bitStream.errorFlag) {
         se.len = (int64_t) 1;
-        dataPartition->bitStream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElementFLC (&se);
         }
       else
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -2787,7 +2787,7 @@ namespace {
     // read MB aff
     if (slice->mbAffFrame && (mbNum & 0x01) == 0) {
       se.len = (int64_t) 1;
-      dataPartition->bitStream.readSyntaxElement_FLC (&se);
+      dataPartition->bitStream.readSyntaxElementFLC (&se);
       mb->mbField = (bool)se.value1;
       }
 
@@ -2895,7 +2895,7 @@ namespace {
         // read MB aff
         if ((((mbNum & 0x01) == 0) || ((mbNum & 0x01) && prevMbSkipped))) {
           se.len = (int64_t) 1;
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           mb->mbField = (bool)se.value1;
           }
 
@@ -2918,7 +2918,7 @@ namespace {
         // read field flag of bottom block
         if (slice->codCount == 0 && ((mbNum & 0x01) == 0)) {
           se.len = (int64_t) 1;
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           dataPartition->bitStream.bitStreamOffset--;
           mb->mbField = (bool)se.value1;
           }
@@ -3045,7 +3045,7 @@ namespace {
         // read MB aff
         if (((mbNum & 0x01) == 0) || ((mbNum & 0x01) && prevMbSkipped)) {
           se.len = (int64_t) 1;
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           mb->mbField = (bool)se.value1;
           }
 
@@ -3066,7 +3066,7 @@ namespace {
         // read field flag of bottom block
         if ((slice->codCount == 0) && ((mbNum & 0x01) == 0)) {
           se.len = (int64_t) 1;
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           dataPartition->bitStream.bitStreamOffset--;
           mb->mbField = (bool)se.value1;
           }
@@ -3156,7 +3156,7 @@ namespace {
     if (slice->mbAffFrame && (mbNum & 0x01) == 0) {
       if (dataPartition->bitStream.errorFlag) {
         se.len = (int64_t)1;
-        dataPartition->bitStream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElementFLC (&se);
         }
       else {
         se.reading = readFieldModeCabac;
@@ -3194,7 +3194,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
           se.len = (int64_t) 1;
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);

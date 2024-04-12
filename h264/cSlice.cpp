@@ -154,7 +154,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
           se.len = 1;
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           }
         else
           dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -310,7 +310,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
           se.len = 1;
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -536,7 +536,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
           se.len = 1;
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -853,7 +853,7 @@ namespace {
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
           se.len = 1;
-          dataPartition->bitStream.readSyntaxElement_FLC (&se);
+          dataPartition->bitStream.readSyntaxElementFLC (&se);
           }
         else
           dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -1134,7 +1134,7 @@ namespace {
         se.type =  SE_HEADER;
         dataPartition = &slice->dataPartitions[dpMap[SE_HEADER]];
         se.len = 1;
-        dataPartition->bitStream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElementFLC (&se);
         mb->lumaTransformSize8x8flag = (bool) se.value1;
         }
         //}}}
@@ -1274,7 +1274,7 @@ namespace {
 
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
-        dataPartition->bitStream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElementFLC (&se);
         mb->lumaTransformSize8x8flag = (bool) se.value1;
         }
         //}}}
@@ -1541,7 +1541,7 @@ namespace {
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
-        dataPartition->bitStream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElementFLC (&se);
         mb->lumaTransformSize8x8flag = (bool)se.value1;
         }
 
@@ -1722,7 +1722,7 @@ namespace {
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
-        dataPartition->bitStream.readSyntaxElement_FLC (&se);
+        dataPartition->bitStream.readSyntaxElementFLC (&se);
         mb->lumaTransformSize8x8flag = (bool)se.value1;
         }
         //}}}

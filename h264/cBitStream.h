@@ -124,7 +124,7 @@ class cBitStream {
 public:
   //{{{
   //! gives CBP value from codeword number, both for intra and inter
-  static inline const uint8_t NCBP[2][48][2]=
+  static inline const uint8_t kNCBP[2][48][2]=
   {
     {  // 0      1        2       3       4       5       6       7       8       9      10      11
       {15, 0},{ 0, 1},{ 7, 2},{11, 4},{13, 8},{14, 3},{ 3, 5},{ 5,10},{10,12},{12,15},{ 1, 7},{ 2,11},
@@ -142,7 +142,7 @@ public:
   //}}}
   //{{{
   //! for the infoLevRunInter routine
-  static inline const uint8_t NTAB1[4][8][2] =
+  static inline const uint8_t kNTAB1[4][8][2] =
   {
     {{1,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
     {{1,1},{1,2},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
@@ -151,13 +151,13 @@ public:
   };
   //}}}
   //{{{
-  static inline const uint8_t LEVRUN1[16]=
+  static inline const uint8_t kLEVRUN1[16]=
   {
     4,2,2,1,1,1,1,1,1,1,0,0,0,0,0,0,
   };
   //}}}
   //{{{
-  static inline const uint8_t NTAB2[4][8][2] =
+  static inline const uint8_t kNTAB2[4][8][2] =
   {
     {{1,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
     {{1,1},{2,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
@@ -167,13 +167,13 @@ public:
   //}}}
   //{{{
   //! for the linfo_levrun__c2x2 routine
-  static inline const uint8_t LEVRUN3[4] =
+  static inline const uint8_t kLEVRUN3[4] =
   {
     2,1,0,0
   };
   //}}}
   //{{{
-  static inline const uint8_t NTAB3[2][2][2] =
+  static inline const uint8_t kNTAB3[2][2][2] =
   {
     {{1,0},{0,0}},
     {{2,0},{1,1}},
@@ -203,22 +203,22 @@ public:
   int readSeV (const std::string& label);
   int readUeV (const std::string& label);
   bool readU1 (const std::string& label);
-  int readUv (int LenInBits, const std::string& label);
-  int readIv (int LenInBits, const std::string& label);
+  int readUv (int lenInBits, const std::string& label);
+  int readIv (int lenInBits, const std::string& label);
 
-  int readSyntaxElement_VLC (sSyntaxElement* se);
-  int readSyntaxElement_FLC (sSyntaxElement* se);
-  int readSyntaxElement_Intra4x4PredictionMode (sSyntaxElement* se);
+  int readSyntaxElementVLC (sSyntaxElement* se);
+  int readSyntaxElementFLC (sSyntaxElement* se);
+  int readSyntaxElementIntra4x4PredictionMode (sSyntaxElement* se);
 
-  int readSyntaxElement_NumCoeffTrailingOnes (sSyntaxElement* se, char* type);
-  int readSyntaxElement_NumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se);
+  int readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char* type);
+  int readSyntaxElementNumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se);
 
-  int readSyntaxElement_Level_VLC0 (sSyntaxElement* se);
-  int readSyntaxElement_Level_VLCN (sSyntaxElement* se, int vlc);
+  int readSyntaxElementLevelVlc0 (sSyntaxElement* se);
+  int readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc);
 
-  int readSyntaxElement_TotalZeros (sSyntaxElement* se);
-  int readSyntaxElement_TotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se);
-  int readSyntaxElement_Run (sSyntaxElement* se);
+  int readSyntaxElementTotalZeros (sSyntaxElement* se);
+  int readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se);
+  int readSyntaxElementRun (sSyntaxElement* se);
 
   // vars cavlc
   uint8_t* bitStreamBuffer; // codebuffer for read bytes

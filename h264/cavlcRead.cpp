@@ -553,7 +553,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
       nnz = predictNnz (mb, CR, i<<2, j<<2);
 
     se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-    s.readSyntaxElement_NumCoeffTrailingOnes (&se, type);
+    s.readSyntaxElementNumCoeffTrailingOnes (&se, type);
     numcoeff = se.value1;
     numtrailingones = se.value2;
     if  (block_type == LUMA || block_type == LUMA_INTRA16x16DC || block_type == LUMA_INTRA16x16AC || block_type == CHROMA_AC)
@@ -566,7 +566,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
     //}}}
   else {
     //{{{  chroma DC
-    s.readSyntaxElement_NumCoeffTrailingOnesChromaDC (decoder, &se);
+    s.readSyntaxElementNumCoeffTrailingOnesChromaDC (decoder, &se);
     numcoeff = se.value1;
     numtrailingones = se.value2;
     }
@@ -579,7 +579,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
   if (numcoeff) {
     if (numtrailingones) {
       se.len = numtrailingones;
-      s.readSyntaxElement_FLC (&se);
+      s.readSyntaxElementFLC (&se);
       code = se.inf;
       ntr = numtrailingones;
       for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
@@ -594,9 +594,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
       //{{{  decode level
       if (vlcnum == 0)
-        s.readSyntaxElement_Level_VLC0 (&se);
+        s.readSyntaxElementLevelVlc0 (&se);
       else
-        s.readSyntaxElement_Level_VLCN (&se, vlcnum);
+        s.readSyntaxElementLevelVlcN (&se, vlcnum);
 
       if (level_two_or_higher) {
         se.inf += (se.inf > 0) ? 1 : -1;
@@ -623,9 +623,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
       se.value1 = vlcnum;
 
       if (cdc)
-        s.readSyntaxElement_TotalZerosChromaDC (decoder, &se);
+        s.readSyntaxElementTotalZerosChromaDC (decoder, &se);
       else
-        s.readSyntaxElement_TotalZeros (&se);
+        s.readSyntaxElementTotalZeros (&se);
 
       totzeros = se.value1;
       }
@@ -641,7 +641,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
         // select VLC for runbefore
         vlcnum = imin (zerosleft - 1, RUNBEFORE_NUM_M1);
         se.value1 = vlcnum;
-        s.readSyntaxElement_Run (&se);
+        s.readSyntaxElementRun (&se);
         runarr[i] = se.value1;
         zerosleft -= runarr[i];
         i --;
@@ -724,7 +724,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
     //{{{  luma or chroma AC
     nnz = (!cac) ? predictNnz (mb, LUMA, i<<2, j<<2) : predictNnzChroma (mb, i, ((j-4)<<2));
     se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-    s.readSyntaxElement_NumCoeffTrailingOnes(&se, type);
+    s.readSyntaxElementNumCoeffTrailingOnes(&se, type);
     numcoeff = se.value1;
     numtrailingones = se.value2;
     decoder->nzCoeff[mb_nr][0][j][i] = (uint8_t) numcoeff;
@@ -732,7 +732,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
     //}}}
   else {
     //{{{  chroma DC
-    s.readSyntaxElement_NumCoeffTrailingOnesChromaDC (decoder, &se);
+    s.readSyntaxElementNumCoeffTrailingOnesChromaDC (decoder, &se);
     numcoeff = se.value1;
     numtrailingones = se.value2;
     }
@@ -745,7 +745,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
   if (numcoeff) {
     if (numtrailingones) {
       se.len = numtrailingones;
-      s.readSyntaxElement_FLC (&se);
+      s.readSyntaxElementFLC (&se);
       code = se.inf;
       ntr = numtrailingones;
       for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
@@ -760,9 +760,9 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
       //{{{  decode level
       if (vlcnum == 0)
-        s.readSyntaxElement_Level_VLC0 (&se);
+        s.readSyntaxElementLevelVlc0 (&se);
       else
-        s.readSyntaxElement_Level_VLCN (&se, vlcnum);
+        s.readSyntaxElementLevelVlcN (&se, vlcnum);
 
       if (level_two_or_higher) {
         se.inf += (se.inf > 0) ? 1 : -1;
@@ -788,9 +788,9 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
       se.value1 = vlcnum;
 
       if (cdc)
-        s.readSyntaxElement_TotalZerosChromaDC (decoder, &se);
+        s.readSyntaxElementTotalZerosChromaDC (decoder, &se);
       else
-        s.readSyntaxElement_TotalZeros (&se);
+        s.readSyntaxElementTotalZeros (&se);
 
       totzeros = se.value1;
       }
@@ -808,7 +808,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
         vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
 
         se.value1 = vlcnum;
-        s.readSyntaxElement_Run (&se);
+        s.readSyntaxElementRun (&se);
         runarr[i] = se.value1;
 
         zerosleft -= runarr[i];
