@@ -187,14 +187,14 @@ public:
   static void infoCbpInterNormal (int len, int info, int* codedBlockPattern, int* dummy);
   static void infoCbpIntraOther (int len, int info, int* codedBlockPattern, int* dummy);
   static void infoCbpInterOther (int len, int info, int* codedBlockPattern, int* dummy);
-  static void infoLevRunInter (int len, int info, int* level, int* irun);
-  static void infoLevRunc2x2 (int len, int info, int* level, int* irun);
+  static void infoLevelRunInter (int len, int info, int* level, int* irun);
+  static void infoLevelRunc2x2 (int len, int info, int* level, int* irun);
 
   static int vlcStartCode (cSlice* slice, int dummy);
   static int readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
 
-  static int getVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
-  static int getVLCSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
+  static int getVlcSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
+  static int getVlcSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount);
   static int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
   static int showBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);
   static int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);

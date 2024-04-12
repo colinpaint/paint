@@ -34,7 +34,7 @@ namespace {
           se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
           dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
           if (dataPartition->bitStream.errorFlag)
-            se->mapping = cBitStream::infoLevRunInter;
+            se->mapping = cBitStream::infoLevelRunInter;
           else
             se->reading = readRunLevelCabac;
           dataPartition->readSyntaxElement (mb, se, dataPartition);
@@ -54,7 +54,7 @@ namespace {
           se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
           dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
           if (dataPartition->bitStream.errorFlag)
-            se->mapping = cBitStream::infoLevRunInter;
+            se->mapping = cBitStream::infoLevelRunInter;
           else
             se->reading = readRunLevelCabac;
 

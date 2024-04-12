@@ -103,7 +103,7 @@ void cBitStream::infoCbpInterOther (int len, int info, int* codedBlockPattern, i
   }
 //}}}
 //{{{
-void cBitStream::infoLevRunInter (int len, int info, int* level, int* irun) {
+void cBitStream::infoLevelRunInter (int len, int info, int* level, int* irun) {
 
   if (len <= 9) {
     int l2 = imax(0,(len >> 1)-1);
@@ -126,7 +126,7 @@ void cBitStream::infoLevRunInter (int len, int info, int* level, int* irun) {
   }
 //}}}
 //{{{
-void cBitStream::infoLevRunc2x2 (int len, int info, int* level, int* irun) {
+void cBitStream::infoLevelRunc2x2 (int len, int info, int* level, int* irun) {
 
   if (len <= 5) {
     int l2 = imax(0, (len >> 1) - 1);
@@ -165,7 +165,7 @@ int cBitStream::readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sData
 //}}}
 
 //{{{
-int cBitStream::getVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
+int cBitStream::getVlcSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
   long byteoffset = totalBitOffset >> 3;        // uint8_t from start of buffer
   int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
@@ -203,7 +203,7 @@ int cBitStream::getVLCSymbol (uint8_t buffer[], int totalBitOffset, int* info, i
   }
 //}}}
 //{{{
-int cBitStream::getVLCSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
+int cBitStream::getVlcSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
   int byteoffset = (totalBitOffset >> 3);        // uint8_t from start of buffer
   int bitOffset = (7 - (totalBitOffset & 0x07)); // bit from start of uint8_t
@@ -386,7 +386,7 @@ bool cBitStream::readU1 (const string& label) {
 //{{{
 int cBitStream::readSyntaxElementVLC (sSyntaxElement* se) {
 
-  se->len = getVLCSymbol (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
+  se->len = getVlcSymbol (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
   if (se->len == -1)
     return -1;
 
@@ -412,7 +412,7 @@ int cBitStream::readSyntaxElementFLC (sSyntaxElement* se) {
 //{{{
 int cBitStream::readSyntaxElementIntra4x4PredictionMode (sSyntaxElement* se) {
 
-  se->len = getVLCSymbolIntraMode (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
+  se->len = getVlcSymbolIntraMode (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
   if (se->len == -1)
     return -1;
 
