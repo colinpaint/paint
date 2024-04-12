@@ -1081,13 +1081,16 @@ public:
 
   cApp::cOptions* getOptions() { return mOptions; }
   cFilePlayer* getFilePlayer() { return mFilePlayer; }
-  bool getPlaying() { return mFilePlayer ? mFilePlayer->getPlaying() : mPlayState == ePlaying; }
   cDecoder264* getDecoder() { return mFilePlayer ? mFilePlayer->getDecoder() : mDecoder; }
   cVideoFrame* getVideoFrame() { return mFilePlayer ? mFilePlayer->getVideoFrame() : mVideoFrame; }
+  bool getPlaying() { return mFilePlayer ? mFilePlayer->getPlaying() : mPlayState == ePlaying; }
 
   //{{{
   void togglePlay() {
-    if (mPlayState == ePlaying)
+
+    if (mFilePlayer)
+      mFilePlayer->togglePlay();
+    else if (mPlayState == ePlaying)
       mPlayState = eStopped;
     else
       mPlayState = ePlaying;
@@ -1095,7 +1098,10 @@ public:
   //}}}
   //{{{
   void singleStep() {
-    mPlayState = eSingleStep;
+    if (mFilePlayer)
+      mFilePlayer->singleStep();
+    else
+      mPlayState = eSingleStep;
     }
   //}}}
   //{{{
