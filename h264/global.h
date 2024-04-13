@@ -826,8 +826,8 @@ private:
   void readDecRefPicMarking (cBitStream& bitStream, cSlice* slice);
   void readSliceHeader (cBitStream& bitStream, cSlice* slice);
   void decodeSlice (cSlice* slice);
-  int decodeFrame();
   void endDecodeFrame();
+  int decodeFrame();
 
   //{{{  fmo
   void initFmo (cSlice* slice);
@@ -848,13 +848,12 @@ private:
   int fmoGenerateMapUnitToSliceGroupMap (cSlice* slice);
   int fmoGenerateMbToSliceGroupMap (cSlice* slice);
   //}}}
-
   void setCoding();
   void setCodingParam (cSps* sps);
   void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
 
   void allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* picture,
-                               int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
+                               int frameSize, int lumaSize, int lumaSizeX, int lumaSizeY,
                                int chromaSizeX, int chromaSizeY);
   void clearPicture (sPicture* picture);
   void writeOutPicture (sPicture* picture);

@@ -2840,135 +2840,6 @@ void cDecoder264::decodeSlice (cSlice* slice) {
   }
 //}}}
 //{{{
-int cDecoder264::decodeFrame() {
-
-  int ret = 0;
-
-  numDecodedMbs = 0;
-  picSliceIndex = 0;
-  numDecodedSlices = 0;
-
-  int curHeader = 0;
-  if (newFrame) {
-    // get firstSlice from sliceList;
-    cSlice* slice = sliceList[picSliceIndex];
-    sliceList[picSliceIndex] = nextSlice;
-    nextSlice = slice;
-
-    slice = sliceList[picSliceIndex];
-    useParameterSet (slice);
-    initPicture (slice);
-
-    picSliceIndex++;
-    curHeader = eSOS;
-    }
-
-  while ((curHeader != eSOP) && (curHeader != eEOS)) {
-    //{{{  no pending slices, read next nalu
-    if (!sliceList[picSliceIndex])
-      sliceList[picSliceIndex] = cSlice::allocSlice();
-
-    cSlice* slice = sliceList[picSliceIndex];
-    slice->decoder = this;
-    slice->dpb = &dpb; //set default value;
-    slice->nextHeader = -8888;
-    slice->numDecodedMbs = 0;
-    slice->coefCount = -1;
-    slice->pos = 0;
-    slice->isResetCoef = false;
-    slice->isResetCoefCr = false;
-
-    // read slice
-    curHeader = readNalu (slice);
-    slice->curHeader = curHeader;
-
-    //{{{  manage primary, redundant slices
-    if (!slice->redundantPicCount)
-      isPrimaryOk = isRedundantOk = 1;
-
-    if (!slice->redundantPicCount && (coding.sliceType != eSliceI)) {
-      for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
-        if (!slice->refFlag[i]) // reference primary slice incorrect, primary slice incorrect
-          isPrimaryOk = 0;
-      }
-    else if (slice->redundantPicCount && (coding.sliceType != eSliceI)) // reference redundant slice incorrect
-      if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
-        isRedundantOk = 0;
-
-    // If primary and redundant received, primary is correct
-    //   discard redundant
-    // else
-    //   primary slice replaced with redundant slice.
-    if ((slice->frameNum == prevFrameNum) &&
-        slice->redundantPicCount && isPrimaryOk && (curHeader != eEOS))
-      continue;
-
-    if (((curHeader != eSOP) && (curHeader != eEOS)) ||
-        ((curHeader == eSOP) && !picSliceIndex)) {
-       slice->curSliceIndex = (int16_t)picSliceIndex;
-       picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
-       if (picSliceIndex > 0) {
-         (*sliceList)->copyPoc (slice);
-         sliceList[picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
-         }
-
-       picSliceIndex++;
-       if (picSliceIndex >= numAllocatedSlices)
-         error ("decodeFrame - sliceList numAllocationSlices too small");
-      curHeader = eSOS;
-      }
-
-    else {
-      if (sliceList[picSliceIndex-1]->mbAffFrame)
-        sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs / 2;
-      else
-        sliceList[picSliceIndex-1]->endMbNumPlus1 =
-          coding.frameSizeMbs / (sliceList[picSliceIndex-1]->fieldPic + 1);
-
-      newFrame = 1;
-
-      slice->curSliceIndex = 0;
-      sliceList[picSliceIndex] = nextSlice;
-      nextSlice = slice;
-      }
-    //}}}
-    copySliceInfo (slice, oldSlice);
-    }
-    //}}}
-
-  // decode slices
-  ret = curHeader;
-  initPictureDecode();
-  for (int sliceIndex = 0; sliceIndex < picSliceIndex; sliceIndex++) {
-    cSlice* slice = sliceList[sliceIndex];
-    curHeader = slice->curHeader;
-    initSlice (slice);
-
-    if (slice->activePps->entropyCoding == eCabac) {
-      //{{{  init cabac
-      initCabacContexts (slice);
-      cabacNewSlice (slice);
-      }
-      //}}}
-    if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == eSliceB)) ||
-        (slice->activePps->hasWeightedPred && (slice->sliceType != eSliceI)))
-      slice->fillWeightedPredParam();
-
-    if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->errorFlag)
-      decodeSlice (slice);
-
-    numDecodedSlices++;
-    ercMvPerMb += slice->ercMvPerMb;
-    numDecodedMbs += slice->numDecodedMbs;
-    }
-
-  endDecodeFrame();
-  prevFrameNum = sliceList[0]->frameNum;
-
-  return ret;
-  }
-//}}}
-//{{{
 void cDecoder264::endDecodeFrame() {
 
   // return if the last picture has already been finished
@@ -3134,6 +3005,135 @@ void cDecoder264::endDecodeFrame() {
 
     (decodeFrameNum)++;
     }
+  }
+//}}}
+//{{{
+int cDecoder264::decodeFrame() {
+
+  int ret = 0;
+
+  numDecodedMbs = 0;
+  picSliceIndex = 0;
+  numDecodedSlices = 0;
+
+  int curHeader = 0;
+  if (newFrame) {
+    // get firstSlice from sliceList;
+    cSlice* slice = sliceList[picSliceIndex];
+    sliceList[picSliceIndex] = nextSlice;
+    nextSlice = slice;
+
+    slice = sliceList[picSliceIndex];
+    useParameterSet (slice);
+    initPicture (slice);
+
+    picSliceIndex++;
+    curHeader = eSOS;
+    }
+
+  while ((curHeader != eSOP) && (curHeader != eEOS)) {
+    //{{{  no pending slices, read next nalu
+    if (!sliceList[picSliceIndex])
+      sliceList[picSliceIndex] = cSlice::allocSlice();
+
+    cSlice* slice = sliceList[picSliceIndex];
+    slice->decoder = this;
+    slice->dpb = &dpb; //set default value;
+    slice->nextHeader = -8888;
+    slice->numDecodedMbs = 0;
+    slice->coefCount = -1;
+    slice->pos = 0;
+    slice->isResetCoef = false;
+    slice->isResetCoefCr = false;
+
+    // read slice
+    curHeader = readNalu (slice);
+    slice->curHeader = curHeader;
+
+    //{{{  manage primary, redundant slices
+    if (!slice->redundantPicCount)
+      isPrimaryOk = isRedundantOk = 1;
+
+    if (!slice->redundantPicCount && (coding.sliceType != eSliceI)) {
+      for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
+        if (!slice->refFlag[i]) // reference primary slice incorrect, primary slice incorrect
+          isPrimaryOk = 0;
+      }
+    else if (slice->redundantPicCount && (coding.sliceType != eSliceI)) // reference redundant slice incorrect
+      if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
+        isRedundantOk = 0;
+
+    // If primary and redundant received, primary is correct
+    //   discard redundant
+    // else
+    //   primary slice replaced with redundant slice.
+    if ((slice->frameNum == prevFrameNum) &&
+        slice->redundantPicCount && isPrimaryOk && (curHeader != eEOS))
+      continue;
+
+    if (((curHeader != eSOP) && (curHeader != eEOS)) ||
+        ((curHeader == eSOP) && !picSliceIndex)) {
+       slice->curSliceIndex = (int16_t)picSliceIndex;
+       picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
+       if (picSliceIndex > 0) {
+         (*sliceList)->copyPoc (slice);
+         sliceList[picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
+         }
+
+       picSliceIndex++;
+       if (picSliceIndex >= numAllocatedSlices)
+         error ("decodeFrame - sliceList numAllocationSlices too small");
+      curHeader = eSOS;
+      }
+
+    else {
+      if (sliceList[picSliceIndex-1]->mbAffFrame)
+        sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs / 2;
+      else
+        sliceList[picSliceIndex-1]->endMbNumPlus1 =
+          coding.frameSizeMbs / (sliceList[picSliceIndex-1]->fieldPic + 1);
+
+      newFrame = 1;
+
+      slice->curSliceIndex = 0;
+      sliceList[picSliceIndex] = nextSlice;
+      nextSlice = slice;
+      }
+    //}}}
+    copySliceInfo (slice, oldSlice);
+    }
+    //}}}
+
+  // decode slices
+  ret = curHeader;
+  initPictureDecode();
+  for (int sliceIndex = 0; sliceIndex < picSliceIndex; sliceIndex++) {
+    cSlice* slice = sliceList[sliceIndex];
+    curHeader = slice->curHeader;
+    initSlice (slice);
+
+    if (slice->activePps->entropyCoding == eCabac) {
+      //{{{  init cabac
+      initCabacContexts (slice);
+      cabacNewSlice (slice);
+      }
+      //}}}
+    if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == eSliceB)) ||
+        (slice->activePps->hasWeightedPred && (slice->sliceType != eSliceI)))
+      slice->fillWeightedPredParam();
+
+    if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->errorFlag)
+      decodeSlice (slice);
+
+    numDecodedSlices++;
+    ercMvPerMb += slice->ercMvPerMb;
+    numDecodedMbs += slice->numDecodedMbs;
+    }
+
+  endDecodeFrame();
+  prevFrameNum = sliceList[0]->frameNum;
+
+  return ret;
   }
 //}}}
 
@@ -4110,8 +4110,8 @@ void cDecoder264::useParameterSet (cSlice* slice) {
 
 // output
 //{{{
-void cDecoder264::allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* p,
-                                          int lumaSize, int frameSize, int lumaSizeX, int lumaSizeY,
+void cDecoder264::allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* picture,
+                                          int frameSize, int lumaSize, int lumaSizeX, int lumaSizeY,
                                           int chromaSizeX, int chromaSizeY) {
 
   if (decodedPic->bufSize != frameSize) {
@@ -4122,7 +4122,7 @@ void cDecoder264::allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* p,
     decodedPic->uBuf = decodedPic->yBuf + lumaSize;
     decodedPic->vBuf = decodedPic->uBuf + ((frameSize - lumaSize)>>1);
 
-    decodedPic->yuvFormat = p->chromaFormatIdc;
+    decodedPic->yuvFormat = picture->chromaFormatIdc;
     decodedPic->bitDepth = coding.picUnitBitSizeDisk;
     decodedPic->width = lumaSizeX;
     decodedPic->height = lumaSizeY;
@@ -4173,8 +4173,8 @@ void cDecoder264::writeOutPicture (sPicture* picture) {
 
   sDecodedPic* decodedPic = allocDecodedPicture (outDecodedPics);
   if (!decodedPic->yBuf || (decodedPic->bufSize < frameSize))
-    allocDecodedPicBuffers (decodedPic, picture, lumaSize, frameSize,
-                            lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
+    allocDecodedPicBuffers (decodedPic, picture, frameSize, 
+                            lumaSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
   decodedPic->ok = true;
   decodedPic->poc = picture->framePoc;
   copyCropped (decodedPic->ok ? decodedPic->yBuf : decodedPic->yBuf + lumaSizeX * symbolSizeInBytes,
@@ -4185,11 +4185,9 @@ void cDecoder264::writeOutPicture (sPicture* picture) {
   cropRight = picture->cropRight;
   cropTop = (2 - picture->frameMbOnly) * picture->cropTop;
   cropBot = (2 - picture->frameMbOnly) * picture->cropBot;
-
   copyCropped (decodedPic->ok ? decodedPic->uBuf : decodedPic->uBuf + chromaSizeX * symbolSizeInBytes,
                picture->imgUV[0], picture->sizeXcr, picture->sizeYcr, symbolSizeInBytes,
                cropLeft, cropRight, cropTop, cropBot, decodedPic->uvStride);
-
   copyCropped (decodedPic->ok ? decodedPic->vBuf : decodedPic->vBuf + chromaSizeX * symbolSizeInBytes,
                picture->imgUV[1], picture->sizeXcr, picture->sizeYcr, symbolSizeInBytes,
                cropLeft, cropRight, cropTop, cropBot, decodedPic->uvStride);
