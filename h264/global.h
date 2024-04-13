@@ -59,15 +59,6 @@
 // Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
 #define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
 //}}}
-#include "nalu.h"
-#include "cSps.h"
-#include "cPps.h"
-#include "cCabacDecode.h"
-#include "cBitStream.h"
-#include "cSlice.h"
-#include "cFrameStore.h"
-#include "sPicture.h"
-#include "cDpb.h"
 
 //{{{
 enum ePixelFormat {
@@ -248,6 +239,16 @@ enum eDecodeResult {
   ePictureDecoded = 2
   };
 //}}}
+
+#include "nalu.h"
+#include "cSps.h"
+#include "cPps.h"
+#include "cCabacDecode.h"
+#include "cBitStream.h"
+#include "cSlice.h"
+#include "cFrameStore.h"
+#include "sPicture.h"
+#include "cDpb.h"
 
 struct sMacroBlock;
 //{{{
@@ -638,12 +639,7 @@ public:
   void reset_ecFlags();
   int setEcFlag (int se);
   int getConcealElement (sSyntaxElement* se);
-
   int fmoGetNextMBNr (int CurrentMbNr);
-
-  sDecodedPic* decodeOneFrame (int& result);
-  sDecodedPic* finish();
-  void close();
 
   void decodePOC (cSlice* slice);
   void padPicture (sPicture* picture);
@@ -651,6 +647,10 @@ public:
 
   void directOutput (sPicture* picture);
   void writeStoredFrame (cFrameStore* frameStore);
+
+  sDecodedPic* decodeOneFrame (int& result);
+  sDecodedPic* finish();
+  void close();
 
   // static var
   static inline cDecoder264* gDecoder = nullptr;
@@ -819,8 +819,14 @@ private:
   void initGlobalBuffers();
   void freeGlobalBuffers();
   void freeLayerBuffers();
-
   void mbAffPostProc();
+
+  // slice
+  int readNalu (cSlice* slice);
+  void readSliceHeader (cBitStream& s, cSlice* slice);
+  void decodeSlice (cSlice* slice);
+  int decodeFrame();
+  void endDecodeFrame();
 
   //{{{  fmo
   void initFmo (cSlice* slice);
@@ -866,11 +872,5 @@ private:
   void useParameterSet (cSlice* slice);
 
   void makeFramePictureJV();
-
-  void readSliceHeader (cSlice* slice);
-  int readSlice (cSlice* slice);
-  void decodeSlice (cSlice* slice);
-  int decodeFrame();
-  void endDecodeFrame();
   };
 //}}}

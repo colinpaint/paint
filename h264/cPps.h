@@ -17,26 +17,26 @@ public:
 
   uint32_t id = 0;                           // ue(v)
   uint32_t spsId = 0;                        // ue(v)
-  int      entropyCoding = 0;                // u(1)
+  eEntropyCodingType entropyCoding = eCavlc; // u(1)
   bool     frameBotField = false;            // u(1)
 
   uint32_t numSliceGroupsMinus1 = 0;         // ue(v)
   uint32_t sliceGroupMapType = 0;            // ue(v)
   //{{{  optional sliceGroupMapType fields
   // sliceGroupMapType 0
-  uint32_t runLengthMinus1[8] = {0};            // ue(v)
+  uint32_t runLengthMinus1[8] = {0};         // ue(v)
 
   // sliceGroupMapType 2
-  uint32_t topLeft[8] = {0};                    // ue(v)
-  uint32_t botRight[8] = {0};                   // ue(v)
+  uint32_t topLeft[8] = {0};                 // ue(v)
+  uint32_t botRight[8] = {0};                // ue(v)
 
   // sliceGroupMapType 3 || 4 || 5
   bool   sliceGroupChangeDirectionFlag = false; // u(1)
-  uint32_t sliceGroupChangeRateMius1 = 0;       // ue(v)
+  uint32_t sliceGroupChangeRateMius1 = 0;    // ue(v)
 
   // sliceGroupMapType 6
-  uint32_t picSizeMapUnitsMinus1 = 0;           // ue(v)
-  uint8_t* sliceGroupId = 0;                    // complete MBAmap u(v)
+  uint32_t picSizeMapUnitsMinus1 = 0;        // ue(v)
+  uint8_t* sliceGroupId = 0;                 // complete MBAmap u(v)
   //}}}
 
   int      numRefIndexL0defaultActiveMinus1; // ue(v)

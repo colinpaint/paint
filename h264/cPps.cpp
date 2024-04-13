@@ -186,7 +186,7 @@ void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
   id = s.readUeV ("PPS ppsId");
   spsId = s.readUeV ("PPS spsId");
 
-  entropyCoding = s.readU1 ("PPS entropyCoding");
+  entropyCoding = (eEntropyCodingType)s.readU1 ("PPS entropyCoding");
   frameBotField = s.readU1 ("PPS frameBotField");
   numSliceGroupsMinus1 = s.readUeV ("PPS numSliceGroupsMinus1");
 
