@@ -1324,13 +1324,48 @@ namespace {
   void ercWriteMbModeMv (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
+
     int curMbNum = mb->mbIndexX;
     sPicture* picture = decoder->picture;
-
     int mbx = xPosMB (curMbNum, picture->sizeX), mby = yPosMB (curMbNum, picture->sizeX);
     sObjectBuffer* curRegion = decoder->ercObjectList + (curMbNum << 2);
 
-    if (decoder->coding.sliceType != eSliceB) {
+    if (decoder->coding.sliceType == eSliceB) {
+      //{{{  B-frame
+      for (int i = 0; i < 4; ++i) {
+        int ii = 4*mbx + (i%2) * 2;
+        int jj = 4*mby + (i/2) * 2;
+
+        sObjectBuffer* region = curRegion + i;
+        region->regionMode = (mb->mbType == I16MB  ? REGMODE_INTRA :
+                                mb->b8mode[i] == IBLOCK ? REGMODE_INTRA_8x8 :
+                                  REGMODE_INTER_PRED_8x8);
+
+        if (mb->mbType == I16MB || mb->b8mode[i] == IBLOCK) {
+          // INTRA
+          region->mv[0] = 0;
+          region->mv[1] = 0;
+          region->mv[2] = 0;
+          }
+        else {
+          int idx = (picture->mvInfo[jj][ii].refIndex[0] < 0) ? 1 : 0;
+          region->mv[0] = (picture->mvInfo[jj][ii].mv[idx].mvX +
+                           picture->mvInfo[jj][ii+1].mv[idx].mvX +
+                           picture->mvInfo[jj+1][ii].mv[idx].mvX +
+                           picture->mvInfo[jj+1][ii+1].mv[idx].mvX + 2)/4;
+
+          region->mv[1] = (picture->mvInfo[jj][ii].mv[idx].mvY +
+                           picture->mvInfo[jj][ii+1].mv[idx].mvY +
+                           picture->mvInfo[jj+1][ii].mv[idx].mvY +
+                           picture->mvInfo[jj+1][ii+1].mv[idx].mvY + 2)/4;
+          mb->slice->ercMvPerMb += iabs (region->mv[0]) + iabs (region->mv[1]);
+
+          region->mv[2] = (picture->mvInfo[jj][ii].refIndex[idx]);
+          }
+        }
+      }
+      //}}}
+    else {
       //{{{  non-B frame
       for (int i = 0; i < 4; ++i) {
         sObjectBuffer* region = curRegion + i;
@@ -1362,41 +1397,6 @@ namespace {
 
           mb->slice->ercMvPerMb += iabs (region->mv[0]) + iabs (region->mv[1]);
           region->mv[2] = picture->mvInfo[jj][ii].refIndex[LIST_0];
-          }
-        }
-      }
-      //}}}
-    else {
-      //{{{  B-frame
-      for (int i = 0; i < 4; ++i) {
-        int ii = 4*mbx + (i%2) * 2;
-        int jj = 4*mby + (i/2) * 2;
-
-        sObjectBuffer* region = curRegion + i;
-        region->regionMode = (mb->mbType == I16MB  ? REGMODE_INTRA :
-                               mb->b8mode[i] == IBLOCK ? REGMODE_INTRA_8x8 :
-                                 REGMODE_INTER_PRED_8x8);
-
-        if (mb->mbType == I16MB || mb->b8mode[i] == IBLOCK) {
-          // INTRA
-          region->mv[0] = 0;
-          region->mv[1] = 0;
-          region->mv[2] = 0;
-          }
-        else {
-          int idx = (picture->mvInfo[jj][ii].refIndex[0] < 0) ? 1 : 0;
-          region->mv[0] = (picture->mvInfo[jj][ii].mv[idx].mvX +
-                           picture->mvInfo[jj][ii+1].mv[idx].mvX +
-                           picture->mvInfo[jj+1][ii].mv[idx].mvX +
-                           picture->mvInfo[jj+1][ii+1].mv[idx].mvX + 2)/4;
-
-          region->mv[1] = (picture->mvInfo[jj][ii].mv[idx].mvY +
-                           picture->mvInfo[jj][ii+1].mv[idx].mvY +
-                           picture->mvInfo[jj+1][ii].mv[idx].mvY +
-                           picture->mvInfo[jj+1][ii+1].mv[idx].mvY + 2)/4;
-          mb->slice->ercMvPerMb += iabs (region->mv[0]) + iabs (region->mv[1]);
-
-          region->mv[2] = (picture->mvInfo[jj][ii].refIndex[idx]);
           }
         }
       }
@@ -2310,10 +2310,10 @@ int cDecoder264::readNalu (cSlice* slice) {
         // debug
         debug.sliceType = slice->sliceType;
         debug.sliceString = fmt::format ("{}:{}:{:6d} -> pps:{} frame:{:2d} {} {}{}",
-                                         (nalu->unitType == cNalu::NALU_TYPE_IDR) ? "IDR":"SLC", 
+                                         (nalu->unitType == cNalu::NALU_TYPE_IDR) ? "IDR":"SLC",
                                          slice->refId, nalu->len,
                                          slice->ppsId, slice->frameNum,
-                                         slice->sliceType ? (slice->sliceType == 1) ? 
+                                         slice->sliceType ? (slice->sliceType == 1) ?
                                            'B' : ((slice->sliceType == 2) ? 'I':'?') : 'P',
                                          slice->fieldPic ? " field":"", slice->mbAffFrame ? " mbAff":"");
         if (param.sliceDebug)
@@ -2468,6 +2468,53 @@ int cDecoder264::readNalu (cSlice* slice) {
     }
 
   return curHeader;
+  }
+//}}}
+//{{{
+void cDecoder264::readDecRefPicMarking (cBitStream& bitStream, cSlice* slice) {
+
+  // free old buffer content
+  while (slice->decRefPicMarkBuffer) {
+    sDecodedRefPicMark* tmp_drpm = slice->decRefPicMarkBuffer;
+    slice->decRefPicMarkBuffer = tmp_drpm->next;
+    free (tmp_drpm);
+    }
+
+  if (slice->isIDR) {
+    slice->noOutputPriorPicFlag = bitStream.readU1 ("SLC noOutputPriorPicFlag");
+    noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
+    slice->longTermRefFlag = bitStream.readU1 ("SLC longTermRefFlag");
+    }
+  else {
+    slice->adaptRefPicBufFlag = bitStream.readU1 ("SLC adaptRefPicBufFlag");
+    if (slice->adaptRefPicBufFlag) {
+      // read Memory Management Control Operation
+      int val;
+      do {
+        sDecodedRefPicMark* tempDrpm = (sDecodedRefPicMark*)calloc (1,sizeof (sDecodedRefPicMark));
+        tempDrpm->next = NULL;
+        val = tempDrpm->memManagement = bitStream.readUeV ("SLC memManagement");
+        if ((val == 1) || (val == 3))
+          tempDrpm->diffPicNumMinus1 = bitStream.readUeV ("SLC diffPicNumMinus1");
+        if (val == 2)
+          tempDrpm->longTermPicNum = bitStream.readUeV ("SLC longTermPicNum");
+        if ((val == 3 ) || (val == 6))
+          tempDrpm->longTermFrameIndex = bitStream.readUeV ("SLC longTermFrameIndex");
+        if (val == 4)
+          tempDrpm->maxLongTermFrameIndexPlus1 = bitStream.readUeV ("SLC max_long_term_pic_idx_plus1");
+
+        // add command
+        if (!slice->decRefPicMarkBuffer)
+          slice->decRefPicMarkBuffer = tempDrpm;
+        else {
+          sDecodedRefPicMark* tempDrpm2 = slice->decRefPicMarkBuffer;
+          while (tempDrpm2->next)
+            tempDrpm2 = tempDrpm2->next;
+          tempDrpm2->next = tempDrpm;
+          }
+        } while (val != 0);
+      }
+    }
   }
 //}}}
 //{{{
@@ -3686,54 +3733,6 @@ bool cDecoder264::isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* old
   }
 //}}}
 //{{{
-void cDecoder264::readDecRefPicMarking (cBitStream& s, cSlice* slice) {
-
-  // free old buffer content
-  while (slice->decRefPicMarkBuffer) {
-    sDecodedRefPicMark* tmp_drpm = slice->decRefPicMarkBuffer;
-    slice->decRefPicMarkBuffer = tmp_drpm->next;
-    free (tmp_drpm);
-    }
-
-  if (slice->isIDR) {
-    slice->noOutputPriorPicFlag = s.readU1 ("SLC noOutputPriorPicFlag");
-    noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
-    slice->longTermRefFlag = s.readU1 ("SLC longTermRefFlag");
-    }
-  else {
-    slice->adaptRefPicBufFlag = s.readU1 ("SLC adaptRefPicBufFlag");
-    if (slice->adaptRefPicBufFlag) {
-      // read Memory Management Control Operation
-      int val;
-      do {
-        sDecodedRefPicMark* tempDrpm = (sDecodedRefPicMark*)calloc (1,sizeof (sDecodedRefPicMark));
-        tempDrpm->next = NULL;
-        val = tempDrpm->memManagement = s.readUeV ("SLC memManagement");
-        if ((val == 1) || (val == 3))
-          tempDrpm->diffPicNumMinus1 = s.readUeV ("SLC diffPicNumMinus1");
-        if (val == 2)
-          tempDrpm->longTermPicNum = s.readUeV ("SLC longTermPicNum");
-
-        if ((val == 3 ) || (val == 6))
-          tempDrpm->longTermFrameIndex = s.readUeV ("SLC longTermFrameIndex");
-        if (val == 4)
-          tempDrpm->maxLongTermFrameIndexPlus1 = s.readUeV ("SLC max_long_term_pic_idx_plus1");
-
-        // add command
-        if (!slice->decRefPicMarkBuffer)
-          slice->decRefPicMarkBuffer = tempDrpm;
-        else {
-          sDecodedRefPicMark* tempDrpm2 = slice->decRefPicMarkBuffer;
-          while (tempDrpm2->next)
-            tempDrpm2 = tempDrpm2->next;
-          tempDrpm2->next = tempDrpm;
-          }
-        } while (val != 0);
-      }
-    }
-  }
-//}}}
-//{{{
 void cDecoder264::initRefPicture (cSlice* slice) {
 
   sPicture* vidRefPicture = dpb.noRefPicture;
@@ -4157,25 +4156,19 @@ void cDecoder264::writeOutPicture (sPicture* picture) {
   if (picture->nonExisting)
     return;
 
-  int cropLeft;
-  int cropRight;
-  int cropTop;
-  int cropBottom;
-  if (picture->hasCrop) {
-    cropLeft = kSubWidthC [picture->chromaFormatIdc] * picture->cropLeft;
-    cropRight = kSubWidthC [picture->chromaFormatIdc] * picture->cropRight;
-    cropTop = kSubHeightC[picture->chromaFormatIdc] * (2-picture->frameMbOnly) * picture->cropTop;
-    cropBottom = kSubHeightC[picture->chromaFormatIdc] * (2-picture->frameMbOnly) * picture->cropBot;
-    }
-  else
-    cropLeft = cropRight = cropTop = cropBottom = 0;
+  int cropLeft = picture->hasCrop ? kSubWidthC [picture->chromaFormatIdc] * picture->cropLeft : 0;
+  int cropRight = picture->hasCrop ? kSubWidthC [picture->chromaFormatIdc] * picture->cropRight : 0;
+  int cropTop = picture->hasCrop ?
+    kSubHeightC[picture->chromaFormatIdc] * (2-picture->frameMbOnly) * picture->cropTop : 0;
+  int cropBot = picture->hasCrop ?
+    kSubHeightC[picture->chromaFormatIdc] * (2-picture->frameMbOnly) * picture->cropBot : 0;
 
   int symbolSizeInBytes = (coding.picUnitBitSizeDisk+7) >> 3;
-  int chromaSizeX = picture->sizeXcr- picture->cropLeft -picture->cropRight;
+  int chromaSizeX = picture->sizeXcr - picture->cropLeft - picture->cropRight;
   int chromaSizeY = picture->sizeYcr - (2 - picture->frameMbOnly) * picture->cropTop -
                                        (2 - picture->frameMbOnly) * picture->cropBot;
   int lumaSizeX = picture->sizeX - cropLeft - cropRight;
-  int lumaSizeY = picture->sizeY - cropTop - cropBottom;
+  int lumaSizeY = picture->sizeY - cropTop - cropBot;
   int lumaSize = lumaSizeX * lumaSizeY * symbolSizeInBytes;
   int frameSize = (lumaSizeX * lumaSizeY + 2 * (chromaSizeX * chromaSizeY)) * symbolSizeInBytes;
 
@@ -4187,20 +4180,20 @@ void cDecoder264::writeOutPicture (sPicture* picture) {
   decodedPic->poc = picture->framePoc;
   copyCropped (decodedPic->ok ? decodedPic->yBuf : decodedPic->yBuf + lumaSizeX * symbolSizeInBytes,
                picture->imgY, picture->sizeX, picture->sizeY, symbolSizeInBytes,
-               cropLeft, cropRight, cropTop, cropBottom, decodedPic->yStride);
+               cropLeft, cropRight, cropTop, cropBot, decodedPic->yStride);
 
   cropLeft = picture->cropLeft;
   cropRight = picture->cropRight;
   cropTop = (2 - picture->frameMbOnly) * picture->cropTop;
-  cropBottom = (2 - picture->frameMbOnly) * picture->cropBot;
+  cropBot = (2 - picture->frameMbOnly) * picture->cropBot;
 
   copyCropped (decodedPic->ok ? decodedPic->uBuf : decodedPic->uBuf + chromaSizeX * symbolSizeInBytes,
                picture->imgUV[0], picture->sizeXcr, picture->sizeYcr, symbolSizeInBytes,
-               cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
+               cropLeft, cropRight, cropTop, cropBot, decodedPic->uvStride);
 
   copyCropped (decodedPic->ok ? decodedPic->vBuf : decodedPic->vBuf + chromaSizeX * symbolSizeInBytes,
                picture->imgUV[1], picture->sizeXcr, picture->sizeYcr, symbolSizeInBytes,
-               cropLeft, cropRight, cropTop, cropBottom, decodedPic->uvStride);
+               cropLeft, cropRight, cropTop, cropBot, decodedPic->uvStride);
   }
 //}}}
 //{{{

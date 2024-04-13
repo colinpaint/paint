@@ -823,6 +823,7 @@ private:
 
   // slice
   int readNalu (cSlice* slice);
+  void readDecRefPicMarking (cBitStream& bitStream, cSlice* slice);
   void readSliceHeader (cBitStream& bitStream, cSlice* slice);
   void decodeSlice (cSlice* slice);
   int decodeFrame();
@@ -863,7 +864,6 @@ private:
   void flushDirectOutput();
 
   bool isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice);
-  void readDecRefPicMarking (cBitStream& s, cSlice* slice);
   void initPicture (cSlice* slice);
   void initRefPicture (cSlice* slice);
   void initSlice (cSlice* slice);
