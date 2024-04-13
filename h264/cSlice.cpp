@@ -131,7 +131,7 @@ namespace {
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-          ? slice->linfoCbpIntra : slice->linfoCbpInter;
+          ? slice->infoCbpIntra : slice->infoCbpInter;
       else
         se.reading = readCbpCabac;
 
@@ -287,7 +287,7 @@ namespace {
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-          ? slice->linfoCbpIntra : slice->linfoCbpInter;
+          ? slice->infoCbpIntra : slice->infoCbpInter;
       else
         se.reading = readCbpCabac;
 
@@ -514,7 +514,7 @@ namespace {
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-                       ? slice->linfoCbpIntra : slice->linfoCbpInter;
+                       ? slice->infoCbpIntra : slice->infoCbpInter;
       else
         se.reading = readCbpCabac;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -831,7 +831,7 @@ namespace {
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-          ? slice->linfoCbpIntra : slice->linfoCbpInter;
+          ? slice->infoCbpIntra : slice->infoCbpInter;
       else
         se.reading = readCbpCabac;
       dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -1117,7 +1117,7 @@ namespace {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-        ? slice->linfoCbpIntra : slice->linfoCbpInter;
+        ? slice->infoCbpIntra : slice->infoCbpInter;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       mb->codedBlockPattern = codedBlockPattern = se.value1;
 
@@ -1256,7 +1256,7 @@ namespace {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-        ? slice->linfoCbpIntra : slice->linfoCbpInter;
+        ? slice->infoCbpIntra : slice->infoCbpInter;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       mb->codedBlockPattern = codedBlockPattern = se.value1;
 
@@ -1524,7 +1524,7 @@ namespace {
         ? SE_CBP_INTRA : SE_CBP_INTER;
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-        ? slice->linfoCbpIntra : slice->linfoCbpInter;
+        ? slice->infoCbpIntra : slice->infoCbpInter;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       mb->codedBlockPattern = codedBlockPattern = se.value1;
 
@@ -1706,7 +1706,7 @@ namespace {
         ? SE_CBP_INTRA : SE_CBP_INTER;
       dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
-        ? slice->linfoCbpIntra : slice->linfoCbpInter;
+        ? slice->infoCbpIntra : slice->infoCbpInter;
       dataPartition->readSyntaxElement(mb, &se, dataPartition);
       mb->codedBlockPattern = codedBlockPattern = se.value1;
 

@@ -2710,7 +2710,7 @@ namespace {
       }
 
     initMacroBlock (mb);
-    slice->nalReadMotionInfo (mb);
+    slice->nalReadMotion (mb);
     slice->readCBPcoeffs (mb);
     }
   //}}}
@@ -2753,7 +2753,7 @@ namespace {
       }
 
     initMacroBlock (mb);
-    slice->nalReadMotionInfo (mb);
+    slice->nalReadMotion (mb);
 
     if (mb->decoder->activePps->hasConstrainedIntraPred) {
       int mbNum = mb->mbIndexX;
@@ -3131,7 +3131,7 @@ namespace {
   //}}}
 
   //{{{
-  void readIcabacMacroBlock (sMacroBlock* mb) {
+  void readCabacMacroBlockI (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
 
@@ -3218,7 +3218,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readPcabacMacroBlock (sMacroBlock* mb)
+  void readCabacMacroBlockP (sMacroBlock* mb)
   {
     cSlice* slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3365,7 +3365,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readBcabacMacroBlock (sMacroBlock* mb) {
+  void readCabacMacroBlockB (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -3724,7 +3724,7 @@ namespace {
   //}}}
   //{{{  readMotion functions
   //{{{
-  void readMotionInfoP (sMacroBlock* mb){
+  void readMotionP (sMacroBlock* mb){
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -3777,7 +3777,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readMotionInfoB (sMacroBlock* mb) {
+  void readMotionB (sMacroBlock* mb) {
 
     cSlice* slice = mb->slice;
     cDecoder264* decoder = mb->decoder;
@@ -5131,18 +5131,18 @@ void cSlice::setSliceReadFunctions() {
       case eSliceP:
       //{{{
       case eSliceSP:
-        readMacroBlock = readPcabacMacroBlock;
+        readMacroBlock = readCabacMacroBlockP;
         break;
       //}}}
       //{{{
       case eSliceB:
-        readMacroBlock = readBcabacMacroBlock;
+        readMacroBlock = readCabacMacroBlockB;
         break;
       //}}}
       case eSliceI:
       //{{{
       case eSliceSI:
-        readMacroBlock = readIcabacMacroBlock;
+        readMacroBlock = readCabacMacroBlockI;
         break;
       //}}}
       //{{{
@@ -5184,7 +5184,7 @@ void cSlice::setSliceReadFunctions() {
     //{{{
     case eSliceP:
       interpretMbMode = interpretMbModeP;
-      nalReadMotionInfo = readMotionInfoP;
+      nalReadMotion = readMotionP;
       decodeComponenet = decodeComponentP;
       updateDirectMv = NULL;
       initLists = initListsSliceP;
@@ -5193,7 +5193,7 @@ void cSlice::setSliceReadFunctions() {
     //{{{
     case eSliceSP:
       interpretMbMode = interpretMbModeP;
-      nalReadMotionInfo = readMotionInfoP;
+      nalReadMotion = readMotionP;
       decodeComponenet = decodeComponentSP;
       updateDirectMv = NULL;
       initLists = initListsSliceP;
@@ -5202,28 +5202,28 @@ void cSlice::setSliceReadFunctions() {
     //{{{
     case eSliceB:
       interpretMbMode = interpretMbModeB;
-      nalReadMotionInfo = readMotionInfoB;
+      nalReadMotion = readMotionB;
       decodeComponenet = decodeComponentB;
       setUpdateDirectFunction();
-      initLists  = initListsSliceB;
+      initLists = initListsSliceB;
       break;
     //}}}
     //{{{
     case eSliceI:
       interpretMbMode = interpretMbModeI;
-      nalReadMotionInfo = NULL;
       decodeComponenet = decodeComponentI;
-      updateDirectMv = NULL;
       initLists = initListsSliceI;
+      nalReadMotion = NULL;
+      updateDirectMv = NULL;
       break;
     //}}}
     //{{{
     case eSliceSI:
       interpretMbMode = interpretMbModeSI;
-      nalReadMotionInfo = NULL;
       decodeComponenet = decodeComponentI;
-      updateDirectMv = NULL;
       initLists = initListsSliceI;
+      nalReadMotion = NULL;
+      updateDirectMv = NULL;
       break;
     //}}}
     //{{{

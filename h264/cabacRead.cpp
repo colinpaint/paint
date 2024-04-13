@@ -32,7 +32,7 @@ namespace {
         if (start_scan == 0) {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
-          dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
+          dataPartition = &slice->dataPartitions[dpMap[se->type]];
           if (dataPartition->bitStream.errorFlag)
             se->mapping = cBitStream::infoLevelRunInter;
           else
@@ -52,7 +52,7 @@ namespace {
         if (level != 0) {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
-          dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
+          dataPartition = &slice->dataPartitions[dpMap[se->type]];
           if (dataPartition->bitStream.errorFlag)
             se->mapping = cBitStream::infoLevelRunInter;
           else

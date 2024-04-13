@@ -19,7 +19,6 @@ namespace {
   //{{{  tables
   #define CTX_UNUSED {0,64}
   #define CTX_UNDEF  {0,63}
-
   #define NUM_CTX_MODELS_I 1
   #define NUM_CTX_MODELS_P 3
 
@@ -2991,9 +2990,9 @@ void cDecoder264::endDecodeFrame() {
 
   // mark the start of the first segment
   if (!picture->mbAffFrame) {
-    int i;
     ercStartSegment (0, ercSegment, 0 , ercErrorVar);
     // generate the segments according to the macroBlock map
+    int i;
     for (i = 1; i < (int)(picture->picSizeInMbs); ++i) {
       if (mbData[i].errorFlag != mbData[i-1].errorFlag) {
         ercStopSegment (i-1, ercSegment, 0, ercErrorVar); //! stop current segment
@@ -3975,12 +3974,12 @@ void cDecoder264::initSlice (cSlice* slice) {
 
   if (!slice->activeSps->chromaFormatIdc ||
       (slice->activeSps->chromaFormatIdc == 3)) {
-    slice->linfoCbpIntra = cBitStream::infoCbpIntraOther;
-    slice->linfoCbpInter = cBitStream::infoCbpInterOther;
+    slice->infoCbpIntra = cBitStream::infoCbpIntraOther;
+    slice->infoCbpInter = cBitStream::infoCbpInterOther;
     }
   else {
-    slice->linfoCbpIntra = cBitStream::infoCbpIntraNormal;
-    slice->linfoCbpInter = cBitStream::infoCbpInterNormal;
+    slice->infoCbpIntra = cBitStream::infoCbpIntraNormal;
+    slice->infoCbpInter = cBitStream::infoCbpInterNormal;
     }
   }
 //}}}

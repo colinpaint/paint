@@ -354,20 +354,24 @@ public:
   //}}}
   //{{{  c style virtual functionss
   int  (*nalStartCode) (cSlice*, int);
+  void (*nalReadMotion) (sMacroBlock*);
+
   void (*initLists) (cSlice*);
   void (*readCBPcoeffs) (sMacroBlock*);
   int  (*decodeComponenet) (sMacroBlock*, eColorPlane, sPixel**, sPicture*);
-  void (*nalReadMotionInfo) (sMacroBlock*);
   void (*readMacroBlock) (sMacroBlock*);
   void (*interpretMbMode) (sMacroBlock*);
+
   void (*intraPredChroma) (sMacroBlock*);
   int  (*intraPred4x4) (sMacroBlock*, eColorPlane, int, int, int, int);
   int  (*intraPred8x8) (sMacroBlock*, eColorPlane, int, int);
   int  (*intraPred16x16) (sMacroBlock*, eColorPlane plane, int);
+
   void (*updateDirectMv) (sMacroBlock*);
   void (*readCoef4x4cavlc) (sMacroBlock*, int, int, int, int[16], int[16], int*);
-  void (*linfoCbpIntra) (int, int, int*, int*);
-  void (*linfoCbpInter) (int, int, int*, int*);
+
+  void (*infoCbpIntra) (int, int, int*, int*);
+  void (*infoCbpInter) (int, int, int*, int*);
   //}}}
 
 private:
