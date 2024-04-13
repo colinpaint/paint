@@ -823,7 +823,7 @@ private:
 
   // slice
   int readNalu (cSlice* slice);
-  void readSliceHeader (cBitStream& s, cSlice* slice);
+  void readSliceHeader (cBitStream& bitStream, cSlice* slice);
   void decodeSlice (cSlice* slice);
   int decodeFrame();
   void endDecodeFrame();

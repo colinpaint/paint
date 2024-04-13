@@ -2039,7 +2039,7 @@ void cSlice::setReadCbpCavlc() {
 //}}}
 
 //{{{
-void cSlice::setQuantParams() {
+void cSlice::setQuant() {
 
   cSps* sps = activeSps;
   cPps* pps = activePps;

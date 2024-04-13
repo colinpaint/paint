@@ -184,7 +184,7 @@ public:
   static cSlice* allocSlice();
   ~cSlice();
 
-  void setQuantParams();
+  void setQuant();
   void setReadCbpCavlc();
   void setReadCbpCabac();
   void setIntraPredFunctions();
