@@ -1242,84 +1242,6 @@ namespace {
     }
   //}}}
   //{{{
-  void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
-
-    int pad_width = padx + width;
-    memset (pixel - padx, *pixel, padx * sizeof(sPixel));
-    memset (pixel + width, *(pixel + width - 1), padx * sizeof(sPixel));
-
-    sPixel* line0 = pixel - padx;
-    sPixel* line = line0 - pady * stride;
-    for (int j = -pady; j < 0; j++) {
-      memcpy (line, line0, stride * sizeof(sPixel));
-      line += stride;
-      }
-
-    for (int j = 1; j < height; j++) {
-      line += stride;
-      memset (line, *(line + padx), padx * sizeof(sPixel));
-      memset (line + pad_width, *(line + pad_width - 1), padx * sizeof(sPixel));
-      }
-
-    line0 = line + stride;
-    for (int j = height; j < height + pady; j++) {
-      memcpy (line0,  line, stride * sizeof(sPixel));
-      line0 += stride;
-      }
-    }
-  //}}}
-  //{{{
-  void copyDecPictureJV (sPicture* dst, sPicture* src) {
-
-    dst->poc = src->poc;
-    dst->topPoc = src->topPoc;
-    dst->botPoc = src->botPoc;
-    dst->framePoc = src->framePoc;
-
-    dst->qp = src->qp;
-    dst->sliceQpDelta = src->sliceQpDelta;
-    dst->chromaQpOffset[0] = src->chromaQpOffset[0];
-    dst->chromaQpOffset[1] = src->chromaQpOffset[1];
-
-    dst->sliceType = src->sliceType;
-    dst->usedForRef = src->usedForRef;
-    dst->isIDR = src->isIDR;
-    dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
-    dst->longTermRefFlag = src->longTermRefFlag;
-    dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
-    dst->decRefPicMarkBuffer = src->decRefPicMarkBuffer;
-    dst->mbAffFrame = src->mbAffFrame;
-    dst->picWidthMbs = src->picWidthMbs;
-    dst->picNum  = src->picNum;
-    dst->frameNum = src->frameNum;
-    dst->recoveryFrame = src->recoveryFrame;
-    dst->codedFrame = src->codedFrame;
-    dst->chromaFormatIdc = src->chromaFormatIdc;
-    dst->frameMbOnly = src->frameMbOnly;
-    dst->hasCrop = src->hasCrop;
-    dst->cropLeft = src->cropLeft;
-    dst->cropRight = src->cropRight;
-    dst->cropTop = src->cropTop;
-    dst->cropBot = src->cropBot;
-    }
-  //}}}
-  //{{{
-  void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
-
-    sPixel (*temp_evn)[16] = temp;
-    sPixel (*temp_odd)[16] = temp + height;
-    sPixel** temp_img = pixel;
-
-    for (int y = 0; y < 2 * height; ++y)
-      memcpy (*temp++, (*temp_img++ + x0), width * sizeof(sPixel));
-
-    for (int y = 0; y < height; ++y) {
-      memcpy ((*pixel++ + x0), *temp_evn++, width * sizeof(sPixel));
-      memcpy ((*pixel++ + x0), *temp_odd++, width * sizeof(sPixel));
-      }
-    }
-  //}}}
-  //{{{
   void ercWriteMbModeMv (sMacroBlock* mb) {
 
     cDecoder264* decoder = mb->decoder;
@@ -1403,6 +1325,84 @@ namespace {
     }
   //}}}
 
+  //{{{
+  void copyDecPictureJV (sPicture* dst, sPicture* src) {
+
+    dst->poc = src->poc;
+    dst->topPoc = src->topPoc;
+    dst->botPoc = src->botPoc;
+    dst->framePoc = src->framePoc;
+
+    dst->qp = src->qp;
+    dst->sliceQpDelta = src->sliceQpDelta;
+    dst->chromaQpOffset[0] = src->chromaQpOffset[0];
+    dst->chromaQpOffset[1] = src->chromaQpOffset[1];
+
+    dst->sliceType = src->sliceType;
+    dst->usedForRef = src->usedForRef;
+    dst->isIDR = src->isIDR;
+    dst->noOutputPriorPicFlag = src->noOutputPriorPicFlag;
+    dst->longTermRefFlag = src->longTermRefFlag;
+    dst->adaptRefPicBufFlag = src->adaptRefPicBufFlag;
+    dst->decRefPicMarkBuffer = src->decRefPicMarkBuffer;
+    dst->mbAffFrame = src->mbAffFrame;
+    dst->picWidthMbs = src->picWidthMbs;
+    dst->picNum  = src->picNum;
+    dst->frameNum = src->frameNum;
+    dst->recoveryFrame = src->recoveryFrame;
+    dst->codedFrame = src->codedFrame;
+    dst->chromaFormatIdc = src->chromaFormatIdc;
+    dst->frameMbOnly = src->frameMbOnly;
+    dst->hasCrop = src->hasCrop;
+    dst->cropLeft = src->cropLeft;
+    dst->cropRight = src->cropRight;
+    dst->cropTop = src->cropTop;
+    dst->cropBot = src->cropBot;
+    }
+  //}}}
+  //{{{
+  void updateMbAff (sPixel** pixel, sPixel (*temp)[16], int x0, int width, int height) {
+
+    sPixel (*temp_evn)[16] = temp;
+    sPixel (*temp_odd)[16] = temp + height;
+    sPixel** temp_img = pixel;
+
+    for (int y = 0; y < 2 * height; ++y)
+      memcpy (*temp++, (*temp_img++ + x0), width * sizeof(sPixel));
+
+    for (int y = 0; y < height; ++y) {
+      memcpy ((*pixel++ + x0), *temp_evn++, width * sizeof(sPixel));
+      memcpy ((*pixel++ + x0), *temp_odd++, width * sizeof(sPixel));
+      }
+    }
+  //}}}
+  //{{{
+  void padBuf (sPixel* pixel, int width, int height, int stride, int padx, int pady) {
+
+    int pad_width = padx + width;
+    memset (pixel - padx, *pixel, padx * sizeof(sPixel));
+    memset (pixel + width, *(pixel + width - 1), padx * sizeof(sPixel));
+
+    sPixel* line0 = pixel - padx;
+    sPixel* line = line0 - pady * stride;
+    for (int j = -pady; j < 0; j++) {
+      memcpy (line, line0, stride * sizeof(sPixel));
+      line += stride;
+      }
+
+    for (int j = 1; j < height; j++) {
+      line += stride;
+      memset (line, *(line + padx), padx * sizeof(sPixel));
+      memset (line + pad_width, *(line + pad_width - 1), padx * sizeof(sPixel));
+      }
+
+    line0 = line + stride;
+    for (int j = height; j < height + pady; j++) {
+      memcpy (line0,  line, stride * sizeof(sPixel));
+      line0 += stride;
+      }
+    }
+  //}}}
   //{{{
   void copyCropped (uint8_t* buf, sPixel** imgX, int sizeX, int sizeY, int symbolSizeInBytes,
                     int cropLeft, int cropRight, int cropTop, int cropBot, int outStride) {
@@ -4173,7 +4173,7 @@ void cDecoder264::writeOutPicture (sPicture* picture) {
 
   sDecodedPic* decodedPic = allocDecodedPicture (outDecodedPics);
   if (!decodedPic->yBuf || (decodedPic->bufSize < frameSize))
-    allocDecodedPicBuffers (decodedPic, picture, frameSize, 
+    allocDecodedPicBuffers (decodedPic, picture, frameSize,
                             lumaSize, lumaSizeX, lumaSizeY, chromaSizeX, chromaSizeY);
   decodedPic->ok = true;
   decodedPic->poc = picture->framePoc;
