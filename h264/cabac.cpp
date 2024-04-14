@@ -168,199 +168,6 @@ namespace {
   //}}}
 
   //{{{
-  int readCbp444 (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type) {
-
-    cDecoder264* decoder = mb->decoder;
-    cSlice* slice = mb->slice;
-    sPicture* picture = slice->picture;
-    sTextureContexts* textureContexts = slice->textureContexts;
-    sMacroBlock* mbData = slice->mbData;
-
-    int y_ac        = (type==LUMA_16AC || type==LUMA_8x8 || type==LUMA_8x4 || type==LUMA_4x8 || type==LUMA_4x4
-                      || type==CB_16AC || type==CB_8x8 || type==CB_8x4 || type==CB_4x8 || type==CB_4x4
-                      || type==CR_16AC || type==CR_8x8 || type==CR_8x4 || type==CR_4x8 || type==CR_4x4);
-    int y_dc        = (type==LUMA_16DC || type==CB_16DC || type==CR_16DC);
-    int u_ac        = (type==CHROMA_AC && !mb->isVblock);
-    int v_ac        = (type==CHROMA_AC &&  mb->isVblock);
-    int chroma_dc   = (type==CHROMA_DC || type==CHROMA_DC_2x4 || type==CHROMA_DC_4x4);
-    int u_dc        = (chroma_dc && !mb->isVblock);
-    int v_dc        = (chroma_dc &&  mb->isVblock);
-    int j           = (y_ac || u_ac || v_ac ? mb->subblockY : 0);
-    int i           = (y_ac || u_ac || v_ac ? mb->subblockX : 0);
-    int bit         = (y_dc ? 0 : y_ac ? 1 : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 : 35);
-    int default_bit = (mb->isIntraBlock ? 1 : 0);
-    int upper_bit   = default_bit;
-    int left_bit    = default_bit;
-    int codedBlockPatternBit     = 1;  // always one for 8x8 mode
-    int ctx;
-    int bit_pos_a   = 0;
-    int bit_pos_b   = 0;
-
-    sPixelPos block_a, block_b;
-    if (y_ac) {
-      get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
-      get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-      if (block_a.ok)
-          bit_pos_a = 4*block_a.y + block_a.x;
-      if (block_b.ok)
-        bit_pos_b = 4*block_b.y + block_b.x;
-      }
-    else if (y_dc) {
-      get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
-      get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-      }
-    else if (u_ac || v_ac) {
-      get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
-      get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
-      if (block_a.ok)
-        bit_pos_a = 4*block_a.y + block_a.x;
-      if (block_b.ok)
-        bit_pos_b = 4*block_b.y + block_b.x;
-      }
-    else {
-      get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
-      get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
-      }
-
-    if (picture->chromaFormatIdc!=YUV444) {
-      if (type != LUMA_8x8) {
-        // get bits from neighboring blocks ---
-        if (block_b.ok) {
-          if(mbData[block_b.mbIndex].mbType==IPCM)
-            upper_bit = 1;
-          else
-            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits, bit + bit_pos_b);
-          }
-
-        if (block_a.ok) {
-          if (mbData[block_a.mbIndex].mbType==IPCM)
-            left_bit = 1;
-          else
-            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits, bit + bit_pos_a);
-          }
-
-
-        ctx = 2 * upper_bit + left_bit;
-        // encode symbol =====
-        codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-        }
-      }
-    else if (decoder->coding.isSeperateColourPlane != 0) {
-      if (type != LUMA_8x8) {
-        // get bits from neighbouring blocks ---
-        if (block_b.ok) {
-          if(mbData[block_b.mbIndex].mbType == IPCM)
-            upper_bit = 1;
-          else
-            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits,bit+bit_pos_b);
-          }
-
-
-        if (block_a.ok) {
-          if(mbData[block_a.mbIndex].mbType==IPCM)
-            left_bit = 1;
-          else
-            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits,bit+bit_pos_a);
-          }
-
-        ctx = 2 * upper_bit + left_bit;
-        codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-        }
-      }
-
-    else {
-      if (block_b.ok) {
-        if (mbData[block_b.mbIndex].mbType==IPCM)
-          upper_bit = 1;
-        else if ((type == LUMA_8x8 || type == CB_8x8 || type == CR_8x8) &&
-                 !mbData[block_b.mbIndex].lumaTransformSize8x8flag)
-          upper_bit = 0;
-        else {
-          if (type == LUMA_8x8)
-            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits8x8, bit + bit_pos_b);
-          else if (type == CB_8x8)
-            upper_bit = getBit (mbData[block_b.mbIndex].cbp[1].bits8x8, bit + bit_pos_b);
-          else if (type == CR_8x8)
-            upper_bit = getBit (mbData[block_b.mbIndex].cbp[2].bits8x8, bit + bit_pos_b);
-          else if ((type == CB_4x4)||(type == CB_4x8) || (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
-            upper_bit = getBit (mbData[block_b.mbIndex].cbp[1].bits,bit+bit_pos_b);
-          else if ((type == CR_4x4)||(type == CR_4x8) || (type == CR_8x4) || (type == CR_16AC)||(type == CR_16DC))
-            upper_bit = getBit (mbData[block_b.mbIndex].cbp[2].bits,bit+bit_pos_b);
-          else
-            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits,bit+bit_pos_b);
-          }
-        }
-
-
-      if (block_a.ok) {
-        if (mbData[block_a.mbIndex].mbType == IPCM)
-          left_bit = 1;
-        else if ((type == LUMA_8x8 || type == CB_8x8 || type == CR_8x8) &&
-                 !mbData[block_a.mbIndex].lumaTransformSize8x8flag)
-          left_bit = 0;
-        else {
-          if (type == LUMA_8x8)
-            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits8x8,bit+bit_pos_a);
-          else if (type == CB_8x8)
-            left_bit = getBit (mbData[block_a.mbIndex].cbp[1].bits8x8,bit+bit_pos_a);
-          else if (type == CR_8x8)
-            left_bit = getBit (mbData[block_a.mbIndex].cbp[2].bits8x8,bit+bit_pos_a);
-          else if ((type == CB_4x4) || (type == CB_4x8) ||
-                   (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
-            left_bit = getBit (mbData[block_a.mbIndex].cbp[1].bits,bit+bit_pos_a);
-          else if ((type == CR_4x4) || (type==CR_4x8) ||
-                   (type == CR_8x4) || (type == CR_16AC) || (type == CR_16DC))
-            left_bit = getBit (mbData[block_a.mbIndex].cbp[2].bits,bit+bit_pos_a);
-          else
-            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits,bit+bit_pos_a);
-          }
-        }
-
-      ctx = 2 * upper_bit + left_bit;
-      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-      }
-
-    // set bits for current block ---
-    bit = (y_dc ? 0 : y_ac ? 1 + j + (i >> 2) : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
-    if (codedBlockPatternBit) {
-      sCodedBlockPattern * cbp = mb->cbp;
-      if (type == LUMA_8x8) {
-        cbp[0].bits |= ((int64_t) 0x33 << bit);
-        if (picture->chromaFormatIdc == YUV444)
-          cbp[0].bits8x8 |= ((int64_t) 0x33 << bit);
-        }
-      else if (type == CB_8x8) {
-        cbp[1].bits8x8 |= ((int64_t) 0x33 << bit);
-        cbp[1].bits |= ((int64_t) 0x33 << bit);
-        }
-      else if (type == CR_8x8) {
-        cbp[2].bits8x8 |= ((int64_t) 0x33 << bit);
-        cbp[2].bits |= ((int64_t) 0x33 << bit);
-        }
-      else if (type == LUMA_8x4)
-        cbp[0].bits |= ((int64_t) 0x03 << bit);
-      else if (type == CB_8x4)
-        cbp[1].bits |= ((int64_t) 0x03 << bit);
-      else if (type == CR_8x4)
-        cbp[2].bits |= ((int64_t) 0x03 << bit);
-      else if (type == LUMA_4x8)
-        cbp[0].bits |= ((int64_t) 0x11<< bit);
-      else if (type == CB_4x8)
-        cbp[1].bits |= ((int64_t)0x11<< bit);
-      else if (type == CR_4x8)
-        cbp[2].bits |= ((int64_t)0x11<< bit);
-      else if ((type == CB_4x4) || (type == CB_16AC) || (type == CB_16DC))
-        cbp[1].bits |= i64power2 (bit);
-      else if ((type == CR_4x4) || (type == CR_16AC) || (type == CR_16DC))
-        cbp[2].bits |= i64power2 (bit);
-      else
-        cbp[0].bits |= i64power2 (bit);
-      }
-
-    return codedBlockPatternBit;
-    }
-  //}}}
-  //{{{
   int readCbpNormal (sMacroBlock* mb, cCabacDecode* cabacDecode, int type) {
 
     cDecoder264* decoder = mb->decoder;
@@ -372,24 +179,20 @@ namespace {
     int codedBlockPatternBit = 1;  // always one for 8x8 mode
     if (type == LUMA_16DC) {
       //{{{  luma_16dc
-      int upper_bit = 1;
       int left_bit = 1;
-      int ctx;
-
-      sPixelPos block_a, block_b;
+      sPixelPos block_a;
       get4x4NeighbourBase (mb, -1,  0, decoder->mbSize[eLuma], &block_a);
-      get4x4NeighbourBase (mb,  0, -1, decoder->mbSize[eLuma], &block_b);
-
-      //--- get bits from neighboring blocks ---
-      if (block_b.ok)
-        upper_bit = setCbp (&mbData[block_b.mbIndex]);
-
       if (block_a.ok)
         left_bit = setCbp (&mbData[block_a.mbIndex]);
 
-      ctx = 2 * upper_bit + left_bit;
+      int upper_bit = 1;
+      sPixelPos block_b;
+      get4x4NeighbourBase (mb,  0, -1, decoder->mbSize[eLuma], &block_b);
+      if (block_b.ok)
+        upper_bit = setCbp (&mbData[block_b.mbIndex]);
 
-      // encode symbol =====
+      // encode symbol
+      int ctx = 2 * upper_bit + left_bit;
       codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       // set bits for current block ---
@@ -401,27 +204,25 @@ namespace {
       //{{{  luma_16ac
       int j = mb->subblockY;
       int i = mb->subblockX;
+
       int bit = 1;
       int default_bit = (mb->isIntraBlock ? 1 : 0);
+
       int upper_bit = default_bit;
-      int left_bit = default_bit;
-      int ctx;
-
-      sPixelPos block_a, block_b;
-      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      sPixelPos block_b;
       get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-
-      // get bits from neighboring blocks ---
       if (block_b.ok)
         upper_bit = setCbpAC (&mbData[block_b.mbIndex], &block_b);
+
+      int left_bit = default_bit;
+      sPixelPos block_a;
+      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
       if (block_a.ok)
         left_bit = setCbpAC (&mbData[block_a.mbIndex], &block_a);
 
-      ctx = 2 * upper_bit + left_bit;
-
-      // encode symbol =====
+      // encode symbol
+      int ctx = 2 * upper_bit + left_bit;
       codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
-
       if (codedBlockPatternBit) {
         // set bits for current block ---
         bit = 1 + j + (i >> 2);
@@ -433,26 +234,23 @@ namespace {
       //{{{  luma8x4
       int j = mb->subblockY;
       int i = mb->subblockX;
+
       int bit = 1;
       int default_bit = (mb->isIntraBlock ? 1 : 0);
+
       int upper_bit = default_bit;
-      int left_bit = default_bit;
-      int ctx;
-
-      sPixelPos block_a, block_b;
-
-      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      sPixelPos block_b;
       get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
-
-      // get bits from neighboring blocks ---
       if (block_b.ok)
         upper_bit = setCbpAC (&mbData[block_b.mbIndex], &block_b);
 
+      int left_bit = default_bit;
+      sPixelPos block_a;
+      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
       if (block_a.ok)
         left_bit = setCbpAC (&mbData[block_a.mbIndex], &block_a);
 
-      ctx = 2 * upper_bit + left_bit;
-      // encode symbol =====
+      int ctx = 2 * upper_bit + left_bit;
       codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
 
       if (codedBlockPatternBit) {
@@ -474,8 +272,8 @@ namespace {
 
       sPixelPos block_a, block_b;
 
-      get4x4NeighbourBase(mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
-      get4x4NeighbourBase(mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+      get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
 
       // get bits from neighboring blocks ---
       if (block_b.ok)
@@ -541,29 +339,28 @@ namespace {
       int u_dc = (!mb->isVblock);
       int j = 0;
       int i = 0;
+
       int bit = (u_dc ? 17 : 18);
       int default_bit = (mb->isIntraBlock ? 1 : 0);
-      int upper_bit = default_bit;
-      int left_bit = default_bit;
 
+      int left_bit = default_bit;
       sPixelPos block_a;
       get4x4NeighbourBase (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
-      sPixelPos block_b;
-      get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
-
-      //--- get bits from neighboring blocks ---
-      if (block_b.ok) {
-        if (mbData[block_b.mbIndex].mbType==IPCM)
-          upper_bit = 1;
-        else
-          upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits, bit);
-        }
-
       if (block_a.ok) {
         if (mbData[block_a.mbIndex].mbType==IPCM)
           left_bit = 1;
         else
           left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits, bit);
+        }
+
+      int upper_bit = default_bit;
+      sPixelPos block_b;
+      get4x4NeighbourBase (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
+      if (block_b.ok) {
+        if (mbData[block_b.mbIndex].mbType==IPCM)
+          upper_bit = 1;
+        else
+          upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits, bit);
         }
 
       int ctx = 2 * upper_bit + left_bit;
@@ -582,32 +379,31 @@ namespace {
       int u_ac = !mb->isVblock;
       int j = mb->subblockY;
       int i = mb->subblockX;
+
       int bit = u_ac ? 19 : 35;
       int default_bit = (mb->isIntraBlock ? 1 : 0);
-      int upper_bit = default_bit;
-      int left_bit = default_bit;
 
+      int left_bit = default_bit;
       sPixelPos block_a;
       get4x4NeighbourBase (mb, i - 1, j, decoder->mbSize[eChroma], &block_a);
-      sPixelPos block_b;
-      get4x4NeighbourBase (mb, i, j - 1, decoder->mbSize[eChroma], &block_b);
-
-      // get bits from neighboring blocks ---
-      if (block_b.ok) {
-        if(mbData[block_b.mbIndex].mbType == IPCM)
-          upper_bit = 1;
-        else {
-          int bit_pos_b = 4*block_b.y + block_b.x;
-          upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits, bit + bit_pos_b);
-          }
-        }
-
       if (block_a.ok) {
         if (mbData[block_a.mbIndex].mbType == IPCM)
           left_bit = 1;
         else {
           int bit_pos_a = 4*block_a.y + block_a.x;
           left_bit = getBit(mbData[block_a.mbIndex].cbp[0].bits,bit + bit_pos_a);
+          }
+        }
+
+      int upper_bit = default_bit;
+      sPixelPos block_b;
+      get4x4NeighbourBase (mb, i, j - 1, decoder->mbSize[eChroma], &block_b);
+      if (block_b.ok) {
+        if(mbData[block_b.mbIndex].mbType == IPCM)
+          upper_bit = 1;
+        else {
+          int bit_pos_b = 4*block_b.y + block_b.x;
+          upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits, bit + bit_pos_b);
           }
         }
 
@@ -620,6 +416,214 @@ namespace {
         bit = (u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
         mb->cbp[0].bits |= i64power2(bit);
         }
+      }
+      //}}}
+
+    return codedBlockPatternBit;
+    }
+  //}}}
+  //{{{
+  int readCbp444 (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type) {
+
+    cDecoder264* decoder = mb->decoder;
+    cSlice* slice = mb->slice;
+    sPicture* picture = slice->picture;
+    sTextureContexts* textureContexts = slice->textureContexts;
+    sMacroBlock* mbData = slice->mbData;
+
+    int y_ac        = (type==LUMA_16AC || type==LUMA_8x8 || type==LUMA_8x4 || type==LUMA_4x8 || type==LUMA_4x4
+                      || type==CB_16AC || type==CB_8x8 || type==CB_8x4 || type==CB_4x8 || type==CB_4x4
+                      || type==CR_16AC || type==CR_8x8 || type==CR_8x4 || type==CR_4x8 || type==CR_4x4);
+    int y_dc        = (type==LUMA_16DC || type==CB_16DC || type==CR_16DC);
+    int u_ac        = (type==CHROMA_AC && !mb->isVblock);
+    int v_ac        = (type==CHROMA_AC &&  mb->isVblock);
+    int chroma_dc   = (type==CHROMA_DC || type==CHROMA_DC_2x4 || type==CHROMA_DC_4x4);
+    int u_dc        = (chroma_dc && !mb->isVblock);
+    int v_dc        = (chroma_dc &&  mb->isVblock);
+
+    int j           = (y_ac || u_ac || v_ac ? mb->subblockY : 0);
+    int i           = (y_ac || u_ac || v_ac ? mb->subblockX : 0);
+
+    int bit         = (y_dc ? 0 : y_ac ? 1 : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 : 35);
+    int default_bit = (mb->isIntraBlock ? 1 : 0);
+    int upper_bit   = default_bit;
+    int left_bit    = default_bit;
+
+    int codedBlockPatternBit     = 1;  // always one for 8x8 mode
+    int ctx;
+    int bit_pos_a   = 0;
+    int bit_pos_b   = 0;
+
+    sPixelPos block_a, block_b;
+    if (y_ac) {
+      //{{{  yAC
+      get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+      if (block_a.ok)
+          bit_pos_a = 4*block_a.y + block_a.x;
+      if (block_b.ok)
+        bit_pos_b = 4*block_b.y + block_b.x;
+      }
+      //}}}
+    else if (y_dc) {
+      //{{{  yDC
+      get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eLuma], &block_a);
+      get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eLuma], &block_b);
+      }
+      //}}}
+    else if (u_ac || v_ac) {
+      //{{{  uAC, vAC
+      get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+      get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
+      if (block_a.ok)
+        bit_pos_a = 4*block_a.y + block_a.x;
+      if (block_b.ok)
+        bit_pos_b = 4*block_b.y + block_b.x;
+      }
+      //}}}
+    else {
+      //{{{  uDC, vDC
+      get4x4Neighbour (mb, i - 1, j    , decoder->mbSize[eChroma], &block_a);
+      get4x4Neighbour (mb, i    , j - 1, decoder->mbSize[eChroma], &block_b);
+      }
+      //}}}
+
+    if (picture->chromaFormatIdc != YUV444) {
+      if (type != LUMA_8x8) {
+        //{{{  get bits from neighboring blocks ---
+        if (block_b.ok) {
+          if(mbData[block_b.mbIndex].mbType==IPCM)
+            upper_bit = 1;
+          else
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits, bit + bit_pos_b);
+          }
+
+        if (block_a.ok) {
+          if (mbData[block_a.mbIndex].mbType==IPCM)
+            left_bit = 1;
+          else
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits, bit + bit_pos_a);
+          }
+
+
+        ctx = 2 * upper_bit + left_bit;
+        // encode symbol =====
+        codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+        }
+        //}}}
+      }
+    else if (decoder->coding.isSeperateColourPlane != 0) {
+      if (type != LUMA_8x8) {
+        //{{{  get bits from neighbouring blocks ---
+        if (block_b.ok) {
+          if(mbData[block_b.mbIndex].mbType == IPCM)
+            upper_bit = 1;
+          else
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits,bit+bit_pos_b);
+          }
+
+
+        if (block_a.ok) {
+          if(mbData[block_a.mbIndex].mbType==IPCM)
+            left_bit = 1;
+          else
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits,bit+bit_pos_a);
+          }
+
+        ctx = 2 * upper_bit + left_bit;
+        codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+        }
+        //}}}
+      }
+    else {
+      if (block_b.ok) {
+        //{{{  block b
+        if (mbData[block_b.mbIndex].mbType==IPCM)
+          upper_bit = 1;
+        else if ((type == LUMA_8x8 || type == CB_8x8 || type == CR_8x8) &&
+                 !mbData[block_b.mbIndex].lumaTransformSize8x8flag)
+          upper_bit = 0;
+        else {
+          if (type == LUMA_8x8)
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits8x8, bit + bit_pos_b);
+          else if (type == CB_8x8)
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[1].bits8x8, bit + bit_pos_b);
+          else if (type == CR_8x8)
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[2].bits8x8, bit + bit_pos_b);
+          else if ((type == CB_4x4)||(type == CB_4x8) || (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[1].bits,bit+bit_pos_b);
+          else if ((type == CR_4x4)||(type == CR_4x8) || (type == CR_8x4) || (type == CR_16AC)||(type == CR_16DC))
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[2].bits,bit+bit_pos_b);
+          else
+            upper_bit = getBit (mbData[block_b.mbIndex].cbp[0].bits,bit+bit_pos_b);
+          }
+        }
+        //}}}
+      if (block_a.ok) {
+        //{{{  block a
+        if (mbData[block_a.mbIndex].mbType == IPCM)
+          left_bit = 1;
+        else if ((type == LUMA_8x8 || type == CB_8x8 || type == CR_8x8) &&
+                 !mbData[block_a.mbIndex].lumaTransformSize8x8flag)
+          left_bit = 0;
+        else {
+          if (type == LUMA_8x8)
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits8x8,bit+bit_pos_a);
+          else if (type == CB_8x8)
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[1].bits8x8,bit+bit_pos_a);
+          else if (type == CR_8x8)
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[2].bits8x8,bit+bit_pos_a);
+          else if ((type == CB_4x4) || (type == CB_4x8) ||
+                   (type == CB_8x4) || (type == CB_16AC) || (type == CB_16DC))
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[1].bits,bit+bit_pos_a);
+          else if ((type == CR_4x4) || (type==CR_4x8) ||
+                   (type == CR_8x4) || (type == CR_16AC) || (type == CR_16DC))
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[2].bits,bit+bit_pos_a);
+          else
+            left_bit = getBit (mbData[block_a.mbIndex].cbp[0].bits,bit+bit_pos_a);
+          }
+        }
+        //}}}
+      ctx = 2 * upper_bit + left_bit;
+      codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
+      }
+
+    // set bits for current block 
+    bit = (y_dc ? 0 : y_ac ? 1 + j + (i >> 2) : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
+    if (codedBlockPatternBit) {
+      //{{{  get cbp
+      sCodedBlockPattern * cbp = mb->cbp;
+      if (type == LUMA_8x8) {
+        cbp[0].bits |= ((int64_t) 0x33 << bit);
+        if (picture->chromaFormatIdc == YUV444)
+          cbp[0].bits8x8 |= ((int64_t) 0x33 << bit);
+        }
+      else if (type == CB_8x8) {
+        cbp[1].bits8x8 |= ((int64_t) 0x33 << bit);
+        cbp[1].bits |= ((int64_t) 0x33 << bit);
+        }
+      else if (type == CR_8x8) {
+        cbp[2].bits8x8 |= ((int64_t) 0x33 << bit);
+        cbp[2].bits |= ((int64_t) 0x33 << bit);
+        }
+      else if (type == LUMA_8x4)
+        cbp[0].bits |= ((int64_t) 0x03 << bit);
+      else if (type == CB_8x4)
+        cbp[1].bits |= ((int64_t) 0x03 << bit);
+      else if (type == CR_8x4)
+        cbp[2].bits |= ((int64_t) 0x03 << bit);
+      else if (type == LUMA_4x8)
+        cbp[0].bits |= ((int64_t) 0x11<< bit);
+      else if (type == CB_4x8)
+        cbp[1].bits |= ((int64_t)0x11<< bit);
+      else if (type == CR_4x8)
+        cbp[2].bits |= ((int64_t)0x11<< bit);
+      else if ((type == CB_4x4) || (type == CB_16AC) || (type == CB_16DC))
+        cbp[1].bits |= i64power2 (bit);
+      else if ((type == CR_4x4) || (type == CR_16AC) || (type == CR_16DC))
+        cbp[2].bits |= i64power2 (bit);
+      else
+        cbp[0].bits |= i64power2 (bit);
       }
       //}}}
 
@@ -639,16 +643,16 @@ namespace {
     sBiContext*  map_ctx  = slice->textureContexts->mapContexts [fld][type2ctx_map [type]];
     sBiContext*  last_ctx = slice->textureContexts->lastContexts[fld][type2ctx_last[type]];
 
-    int i;
-    int coefCount = 0;
+
     int i0 = 0;
     int i1 = maxpos[type];
-
     if (!c1isdc[type]) {
       ++i0;
       ++i1;
       }
 
+    int coefCount = 0;
+    int i;
     for (i = i0; i < i1; ++i){
       // if last coeff is reached, it has to be significant
       //--- read significance symbol ---
@@ -681,11 +685,10 @@ namespace {
     sBiContext* absContexts = textureContexts->absContexts[type2ctx_abs[type]];
 
     const int16_t max_type = max_c2[type];
-    int i = maxpos[type];
-    int *cof = coeff + i;
     int c1 = 1;
     int c2 = 0;
-
+    int i = maxpos[type];
+    int* cof = coeff + i;
     for (; i >= 0; i--) {
       if (*cof != 0) {
         *cof += cabacDecode->getSymbol (oneContexts + c1);
@@ -1992,10 +1995,6 @@ void sMacroBlock::setReadCompCabac() {
 //}}}
 //{{{
 void sMacroBlock::setReadCbpCabac (int chromaFormatIdc) {
-
-  if (chromaFormatIdc == YUV444)
-    readCbp = readCbp444;
-  else
-    readCbp = readCbpNormal;
+  readCbp = (chromaFormatIdc == YUV444) ? readCbp444 : readCbpNormal;
   }
 //}}}
