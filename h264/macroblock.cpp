@@ -3168,7 +3168,7 @@ namespace {
     checkNeighbourCabac(mb);
 
     //  read MB type
-    se.reading = readMbTypeInfoCabacSliceI;
+    se.reading = readMbTypeCabacSliceI;
     dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
     mb->mbType = (int16_t)se.value1;
@@ -3250,7 +3250,7 @@ namespace {
 
       // read MB type
       if (mb->mbType != 0 ) {
-        se.reading = readMbTypeInfoCabacSliceP;
+        se.reading = readMbTypeCabacSliceP;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbType = (int16_t) se.value1;
         if(!dataPartition->bitStream.errorFlag)
@@ -3323,7 +3323,7 @@ namespace {
 
       // read MB type
       if (mb->mbType != 0 ) {
-        se.reading = readMbTypeInfoCabacSliceP;
+        se.reading = readMbTypeCabacSliceP;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbType = (int16_t) se.value1;
         if (!dataPartition->bitStream.errorFlag)
@@ -3352,7 +3352,7 @@ namespace {
       if (dataPartition->bitStream.errorFlag)
         se.mapping = cBitStream::infoUe;
       else
-        se.reading = readB8TypeInfoCabacSliceP;
+        se.reading = readB8TypeCabacSliceP;
 
       readI8x8macroBlock (mb, dataPartition, &se);
       }
@@ -3402,7 +3402,7 @@ namespace {
 
       // read MB type
       if (mb->mbType != 0 ) {
-        se.reading = readMbTypeInfoCabacSliceB;
+        se.reading = readMbTypeCabacSliceB;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbType = (int16_t)se.value1;
         if (!dataPartition->bitStream.errorFlag)
@@ -3478,7 +3478,7 @@ namespace {
 
       // read MB type
       if (mb->mbType != 0 ) {
-        se.reading = readMbTypeInfoCabacSliceB;
+        se.reading = readMbTypeCabacSliceB;
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         mb->mbType = (int16_t)se.value1;
         if(!dataPartition->bitStream.errorFlag)
@@ -3505,8 +3505,8 @@ namespace {
       if (dataPartition->bitStream.errorFlag)
         se.mapping = cBitStream::infoUe;
       else
-        se.reading = readB8TypeInfoCabacSliceB;
-      readI8x8macroBlock(mb, dataPartition, &se);
+        se.reading = readB8TypeCabacSliceB;
+      readI8x8macroBlock (mb, dataPartition, &se);
       }
     else if (mb->mbType == BSKIP_DIRECT) {
       //init noMbPartLessThan8x8Flag
@@ -3542,8 +3542,8 @@ namespace {
     int16_t mbmode = mb->mbType;
     if (mbmode < 4) {
       mb->mbType = mbmode;
-      memset(mb->b8mode, mbmode, 4 * sizeof(char));
-      memset(mb->b8pdir, 0, 4 * sizeof(char));
+      memset (mb->b8mode, mbmode, 4 * sizeof(char));
+      memset (mb->b8pdir, 0, 4 * sizeof(char));
       }
     else if ((mbmode == 4 || mbmode == 5)) {
       mb->mbType = P8x8;

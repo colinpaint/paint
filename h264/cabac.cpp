@@ -1178,7 +1178,7 @@ int readSyntaxElementCabac (sMacroBlock* mb, sSyntaxElement* se, sDataPartition*
 //}}}
 
 //{{{
-void readMbTypeInfoCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readMbTypeCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* context = slice->motionContexts;
@@ -1297,7 +1297,7 @@ void readMbTypeInfoCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
   }
 //}}}
 //{{{
-void readMbTypeInfoCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readMbTypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* motionContexts = slice->motionContexts;
@@ -1364,7 +1364,7 @@ void readMbTypeInfoCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
   }
 //}}}
 //{{{
-void readMbTypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readMbTypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
@@ -1455,7 +1455,7 @@ void readMbTypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
   }
 //}}}
 //{{{
-void readB8TypeInfoCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readB8TypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* motionContexts = slice->motionContexts;
@@ -1475,7 +1475,7 @@ void readB8TypeInfoCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecod
   }
 //}}}
 //{{{
-void readB8TypeInfoCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readB8TypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
