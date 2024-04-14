@@ -5298,7 +5298,7 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
 
   // Select appropriate MV predictor function
   initMotionVectorPrediction (*mb, mbAffFrame);
-  setReadCbp (mb, activeSps->chromaFormatIdc);
+  (*mb)->setReadCbpCabac (activeSps->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
   if (sliceType != eSliceI) {

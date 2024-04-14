@@ -355,6 +355,7 @@ struct sCodedBlockPattern {
 struct sMacroBlock {
   void setReadCompCavlc();
   void setReadCompCabac();
+  void setReadCbpCabac (int chromaFormatIdc);
 
   cDecoder264* decoder;
   cSlice*   slice;
