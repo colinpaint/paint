@@ -2,45 +2,84 @@
 #include "global.h"
 #include "transform.h"
 //}}}
+namespace {
+  //{{{
+  void recon8x8 (int** m7, sPixel** mbRec, sPixel** mpr, int max_imgpel_value, int ioff) {
+
+    int* m_tr  = NULL;
+    sPixel* m_rec = NULL;
+    sPixel* m_prd = NULL;
+
+    for (int j = 0; j < 8; j++) {
+      m_tr = (*m7++) + ioff;
+      m_rec = (*mbRec++) + ioff;
+      m_prd = (*mpr++) + ioff;
+
+      *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
+      *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
+      *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
+      *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
+      *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
+      *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
+      *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
+      *m_rec   = (sPixel) iClip1(max_imgpel_value, (*m_prd  ) + rshift_rnd_sf(*m_tr  , DQ_BITS_8));
+      }
+    }
+  //}}}
+  //{{{
+  void recon8x8_lossless (int** m7, sPixel** mbRec, sPixel** mpr, int max_imgpel_value, int ioff) {
+
+    for (int  j = 0; j < 8; j++) {
+      for (int i = ioff; i < ioff + 8; i++)
+        (*mbRec)[i] = (sPixel)lClip1 (max_imgpel_value, ((*m7)[i] + (long)(*mpr)[i]));
+      mbRec++;
+      m7++;
+      mpr++;
+      }
+    }
+  //}}}
+  //{{{
+  void copy8x8 (sPixel** mbRec, sPixel** mpr, int ioff) {
+
+    for (int j = 0; j < 8; j++)
+      memcpy ((*mbRec++) + ioff, (*mpr++) + ioff, 8 * sizeof(sPixel));
+    }
+  //}}}
+  }
 
 //{{{
 //following functions perform 8 additions, 8 assignments. Should be a bit faster
-void hadamard2x2 (int** block, int tblock[4])
-{
-  int p0,p1,p2,p3;
+void hadamard2x2 (int** block, int tblock[4]) {
 
-  p0 = block[0][0] + block[0][4];
-  p1 = block[0][0] - block[0][4];
-  p2 = block[4][0] + block[4][4];
-  p3 = block[4][0] - block[4][4];
+  int p0 = block[0][0] + block[0][4];
+  int p1 = block[0][0] - block[0][4];
+  int p2 = block[4][0] + block[4][4];
+  int p3 = block[4][0] - block[4][4];
 
   tblock[0] = (p0 + p2);
   tblock[1] = (p1 + p3);
   tblock[2] = (p0 - p2);
   tblock[3] = (p1 - p3);
-}
+  }
 //}}}
 //{{{
-void ihadamard2x2 (int tblock[4], int block[4])
-{
-  int t0,t1,t2,t3;
+void ihadamard2x2 (int tblock[4], int block[4]) {
 
-  t0 = tblock[0] + tblock[1];
-  t1 = tblock[0] - tblock[1];
-  t2 = tblock[2] + tblock[3];
-  t3 = tblock[2] - tblock[3];
+  int t0 = tblock[0] + tblock[1];
+  int t1 = tblock[0] - tblock[1];
+  int t2 = tblock[2] + tblock[3];
+  int t3 = tblock[2] - tblock[3];
 
   block[0] = (t0 + t2);
   block[1] = (t1 + t3);
   block[2] = (t0 - t2);
   block[3] = (t1 - t3);
-}
+  }
 //}}}
 
 //{{{
-void hadamard4x2 (int** block, int** tblock)
-{
-  int i;
+void hadamard4x2 (int** block, int** tblock) {
+
   int tmp[8];
   int *pTmp = tmp;
   int p0,p1,p2,p3;
@@ -59,8 +98,7 @@ void hadamard4x2 (int** block, int** tblock)
 
   // Vertical
   pTmp = tmp;
-  for (i=0;i<2;i++)
-  {
+  for (int i = 0; i < 2; i++) {
     p0 = *(pTmp++);
     p1 = *(pTmp++);
     p2 = *(pTmp++);
@@ -75,13 +113,12 @@ void hadamard4x2 (int** block, int** tblock)
     tblock[i][1] = (t3 + t2);
     tblock[i][2] = (t0 - t1);
     tblock[i][3] = (t3 - t2);
+    }
   }
-}
 //}}}
 //{{{
-void ihadamard4x2 (int** tblock, int** block)
-{
-  int i;
+void ihadamard4x2 (int** tblock, int** block) {
+
   int tmp[8];
   int *pTmp = tmp;
   int p0,p1,p2,p3;
@@ -100,8 +137,7 @@ void ihadamard4x2 (int** tblock, int** block)
 
   // Vertical
   pTmp = tmp;
-  for (i = 0; i < 2; i++)
-  {
+  for (int i = 0; i < 2; i++) {
     p0 = *(pTmp++);
     p1 = *(pTmp++);
     p2 = *(pTmp++);
@@ -117,13 +153,13 @@ void ihadamard4x2 (int** tblock, int** block)
     block[1][i] = t1 + t2;
     block[2][i] = t1 - t2;
     block[3][i] = t0 - t3;
+    }
   }
-}
 //}}}
 
 //{{{
-void forward4x4 (int** block, int** tblock, int posY, int posX)
-{
+void forward4x4 (int** block, int** tblock, int posY, int posX) {
+
   int i, ii;
   int tmp[16];
   int *pTmp = tmp, *pblock;
@@ -131,8 +167,7 @@ void forward4x4 (int** block, int** tblock, int posY, int posX)
   int t0,t1,t2,t3;
 
   // Horizontal
-  for (i=posY; i < posY + BLOCK_SIZE; i++)
-  {
+  for (i=posY; i < posY + BLOCK_SIZE; i++) {
     pblock = &block[i][posX];
     p0 = *(pblock++);
     p1 = *(pblock++);
@@ -148,11 +183,10 @@ void forward4x4 (int** block, int** tblock, int posY, int posX)
     *(pTmp++) = (t3 << 1) + t2;
     *(pTmp++) =  t0 - t1;
     *(pTmp++) =  t3 - (t2 << 1);
-  }
+    }
 
   // Vertical
-  for (i=0; i < BLOCK_SIZE; i++)
-  {
+  for (i=0; i < BLOCK_SIZE; i++) {
     pTmp = tmp + i;
     p0 = *pTmp;
     p1 = *(pTmp += BLOCK_SIZE);
@@ -169,12 +203,12 @@ void forward4x4 (int** block, int** tblock, int posY, int posX)
     tblock[posY + 1][ii] = t2 + (t3 << 1);
     tblock[posY + 2][ii] = t0 -  t1;
     tblock[posY + 3][ii] = t3 - (t2 << 1);
+   }
   }
-}
 //}}}
 //{{{
-void inverse4x4 (int** tblock, int** block, int posY, int posX)
-{
+void inverse4x4 (int** tblock, int** block, int posY, int posX) {
+
   int i, ii;
   int tmp[16];
   int *pTmp = tmp, *pblock;
@@ -182,8 +216,7 @@ void inverse4x4 (int** tblock, int** block, int posY, int posX)
   int t0,t1,t2,t3;
 
   // Horizontal
-  for (i = posY; i < posY + BLOCK_SIZE; i++)
-  {
+  for (i = posY; i < posY + BLOCK_SIZE; i++) {
     pblock = &tblock[i][posX];
     t0 = *(pblock++);
     t1 = *(pblock++);
@@ -199,11 +232,10 @@ void inverse4x4 (int** tblock, int** block, int posY, int posX)
     *(pTmp++) = p1 + p2;
     *(pTmp++) = p1 - p2;
     *(pTmp++) = p0 - p3;
-  }
+    }
 
   //  Vertical
-  for (i = 0; i < BLOCK_SIZE; i++)
-  {
+  for (i = 0; i < BLOCK_SIZE; i++) {
     pTmp = tmp + i;
     t0 = *pTmp;
     t1 = *(pTmp += BLOCK_SIZE);
@@ -220,12 +252,12 @@ void inverse4x4 (int** tblock, int** block, int posY, int posX)
     block[posY + 1][ii] = p1 + p2;
     block[posY + 2][ii] = p1 - p2;
     block[posY + 3][ii] = p0 - p3;
+    }
   }
-}
 //}}}
 //{{{
-void hadamard4x4 (int** block, int** tblock)
-{
+void hadamard4x4 (int** block, int** tblock) {
+
   int i;
   int tmp[16];
   int *pTmp = tmp, *pblock;
@@ -233,8 +265,7 @@ void hadamard4x4 (int** block, int** tblock)
   int t0,t1,t2,t3;
 
   // Horizontal
-  for (i = 0; i < BLOCK_SIZE; i++)
-  {
+  for (i = 0; i < BLOCK_SIZE; i++) {
     pblock = block[i];
     p0 = *(pblock++);
     p1 = *(pblock++);
@@ -250,11 +281,10 @@ void hadamard4x4 (int** block, int** tblock)
     *(pTmp++) = t3 + t2;
     *(pTmp++) = t0 - t1;
     *(pTmp++) = t3 - t2;
-  }
+    }
 
   // Vertical
-  for (i = 0; i < BLOCK_SIZE; i++)
-  {
+  for (i = 0; i < BLOCK_SIZE; i++) {
     pTmp = tmp + i;
     p0 = *pTmp;
     p1 = *(pTmp += BLOCK_SIZE);
@@ -270,12 +300,12 @@ void hadamard4x4 (int** block, int** tblock)
     tblock[1][i] = (t2 + t3) >> 1;
     tblock[2][i] = (t0 - t1) >> 1;
     tblock[3][i] = (t3 - t2) >> 1;
+    }
   }
-}
 //}}}
 //{{{
-void ihadamard4x4 (int** tblock, int** block)
-{
+void ihadamard4x4 (int** tblock, int** block) {
+
   int i;
   int tmp[16];
   int *pTmp = tmp, *pblock;
@@ -283,8 +313,7 @@ void ihadamard4x4 (int** tblock, int** block)
   int t0,t1,t2,t3;
 
   // Horizontal
-  for (i = 0; i < BLOCK_SIZE; i++)
-  {
+  for (i = 0; i < BLOCK_SIZE; i++) {
     pblock = tblock[i];
     t0 = *(pblock++);
     t1 = *(pblock++);
@@ -300,11 +329,10 @@ void ihadamard4x4 (int** tblock, int** block)
     *(pTmp++) = p1 + p2;
     *(pTmp++) = p1 - p2;
     *(pTmp++) = p0 - p3;
-  }
+    }
 
   //  Vertical
-  for (i = 0; i < BLOCK_SIZE; i++)
-  {
+  for (i = 0; i < BLOCK_SIZE; i++) {
     pTmp = tmp + i;
     t0 = *pTmp;
     t1 = *(pTmp += BLOCK_SIZE);
@@ -320,14 +348,14 @@ void ihadamard4x4 (int** tblock, int** block)
     block[1][i] = p1 + p2;
     block[2][i] = p1 - p2;
     block[3][i] = p0 - p3;
+    }
   }
-}
 //}}}
 
 //{{{
-void forward8x8 (int** block, int** tblock, int posY, int posX)
-{
-  int i, ii;
+void forward8x8 (int** block, int** tblock, int posY, int posX) {
+
+  int ii;
   int tmp[64];
   int *pTmp = tmp, *pblock;
   int a0, a1, a2, a3;
@@ -335,8 +363,7 @@ void forward8x8 (int** block, int** tblock, int posY, int posX)
   int b0, b1, b2, b3, b4, b5, b6, b7;
 
   // Horizontal
-  for (i=posY; i < posY + BLOCK_SIZE_8x8; i++)
-  {
+  for (int i = posY; i < posY + BLOCK_SIZE_8x8; i++) {
     pblock = &block[i][posX];
     p0 = *(pblock++);
     p1 = *(pblock++);
@@ -378,8 +405,7 @@ void forward8x8 (int** block, int** tblock, int posY, int posX)
   }
 
   // Vertical
-  for (i=0; i < BLOCK_SIZE_8x8; i++)
-  {
+  for (int i = 0; i < BLOCK_SIZE_8x8; i++) {
     pTmp = tmp + i;
     p0 = *pTmp;
     p1 = *(pTmp += BLOCK_SIZE_8x8);
@@ -419,13 +445,13 @@ void forward8x8 (int** block, int** tblock, int posY, int posX)
     tblock[posY + 5][ii] =  b6 - (b5 >> 2);
     tblock[posY + 6][ii] = (b2 >> 1) - b3;
     tblock[posY + 7][ii] = (b4 >> 2) - b7;
+    }
   }
-}
 //}}}
 //{{{
-void inverse8x8 (int** tblock, int** block, int posX)
-{
-  int i, ii;
+void inverse8x8 (int** tblock, int** block, int posX) {
+
+  int ii;
   int tmp[64];
   int *pTmp = tmp, *pblock;
   int a0, a1, a2, a3;
@@ -433,8 +459,7 @@ void inverse8x8 (int** tblock, int** block, int posX)
   int b0, b1, b2, b3, b4, b5, b6, b7;
 
   // Horizontal
-  for (i=0; i < BLOCK_SIZE_8x8; i++)
-  {
+  for (int i = 0; i < BLOCK_SIZE_8x8; i++) {
     pblock = &tblock[i][posX];
     p0 = *(pblock++);
     p1 = *(pblock++);
@@ -477,8 +502,7 @@ void inverse8x8 (int** tblock, int** block, int posX)
   }
 
   //  Vertical
-  for (i=0; i < BLOCK_SIZE_8x8; i++)
-  {
+  for (int i = 0; i < BLOCK_SIZE_8x8; i++) {
     pTmp = tmp + i;
     p0 = *pTmp;
     p1 = *(pTmp += BLOCK_SIZE_8x8);
@@ -519,43 +543,6 @@ void inverse8x8 (int** tblock, int** block, int posX)
     block[5][ii] = b4 - b3;
     block[6][ii] = b2 + b5;
     block[7][ii] = b0 - b7;
-  }
-}
-
-//}}}
-
-//{{{
-static void recon8x8 (int** m7, sPixel** mbRec, sPixel** mpr, int max_imgpel_value, int ioff) {
-
-  int* m_tr  = NULL;
-  sPixel* m_rec = NULL;
-  sPixel* m_prd = NULL;
-
-  for (int j = 0; j < 8; j++) {
-    m_tr = (*m7++) + ioff;
-    m_rec = (*mbRec++) + ioff;
-    m_prd = (*mpr++) + ioff;
-
-    *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
-    *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
-    *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
-    *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
-    *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
-    *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
-    *m_rec++ = (sPixel) iClip1(max_imgpel_value, (*m_prd++) + rshift_rnd_sf(*m_tr++, DQ_BITS_8));
-    *m_rec   = (sPixel) iClip1(max_imgpel_value, (*m_prd  ) + rshift_rnd_sf(*m_tr  , DQ_BITS_8));
-    }
-  }
-//}}}
-//{{{
-static void recon8x8_lossless (int** m7, sPixel** mbRec, sPixel** mpr, int max_imgpel_value, int ioff) {
-
-  for (int  j = 0; j < 8; j++) {
-    for (int i = ioff; i < ioff + 8; i++)
-      (*mbRec)[i] = (sPixel)lClip1 (max_imgpel_value, ((*m7)[i] + (long)(*mpr)[i]));
-    mbRec++;
-    m7++;
-    mpr++;
     }
   }
 //}}}
@@ -571,14 +558,6 @@ void itrans8x8 (sMacroBlock *mb, eColorPlane plane, int ioff, int joff) {
     inverse8x8 (&m7[joff], &m7[joff], ioff);
     recon8x8 (&m7[joff], &slice->mbRec[plane][joff], &slice->mbPred[plane][joff], mb->decoder->coding.maxPelValueComp[plane], ioff);
    }
-  }
-//}}}
-
-//{{{
-static void copy8x8 (sPixel** mbRec, sPixel** mpr, int ioff) {
-
-  for (int j = 0; j < 8; j++)
-    memcpy((*mbRec++) + ioff, (*mpr++) + ioff, 8 * sizeof(sPixel));
   }
 //}}}
 //{{{
