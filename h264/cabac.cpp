@@ -146,9 +146,6 @@ namespace {
     pos2ctx_last8x4, pos2ctx_last4x4};
   //}}}
   //}}}
-  cCabacDecode cabacDecodeCopy;
-  sBiContext mbAffContextCopy[NUM_MB_AFF_CTX];
-  sBiContext mbTypeContextCopy[3][NUM_MB_TYPE_CTX];
   //{{{
   int setCbp (sMacroBlock* neighbourMb) {
 
@@ -754,9 +751,8 @@ void checkNeighbourCabac (sMacroBlock* mb) {
 //{{{
 int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp) {
 
-  sMotionContexts* motionContexts  = slice->motionContexts;
-
   cCabacDecode* cabacDecode = &act_dp->cabacDecode;
+  sMotionContexts* motionContexts  = slice->motionContexts;
 
   // get next MB
   ++slice->mbIndex;
@@ -772,11 +768,14 @@ int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartiti
   checkNeighbourCabac (mb);
 
   // copy
-  memcpy (&cabacDecodeCopy,cabacDecode,sizeof(cCabacDecode));
+  cCabacDecode cabacDecodeCopy;
+  memcpy (&cabacDecodeCopy, cabacDecode, sizeof(cCabacDecode));
   int codeStreamLen = *(cabacDecodeCopy.codeStreamLen) = *(cabacDecode->codeStreamLen);
+  sBiContext mbAffContextCopy[NUM_MB_AFF_CTX];
   memcpy (&mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX*sizeof(sBiContext) );
+  sBiContext mbTypeContextCopy[3][NUM_MB_TYPE_CTX];
   for (int i = 0; i < 3;++i)
-    memcpy (&mbTypeContextCopy[i], motionContexts->mbTypeContexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContext) );
+    memcpy (&mbTypeContextCopy[i], motionContexts->mbTypeContexts[i], NUM_MB_TYPE_CTX*sizeof(sBiContext));
 
   // check_next_mb
   slice->lastDquant = 0;
@@ -822,9 +821,12 @@ int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartiti
   checkNeighbourCabac (mb);
 
   // copy
+  cCabacDecode cabacDecodeCopy;
   memcpy (&cabacDecodeCopy, cabacDecode, sizeof(cCabacDecode));
   int codeStreamLen = *(cabacDecodeCopy.codeStreamLen) = *(cabacDecode->codeStreamLen);
+  sBiContext mbAffContextCopy[NUM_MB_AFF_CTX];
   memcpy (&mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX * sizeof(sBiContext));
+  sBiContext mbTypeContextCopy[3][NUM_MB_TYPE_CTX];
   for (int i = 0; i < 3;++i)
     memcpy (&mbTypeContextCopy[i], motionContexts->mbTypeContexts[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
 
