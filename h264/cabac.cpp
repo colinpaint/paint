@@ -146,6 +146,9 @@ namespace {
     pos2ctx_last8x4, pos2ctx_last4x4};
   //}}}
   //}}}
+  cCabacDecode cabacDecodeCopy;
+  sBiContext mbAffContextCopy[NUM_MB_AFF_CTX];
+  sBiContext mbTypeContextCopy[3][NUM_MB_TYPE_CTX];
   //{{{
   int setCbp (sMacroBlock* neighbourMb) {
 
@@ -731,8 +734,8 @@ int cabacStartCode (cSlice* slice, int eos_bit) {
 void checkNeighbourCabac (sMacroBlock* mb) {
 
   cDecoder264* decoder = mb->decoder;
-  int* mbSize = decoder->mbSize[eLuma];
 
+  int* mbSize = decoder->mbSize[eLuma];
   sPixelPos up;
   decoder->getNeighbour (mb,  0, -1, mbSize, &up);
   if (up.ok)
@@ -749,24 +752,16 @@ void checkNeighbourCabac (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp) {
+int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp) {
 
-  sBiContext* mbTypeContextCopy[3];
-  sBiContext* mbAffContextCopy;
-  cCabacDecode* cabacDecodeCopy;
   sMotionContexts* motionContexts  = slice->motionContexts;
 
-  int length;
   cCabacDecode* cabacDecode = &act_dp->cabacDecode;
-
-  int skip = 0;
-  int field = 0;
-  sMacroBlock* mb;
 
   // get next MB
   ++slice->mbIndex;
 
-  mb = &slice->mbData[slice->mbIndex];
+  sMacroBlock* mb = &slice->mbData[slice->mbIndex];
   mb->decoder = slice->decoder;
   mb->slice = slice;
   mb->sliceNum = slice->curSliceIndex;
@@ -776,69 +771,47 @@ int checkNextMbGetFieldModeCabacSliceP (cSlice* slice, sSyntaxElement* se, sData
   checkNeighboursMbAff (mb);
   checkNeighbourCabac (mb);
 
-  // create
-  cabacDecodeCopy = (cCabacDecode*)calloc (1, sizeof(cCabacDecode));
-  for (int i = 0; i < 3;++i)
-    mbTypeContextCopy[i] = (sBiContext*)calloc (NUM_MB_TYPE_CTX, sizeof(sBiContext));
-  mbAffContextCopy = (sBiContext*)calloc (NUM_MB_AFF_CTX, sizeof(sBiContext));
-
   // copy
-  memcpy (cabacDecodeCopy,cabacDecode,sizeof(cCabacDecode));
-  length = *(cabacDecodeCopy->codeStreamLen) = *(cabacDecode->codeStreamLen);
+  memcpy (&cabacDecodeCopy,cabacDecode,sizeof(cCabacDecode));
+  int codeStreamLen = *(cabacDecodeCopy.codeStreamLen) = *(cabacDecode->codeStreamLen);
+  memcpy (&mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX*sizeof(sBiContext) );
   for (int i = 0; i < 3;++i)
-    memcpy (mbTypeContextCopy[i], motionContexts->mbTypeContexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContext) );
-  memcpy (mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX*sizeof(sBiContext) );
+    memcpy (&mbTypeContextCopy[i], motionContexts->mbTypeContexts[i],NUM_MB_TYPE_CTX*sizeof(sBiContext) );
 
   // check_next_mb
   slice->lastDquant = 0;
   readSkipCabacSliceP (mb, se, cabacDecode);
-  skip = (se->value1 == 0);
+  bool skip = (se->value1 == 0);
   if (!skip) {
     readFieldModeCabac (mb, se,cabacDecode);
-    field = se->value1;
-    slice->mbData[slice->mbIndex-1].mbField = field;
+    slice->mbData[slice->mbIndex-1].mbField = se->value1;
     }
 
   // reset
   slice->mbIndex--;
 
-  memcpy (cabacDecode, cabacDecodeCopy, sizeof(cCabacDecode));
-  *(cabacDecode->codeStreamLen) = length;
+  // restore
+  memcpy (cabacDecode, &cabacDecodeCopy, sizeof(cCabacDecode));
+  *(cabacDecode->codeStreamLen) = codeStreamLen;
+  memcpy (motionContexts->mbAffContexts, &mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext));
   for (int i = 0; i < 3; ++i)
-    memcpy (motionContexts->mbTypeContexts[i], mbTypeContextCopy[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
-  memcpy (motionContexts->mbAffContexts, mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext));
+    memcpy (motionContexts->mbTypeContexts[i], &mbTypeContextCopy[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
 
   checkNeighbourCabac (mb);
-
-  // delete
-  free (cabacDecodeCopy);
-  for (int i = 0; i < 3; ++i)
-    free (mbTypeContextCopy[i]);
-  free (mbAffContextCopy);
 
   return skip;
   }
 //}}}
 //{{{
-int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition  *act_dp) {
+int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition  *act_dp) {
 
-  sBiContext* mbTypeContextCopy[3];
-  sBiContext* mbAffContextCopy;
-  cCabacDecode* cabacDecodeCopy;
-
-  int length;
   cCabacDecode* cabacDecode = &act_dp->cabacDecode;
   sMotionContexts* motionContexts = slice->motionContexts;
-
-  int skip = 0;
-  int field = 0;
-
-  sMacroBlock* mb;
 
   // get next MB
   ++slice->mbIndex;
 
-  mb = &slice->mbData[slice->mbIndex];
+  sMacroBlock* mb = &slice->mbData[slice->mbIndex];
   mb->decoder = slice->decoder;
   mb->slice = slice;
   mb->sliceNum = slice->curSliceIndex;
@@ -848,47 +821,33 @@ int checkNextMbGetFieldModeCabacSliceB (cSlice* slice, sSyntaxElement* se, sData
   checkNeighboursMbAff (mb);
   checkNeighbourCabac (mb);
 
-  // create
-  cabacDecodeCopy = (cCabacDecode*)calloc(1, sizeof(cCabacDecode));
-  for (int i = 0; i < 3; ++i)
-    mbTypeContextCopy[i] = (sBiContext*)calloc (NUM_MB_TYPE_CTX, sizeof(sBiContext) );
-  mbAffContextCopy = (sBiContext*)calloc (NUM_MB_AFF_CTX, sizeof(sBiContext) );
-
-  //copy
-  memcpy (cabacDecodeCopy, cabacDecode, sizeof(cCabacDecode));
-  length = *(cabacDecodeCopy->codeStreamLen) = *(cabacDecode->codeStreamLen);
-
+  // copy
+  memcpy (&cabacDecodeCopy, cabacDecode, sizeof(cCabacDecode));
+  int codeStreamLen = *(cabacDecodeCopy.codeStreamLen) = *(cabacDecode->codeStreamLen);
+  memcpy (&mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX * sizeof(sBiContext));
   for (int i = 0; i < 3;++i)
-    memcpy (mbTypeContextCopy[i], motionContexts->mbTypeContexts[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
-  memcpy (mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX * sizeof(sBiContext));
+    memcpy (&mbTypeContextCopy[i], motionContexts->mbTypeContexts[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
 
   //  check_next_mb
   slice->lastDquant = 0;
   readSkipCabacSliceB (mb, se, cabacDecode);
-  skip = (se->value1 == 0 && se->value2 == 0);
+  bool skip = (se->value1 == 0) && (se->value2 == 0);
   if (!skip) {
-    readFieldModeCabac (mb, se,cabacDecode);
-    field = se->value1;
-    slice->mbData[slice->mbIndex-1].mbField = field;
+    readFieldModeCabac (mb, se, cabacDecode);
+    slice->mbData[slice->mbIndex-1].mbField = se->value1;
     }
 
   // reset
   slice->mbIndex--;
 
-  memcpy(cabacDecode,cabacDecodeCopy,sizeof(cCabacDecode));
-  *(cabacDecode->codeStreamLen) = length;
-
+  // restore
+  memcpy (cabacDecode, &cabacDecodeCopy, sizeof(cCabacDecode));
+  *(cabacDecode->codeStreamLen) = codeStreamLen;
+  memcpy (motionContexts->mbAffContexts, &mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext));
   for (int i = 0; i < 3; ++i)
-    memcpy (motionContexts->mbTypeContexts[i], mbTypeContextCopy[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
-  memcpy (motionContexts->mbAffContexts, mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext));
+    memcpy (motionContexts->mbTypeContexts[i], &mbTypeContextCopy[i], NUM_MB_TYPE_CTX * sizeof(sBiContext));
 
   checkNeighbourCabac (mb);
-
-  // delete
-  free (cabacDecodeCopy);
-  for (int i = 0; i < 3; ++i)
-    free (mbTypeContextCopy[i]);
-  free (mbAffContextCopy);
 
   return skip;
   }

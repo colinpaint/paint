@@ -3315,7 +3315,7 @@ namespace {
         }
 
       if (checkBot)
-        checkNextMbGetFieldModeCabacSliceP (slice, &se, dataPartition);
+        checkNextMbFieldCabacSliceP (slice, &se, dataPartition);
 
       // update the list offset;
       mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4 : 2) : 0;
@@ -3469,7 +3469,7 @@ namespace {
         mb->mbField = (bool)se.value1;
         }
       if (checkBot)
-        checkNextMbGetFieldModeCabacSliceB (slice, &se, dataPartition);
+        checkNextMbFieldCabacSliceB (slice, &se, dataPartition);
 
       //update the list offset;
       mb->listOffset = (mb->mbField)? ((mbNum & 0x01)? 4: 2): 0;
