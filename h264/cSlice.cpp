@@ -149,7 +149,7 @@ namespace {
       if (need_transform_sizeFlag) {
         se.type =  SE_HEADER;
         dataPartition = &slice->dataPartitions[dpMap[SE_HEADER]];
-        se.reading = readMbTransformSizeFlagCabac;
+        se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
@@ -305,7 +305,7 @@ namespace {
       if (need_transform_sizeFlag) {
         se.type =  SE_HEADER;
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-        se.reading = readMbTransformSizeFlagCabac;
+        se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
@@ -531,7 +531,7 @@ namespace {
       if (need_transform_sizeFlag) {
         se.type = SE_HEADER;
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-        se.reading = readMbTransformSizeFlagCabac;
+        se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
@@ -848,7 +848,7 @@ namespace {
       if (need_transform_sizeFlag) {
         se.type = SE_HEADER;
         dataPartition = &slice->dataPartitions[dpMap[SE_HEADER]];
-        se.reading = readMbTransformSizeFlagCabac;
+        se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {

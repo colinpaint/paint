@@ -2295,7 +2295,7 @@ namespace {
       mb->chromaPredMode = (char)se.value1;
 
       if (mb->chromaPredMode < DC_PRED_8 || mb->chromaPredMode > PLANE_8)
-        cDecoder264::error ("illegal chroma intra pred mode!\n");
+        cDecoder264::error ("illegal chroma intra pred mode");
       }
     }
   //}}}
@@ -2672,7 +2672,7 @@ namespace {
      sSyntaxElement se;
       sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
       se.type = SE_HEADER;
-      se.reading = readMbTransformSizeFlagCabac;
+      se.reading = readMbTransformSizeCabac;
       // read eCavlc transform_size_8x8Flag
       if (dataPartition->bitStream.errorFlag) {
         se.len = (int64_t) 1;
@@ -3189,7 +3189,7 @@ namespace {
       if (slice->transform8x8Mode) {
         se.type = SE_HEADER;
         dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
-        se.reading = readMbTransformSizeFlagCabac;
+        se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
         if (dataPartition->bitStream.errorFlag) {
@@ -3240,7 +3240,7 @@ namespace {
         se.mapping = cBitStream::infoUe;
 
       checkNeighbourCabac(mb);
-      se.reading = readSkipFlagCabacSliceP;
+      se.reading = readSkipCabacSliceP;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
       mb->mbType = (int16_t) se.value1;
@@ -3290,7 +3290,7 @@ namespace {
         fieldFlagInference (mb);
 
       checkNeighbourCabac(mb);
-      se.reading = readSkipFlagCabacSliceP;
+      se.reading = readSkipCabacSliceP;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
       mb->mbType = (int16_t)se.value1;
@@ -3388,7 +3388,7 @@ namespace {
         se.mapping = cBitStream::infoUe;
 
       checkNeighbourCabac(mb);
-      se.reading = readSkipFlagCabacSliceB;
+      se.reading = readSkipCabacSliceB;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
 
       mb->mbType  = (int16_t)se.value1;
@@ -3443,7 +3443,7 @@ namespace {
         fieldFlagInference (mb);
 
       checkNeighbourCabac (mb);
-      se.reading = readSkipFlagCabacSliceB;
+      se.reading = readSkipCabacSliceB;
 
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
       mb->mbType = (int16_t)se.value1;
