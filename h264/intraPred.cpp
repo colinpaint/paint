@@ -1329,10 +1329,10 @@ namespace {
     for (int i = 0; i < 25; i++)
       predPel[i] = 0;
 
-    getNonAffNeighbour(mb, ioff - 1, joff, mbSize, &pix_a);
-    getNonAffNeighbour(mb, ioff    , joff - 1, mbSize, &pix_b);
-    getNonAffNeighbour(mb, ioff + 8, joff - 1, mbSize, &pix_c);
-    getNonAffNeighbour(mb, ioff - 1, joff - 1, mbSize, &pix_d);
+    getNonAffNeighbour (mb, ioff - 1, joff, mbSize, &pix_a);
+    getNonAffNeighbour (mb, ioff    , joff - 1, mbSize, &pix_b);
+    getNonAffNeighbour (mb, ioff + 8, joff - 1, mbSize, &pix_c);
+    getNonAffNeighbour (mb, ioff - 1, joff - 1, mbSize, &pix_d);
 
     pix_c.ok = pix_c.ok && !(ioff == 8 && joff == 8);
     if (decoder->activePps->hasConstrainedIntraPred) {
@@ -1362,14 +1362,14 @@ namespace {
     if (blockLeftOk) {
       sPixel** img_pred = &imgY[pix_a.posY];
       int posX = pix_a.posX;
-      P_Q = *(*(img_pred ++) + posX);
-      P_R = *(*(img_pred ++) + posX);
-      P_S = *(*(img_pred ++) + posX);
-      P_T = *(*(img_pred ++) + posX);
-      P_U = *(*(img_pred ++) + posX);
-      P_V = *(*(img_pred ++) + posX);
-      P_W = *(*(img_pred ++) + posX);
-      P_X = *(*(img_pred   ) + posX);
+      P_Q = *(*(img_pred++) + posX);
+      P_R = *(*(img_pred++) + posX);
+      P_S = *(*(img_pred++) + posX);
+      P_T = *(*(img_pred++) + posX);
+      P_U = *(*(img_pred++) + posX);
+      P_V = *(*(img_pred++) + posX);
+      P_W = *(*(img_pred++) + posX);
+      P_X = *(*(img_pred) + posX);
     }
     else {
       P_Q = P_R = P_S = P_T = P_U = P_V = P_W = P_X = (sPixel) decoder->coding.dcPredValueComp[plane];
@@ -1396,7 +1396,7 @@ namespace {
       s0 = decoder->coding.dcPredValueComp[plane];
 
     for (i = ioff; i < ioff + BLOCK_SIZE_8x8; i++)
-      mpr[joff][i] = (sPixel) s0;
+      mpr[joff][i] = (sPixel)s0;
 
     for (j = joff + 1; j < joff + BLOCK_SIZE_8x8; j++)
       memcpy(&mpr[j][ioff], &mpr[j - 1][ioff], BLOCK_SIZE_8x8 * sizeof(sPixel));
@@ -1423,11 +1423,10 @@ namespace {
     int blockUpOk_left;
     int blockUpOk_right;
 
-
     sPixel** mpr = slice->mbPred[plane];
     int *mbSize = decoder->mbSize[eLuma];
 
-    for (int i=0; i<25;i++)
+    for (int i = 0;  i< 25; i++)
       predPel[i] = 0;
 
     getNonAffNeighbour (mb, ioff - 1, joff    , mbSize, &pix_a);
@@ -1472,7 +1471,7 @@ namespace {
     lowPassForIntra8x8PredHor (&(P_Z), blockUpOk_left, blockUpOk, blockLeftOk);
 
     for (i = joff; i < joff + BLOCK_SIZE_8x8; i++)
-      memcpy(&mpr[i][ioff], &predPel[1], BLOCK_SIZE_8x8 * sizeof(sPixel));
+      memcpy (&mpr[i][ioff], &predPel[1], BLOCK_SIZE_8x8 * sizeof(sPixel));
 
     return eDecodingOk;
     }
@@ -3874,7 +3873,6 @@ namespace {
                                sPixelPos up, sPixelPos left, int blk_x, int blk_y, int* pred, int direction) {
 
     int s0 = 0;
-
     if ((direction && upOk) || (!leftOk && upOk)) {
       sPixel* pixel = &pixels[up.posY][up.posX + blk_x];
       for (int i = 0; i < 4;++i)
@@ -4207,137 +4205,129 @@ namespace {
 
     switch (mb->chromaPredMode) {
       //{{{
-      case DC_PRED_8:
-        {
-          sPixelPos up;        //!< pixel position  p(0,-1)
-          sPixelPos left[17];  //!< pixel positions p(-1, -1..16)
+      case DC_PRED_8: {
+        sPixelPos up;        // pixel position  p(0,-1)
+        sPixelPos left[17];  // pixel positions p(-1, -1..16)
+        int upOk, leftOk[2];
 
-          int upOk, leftOk[2];
+        int cr_MB_y = decoder->mbCrSizeY;
+        int cr_MB_y2 = (cr_MB_y >> 1);
 
-          int cr_MB_y = decoder->mbCrSizeY;
-          int cr_MB_y2 = (cr_MB_y >> 1);
+        for (i = 0; i < cr_MB_y + 1 ; ++i)
+          getAffNeighbour (mb, -1, i-1, decoder->mbSize[eChroma], &left[i]);
+        getAffNeighbour (mb, 0, -1, decoder->mbSize[eChroma], &up);
 
-          for (i=0; i < cr_MB_y + 1 ; ++i)
-            getAffNeighbour(mb, -1, i-1, decoder->mbSize[eChroma], &left[i]);
-          getAffNeighbour(mb, 0, -1, decoder->mbSize[eChroma], &up);
-
-          if (!decoder->activePps->hasConstrainedIntraPred) {
-            upOk      = up.ok;
-            leftOk[0] = leftOk[1] = left[1].ok;
+        if (!decoder->activePps->hasConstrainedIntraPred) {
+          upOk = up.ok;
+          leftOk[0] = leftOk[1] = left[1].ok;
           }
-          else {
-            upOk = up.ok ? slice->intraBlock[up.mbIndex] : 0;
-            for (i=0, leftOk[0] = 1; i < cr_MB_y2;++i)
-              leftOk[0]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
-
-            for (i = cr_MB_y2, leftOk[1] = 1; i<cr_MB_y;++i)
-              leftOk[1]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
-
+        else {
+          upOk = up.ok ? slice->intraBlock[up.mbIndex] : 0;
+          for (i = 0, leftOk[0] = 1; i < cr_MB_y2;++i)
+            leftOk[0]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
+          for (i = cr_MB_y2, leftOk[1] = 1; i<cr_MB_y;++i)
+            leftOk[1]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
           }
-          // DC prediction
-          // Note that unlike what is stated in many presentations and papers, this mode does not operate
-          // the same way as I_16x16 DC prediction.
-          {
-            int pred1;
-            sPixel** imgUV0 = picture->imgUV[0];
-            sPixel** imgUV1 = picture->imgUV[1];
-            sPixel** mb_pred0 = slice->mbPred[0 + 1];
-            sPixel** mb_pred1 = slice->mbPred[1 + 1];
-            for(b8 = 0; b8 < (decoder->coding.numUvBlocks) ;++b8) {
-              for (b4 = 0; b4 < 4; ++b4) {
-                blk_y = subblk_offset_y[yuv][b8][b4];
-                blk_x = subblk_offset_x[yuv][b8][b4];
 
-                pred = decoder->coding.dcPredValueComp[1];
-                pred1 = decoder->coding.dcPredValueComp[2];
+        // DC prediction
+        // Note that unlike what is stated in many presentations and papers, this mode does not operate
+        // the same way as I_16x16 DC prediction.
+        int pred1;
+        sPixel** imgUV0 = picture->imgUV[0];
+        sPixel** imgUV1 = picture->imgUV[1];
+        sPixel** mb_pred0 = slice->mbPred[0 + 1];
+        sPixel** mb_pred1 = slice->mbPred[1 + 1];
+        for (b8 = 0; b8 < (decoder->coding.numUvBlocks) ;++b8) {
+          for (b4 = 0; b4 < 4; ++b4) {
+            blk_y = subblk_offset_y[yuv][b8][b4];
+            blk_x = subblk_offset_x[yuv][b8][b4];
+            pred = decoder->coding.dcPredValueComp[1];
+            pred1 = decoder->coding.dcPredValueComp[2];
 
-                //===== get prediction value =====
-                switch (block_pos[yuv][b8][b4]) {
-                  case 0:  //===== TOP TOP-LEFT =====
-                    intraPredChromaDcAllMbAff    (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred);
-                    intraPredChromaDcAllMbAff    (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1);
-                    break;
-                  case 1: //===== TOP TOP-RIGHT =====
-                    intraPredChromaDcSingleMbAff (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred, 1);
-                    intraPredChromaDcSingleMbAff (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1, 1);
-                    break;
-                  case 2:  //===== TOP BOTTOM-LEFT =====
-                    intraPredChromaDcSingleMbAff (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred, 0);
-                    intraPredChromaDcSingleMbAff (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1, 0);
-                    break;
-                  case 3: //===== TOP BOTTOM-RIGHT =====
-                    intraPredChromaDcAllMbAff    (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred);
-                    intraPredChromaDcAllMbAff    (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1);
-                    break;
+            // get prediction value
+            switch (block_pos[yuv][b8][b4]) {
+              case 0:  //===== TOP TOP-LEFT =====
+                intraPredChromaDcAllMbAff    (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred);
+                intraPredChromaDcAllMbAff    (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1);
+                break;
+              case 1: //===== TOP TOP-RIGHT =====
+                intraPredChromaDcSingleMbAff (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred, 1);
+                intraPredChromaDcSingleMbAff (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1, 1);
+                break;
+              case 2:  //===== TOP BOTTOM-LEFT =====
+                intraPredChromaDcSingleMbAff (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred, 0);
+                intraPredChromaDcSingleMbAff (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1, 0);
+                break;
+              case 3: //===== TOP BOTTOM-RIGHT =====
+                intraPredChromaDcAllMbAff    (imgUV0, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred);
+                intraPredChromaDcAllMbAff    (imgUV1, upOk, leftOk[0], up, left, blk_x, blk_y + 1, &pred1);
+                break;
 
-                  case 4: //===== BOTTOM LEFT =====
-                    intraPredChromaDcSingleMbAff (imgUV0, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred, 0);
-                    intraPredChromaDcSingleMbAff (imgUV1, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred1, 0);
-                    break;
-                  case 5: //===== BOTTOM RIGHT =====
-                    intraPredChromaDcAllMbAff   (imgUV0, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred);
-                    intraPredChromaDcAllMbAff   (imgUV1, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred1);
-                    break;
-                  }
-
-                for (jj = blk_y; jj < blk_y + BLOCK_SIZE; ++jj)
-                  for (ii = blk_x; ii < blk_x + BLOCK_SIZE; ++ii) {
-                    mb_pred0[jj][ii]=(sPixel) pred;
-                    mb_pred1[jj][ii]=(sPixel) pred1;
-                    }
-                }
+              case 4: //===== BOTTOM LEFT =====
+                intraPredChromaDcSingleMbAff (imgUV0, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred, 0);
+                intraPredChromaDcSingleMbAff (imgUV1, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred1, 0);
+                break;
+              case 5: //===== BOTTOM RIGHT =====
+                intraPredChromaDcAllMbAff   (imgUV0, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred);
+                intraPredChromaDcAllMbAff   (imgUV1, upOk, leftOk[1], up, left, blk_x, blk_y + 1, &pred1);
+                break;
               }
+
+            for (jj = blk_y; jj < blk_y + BLOCK_SIZE; ++jj)
+              for (ii = blk_x; ii < blk_x + BLOCK_SIZE; ++ii) {
+                mb_pred0[jj][ii]=(sPixel) pred;
+                mb_pred1[jj][ii]=(sPixel) pred1;
+                }
             }
           }
+        }
         break;
       //}}}
       //{{{
-      case HOR_PRED_8:
-        {
-          sPixelPos left[17];  //!< pixel positions p(-1, -1..16)
-          int leftOk[2];
+      case HOR_PRED_8: {
+        sPixelPos left[17];  //!< pixel positions p(-1, -1..16)
+        int leftOk[2];
 
-          int cr_MB_x = decoder->mbCrSizeX;
-          int cr_MB_y = decoder->mbCrSizeY;
-          int cr_MB_y2 = (cr_MB_y >> 1);
+        int cr_MB_x = decoder->mbCrSizeX;
+        int cr_MB_y = decoder->mbCrSizeY;
+        int cr_MB_y2 = (cr_MB_y >> 1);
 
-          for (i = 0; i < cr_MB_y + 1 ; ++i)
-            getAffNeighbour(mb, -1, i-1, decoder->mbSize[eChroma], &left[i]);
+        for (i = 0; i < cr_MB_y + 1 ; ++i)
+          getAffNeighbour(mb, -1, i-1, decoder->mbSize[eChroma], &left[i]);
 
-          if (!decoder->activePps->hasConstrainedIntraPred)
-            leftOk[0] = leftOk[1] = left[1].ok;
-          else {
-            for (i = 0, leftOk[0] = 1; i < cr_MB_y2;++i)
-              leftOk[0]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
+        if (!decoder->activePps->hasConstrainedIntraPred)
+          leftOk[0] = leftOk[1] = left[1].ok;
+        else {
+          for (i = 0, leftOk[0] = 1; i < cr_MB_y2;++i)
+            leftOk[0]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
 
-            for (i = cr_MB_y2, leftOk[1] = 1; i<cr_MB_y;++i)
-              leftOk[1]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
-            }
+          for (i = cr_MB_y2, leftOk[1] = 1; i<cr_MB_y;++i)
+            leftOk[1]  &= left[i + 1].ok ? slice->intraBlock[left[i + 1].mbIndex]: 0;
+          }
 
-          // Horizontal Prediction
-          if (!leftOk[0] || !leftOk[1])
-            cDecoder264::cDecoder264::error ("unexpected HOR_PRED_8 chroma intra prediction mode");
-          else {
-            int pred1;
-            sPixel** mb_pred0 = slice->mbPred[0 + 1];
-            sPixel** mb_pred1 = slice->mbPred[1 + 1];
-            sPixel** i0 = picture->imgUV[0];
-            sPixel** i1 = picture->imgUV[1];
-            for (j = 0; j < cr_MB_y; ++j) {
-              pred = i0[left[1 + j].posY][left[1 + j].posX];
-              pred1 = i1[left[1 + j].posY][left[1 + j].posX];
-              for (i = 0; i < cr_MB_x; ++i) {
-                mb_pred0[j][i]=(sPixel) pred;
-                mb_pred1[j][i]=(sPixel) pred1;
-                }
+        // Horizontal Prediction
+        if (!leftOk[0] || !leftOk[1])
+          cDecoder264::cDecoder264::error ("unexpected HOR_PRED_8 chroma intra prediction mode");
+        else {
+          int pred1;
+          sPixel** mb_pred0 = slice->mbPred[0 + 1];
+          sPixel** mb_pred1 = slice->mbPred[1 + 1];
+          sPixel** i0 = picture->imgUV[0];
+          sPixel** i1 = picture->imgUV[1];
+          for (j = 0; j < cr_MB_y; ++j) {
+            pred = i0[left[1 + j].posY][left[1 + j].posX];
+            pred1 = i1[left[1 + j].posY][left[1 + j].posX];
+            for (i = 0; i < cr_MB_x; ++i) {
+              mb_pred0[j][i]=(sPixel) pred;
+              mb_pred1[j][i]=(sPixel) pred1;
               }
             }
           }
+        }
         break;
       //}}}
       //{{{
-      case VERT_PRED_8:
-        {
+      case VERT_PRED_8: {
         sPixelPos up;
         int upOk;
         int cr_MB_x = decoder->mbCrSizeX;
@@ -4367,8 +4357,7 @@ namespace {
         break;
       //}}}
       //{{{
-      case PLANE_8:
-        {
+      case PLANE_8: {
         sPixelPos up;        //!< pixel position  p(0,-1)
         sPixelPos left[17];  //!< pixel positions p(-1, -1..16)
         int upOk, leftOk[2], left_upOk;
