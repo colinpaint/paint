@@ -588,7 +588,7 @@ namespace {
       codedBlockPatternBit = cabacDecode->getSymbol (textureContexts->bcbpContexts[type2ctx_bcbp[type]] + ctx);
       }
 
-    // set bits for current block 
+    // set bits for current block
     bit = (y_dc ? 0 : y_ac ? 1 + j + (i >> 2) : u_dc ? 17 : v_dc ? 18 : u_ac ? 19 + j + (i >> 2) : 35 + j + (i >> 2));
     if (codedBlockPatternBit) {
       //{{{  get cbp
@@ -636,13 +636,12 @@ namespace {
 
     cSlice* slice = mb->slice;
 
-    int fld = ( slice->picStructure!=eFrame || mb->mbField );
-    const uint8_t* pos2ctx_Map = (fld) ? pos2ctx_map_int[type] : pos2ctx_map[type];
+    bool fld = (slice->picStructure != eFrame) || mb->mbField;
+    const uint8_t* pos2ctx_Map = fld ? pos2ctx_map_int[type] : pos2ctx_map[type];
     const uint8_t* pos2ctx_Last = pos2ctx_last[type];
 
-    sBiContext*  map_ctx  = slice->textureContexts->mapContexts [fld][type2ctx_map [type]];
-    sBiContext*  last_ctx = slice->textureContexts->lastContexts[fld][type2ctx_last[type]];
-
+    sBiContext* map_ctx = slice->textureContexts->mapContexts [fld][type2ctx_map [type]];
+    sBiContext* last_ctx = slice->textureContexts->lastContexts[fld][type2ctx_last[type]];
 
     int i0 = 0;
     int i1 = maxpos[type];
@@ -655,13 +654,12 @@ namespace {
     int i;
     for (i = i0; i < i1; ++i){
       // if last coeff is reached, it has to be significant
-      //--- read significance symbol ---
       if (cabacDecode->getSymbol (map_ctx + pos2ctx_Map[i])) {
         *(coeff++) = 1;
         ++coefCount;
-        //--- read last coefficient symbol ---
+        // read last coefficient symbol
         if (cabacDecode->getSymbol (last_ctx + pos2ctx_Last[i])) {
-          memset(coeff, 0, (i1 - i) * sizeof(int));
+          memset (coeff, 0, (i1 - i) * sizeof(int));
           return coefCount;
           }
         }
@@ -669,7 +667,7 @@ namespace {
         *(coeff++) = 0;
       }
 
-    //--- last coefficient must be significant if no last symbol was received ---
+    // last coefficient must be significant if no last symbol was received
     if (i < i1 + 1) {
       *coeff = 1;
       ++coefCount;
@@ -713,10 +711,6 @@ namespace {
   void readCompCoef4x4smb (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
                            int blockY, int blockX, int start_scan, int64_t *cbp_blk) {
 
-    int i,j,k;
-    int i0, j0;
-    int level = 1;
-
     cSlice* slice = mb->slice;
     sDataPartition* dataPartition;
     const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
@@ -725,9 +719,10 @@ namespace {
     const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
     int** cof = slice->cof[plane];
 
-    for (j = blockY; j < blockY + BLOCK_SIZE_8x8; j += 4) {
+    int level = 1;
+    for (int j = blockY; j < blockY + BLOCK_SIZE_8x8; j += 4) {
       mb->subblockY = j; // position for coeff_count ctx
-      for (i = blockX; i < blockX + BLOCK_SIZE_8x8; i += 4) {
+      for (int i = blockX; i < blockX + BLOCK_SIZE_8x8; i += 4) {
         mb->subblockX = i; // position for coeff_count ctx
         pos_scan_4x4 = pos_scan4x4[start_scan];
         level = 1;
@@ -745,8 +740,8 @@ namespace {
           if (level != 0) {
              /* leave if level == 0 */
             pos_scan_4x4 += 2 * se->value2;
-            i0 = *pos_scan_4x4++;
-            j0 = *pos_scan_4x4++;
+            int i0 = *pos_scan_4x4++;
+            int j0 = *pos_scan_4x4++;
             *cbp_blk |= i64power2(j + (i >> 2)) ;
             cof[j + j0][i + i0]= level;
             }
@@ -761,13 +756,13 @@ namespace {
           else
             se->reading = readRunLevelCabac;
 
-          for (k = 1; (k < 17) && (level != 0); ++k) {
+          for (int k = 1; (k < 17) && (level != 0); ++k) {
             dataPartition->readSyntaxElement (mb, se, dataPartition);
             level = se->value1;
             if (level != 0) {   /* leave if level == 0 */
               pos_scan_4x4 += 2 * se->value2;
-              i0 = *pos_scan_4x4++;
-              j0 = *pos_scan_4x4++;
+              int i0 = *pos_scan_4x4++;
+              int j0 = *pos_scan_4x4++;
               cof[j + j0][i + i0] = level;
               }
             }
@@ -778,14 +773,13 @@ namespace {
   //}}}
   //{{{
   void readCompCoef4x4 (sMacroBlock* mb, sSyntaxElement* se, eColorPlane plane,
-                                    int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern) {
+                        int (*InvLevelScale4x4)[4], int qp_per, int codedBlockPattern) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
 
     int start_scan = IS_I16MB (mb)? 1 : 0;
     int blockY, blockX;
-    int i, j;
     int64_t *cbp_blk = &mb->cbp[plane].blk;
 
     if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
@@ -803,10 +797,10 @@ namespace {
           // are there any coeff in current block at all
           readCompCoef4x4smb (mb, se, plane, blockY, blockX, start_scan, cbp_blk);
           if (start_scan == 0) {
-            for (j = 0; j < BLOCK_SIZE_8x8; ++j) {
+            for (int j = 0; j < BLOCK_SIZE_8x8; ++j) {
               int* coef = &cof[j][blockX];
               int jj = j & 0x03;
-              for (i = 0; i < BLOCK_SIZE_8x8; i+=4) {
+              for (int i = 0; i < BLOCK_SIZE_8x8; i+=4) {
                 if (*coef)
                   *coef = rshift_rnd_sf((*coef * InvLevelScale4x4[jj][0]) << qp_per, 4);
                 coef++;
@@ -823,10 +817,10 @@ namespace {
               }
             }
           else {
-            for (j = 0; j < BLOCK_SIZE_8x8; ++j) {
+            for (int j = 0; j < BLOCK_SIZE_8x8; ++j) {
               int* coef = &cof[j][blockX];
               int jj = j & 0x03;
-              for (i = 0; i < BLOCK_SIZE_8x8; i += 4) {
+              for (int i = 0; i < BLOCK_SIZE_8x8; i += 4) {
                 if ((jj != 0) && *coef)
                   *coef= rshift_rnd_sf((*coef * InvLevelScale4x4[jj][0]) << qp_per, 4);
                 coef++;
@@ -854,7 +848,7 @@ namespace {
     cDecoder264* decoder = mb->decoder;
     int start_scan = IS_I16MB (mb)? 1 : 0;
 
-    if( plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0) )
+    if ((plane == PLANE_Y) || (decoder->coding.isSeperateColourPlane != 0) )
       se->context = (IS_I16MB(mb) ? LUMA_16AC: LUMA_4x4);
     else if (plane == PLANE_U)
       se->context = (IS_I16MB(mb) ? CB_16AC: CB_4x4);
@@ -902,7 +896,7 @@ namespace {
 
       const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
-      if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
+      if ((plane == PLANE_Y) || (decoder->coding.isSeperateColourPlane != 0))
         se->context = LUMA_8x8;
       else if (plane == PLANE_U)
         se->context = CB_8x8;

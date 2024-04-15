@@ -78,11 +78,12 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 //{{{
 string cPps::getString() {
 
-  return fmt::format ("PPS:{}:{} -> sps:{}{}{}{}{}{}{}{}{}{}{}{}{}",
+  return fmt::format ("PPS:{}:{} -> sps:{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
                       id, naluLen,
                       spsId,
                       entropyCoding ? " cabac":" cavlc",
                       numSliceGroupsMinus1 ? fmt::format(" sliceGroups:{}", numSliceGroupsMinus1):"",
+                      sliceGroupMapType ? fmt::format(" sliceGroupMap:{}", sliceGroupMapType):"",
                       numRefIndexL0defaultActiveMinus1
                         ? fmt::format (" short:{}", numRefIndexL0defaultActiveMinus1):"",
                       numRefIndexL1defaultActiveMinus1
