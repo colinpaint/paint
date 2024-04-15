@@ -13,6 +13,7 @@
 #define get_pos_y_chroma(mb,y,max) (mb->piccY + (y & max))
 //}}}
 namespace {
+  //{{{  const tables
   //{{{
   const uint8_t ALPHA_TABLE[52] = {
     0,0,0,0,0,0,0,0,0,0,0,0,
@@ -59,6 +60,7 @@ namespace {
     {0,8,16,16},
     {0,8, 8,16}};  //[dir:0=vert, 1=hor.][yuvFormat]
   //}}}
+  //}}}
 
   //{{{
   int compare_mvs (const sMotionVec* mv0, const sMotionVec* mv1, int mvlimit) {
@@ -100,7 +102,7 @@ namespace {
 
   // mbaff
   //{{{
-  void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img, uint8_t* Strength, 
+  void edge_loop_luma_ver_MBAff (eColorPlane plane, sPixel** img, uint8_t* Strength,
                                  sMacroBlock* mbQ, int edge) {
 
     int      pel, Strng ;
@@ -200,7 +202,7 @@ namespace {
     }
   //}}}
   //{{{
-  void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, uint8_t* Strength, 
+  void edge_loop_luma_hor_MBAff (eColorPlane plane, sPixel** img, uint8_t* Strength,
                                  sMacroBlock* mbQ, int edge, sPicture *p)
   {
     int      width = p->lumaStride; //p->sizeX;
@@ -376,7 +378,7 @@ namespace {
     }
   //}}}
   //{{{
-  void edge_loop_chroma_hor_MBAff (sPixel** img, uint8_t* Strength, 
+  void edge_loop_chroma_hor_MBAff (sPixel** img, uint8_t* Strength,
                                    sMacroBlock* mbQ, int edge, int uv, sPicture* p)
   {
     cDecoder264* decoder = mbQ->decoder;
@@ -1204,7 +1206,7 @@ namespace {
     }
   //}}}
   //{{{
-  void edge_loop_luma_hor (eColorPlane plane, sPixel** img, uint8_t* Strength, 
+  void edge_loop_luma_hor (eColorPlane plane, sPixel** img, uint8_t* Strength,
                            sMacroBlock* mb, int edge, sPicture *p) {
 
     cDecoder264* decoder = mb->decoder;

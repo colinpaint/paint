@@ -243,12 +243,8 @@ int cNalu::getNALU (cAnnexB* annexB, cDecoder264* decoder) {
       //}}}
     }
 
-  if (*(naluBufPtr - 1) != 1 || naluBufCount < 3) {
-    //{{{  error, retuirn
-    printf ("get_annexB_NALU: no Start Code at the beginning of the NALU, return -1\n");
-    return -1;
-    }
-    //}}}
+  if (*(naluBufPtr - 1) != 1 || naluBufCount < 3)
+    cDecoder264::error ("getNALU  no startCode at front of NALU");
 
   int leadingZero8BitsCount = 0;
   if (naluBufCount == 3)
@@ -257,12 +253,10 @@ int cNalu::getNALU (cAnnexB* annexB, cDecoder264* decoder) {
     leadingZero8BitsCount = naluBufCount - 4;
     startCodeLen = 4;
     }
-  //{{{  only 1st uint8_t stream NAL unit can have leading_zero_8bits
-  if (!annexB->isFirstByteStreamNALU && leadingZero8BitsCount > 0) {
-    printf ("get_annexB_NALU: leading_zero_8bits syntax only present first uint8_t stream NAL unit\n");
-    return -1;
-    }
-  //}}}
+
+  // only 1st uint8_t stream NAL unit can have leading_zero_8bits
+  if (!annexB->isFirstByteStreamNALU && leadingZero8BitsCount > 0)
+    cDecoder264::error ("getNALU leading_zero_8bits syntax only present first uint8_t stream NAL unit");
 
   int info2 = 0;
   int info3 = 0;
@@ -300,7 +294,7 @@ int cNalu::getNALU (cAnnexB* annexB, cDecoder264* decoder) {
       startCodeFound = 1;
     }
 
-  // found next startCode, long(4 bytes) or int16_t(3bytes)
+  // found next startCode, 4bytes or 3bytes
   if (info3 == 1) {
     naluBufPtr -= 5;
     while (*(naluBufPtr--) == 0)

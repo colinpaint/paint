@@ -255,6 +255,7 @@ void inverse4x4 (int** tblock, int** block, int posY, int posX) {
     }
   }
 //}}}
+
 //{{{
 void hadamard4x4 (int** block, int** tblock) {
 
