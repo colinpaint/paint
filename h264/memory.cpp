@@ -96,57 +96,49 @@ int getMem4Dint (int***** array4D, int dim0, int dim1, int dim2, int dim3) {
 //{{{
 void freeMem2D (uint8_t** array2D) {
 
-  if (array2D) {
-    if (*array2D)
-      free (*array2D);
-    free (array2D);
-    }
+  if (array2D)
+    free (*array2D);
+  free (array2D);
   }
 //}}}
 //{{{
 void freeMem2Dint (int** array2D) {
 
-  if (array2D) {
-    if (*array2D)
-      free (*array2D);
-    free (array2D);
-    }
+  if (array2D)
+    free (*array2D);
+  free (array2D);
   }
 //}}}
 //{{{
 void freeMem3D (uint8_t*** array3D) {
 
-  if (array3D) {
+  if (array3D)
     freeMem2D (*array3D);
-    free (array3D);
-    }
+  free (array3D);
   }
 //}}}
 //{{{
 void freeMem3Dint (int*** array3D) {
 
-  if (array3D) {
+  if (array3D)
     freeMem2Dint (*array3D);
-    free (array3D);
-    }
+  free (array3D);
   }
 //}}}
 //{{{
 void freeMem4D (uint8_t**** array4D) {
 
-  if (array4D) {
+  if (array4D)
     freeMem3D (*array4D);
-    free (array4D);
-    }
+  free (array4D);
   }
 //}}}
 //{{{
 void freeMem4Dint (int**** array4D) {
 
-  if (array4D) {
+  if (array4D)
     freeMem3Dint (*array4D);
-    free (array4D);
-    }
+  free (array4D);
   }
 //}}}
 
@@ -185,11 +177,9 @@ int getMem3Dshort (int16_t**** array3D, int dim0, int dim1, int dim2) {
 //{{{
 void freeMem2Dshort (int16_t** array2D) {
 
-  if (array2D) {
-    if (*array2D)
+  if (array2D)
       free (*array2D);
-    free (array2D);
-    }
+  free (array2D);
   }
 //}}}
 //{{{
@@ -230,20 +220,17 @@ int getMem3Dmp (sPicMotion**** array3D, int dim0, int dim1, int dim2) {
 //{{{
 void freeMem2Dmp (sPicMotion** array2D) {
 
-  if (array2D) {
-    if (*array2D)
-      free (*array2D);
-    free (array2D);
-    }
+  if (array2D)
+    free (*array2D);
+  free (array2D);
   }
 //}}}
 //{{{
 void freeMem3Dmp (sPicMotion*** array3D) {
 
-  if (array3D) {
+  if (array3D) 
     freeMem2Dmp (*array3D);
-    free (array3D);
-    }
+  free (array3D);
   }
 //}}}
 
@@ -309,42 +296,33 @@ int getMem3DpelPad (sPixel**** array3D, int dim0, int dim1, int dim2, int iPadY,
 //{{{
 void freeMem2Dpel (sPixel** array2D) {
 
-  if (array2D)  {
-    if (*array2D)
-      free (*array2D);
-    free (array2D);
-    }
+  if (array2D)
+    free (*array2D);
+  free (array2D);
   }
 //}}}
 //{{{
 void freeMem2DpelPad (sPixel** array2D, int iPadY, int iPadX) {
 
-  if (array2D)  {
-    if (*array2D)
-      free (array2D[-iPadY]-iPadX);
-    free (&array2D[-iPadY]);
-    }
+  if (array2D)  
+    free (array2D[-iPadY]-iPadX);
+  free (&array2D[-iPadY]);
   }
 //}}}
 //{{{
 void freeMem3Dpel (sPixel*** array3D) {
 
-  if (array3D) {
+  if (array3D)
     freeMem2Dpel (*array3D);
-    free (array3D);
-    }
+  free (array3D);
   }
 //}}}
 //{{{
 void freeMem3DpelPad (sPixel*** array3D, int iDim12, int iPadY, int iPadX) {
 
-  if (array3D) {
-    for (int i = 0; i < iDim12; i++)
-      if (array3D[i]) {
-        freeMem2DpelPad (array3D[i], iPadY, iPadX);
-        array3D[i] = NULL;
-        }
-    free (array3D);
-    }
+  for (int i = 0; i < iDim12; i++)
+    if (array3D[i]) 
+      freeMem2DpelPad (array3D[i], iPadY, iPadX);
+  free (array3D);
   }
 //}}}
