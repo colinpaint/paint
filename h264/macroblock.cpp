@@ -4814,7 +4814,7 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
 
   sPixel** mbPred = slice->mbPred[uv + 1];
   int** cof = slice->cof[uv + 1];
-  int** PBlock = new_mem2Dint(MB_BLOCK_SIZE, MB_BLOCK_SIZE);
+  int** PBlock = newMem2Dint (MB_BLOCK_SIZE, MB_BLOCK_SIZE);
 
   int qp_per = decoder->qpPerMatrix[slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]];
   int qp_rem = decoder->qpRemMatrix[slice->qp < 0 ? slice->qp : QP_SCALE_CR[slice->qp]];

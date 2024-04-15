@@ -2,46 +2,24 @@
 #include "global.h"
 #include "memory.h"
 //}}}
-namespace {
-  //{{{
-  void* memCalloc (size_t nitems, size_t size) {
-
-    size_t padded_size = nitems * size;
-    void* d = malloc (padded_size);
-    memset (d, 0, (int)padded_size);
-    return d;
-    }
-  //}}}
-  //{{{
-  void noMemoryExit (const char* where) {
-    cDecoder264::error ("no more memory");
-    }
-  //}}}
-  }
 
 //{{{
-int** new_mem2Dint (int dim0, int dim1) {
+int** newMem2Dint (int dim0, int dim1) {
 
-  int** array2D;
-  if ((array2D = (int**)malloc (dim0 * sizeof(int*))) == NULL)
-    noMemoryExit("getMem2Dint: array2D");
-  if ((*(array2D) = (int*)memCalloc (dim0 * dim1, sizeof(int ))) == NULL)
-    noMemoryExit("getMem2Dint: array2D");
-
+  int** array2D = (int**)malloc (dim0 * sizeof(int*));
+  *array2D = (int*)malloc (dim0 * dim1 * sizeof(int));
   for (int i = 1 ; i < dim0; i++)
-    (array2D)[i] =  (array2D)[i-1] + dim1;
+    array2D[i] =  (array2D)[i-1] + dim1;
 
-  return (array2D);
+  return array2D;
   }
 //}}}
+
 //{{{
 int getMem2D (uint8_t*** array2D, int dim0, int dim1) {
 
-  if ((*array2D = (uint8_t**)malloc (dim0 * sizeof(uint8_t*))) == NULL)
-    noMemoryExit ("getMem2D: array2D");
-  if ((*(*array2D) = (uint8_t*)memCalloc (dim0 * dim1,sizeof(uint8_t ))) == NULL)
-    noMemoryExit ("getMem2D: array2D");
-
+  *array2D = (uint8_t**)malloc (dim0 * sizeof(uint8_t*));
+  **array2D = (uint8_t*)malloc (dim0 * dim1 * sizeof(uint8_t));
   for (int i = 1; i < dim0; i++)
     (*array2D)[i] = (*array2D)[i-1] + dim1;
 
@@ -51,11 +29,8 @@ int getMem2D (uint8_t*** array2D, int dim0, int dim1) {
 //{{{
 int getMem2Dint (int*** array2D, int dim0, int dim1) {
 
-  if ((*array2D = (int**)malloc (dim0 * sizeof(int*))) == NULL)
-    noMemoryExit ("getMem2Dint: array2D");
-  if ((*(*array2D) = (int*)memCalloc (dim0 * dim1, sizeof(int ))) == NULL)
-    noMemoryExit ("getMem2Dint: array2D");
-
+  *array2D = (int**)malloc (dim0 * sizeof(int*));
+  **array2D = (int*)malloc (dim0 * dim1 * sizeof(int));
   for (int i = 1 ; i < dim0; i++)
     (*array2D)[i] = (*array2D)[i-1] + dim1;
 
@@ -65,14 +40,13 @@ int getMem2Dint (int*** array2D, int dim0, int dim1) {
 //{{{
 int getMem3D (uint8_t**** array3D, int dim0, int dim1, int dim2) {
 
-  if (((*array3D) = (uint8_t***)malloc (dim0 * sizeof(uint8_t**))) == NULL)
-    noMemoryExit ("getMem3D: array3D");
+  *array3D = (uint8_t***)malloc (dim0 * sizeof(uint8_t**));
 
   int mem_size = dim0 * sizeof(uint8_t**);
   mem_size += getMem2D (*array3D, dim0 * dim1, dim2);
 
   for (int i = 1; i < dim0; i++)
-    (*array3D)[i] =  (*array3D)[i-1] + dim1;
+    (*array3D)[i] = (*array3D)[i-1] + dim1;
 
   return mem_size;
   }
@@ -80,8 +54,7 @@ int getMem3D (uint8_t**** array3D, int dim0, int dim1, int dim2) {
 //{{{
 int getMem3Dint (int**** array3D, int dim0, int dim1, int dim2) {
 
-  if (((*array3D) = (int***)malloc(dim0 * sizeof(int**))) == NULL)
-    noMemoryExit ("getMem3Dint: array3D");
+  *array3D = (int***)malloc (dim0 * sizeof(int**));
 
   int mem_size = dim0 * sizeof(int**);
   mem_size += getMem2Dint (*array3D, dim0 * dim1, dim2);
@@ -95,8 +68,7 @@ int getMem3Dint (int**** array3D, int dim0, int dim1, int dim2) {
 //{{{
 int getMem4D (uint8_t***** array4D, int dim0, int dim1, int dim2, int dim3) {
 
-  if (((*array4D) = (uint8_t****)malloc(dim0 * sizeof(uint8_t***))) == NULL)
-    noMemoryExit ("getMem4D: array4D");
+  *array4D = (uint8_t****)malloc (dim0 * sizeof(uint8_t***));
 
   int mem_size = dim0 * sizeof(uint8_t***);
   mem_size += getMem3D (*array4D, dim0 * dim1, dim2, dim3);
@@ -110,8 +82,7 @@ int getMem4D (uint8_t***** array4D, int dim0, int dim1, int dim2, int dim3) {
 //{{{
 int getMem4Dint (int***** array4D, int dim0, int dim1, int dim2, int dim3) {
 
-  if (((*array4D) = (int****)malloc(dim0 * sizeof(int***))) == NULL)
-    noMemoryExit ("getMem4Dint: array4D");
+  *array4D = (int****)malloc (dim0 * sizeof(int***));
 
   int mem_size = dim0 * sizeof(int***);
   mem_size += getMem3Dint (*array4D, dim0 * dim1, dim2, dim3);
@@ -182,10 +153,8 @@ void freeMem4Dint (int**** array4D) {
 //{{{
 int getMem2Dshort (int16_t*** array2D, int dim0, int dim1) {
 
-  if ((*array2D  = (int16_t**)malloc (dim0 * sizeof(int16_t*))) == NULL)
-    noMemoryExit ("getMem2Dshort: array2D");
-  if ((*(*array2D) = (int16_t*)memCalloc (dim0 * dim1,sizeof(int16_t ))) == NULL)
-    noMemoryExit ("getMem2Dshort: array2D");
+  *array2D = (int16_t**)malloc (dim0 * sizeof(int16_t*));
+  **array2D = (int16_t*)malloc (dim0 * dim1 * sizeof(int16_t));
 
   int16_t* curr = (*array2D)[0];
   for (int i = 1; i < dim0; i++) {
@@ -199,8 +168,7 @@ int getMem2Dshort (int16_t*** array2D, int dim0, int dim1) {
 //{{{
 int getMem3Dshort (int16_t**** array3D, int dim0, int dim1, int dim2) {
 
-  if (((*array3D) = (int16_t***)malloc(dim0 * sizeof(int16_t**))) == NULL)
-    noMemoryExit ("getMem3Dshort: array3D");
+  *array3D = (int16_t***)malloc (dim0 * sizeof(int16_t**));
 
   int mem_size = dim0 * sizeof(int16_t**);
   mem_size += getMem2Dshort (*array3D, dim0 * dim1, dim2);
@@ -237,10 +205,8 @@ void freeMem3Dshort (int16_t*** array3D) {
 //{{{
 int getMem2Dmp (sPicMotion*** array2D, int dim0, int dim1) {
 
-  if ((*array2D = (sPicMotion**)malloc(dim0 *      sizeof(sPicMotion*))) == NULL)
-    noMemoryExit ("getMem2Dmp: array2D");
-  if ((*(*array2D) = (sPicMotion*)memCalloc (dim0 * dim1, sizeof(sPicMotion ))) == NULL)
-    noMemoryExit ("getMem2Dmp: array2D");
+  *array2D = (sPicMotion**)malloc (dim0 * sizeof(sPicMotion*));
+  **array2D = (sPicMotion*)malloc (dim0 * dim1 * sizeof(sPicMotion));
 
   for (int i = 1 ; i < dim0; i++)
     (*array2D)[i] = (*array2D)[i-1] + dim1;
@@ -251,8 +217,7 @@ int getMem2Dmp (sPicMotion*** array2D, int dim0, int dim1) {
 //{{{
 int getMem3Dmp (sPicMotion**** array3D, int dim0, int dim1, int dim2) {
 
-  if (((*array3D) = (sPicMotion***)malloc(dim0 * sizeof(sPicMotion**))) == NULL)
-    noMemoryExit ("getMem3Dmp: array3D");
+  *array3D = (sPicMotion***)malloc (dim0 * sizeof(sPicMotion**));
 
   int mem_size = dim0 * sizeof(sPicMotion**);
   mem_size += getMem2Dmp (*array3D, dim0 * dim1, dim2);
@@ -285,10 +250,8 @@ void freeMem3Dmp (sPicMotion*** array3D) {
 //{{{
 int getMem2Dpel (sPixel*** array2D, int dim0, int dim1) {
 
-  if ((*array2D = (sPixel**)malloc (dim0 * sizeof(sPixel*))) == NULL)
-    noMemoryExit ("getMem2Dpel: array2D");
-  if ((*(*array2D) = (sPixel* )malloc(dim0 * dim1 * sizeof(sPixel ))) == NULL)
-    noMemoryExit ("getMem2Dpel: array2D");
+  *array2D = (sPixel**)malloc (dim0 * sizeof(sPixel*));
+  **array2D = (sPixel* )malloc (dim0 * dim1 * sizeof(sPixel));
 
   for (int i = 1 ; i < dim0; i++)
     (*array2D)[i] = (*array2D)[i-1] + dim1;
@@ -301,10 +264,9 @@ int getMem2DpelPad (sPixel*** array2D, int dim0, int dim1, int iPadY, int iPadX)
 
   int height = dim0 + 2*iPadY;
   int width = dim1 + 2*iPadX;
-  if ((*array2D = (sPixel**)malloc (height*sizeof(sPixel*))) == NULL)
-    noMemoryExit ("getMem2DpelPad: array2D");
-  if ((*(*array2D) = (sPixel*)memCalloc (height * width, sizeof(sPixel ))) == NULL)
-    noMemoryExit ("getMem2DpelPad: array2D");
+
+  *array2D = (sPixel**)malloc (height * sizeof(sPixel*));
+  **array2D = (sPixel*)malloc (height * width * sizeof(sPixel));
 
   (*array2D)[0] += iPadX;
   sPixel* curr = (*array2D)[0];
@@ -320,8 +282,7 @@ int getMem2DpelPad (sPixel*** array2D, int dim0, int dim1, int iPadY, int iPadX)
 //{{{
 int getMem3Dpel (sPixel**** array3D, int dim0, int dim1, int dim2) {
 
-  if (((*array3D) = (sPixel***)malloc(dim0 * sizeof(sPixel**))) == NULL)
-    noMemoryExit("getMem3Dpel: array3D");
+  *array3D = (sPixel***)malloc (dim0 * sizeof(sPixel**));
 
   int mem_size = dim0 * sizeof(sPixel**);
   mem_size += getMem2Dpel(*array3D, dim0 * dim1, dim2);
@@ -336,8 +297,7 @@ int getMem3Dpel (sPixel**** array3D, int dim0, int dim1, int dim2) {
 //{{{
 int getMem3DpelPad (sPixel**** array3D, int dim0, int dim1, int dim2, int iPadY, int iPadX) {
 
-  if (((*array3D) = (sPixel***)malloc (dim0*sizeof(sPixel**))) == NULL)
-    noMemoryExit ("getMem3DpelPad: array3D");
+  *array3D = (sPixel***)malloc (dim0*sizeof(sPixel**));
 
   int mem_size = dim0 * sizeof(sPixel**);
   for (int i = 0; i < dim0; i++)

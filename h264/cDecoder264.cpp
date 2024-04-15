@@ -2228,6 +2228,418 @@ void cDecoder264::mbAffPostProc() {
 
 // slice
 //{{{
+bool cDecoder264::isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice) {
+
+  bool result = (NULL == picture);
+
+  result |= (oldSlice->ppsId != slice->ppsId);
+  result |= (oldSlice->frameNum != slice->frameNum);
+  result |= (oldSlice->fieldPic != slice->fieldPic);
+
+  if (slice->fieldPic && oldSlice->fieldPic)
+    result |= (oldSlice->botField != slice->botField);
+
+  result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
+  result |= (oldSlice->isIDR != slice->isIDR);
+
+  if (slice->isIDR && oldSlice->isIDR)
+    result |= (oldSlice->idrPicId != slice->idrPicId);
+
+  if (!activeSps->pocType) {
+    result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
+    if ((activePps->frameBotField == 1) && !slice->fieldPic)
+      result |= (oldSlice->deltaPicOrderCountBot != slice->deltaPicOrderCountBot);
+    }
+
+  if (activeSps->pocType == 1) {
+    if (!activeSps->deltaPicOrderAlwaysZero) {
+      result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
+      if ((activePps->frameBotField == 1) && !slice->fieldPic)
+        result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
+      }
+    }
+
+  return result;
+  }
+//}}}
+//{{{
+void cDecoder264::initRefPicture (cSlice* slice) {
+
+  sPicture* vidRefPicture = dpb.noRefPicture;
+  int noRef = slice->framePoc < recoveryPoc;
+
+  if (coding.isSeperateColourPlane) {
+    switch (slice->colourPlaneId) {
+      case 0:
+        for (int j = 0; j < 6; j++) {
+          for (int i = 0; i < MAX_LIST_SIZE; i++) {
+            sPicture* refPicture = slice->listX[j][i];
+            if (refPicture) {
+              refPicture->noRef = noRef && (refPicture == vidRefPicture);
+              refPicture->curPixelY = refPicture->imgY;
+              }
+            }
+          }
+        break;
+      }
+    }
+
+  else {
+    int totalLists = slice->mbAffFrame ? 6 : (slice->sliceType == eSliceB ? 2 : 1);
+    for (int j = 0; j < totalLists; j++) {
+      // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid refIndex being set
+      // since currently this is done at the slice level, it seems safe to do so.
+      // Note for some reason I get now a mismatch between version 12 and this one in cabac. I wonder why.
+      for (int i = 0; i < MAX_LIST_SIZE; i++) {
+        sPicture* refPicture = slice->listX[j][i];
+        if (refPicture) {
+          refPicture->noRef = noRef && (refPicture == vidRefPicture);
+          refPicture->curPixelY = refPicture->imgY;
+          }
+        }
+      }
+    }
+  }
+//}}}
+//{{{
+void cDecoder264::initPicture (cSlice* slice) {
+
+  cDpb* dpb = slice->dpb;
+
+  picHeightInMbs = coding.frameHeightMbs / (slice->fieldPic+1);
+  picSizeInMbs = coding.picWidthMbs * picHeightInMbs;
+  coding.frameSizeMbs = coding.picWidthMbs * coding.frameHeightMbs;
+
+  if (picture) // slice loss
+    endDecodeFrame();
+
+  if (recoveryPoint)
+    recoveryFrameNum = (slice->frameNum + recoveryFrameCount) % coding.maxFrameNum;
+  if (slice->isIDR)
+    recoveryFrameNum = slice->frameNum;
+  if (!recoveryPoint &&
+      (slice->frameNum != preFrameNum) &&
+      (slice->frameNum != (preFrameNum + 1) % coding.maxFrameNum)) {
+    if (!activeSps->allowGapsFrameNum) {
+      //{{{  picture error conceal
+      if (param.concealMode) {
+        if ((slice->frameNum) < ((preFrameNum + 1) % coding.maxFrameNum)) {
+          /* Conceal lost IDR frames and any frames immediately following the IDR.
+          // Use frame copy for these since lists cannot be formed correctly for motion copy*/
+          concealMode = 1;
+          idrConcealFlag = 1;
+          concealLostFrames (dpb, slice);
+          // reset to original conceal mode for future drops
+          concealMode = param.concealMode;
+          }
+        else {
+          // reset to original conceal mode for future drops
+          concealMode = param.concealMode;
+          idrConcealFlag = 0;
+          concealLostFrames (dpb, slice);
+          }
+        }
+      else
+        // Advanced Error Concealment would be called here to combat unintentional loss of pictures
+        error ("initPicture - unintentional loss of picture\n");
+      }
+      //}}}
+    if (!concealMode)
+      fillFrameNumGap (this, slice);
+    }
+
+  if (slice->refId)
+    preFrameNum = slice->frameNum;
+
+  // calculate POC
+  decodePOC (slice);
+
+  if (recoveryFrameNum == (int)slice->frameNum && recoveryPoc == 0x7fffffff)
+    recoveryPoc = slice->framePoc;
+  if (slice->refId)
+    lastRefPicPoc = slice->framePoc;
+  if ((slice->picStructure == eFrame) || (slice->picStructure == eTopField))
+    getTime (&debug.startTime);
+
+  picture = sPicture::allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+  picture->topPoc = slice->topPoc;
+  picture->botPoc = slice->botPoc;
+  picture->framePoc = slice->framePoc;
+  picture->qp = slice->qp;
+  picture->sliceQpDelta = slice->sliceQpDelta;
+  picture->chromaQpOffset[0] = activePps->chromaQpOffset;
+  picture->chromaQpOffset[1] = activePps->chromaQpOffset2;
+  picture->codingType = slice->picStructure == eFrame ?
+    (slice->mbAffFrame? eFrameMbPairCoding:eFrameCoding) : eFieldCoding;
+
+  // reset all variables of the error conceal instance before decoding of every frame.
+  // here the third parameter should, if perfectly, be equal to the number of slices per frame.
+  // using little value is ok, the code will allocate more memory if the slice number is larger
+  ercReset (ercErrorVar, picSizeInMbs, picSizeInMbs, picture->sizeX);
+
+  ercMvPerMb = 0;
+  switch (slice->picStructure ) {
+    //{{{
+    case eTopField:
+      picture->poc = slice->topPoc;
+      idrFrameNum *= 2;
+      break;
+    //}}}
+    //{{{
+    case eBotField:
+      picture->poc = slice->botPoc;
+      idrFrameNum = idrFrameNum * 2 + 1;
+      break;
+    //}}}
+    //{{{
+    case eFrame:
+      picture->poc = slice->framePoc;
+      break;
+    //}}}
+    //{{{
+    default:
+      error ("picStructure not initialized");
+    //}}}
+    }
+
+  if (coding.sliceType > eSliceSI) {
+    setEcFlag (SE_PTYPE);
+    coding.sliceType = eSliceP;  // concealed element
+    }
+
+  // cavlc init
+  if (activePps->entropyCoding == eCavlc)
+    memset (nzCoeff[0][0][0], -1, picSizeInMbs * 48 *sizeof(uint8_t)); // 3 * 4 * 4
+
+  // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
+  // TO set sMacroBlock Map (mark all MBs as 'have to be concealed')
+  if (coding.isSeperateColourPlane) {
+    for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
+      sMacroBlock* mb = mbDataJV[nplane];
+      char* intraBlock = intraBlockJV[nplane];
+      for (int i = 0; i < (int)picSizeInMbs; ++i) {
+        //{{{  resetMb
+        mb->errorFlag = 1;
+        mb->dplFlag = 0;
+        mb->sliceNum = -1;
+        mb++;
+        }
+        //}}}
+      memset (predModeJV[nplane][0], DC_PRED, 16 * coding.frameHeightMbs * coding.picWidthMbs * sizeof(char));
+      if (activePps->hasConstrainedIntraPred)
+        for (int i = 0; i < (int)picSizeInMbs; ++i)
+          intraBlock[i] = 1;
+      }
+    }
+  else {
+    sMacroBlock* mb = mbData;
+    for (int i = 0; i < (int)picSizeInMbs; ++i) {
+      //{{{  resetMb
+      mb->errorFlag = 1;
+      mb->dplFlag = 0;
+      mb->sliceNum = -1;
+      mb++;
+      }
+      //}}}
+    if (activePps->hasConstrainedIntraPred)
+      for (int i = 0; i < (int)picSizeInMbs; ++i)
+        intraBlock[i] = 1;
+    memset (predMode[0], DC_PRED, 16 * coding.frameHeightMbs * coding.picWidthMbs * sizeof(char));
+    }
+
+  picture->sliceType = coding.sliceType;
+  picture->usedForRef = (slice->refId != 0);
+  picture->isIDR = slice->isIDR;
+  picture->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
+  picture->longTermRefFlag = slice->longTermRefFlag;
+  picture->adaptRefPicBufFlag = slice->adaptRefPicBufFlag;
+  picture->decRefPicMarkBuffer = slice->decRefPicMarkBuffer;
+  slice->decRefPicMarkBuffer = NULL;
+
+  picture->mbAffFrame = slice->mbAffFrame;
+  picture->picWidthMbs = coding.picWidthMbs;
+
+  getMbBlockPos = picture->mbAffFrame ? getMbBlockPosMbaff : getMbBlockPosNormal;
+  getNeighbour = picture->mbAffFrame ? getAffNeighbour : getNonAffNeighbour;
+
+  picture->picNum = slice->frameNum;
+  picture->frameNum = slice->frameNum;
+  picture->recoveryFrame = (uint32_t)((int)slice->frameNum == recoveryFrameNum);
+  picture->codedFrame = (slice->picStructure == eFrame);
+  picture->chromaFormatIdc = (eYuvFormat)activeSps->chromaFormatIdc;
+  picture->frameMbOnly = activeSps->frameMbOnly;
+  picture->hasCrop = activeSps->hasCrop;
+  if (picture->hasCrop) {
+    picture->cropLeft = activeSps->cropLeft;
+    picture->cropRight = activeSps->cropRight;
+    picture->cropTop = activeSps->cropTop;
+    picture->cropBot = activeSps->cropBot;
+    }
+
+  if (coding.isSeperateColourPlane) {
+    decPictureJV[0] = picture;
+    decPictureJV[1] = sPicture::allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+    copyDecPictureJV (decPictureJV[1], decPictureJV[0] );
+    decPictureJV[2] = sPicture::allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
+    copyDecPictureJV (decPictureJV[2], decPictureJV[0] );
+    }
+  }
+//}}}
+//{{{
+void cDecoder264::initSlice (cSlice* slice) {
+
+  activeSps = slice->activeSps;
+  activePps = slice->activePps;
+
+  slice->initLists (slice);
+  reorderLists (slice);
+
+  if (slice->picStructure == eFrame)
+    slice->initMbAffLists (dpb.noRefPicture);
+
+  // update reference flags and set current refFlag
+  if (!(slice->redundantPicCount && (prevFrameNum == slice->frameNum)))
+    for (int i = 16; i > 0; i--)
+      slice->refFlag[i] = slice->refFlag[i-1];
+  slice->refFlag[0] = (slice->redundantPicCount == 0) ? isPrimaryOk : isRedundantOk;
+
+  if (!slice->activeSps->chromaFormatIdc ||
+      (slice->activeSps->chromaFormatIdc == 3)) {
+    slice->infoCbpIntra = cBitStream::infoCbpIntraOther;
+    slice->infoCbpInter = cBitStream::infoCbpInterOther;
+    }
+  else {
+    slice->infoCbpIntra = cBitStream::infoCbpIntraNormal;
+    slice->infoCbpInter = cBitStream::infoCbpInterNormal;
+    }
+  }
+//}}}
+//{{{
+void cDecoder264::reorderLists (cSlice* slice) {
+
+  if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
+    if (slice->refPicReorderFlag[LIST_0])
+      slice->reorderRefPicList (LIST_0);
+    if (dpb.noRefPicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
+      cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
+                 slice->numRefIndexActive[LIST_0]-1, nonConformingStream ? "conform":"");
+    else
+      slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
+    }
+
+  if (slice->sliceType == eSliceB) {
+    if (slice->refPicReorderFlag[LIST_1])
+      slice->reorderRefPicList (LIST_1);
+    if (dpb.noRefPicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
+      cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
+                 slice->numRefIndexActive[LIST_0] - 1, nonConformingStream ? "conform" : "");
+    else
+      slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
+    }
+
+  slice->freeRefPicListReorderBuffer();
+  }
+//}}}
+//{{{
+void cDecoder264::copySliceInfo (cSlice* slice, sOldSlice* oldSlice) {
+
+  oldSlice->ppsId = slice->ppsId;
+  oldSlice->frameNum = slice->frameNum;
+  oldSlice->fieldPic = slice->fieldPic;
+
+  if (slice->fieldPic)
+    oldSlice->botField = slice->botField;
+
+  oldSlice->nalRefIdc = slice->refId;
+
+  oldSlice->isIDR = (uint8_t)slice->isIDR;
+  if (slice->isIDR)
+    oldSlice->idrPicId = slice->idrPicId;
+
+  if (activeSps->pocType == 0) {
+    oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
+    oldSlice->deltaPicOrderCountBot = slice->deltaPicOrderCountBot;
+    }
+  else if (activeSps->pocType == 1) {
+    oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
+    oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
+    }
+  }
+//}}}
+//{{{
+void cDecoder264::useParameterSet (cSlice* slice) {
+
+  if (!pps[slice->ppsId].ok)
+    cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid ppsId:{}", slice->ppsId));
+
+  if (!sps[pps->spsId].ok)
+    cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid spsId:{} ppsId:{}", slice->ppsId, pps->spsId));
+
+  if (&sps[pps->spsId] != activeSps) {
+    //{{{  new sps
+    if (picture)
+      endDecodeFrame();
+
+    activeSps = &sps[pps->spsId];
+
+    if (activeSps->hasBaseLine() && !dpb.isInitDone())
+      setCodingParam (sps);
+    setCoding();
+    initGlobalBuffers();
+
+    if (!noOutputPriorPicFlag)
+      dpb.flush();
+    dpb.init (this, 0);
+
+    // enable error conceal
+    ercInit (this, coding.width, coding.height, 1);
+    if (picture) {
+      ercReset (ercErrorVar, picSizeInMbs, picSizeInMbs, picture->sizeX);
+      ercMvPerMb = 0;
+      }
+
+    setFormat (activeSps, &param.source, &param.output);
+
+    debug.profileString = fmt::format ("Profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
+                                       coding.profileIdc,
+                                       param.source.width[0], param.source.height[0],
+                                       coding.width, coding.height,
+                                       coding.yuvFormat == YUV400 ? " 400 ":
+                                         coding.yuvFormat == YUV420 ? " 420":
+                                           coding.yuvFormat == YUV422 ? " 422":" 4:4:4",
+                                       param.source.bitDepth[0],
+                                       param.source.bitDepth[1],
+                                       param.source.bitDepth[2]);
+    cLog::log (LOGINFO, debug.profileString);
+    }
+    //}}}
+
+  if (&pps[slice->ppsId] != activePps) {
+    //{{{  new pps
+    if (picture) // only on slice loss
+      endDecodeFrame();
+
+    activePps = &pps[slice->ppsId];
+    }
+    //}}}
+
+  // slice->dataPartitionMode is set by read_new_slice (NALU first uint8_t ok there)
+  if (activePps->entropyCoding == eCavlc) {
+    slice->nalStartCode = cBitStream::vlcStartCode;
+    for (int i = 0; i < 3; i++)
+      slice->dataPartitions[i].readSyntaxElement = cBitStream::readSyntaxElementVLC;
+    }
+  else {
+    slice->nalStartCode = cabacStartCode;
+    for (int i = 0; i < 3; i++)
+      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCabac;
+    }
+
+  coding.sliceType = slice->sliceType;
+  }
+//}}}
+
+//{{{
 int cDecoder264::readNalu (cSlice* slice) {
 
   int curHeader = 0;
@@ -2839,6 +3251,7 @@ void cDecoder264::decodeSlice (cSlice* slice) {
     }
   }
 //}}}
+
 //{{{
 void cDecoder264::endDecodeFrame() {
 
@@ -3135,268 +3548,6 @@ int cDecoder264::decodeFrame() {
   }
 //}}}
 
-//{{{  flexibleMacroblockOrdering
-//{{{
-void cDecoder264::initFmo (cSlice* slice) {
-
-  fmoGenerateMapUnitToSliceGroupMap (slice);
-  fmoGenerateMbToSliceGroupMap (slice);
-  }
-//}}}
-//{{{
-void cDecoder264::closeFmo() {
-
-  free (mbToSliceGroupMap);
-  mbToSliceGroupMap = NULL;
-
-  free (mapUnitToSliceGroupMap);
-  mapUnitToSliceGroupMap = NULL;
-  }
-//}}}
-
-int cDecoder264::fmoGetNumberOfSliceGroup() { return sliceGroupsNum; }
-int cDecoder264::fmoGetLastMBOfPicture() { return fmoGetLastMBInSliceGroup (fmoGetNumberOfSliceGroup() - 1); }
-int cDecoder264::fmoGetSliceGroupId (int mb) { return mbToSliceGroupMap[mb]; }
-//{{{
-int cDecoder264::fmoGetLastMBInSliceGroup (int SliceGroup) {
-
-  for (int i = picSizeInMbs-1; i >= 0; i--)
-    if (fmoGetSliceGroupId (i) == SliceGroup)
-      return i;
-
-  return -1;
-  }
-//}}}
-
-//{{{
-void cDecoder264::fmoGenerateType0MapUnitMap (uint32_t PicSizeInMapUnits) {
-// Generate interleaved slice group map type MapUnit map (type 0)
-
-  uint32_t iGroup;
-  uint32_t j;
-  uint32_t i = 0;
-  do {
-    for (iGroup = 0;
-         (iGroup <= activePps->numSliceGroupsMinus1) && (i < PicSizeInMapUnits);
-         i += activePps->runLengthMinus1[iGroup++] + 1 )
-      for (j = 0; j <= activePps->runLengthMinus1[ iGroup ] && i + j < PicSizeInMapUnits; j++ )
-        mapUnitToSliceGroupMap[i+j] = iGroup;
-    } while (i < PicSizeInMapUnits);
-  }
-//}}}
-//{{{
-void cDecoder264::fmoGenerateType1MapUnitMap (uint32_t PicSizeInMapUnits) {
-// Generate dispersed slice group map type MapUnit map (type 1)
-
-  for (uint32_t i = 0; i < PicSizeInMapUnits; i++ )
-    mapUnitToSliceGroupMap[i] =
-      ((i%coding.picWidthMbs) + (((i/coding.picWidthMbs) * (activePps->numSliceGroupsMinus1+1)) / 2))
-        % (activePps->numSliceGroupsMinus1+1);
-  }
-//}}}
-//{{{
-void cDecoder264::fmoGenerateType2MapUnitMap (uint32_t PicSizeInMapUnits) {
-// Generate foreground with left-over slice group map type MapUnit map (type 2)
-
-  int iGroup;
-  uint32_t i, x, y;
-  uint32_t yTopLeft, xTopLeft, yBottomRight, xBottomRight;
-
-  for (i = 0; i < PicSizeInMapUnits; i++ )
-    mapUnitToSliceGroupMap[i] = activePps->numSliceGroupsMinus1;
-
-  for (iGroup = activePps->numSliceGroupsMinus1 - 1 ; iGroup >= 0; iGroup--) {
-    yTopLeft = activePps->topLeft[ iGroup ] / coding.picWidthMbs;
-    xTopLeft = activePps->topLeft[ iGroup ] % coding.picWidthMbs;
-    yBottomRight = activePps->botRight[iGroup] / coding.picWidthMbs;
-    xBottomRight = activePps->botRight[iGroup] % coding.picWidthMbs;
-    for (y = yTopLeft; y <= yBottomRight; y++ )
-      for (x = xTopLeft; x <= xBottomRight; x++ )
-        mapUnitToSliceGroupMap[ y * coding.picWidthMbs + x ] = iGroup;
-    }
-  }
-//}}}
-//{{{
-void cDecoder264::fmoGenerateType3MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice) {
-// Generate box-out slice group map type MapUnit map (type 3)
-
-  uint32_t i, k;
-  int leftBound, topBound, rightBound, bottomBound;
-  int x, y, xDir, yDir;
-  int mapUnitVacant;
-
-  uint32_t mapUnitsInSliceGroup0 = imin((activePps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
-
-  for (i = 0; i < PicSizeInMapUnits; i++ )
-    mapUnitToSliceGroupMap[i] = 2;
-
-  x = (coding.picWidthMbs - activePps->sliceGroupChangeDirectionFlag) / 2;
-  y = (coding.picHeightMapUnits - activePps->sliceGroupChangeDirectionFlag) / 2;
-
-  leftBound = x;
-  topBound = y;
-  rightBound  = x;
-  bottomBound = y;
-
-  xDir = activePps->sliceGroupChangeDirectionFlag - 1;
-  yDir = activePps->sliceGroupChangeDirectionFlag;
-
-  for (k = 0; k < PicSizeInMapUnits; k += mapUnitVacant ) {
-    mapUnitVacant = ( mapUnitToSliceGroupMap[ y * coding.picWidthMbs + x ]  ==  2 );
-    if (mapUnitVacant )
-       mapUnitToSliceGroupMap[ y * coding.picWidthMbs + x ] = ( k >= mapUnitsInSliceGroup0 );
-
-    if (xDir  ==  -1  &&  x  ==  leftBound ) {
-      leftBound = imax( leftBound - 1, 0 );
-      x = leftBound;
-      xDir = 0;
-      yDir = 2 * activePps->sliceGroupChangeDirectionFlag - 1;
-      }
-    else if (xDir  ==  1  &&  x  ==  rightBound ) {
-      rightBound = imin( rightBound + 1, (int)coding.picWidthMbs - 1 );
-      x = rightBound;
-      xDir = 0;
-      yDir = 1 - 2 * activePps->sliceGroupChangeDirectionFlag;
-      }
-    else if (yDir  ==  -1  &&  y  ==  topBound ) {
-      topBound = imax( topBound - 1, 0 );
-      y = topBound;
-      xDir = 1 - 2 * activePps->sliceGroupChangeDirectionFlag;
-      yDir = 0;
-      }
-    else if (yDir  ==  1  &&  y  ==  bottomBound ) {
-      bottomBound = imin( bottomBound + 1, (int)coding.picHeightMapUnits - 1 );
-      y = bottomBound;
-      xDir = 2 * activePps->sliceGroupChangeDirectionFlag - 1;
-      yDir = 0;
-      }
-    else {
-      x = x + xDir;
-      y = y + yDir;
-      }
-    }
-  }
-//}}}
-//{{{
-void cDecoder264::fmoGenerateType4MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice) {
-// Generate raster scan slice group map type MapUnit map (type 4)
-
-  uint32_t mapUnitsInSliceGroup0 = imin((activePps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
-  uint32_t sizeOfUpperLeftGroup = activePps->sliceGroupChangeDirectionFlag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
-
-  for (uint32_t i = 0; i < PicSizeInMapUnits; i++ )
-    if (i < sizeOfUpperLeftGroup )
-      mapUnitToSliceGroupMap[i] = activePps->sliceGroupChangeDirectionFlag;
-    else
-      mapUnitToSliceGroupMap[i] = 1 - activePps->sliceGroupChangeDirectionFlag;
-  }
-//}}}
-//{{{
-void cDecoder264::fmoGenerateType5MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice) {
-// Generate wipe slice group map type MapUnit map (type 5) *
-
-  uint32_t mapUnitsInSliceGroup0 = imin (
-    (activePps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
-  uint32_t sizeOfUpperLeftGroup = activePps->sliceGroupChangeDirectionFlag
-                                    ? (PicSizeInMapUnits - mapUnitsInSliceGroup0)
-                                    : mapUnitsInSliceGroup0;
-  uint32_t k = 0;
-  for (uint32_t j = 0; j < coding.picWidthMbs; j++)
-    for (uint32_t i = 0; i < coding.picHeightMapUnits; i++)
-      if (k++ < sizeOfUpperLeftGroup)
-        mapUnitToSliceGroupMap[i * coding.picWidthMbs + j] = activePps->sliceGroupChangeDirectionFlag;
-      else
-        mapUnitToSliceGroupMap[i * coding.picWidthMbs + j] = 1 - activePps->sliceGroupChangeDirectionFlag;
-  }
-//}}}
-//{{{
-void cDecoder264::fmoGenerateType6MapUnitMap (uint32_t PicSizeInMapUnits) {
-// Generate explicit slice group map type MapUnit map (type 6)
-
-  for (uint32_t i = 0; i < PicSizeInMapUnits; i++)
-    mapUnitToSliceGroupMap[i] = activePps->sliceGroupId[i];
-  }
-//}}}
-
-//{{{
-int cDecoder264::fmoGenerateMapUnitToSliceGroupMap (cSlice* slice) {
-// Generates mapUnitToSliceGroupMap, called every time a new PPS is used
-
-  uint32_t NumSliceGroupMapUnits = (activeSps->picHeightMapUnitsMinus1+1) * (activeSps->picWidthMbsMinus1+1);
-
-  if (activePps->sliceGroupMapType == 6)
-    if ((activePps->picSizeMapUnitsMinus1 + 1) != NumSliceGroupMapUnits)
-      error ("wrong activePps->picSizeMapUnitsMinus1 for used activeSps and FMO type 6");
-
-  // allocate memory for mapUnitToSliceGroupMap
-  if (mapUnitToSliceGroupMap)
-    free (mapUnitToSliceGroupMap);
-  mapUnitToSliceGroupMap = (int*)malloc ((NumSliceGroupMapUnits) * sizeof (int));
-
-  if (activePps->numSliceGroupsMinus1 == 0) {
-    // only one slice group
-    memset (mapUnitToSliceGroupMap, 0, NumSliceGroupMapUnits * sizeof (int));
-    return 0;
-    }
-
-  switch (activePps->sliceGroupMapType) {
-    case 0:
-      fmoGenerateType0MapUnitMap (NumSliceGroupMapUnits);
-      break;
-    case 1:
-      fmoGenerateType1MapUnitMap (NumSliceGroupMapUnits);
-      break;
-    case 2:
-      fmoGenerateType2MapUnitMap (NumSliceGroupMapUnits);
-      break;
-    case 3:
-      fmoGenerateType3MapUnitMap (NumSliceGroupMapUnits, slice);
-      break;
-    case 4:
-      fmoGenerateType4MapUnitMap (NumSliceGroupMapUnits, slice);
-      break;
-    case 5:
-      fmoGenerateType5MapUnitMap (NumSliceGroupMapUnits, slice);
-      break;
-    case 6:
-      fmoGenerateType6MapUnitMap (NumSliceGroupMapUnits);
-      break;
-    default:
-      error ("Illegal sliceGroupMapType");
-      exit (-1);
-    }
-
-  return 0;
-  }
-//}}}
-//{{{
-int cDecoder264::fmoGenerateMbToSliceGroupMap (cSlice *slice) {
-// Generates mbToSliceGroupMap from mapUnitToSliceGroupMap
-
-  // allocate memory for mbToSliceGroupMap
-  free (mbToSliceGroupMap);
-  mbToSliceGroupMap = (int*)malloc ((picSizeInMbs) * sizeof (int));
-
-  if ((activeSps->frameMbOnly)|| slice->fieldPic) {
-    int* mbToSliceGroupMap1 = mbToSliceGroupMap;
-    int* mapUnitToSliceGroupMap1 = mapUnitToSliceGroupMap;
-    for (uint32_t i = 0; i < picSizeInMbs; i++)
-      *mbToSliceGroupMap1++ = *mapUnitToSliceGroupMap1++;
-    }
-  else {
-    if (activeSps->mbAffFlag  &&  (!slice->fieldPic))
-      for (uint32_t i = 0; i < picSizeInMbs; i++)
-        mbToSliceGroupMap[i] = mapUnitToSliceGroupMap[i/2];
-    else
-      for (uint32_t i = 0; i < picSizeInMbs; i++)
-        mbToSliceGroupMap[i] = mapUnitToSliceGroupMap[(i/(2*coding.picWidthMbs)) *
-                                 coding.picWidthMbs + (i%coding.picWidthMbs)];
-    }
-
-  return 0;
-  }
-//}}}
-//}}}
 //{{{
 void cDecoder264::setCoding() {
 
@@ -3692,417 +3843,267 @@ void cDecoder264::setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* outp
   output->yuvFormat = source->yuvFormat = (eYuvFormat)sps->chromaFormatIdc;
   }
 //}}}
-
+//{{{  flexibleMacroblockOrdering
 //{{{
-bool cDecoder264::isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice) {
+void cDecoder264::initFmo (cSlice* slice) {
 
-  bool result = (NULL == picture);
-
-  result |= (oldSlice->ppsId != slice->ppsId);
-  result |= (oldSlice->frameNum != slice->frameNum);
-  result |= (oldSlice->fieldPic != slice->fieldPic);
-
-  if (slice->fieldPic && oldSlice->fieldPic)
-    result |= (oldSlice->botField != slice->botField);
-
-  result |= (oldSlice->nalRefIdc != slice->refId) && (!oldSlice->nalRefIdc || !slice->refId);
-  result |= (oldSlice->isIDR != slice->isIDR);
-
-  if (slice->isIDR && oldSlice->isIDR)
-    result |= (oldSlice->idrPicId != slice->idrPicId);
-
-  if (!activeSps->pocType) {
-    result |= (oldSlice->picOrderCountLsb != slice->picOrderCountLsb);
-    if ((activePps->frameBotField == 1) && !slice->fieldPic)
-      result |= (oldSlice->deltaPicOrderCountBot != slice->deltaPicOrderCountBot);
-    }
-
-  if (activeSps->pocType == 1) {
-    if (!activeSps->deltaPicOrderAlwaysZero) {
-      result |= (oldSlice->deltaPicOrderCount[0] != slice->deltaPicOrderCount[0]);
-      if ((activePps->frameBotField == 1) && !slice->fieldPic)
-        result |= (oldSlice->deltaPicOrderCount[1] != slice->deltaPicOrderCount[1]);
-      }
-    }
-
-  return result;
+  fmoGenerateMapUnitToSliceGroupMap (slice);
+  fmoGenerateMbToSliceGroupMap (slice);
   }
 //}}}
 //{{{
-void cDecoder264::initRefPicture (cSlice* slice) {
+void cDecoder264::closeFmo() {
 
-  sPicture* vidRefPicture = dpb.noRefPicture;
-  int noRef = slice->framePoc < recoveryPoc;
+  free (mbToSliceGroupMap);
+  mbToSliceGroupMap = NULL;
 
-  if (coding.isSeperateColourPlane) {
-    switch (slice->colourPlaneId) {
-      case 0:
-        for (int j = 0; j < 6; j++) {
-          for (int i = 0; i < MAX_LIST_SIZE; i++) {
-            sPicture* refPicture = slice->listX[j][i];
-            if (refPicture) {
-              refPicture->noRef = noRef && (refPicture == vidRefPicture);
-              refPicture->curPixelY = refPicture->imgY;
-              }
-            }
-          }
-        break;
-      }
+  free (mapUnitToSliceGroupMap);
+  mapUnitToSliceGroupMap = NULL;
+  }
+//}}}
+
+int cDecoder264::fmoGetNumberOfSliceGroup() { return sliceGroupsNum; }
+int cDecoder264::fmoGetLastMBOfPicture() { return fmoGetLastMBInSliceGroup (fmoGetNumberOfSliceGroup() - 1); }
+int cDecoder264::fmoGetSliceGroupId (int mb) { return mbToSliceGroupMap[mb]; }
+//{{{
+int cDecoder264::fmoGetLastMBInSliceGroup (int SliceGroup) {
+
+  for (int i = picSizeInMbs-1; i >= 0; i--)
+    if (fmoGetSliceGroupId (i) == SliceGroup)
+      return i;
+
+  return -1;
+  }
+//}}}
+
+//{{{
+void cDecoder264::fmoGenerateType0MapUnitMap (uint32_t PicSizeInMapUnits) {
+// Generate interleaved slice group map type MapUnit map (type 0)
+
+  uint32_t iGroup;
+  uint32_t j;
+  uint32_t i = 0;
+  do {
+    for (iGroup = 0;
+         (iGroup <= activePps->numSliceGroupsMinus1) && (i < PicSizeInMapUnits);
+         i += activePps->runLengthMinus1[iGroup++] + 1 )
+      for (j = 0; j <= activePps->runLengthMinus1[ iGroup ] && i + j < PicSizeInMapUnits; j++ )
+        mapUnitToSliceGroupMap[i+j] = iGroup;
+    } while (i < PicSizeInMapUnits);
+  }
+//}}}
+//{{{
+void cDecoder264::fmoGenerateType1MapUnitMap (uint32_t PicSizeInMapUnits) {
+// Generate dispersed slice group map type MapUnit map (type 1)
+
+  for (uint32_t i = 0; i < PicSizeInMapUnits; i++ )
+    mapUnitToSliceGroupMap[i] =
+      ((i%coding.picWidthMbs) + (((i/coding.picWidthMbs) * (activePps->numSliceGroupsMinus1+1)) / 2))
+        % (activePps->numSliceGroupsMinus1+1);
+  }
+//}}}
+//{{{
+void cDecoder264::fmoGenerateType2MapUnitMap (uint32_t PicSizeInMapUnits) {
+// Generate foreground with left-over slice group map type MapUnit map (type 2)
+
+  int iGroup;
+  uint32_t i, x, y;
+  uint32_t yTopLeft, xTopLeft, yBottomRight, xBottomRight;
+
+  for (i = 0; i < PicSizeInMapUnits; i++ )
+    mapUnitToSliceGroupMap[i] = activePps->numSliceGroupsMinus1;
+
+  for (iGroup = activePps->numSliceGroupsMinus1 - 1 ; iGroup >= 0; iGroup--) {
+    yTopLeft = activePps->topLeft[ iGroup ] / coding.picWidthMbs;
+    xTopLeft = activePps->topLeft[ iGroup ] % coding.picWidthMbs;
+    yBottomRight = activePps->botRight[iGroup] / coding.picWidthMbs;
+    xBottomRight = activePps->botRight[iGroup] % coding.picWidthMbs;
+    for (y = yTopLeft; y <= yBottomRight; y++ )
+      for (x = xTopLeft; x <= xBottomRight; x++ )
+        mapUnitToSliceGroupMap[ y * coding.picWidthMbs + x ] = iGroup;
     }
+  }
+//}}}
+//{{{
+void cDecoder264::fmoGenerateType3MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice) {
+// Generate box-out slice group map type MapUnit map (type 3)
 
-  else {
-    int totalLists = slice->mbAffFrame ? 6 : (slice->sliceType == eSliceB ? 2 : 1);
-    for (int j = 0; j < totalLists; j++) {
-      // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid refIndex being set
-      // since currently this is done at the slice level, it seems safe to do so.
-      // Note for some reason I get now a mismatch between version 12 and this one in cabac. I wonder why.
-      for (int i = 0; i < MAX_LIST_SIZE; i++) {
-        sPicture* refPicture = slice->listX[j][i];
-        if (refPicture) {
-          refPicture->noRef = noRef && (refPicture == vidRefPicture);
-          refPicture->curPixelY = refPicture->imgY;
-          }
-        }
+  uint32_t i, k;
+  int leftBound, topBound, rightBound, bottomBound;
+  int x, y, xDir, yDir;
+  int mapUnitVacant;
+
+  uint32_t mapUnitsInSliceGroup0 = imin((activePps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
+
+  for (i = 0; i < PicSizeInMapUnits; i++ )
+    mapUnitToSliceGroupMap[i] = 2;
+
+  x = (coding.picWidthMbs - activePps->sliceGroupChangeDirectionFlag) / 2;
+  y = (coding.picHeightMapUnits - activePps->sliceGroupChangeDirectionFlag) / 2;
+
+  leftBound = x;
+  topBound = y;
+  rightBound  = x;
+  bottomBound = y;
+
+  xDir = activePps->sliceGroupChangeDirectionFlag - 1;
+  yDir = activePps->sliceGroupChangeDirectionFlag;
+
+  for (k = 0; k < PicSizeInMapUnits; k += mapUnitVacant ) {
+    mapUnitVacant = ( mapUnitToSliceGroupMap[ y * coding.picWidthMbs + x ]  ==  2 );
+    if (mapUnitVacant )
+       mapUnitToSliceGroupMap[ y * coding.picWidthMbs + x ] = ( k >= mapUnitsInSliceGroup0 );
+
+    if (xDir  ==  -1  &&  x  ==  leftBound ) {
+      leftBound = imax( leftBound - 1, 0 );
+      x = leftBound;
+      xDir = 0;
+      yDir = 2 * activePps->sliceGroupChangeDirectionFlag - 1;
+      }
+    else if (xDir  ==  1  &&  x  ==  rightBound ) {
+      rightBound = imin( rightBound + 1, (int)coding.picWidthMbs - 1 );
+      x = rightBound;
+      xDir = 0;
+      yDir = 1 - 2 * activePps->sliceGroupChangeDirectionFlag;
+      }
+    else if (yDir  ==  -1  &&  y  ==  topBound ) {
+      topBound = imax( topBound - 1, 0 );
+      y = topBound;
+      xDir = 1 - 2 * activePps->sliceGroupChangeDirectionFlag;
+      yDir = 0;
+      }
+    else if (yDir  ==  1  &&  y  ==  bottomBound ) {
+      bottomBound = imin( bottomBound + 1, (int)coding.picHeightMapUnits - 1 );
+      y = bottomBound;
+      xDir = 2 * activePps->sliceGroupChangeDirectionFlag - 1;
+      yDir = 0;
+      }
+    else {
+      x = x + xDir;
+      y = y + yDir;
       }
     }
   }
 //}}}
 //{{{
-void cDecoder264::initPicture (cSlice* slice) {
+void cDecoder264::fmoGenerateType4MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice) {
+// Generate raster scan slice group map type MapUnit map (type 4)
 
-  cDpb* dpb = slice->dpb;
+  uint32_t mapUnitsInSliceGroup0 = imin((activePps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
+  uint32_t sizeOfUpperLeftGroup = activePps->sliceGroupChangeDirectionFlag ? ( PicSizeInMapUnits - mapUnitsInSliceGroup0 ) : mapUnitsInSliceGroup0;
 
-  picHeightInMbs = coding.frameHeightMbs / (slice->fieldPic+1);
-  picSizeInMbs = coding.picWidthMbs * picHeightInMbs;
-  coding.frameSizeMbs = coding.picWidthMbs * coding.frameHeightMbs;
+  for (uint32_t i = 0; i < PicSizeInMapUnits; i++ )
+    if (i < sizeOfUpperLeftGroup )
+      mapUnitToSliceGroupMap[i] = activePps->sliceGroupChangeDirectionFlag;
+    else
+      mapUnitToSliceGroupMap[i] = 1 - activePps->sliceGroupChangeDirectionFlag;
+  }
+//}}}
+//{{{
+void cDecoder264::fmoGenerateType5MapUnitMap (uint32_t PicSizeInMapUnits, cSlice* slice) {
+// Generate wipe slice group map type MapUnit map (type 5) *
 
-  if (picture) // slice loss
-    endDecodeFrame();
-
-  if (recoveryPoint)
-    recoveryFrameNum = (slice->frameNum + recoveryFrameCount) % coding.maxFrameNum;
-  if (slice->isIDR)
-    recoveryFrameNum = slice->frameNum;
-  if (!recoveryPoint &&
-      (slice->frameNum != preFrameNum) &&
-      (slice->frameNum != (preFrameNum + 1) % coding.maxFrameNum)) {
-    if (!activeSps->allowGapsFrameNum) {
-      //{{{  picture error conceal
-      if (param.concealMode) {
-        if ((slice->frameNum) < ((preFrameNum + 1) % coding.maxFrameNum)) {
-          /* Conceal lost IDR frames and any frames immediately following the IDR.
-          // Use frame copy for these since lists cannot be formed correctly for motion copy*/
-          concealMode = 1;
-          idrConcealFlag = 1;
-          concealLostFrames (dpb, slice);
-          // reset to original conceal mode for future drops
-          concealMode = param.concealMode;
-          }
-        else {
-          // reset to original conceal mode for future drops
-          concealMode = param.concealMode;
-          idrConcealFlag = 0;
-          concealLostFrames (dpb, slice);
-          }
-        }
+  uint32_t mapUnitsInSliceGroup0 = imin (
+    (activePps->sliceGroupChangeRateMius1 + 1) * slice->sliceGroupChangeCycle, PicSizeInMapUnits);
+  uint32_t sizeOfUpperLeftGroup = activePps->sliceGroupChangeDirectionFlag
+                                    ? (PicSizeInMapUnits - mapUnitsInSliceGroup0)
+                                    : mapUnitsInSliceGroup0;
+  uint32_t k = 0;
+  for (uint32_t j = 0; j < coding.picWidthMbs; j++)
+    for (uint32_t i = 0; i < coding.picHeightMapUnits; i++)
+      if (k++ < sizeOfUpperLeftGroup)
+        mapUnitToSliceGroupMap[i * coding.picWidthMbs + j] = activePps->sliceGroupChangeDirectionFlag;
       else
-        // Advanced Error Concealment would be called here to combat unintentional loss of pictures
-        error ("initPicture - unintentional loss of picture\n");
-      }
-      //}}}
-    if (!concealMode)
-      fillFrameNumGap (this, slice);
+        mapUnitToSliceGroupMap[i * coding.picWidthMbs + j] = 1 - activePps->sliceGroupChangeDirectionFlag;
+  }
+//}}}
+//{{{
+void cDecoder264::fmoGenerateType6MapUnitMap (uint32_t PicSizeInMapUnits) {
+// Generate explicit slice group map type MapUnit map (type 6)
+
+  for (uint32_t i = 0; i < PicSizeInMapUnits; i++)
+    mapUnitToSliceGroupMap[i] = activePps->sliceGroupId[i];
+  }
+//}}}
+
+//{{{
+int cDecoder264::fmoGenerateMapUnitToSliceGroupMap (cSlice* slice) {
+// Generates mapUnitToSliceGroupMap, called every time a new PPS is used
+
+  uint32_t NumSliceGroupMapUnits = (activeSps->picHeightMapUnitsMinus1+1) * (activeSps->picWidthMbsMinus1+1);
+
+  if (activePps->sliceGroupMapType == 6)
+    if ((activePps->picSizeMapUnitsMinus1 + 1) != NumSliceGroupMapUnits)
+      error ("wrong activePps->picSizeMapUnitsMinus1 for used activeSps and FMO type 6");
+
+  // allocate memory for mapUnitToSliceGroupMap
+  if (mapUnitToSliceGroupMap)
+    free (mapUnitToSliceGroupMap);
+  mapUnitToSliceGroupMap = (int*)malloc ((NumSliceGroupMapUnits) * sizeof (int));
+
+  if (activePps->numSliceGroupsMinus1 == 0) {
+    // only one slice group
+    memset (mapUnitToSliceGroupMap, 0, NumSliceGroupMapUnits * sizeof (int));
+    return 0;
     }
 
-  if (slice->refId)
-    preFrameNum = slice->frameNum;
-
-  // calculate POC
-  decodePOC (slice);
-
-  if (recoveryFrameNum == (int)slice->frameNum && recoveryPoc == 0x7fffffff)
-    recoveryPoc = slice->framePoc;
-  if (slice->refId)
-    lastRefPicPoc = slice->framePoc;
-  if ((slice->picStructure == eFrame) || (slice->picStructure == eTopField))
-    getTime (&debug.startTime);
-
-  picture = sPicture::allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
-  picture->topPoc = slice->topPoc;
-  picture->botPoc = slice->botPoc;
-  picture->framePoc = slice->framePoc;
-  picture->qp = slice->qp;
-  picture->sliceQpDelta = slice->sliceQpDelta;
-  picture->chromaQpOffset[0] = activePps->chromaQpOffset;
-  picture->chromaQpOffset[1] = activePps->chromaQpOffset2;
-  picture->codingType = slice->picStructure == eFrame ?
-    (slice->mbAffFrame? eFrameMbPairCoding:eFrameCoding) : eFieldCoding;
-
-  // reset all variables of the error conceal instance before decoding of every frame.
-  // here the third parameter should, if perfectly, be equal to the number of slices per frame.
-  // using little value is ok, the code will allocate more memory if the slice number is larger
-  ercReset (ercErrorVar, picSizeInMbs, picSizeInMbs, picture->sizeX);
-
-  ercMvPerMb = 0;
-  switch (slice->picStructure ) {
-    //{{{
-    case eTopField:
-      picture->poc = slice->topPoc;
-      idrFrameNum *= 2;
+  switch (activePps->sliceGroupMapType) {
+    case 0:
+      fmoGenerateType0MapUnitMap (NumSliceGroupMapUnits);
       break;
-    //}}}
-    //{{{
-    case eBotField:
-      picture->poc = slice->botPoc;
-      idrFrameNum = idrFrameNum * 2 + 1;
+    case 1:
+      fmoGenerateType1MapUnitMap (NumSliceGroupMapUnits);
       break;
-    //}}}
-    //{{{
-    case eFrame:
-      picture->poc = slice->framePoc;
+    case 2:
+      fmoGenerateType2MapUnitMap (NumSliceGroupMapUnits);
       break;
-    //}}}
-    //{{{
+    case 3:
+      fmoGenerateType3MapUnitMap (NumSliceGroupMapUnits, slice);
+      break;
+    case 4:
+      fmoGenerateType4MapUnitMap (NumSliceGroupMapUnits, slice);
+      break;
+    case 5:
+      fmoGenerateType5MapUnitMap (NumSliceGroupMapUnits, slice);
+      break;
+    case 6:
+      fmoGenerateType6MapUnitMap (NumSliceGroupMapUnits);
+      break;
     default:
-      error ("picStructure not initialized");
-    //}}}
+      error ("Illegal sliceGroupMapType");
+      exit (-1);
     }
 
-  if (coding.sliceType > eSliceSI) {
-    setEcFlag (SE_PTYPE);
-    coding.sliceType = eSliceP;  // concealed element
-    }
-
-  // cavlc init
-  if (activePps->entropyCoding == eCavlc)
-    memset (nzCoeff[0][0][0], -1, picSizeInMbs * 48 *sizeof(uint8_t)); // 3 * 4 * 4
-
-  // Set the sliceNum member of each MB to -1, to ensure correct when packet loss occurs
-  // TO set sMacroBlock Map (mark all MBs as 'have to be concealed')
-  if (coding.isSeperateColourPlane) {
-    for (int nplane = 0; nplane < MAX_PLANE; ++nplane ) {
-      sMacroBlock* mb = mbDataJV[nplane];
-      char* intraBlock = intraBlockJV[nplane];
-      for (int i = 0; i < (int)picSizeInMbs; ++i) {
-        //{{{  resetMb
-        mb->errorFlag = 1;
-        mb->dplFlag = 0;
-        mb->sliceNum = -1;
-        mb++;
-        }
-        //}}}
-      memset (predModeJV[nplane][0], DC_PRED, 16 * coding.frameHeightMbs * coding.picWidthMbs * sizeof(char));
-      if (activePps->hasConstrainedIntraPred)
-        for (int i = 0; i < (int)picSizeInMbs; ++i)
-          intraBlock[i] = 1;
-      }
-    }
-  else {
-    sMacroBlock* mb = mbData;
-    for (int i = 0; i < (int)picSizeInMbs; ++i) {
-      //{{{  resetMb
-      mb->errorFlag = 1;
-      mb->dplFlag = 0;
-      mb->sliceNum = -1;
-      mb++;
-      }
-      //}}}
-    if (activePps->hasConstrainedIntraPred)
-      for (int i = 0; i < (int)picSizeInMbs; ++i)
-        intraBlock[i] = 1;
-    memset (predMode[0], DC_PRED, 16 * coding.frameHeightMbs * coding.picWidthMbs * sizeof(char));
-    }
-
-  picture->sliceType = coding.sliceType;
-  picture->usedForRef = (slice->refId != 0);
-  picture->isIDR = slice->isIDR;
-  picture->noOutputPriorPicFlag = slice->noOutputPriorPicFlag;
-  picture->longTermRefFlag = slice->longTermRefFlag;
-  picture->adaptRefPicBufFlag = slice->adaptRefPicBufFlag;
-  picture->decRefPicMarkBuffer = slice->decRefPicMarkBuffer;
-  slice->decRefPicMarkBuffer = NULL;
-
-  picture->mbAffFrame = slice->mbAffFrame;
-  picture->picWidthMbs = coding.picWidthMbs;
-
-  getMbBlockPos = picture->mbAffFrame ? getMbBlockPosMbaff : getMbBlockPosNormal;
-  getNeighbour = picture->mbAffFrame ? getAffNeighbour : getNonAffNeighbour;
-
-  picture->picNum = slice->frameNum;
-  picture->frameNum = slice->frameNum;
-  picture->recoveryFrame = (uint32_t)((int)slice->frameNum == recoveryFrameNum);
-  picture->codedFrame = (slice->picStructure == eFrame);
-  picture->chromaFormatIdc = (eYuvFormat)activeSps->chromaFormatIdc;
-  picture->frameMbOnly = activeSps->frameMbOnly;
-  picture->hasCrop = activeSps->hasCrop;
-  if (picture->hasCrop) {
-    picture->cropLeft = activeSps->cropLeft;
-    picture->cropRight = activeSps->cropRight;
-    picture->cropTop = activeSps->cropTop;
-    picture->cropBot = activeSps->cropBot;
-    }
-
-  if (coding.isSeperateColourPlane) {
-    decPictureJV[0] = picture;
-    decPictureJV[1] = sPicture::allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
-    copyDecPictureJV (decPictureJV[1], decPictureJV[0] );
-    decPictureJV[2] = sPicture::allocPicture (this, slice->picStructure, coding.width, coding.height, widthCr, heightCr, 1);
-    copyDecPictureJV (decPictureJV[2], decPictureJV[0] );
-    }
+  return 0;
   }
 //}}}
 //{{{
-void cDecoder264::initSlice (cSlice* slice) {
+int cDecoder264::fmoGenerateMbToSliceGroupMap (cSlice *slice) {
+// Generates mbToSliceGroupMap from mapUnitToSliceGroupMap
 
-  activeSps = slice->activeSps;
-  activePps = slice->activePps;
+  // allocate memory for mbToSliceGroupMap
+  free (mbToSliceGroupMap);
+  mbToSliceGroupMap = (int*)malloc ((picSizeInMbs) * sizeof (int));
 
-  slice->initLists (slice);
-  reorderLists (slice);
-
-  if (slice->picStructure == eFrame)
-    slice->initMbAffLists (dpb.noRefPicture);
-
-  // update reference flags and set current refFlag
-  if (!(slice->redundantPicCount && (prevFrameNum == slice->frameNum)))
-    for (int i = 16; i > 0; i--)
-      slice->refFlag[i] = slice->refFlag[i-1];
-  slice->refFlag[0] = (slice->redundantPicCount == 0) ? isPrimaryOk : isRedundantOk;
-
-  if (!slice->activeSps->chromaFormatIdc ||
-      (slice->activeSps->chromaFormatIdc == 3)) {
-    slice->infoCbpIntra = cBitStream::infoCbpIntraOther;
-    slice->infoCbpInter = cBitStream::infoCbpInterOther;
+  if ((activeSps->frameMbOnly)|| slice->fieldPic) {
+    int* mbToSliceGroupMap1 = mbToSliceGroupMap;
+    int* mapUnitToSliceGroupMap1 = mapUnitToSliceGroupMap;
+    for (uint32_t i = 0; i < picSizeInMbs; i++)
+      *mbToSliceGroupMap1++ = *mapUnitToSliceGroupMap1++;
     }
   else {
-    slice->infoCbpIntra = cBitStream::infoCbpIntraNormal;
-    slice->infoCbpInter = cBitStream::infoCbpInterNormal;
-    }
-  }
-//}}}
-//{{{
-void cDecoder264::reorderLists (cSlice* slice) {
-
-  if ((slice->sliceType != eSliceI) && (slice->sliceType != eSliceSI)) {
-    if (slice->refPicReorderFlag[LIST_0])
-      slice->reorderRefPicList (LIST_0);
-    if (dpb.noRefPicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
-      cLog::log (LOGERROR, "------ refPicList0[%d] no refPic %s",
-                 slice->numRefIndexActive[LIST_0]-1, nonConformingStream ? "conform":"");
+    if (activeSps->mbAffFlag  &&  (!slice->fieldPic))
+      for (uint32_t i = 0; i < picSizeInMbs; i++)
+        mbToSliceGroupMap[i] = mapUnitToSliceGroupMap[i/2];
     else
-      slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
+      for (uint32_t i = 0; i < picSizeInMbs; i++)
+        mbToSliceGroupMap[i] = mapUnitToSliceGroupMap[(i/(2*coding.picWidthMbs)) *
+                                 coding.picWidthMbs + (i%coding.picWidthMbs)];
     }
 
-  if (slice->sliceType == eSliceB) {
-    if (slice->refPicReorderFlag[LIST_1])
-      slice->reorderRefPicList (LIST_1);
-    if (dpb.noRefPicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
-      cLog::log (LOGERROR, "------ refPicList1[%d] no refPic %s",
-                 slice->numRefIndexActive[LIST_0] - 1, nonConformingStream ? "conform" : "");
-    else
-      slice->listXsize[1] = (char)slice->numRefIndexActive[LIST_1];
-    }
-
-  slice->freeRefPicListReorderBuffer();
+  return 0;
   }
 //}}}
-//{{{
-void cDecoder264::copySliceInfo (cSlice* slice, sOldSlice* oldSlice) {
-
-  oldSlice->ppsId = slice->ppsId;
-  oldSlice->frameNum = slice->frameNum;
-  oldSlice->fieldPic = slice->fieldPic;
-
-  if (slice->fieldPic)
-    oldSlice->botField = slice->botField;
-
-  oldSlice->nalRefIdc = slice->refId;
-
-  oldSlice->isIDR = (uint8_t)slice->isIDR;
-  if (slice->isIDR)
-    oldSlice->idrPicId = slice->idrPicId;
-
-  if (activeSps->pocType == 0) {
-    oldSlice->picOrderCountLsb = slice->picOrderCountLsb;
-    oldSlice->deltaPicOrderCountBot = slice->deltaPicOrderCountBot;
-    }
-  else if (activeSps->pocType == 1) {
-    oldSlice->deltaPicOrderCount[0] = slice->deltaPicOrderCount[0];
-    oldSlice->deltaPicOrderCount[1] = slice->deltaPicOrderCount[1];
-    }
-  }
-//}}}
-//{{{
-void cDecoder264::useParameterSet (cSlice* slice) {
-
-  if (!pps[slice->ppsId].ok)
-    cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid ppsId:{}", slice->ppsId));
-
-  if (!sps[pps->spsId].ok)
-    cLog::log (LOGINFO, fmt::format ("useParameterSet - invalid spsId:{} ppsId:{}", slice->ppsId, pps->spsId));
-
-  if (&sps[pps->spsId] != activeSps) {
-    //{{{  new sps
-    if (picture)
-      endDecodeFrame();
-
-    activeSps = &sps[pps->spsId];
-
-    if (activeSps->hasBaseLine() && !dpb.isInitDone())
-      setCodingParam (sps);
-    setCoding();
-    initGlobalBuffers();
-
-    if (!noOutputPriorPicFlag)
-      dpb.flush();
-    dpb.init (this, 0);
-
-    // enable error conceal
-    ercInit (this, coding.width, coding.height, 1);
-    if (picture) {
-      ercReset (ercErrorVar, picSizeInMbs, picSizeInMbs, picture->sizeX);
-      ercMvPerMb = 0;
-      }
-
-    setFormat (activeSps, &param.source, &param.output);
-
-    debug.profileString = fmt::format ("Profile:{} {}x{} {}x{} yuv{} {}:{}:{}",
-                                       coding.profileIdc,
-                                       param.source.width[0], param.source.height[0],
-                                       coding.width, coding.height,
-                                       coding.yuvFormat == YUV400 ? " 400 ":
-                                         coding.yuvFormat == YUV420 ? " 420":
-                                           coding.yuvFormat == YUV422 ? " 422":" 4:4:4",
-                                       param.source.bitDepth[0],
-                                       param.source.bitDepth[1],
-                                       param.source.bitDepth[2]);
-    cLog::log (LOGINFO, debug.profileString);
-    }
-    //}}}
-
-  if (&pps[slice->ppsId] != activePps) {
-    //{{{  new pps
-    if (picture) // only on slice loss
-      endDecodeFrame();
-
-    activePps = &pps[slice->ppsId];
-    }
-    //}}}
-
-  // slice->dataPartitionMode is set by read_new_slice (NALU first uint8_t ok there)
-  if (activePps->entropyCoding == eCavlc) {
-    slice->nalStartCode = cBitStream::vlcStartCode;
-    for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = cBitStream::readSyntaxElementVLC;
-    }
-  else {
-    slice->nalStartCode = cabacStartCode;
-    for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCabac;
-    }
-
-  coding.sliceType = slice->sliceType;
-  }
 //}}}
 
 // output

@@ -823,14 +823,26 @@ private:
   void mbAffPostProc();
 
   // slice
+  bool isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice);
+  void initPicture (cSlice* slice);
+  void initRefPicture (cSlice* slice);
+  void initSlice (cSlice* slice);
+  void reorderLists (cSlice* slice);
+  void copySliceInfo (cSlice* slice, sOldSlice* oldSlice);
+  void useParameterSet (cSlice* slice);
+
   int readNalu (cSlice* slice);
   void readDecRefPicMarking (cBitStream& bitStream, cSlice* slice);
   void readSliceHeader (cBitStream& bitStream, cSlice* slice);
   void decodeSlice (cSlice* slice);
+
   void endDecodeFrame();
   int decodeFrame();
 
-  //{{{  fmo
+  void setCoding();
+  void setCodingParam (cSps* sps);
+  void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
+  //{{{  flexibleMacroBlockOrdering
   void initFmo (cSlice* slice);
   void closeFmo();
 
@@ -849,10 +861,8 @@ private:
   int fmoGenerateMapUnitToSliceGroupMap (cSlice* slice);
   int fmoGenerateMbToSliceGroupMap (cSlice* slice);
   //}}}
-  void setCoding();
-  void setCodingParam (cSps* sps);
-  void setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output);
 
+  // output
   void allocDecodedPicBuffers (sDecodedPic* decodedPic, sPicture* picture,
                                int frameSize, int lumaSize, int lumaSizeX, int lumaSizeY,
                                int chromaSizeX, int chromaSizeY);
@@ -862,14 +872,6 @@ private:
   void writePicture (sPicture* picture, int realStructure);
   void writeUnpairedField (cFrameStore* frameStore);
   void flushDirectOutput();
-
-  bool isNewPicture (sPicture* picture, cSlice* slice, sOldSlice* oldSlice);
-  void initPicture (cSlice* slice);
-  void initRefPicture (cSlice* slice);
-  void initSlice (cSlice* slice);
-  void reorderLists (cSlice* slice);
-  void copySliceInfo (cSlice* slice, sOldSlice* oldSlice);
-  void useParameterSet (cSlice* slice);
 
   void makeFramePictureJV();
   };

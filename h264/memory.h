@@ -1,7 +1,8 @@
 #pragma once
 #include "global.h"
 
-int** new_mem2Dint (int dim0, int dim1);
+int** newMem2Dint (int dim0, int dim1);
+
 int getMem2D (uint8_t*** array2D, int dim0, int dim1);
 int getMem2Dint (int*** array2D, int dim0, int dim1);
 int getMem3D (uint8_t**** array3D, int dim0, int dim1, int dim2);
