@@ -22,7 +22,7 @@ namespace {
   //}}}
   }
 
-// cAnnexB
+// cAnnexB - stream with startCodes
 //{{{
 cAnnexB::cAnnexB (cDecoder264* decoder, uint32_t size) {
 
@@ -53,7 +53,7 @@ void cAnnexB::reset() {
 //}}}
 //{{{
 uint32_t cAnnexB::readNalu() {
-// dumb nalu parser, get nalu from after nextstartCode to next startCode or end
+// extract nalu from stream between startCodes or bufferEnd
 // - !!! could be faster !!!
 
   // find leading startCode, or bufferEnd
@@ -61,13 +61,13 @@ uint32_t cAnnexB::readNalu() {
   while (!startCodeFound && (bufferLeft >= 4)) {
     if (findStartCode (bufferPtr, 2)) {
       startCodeFound = true;
-      startCodeLong = false;
+      longStartCode = false;
       bufferPtr += 3;
       bufferLeft -= 3;
       }
     else if (findStartCode (bufferPtr, 3)) {
       startCodeFound = true;
-      startCodeLong = true;
+      longStartCode = true;
       bufferPtr += 4;
       bufferLeft -= 4;
       }
@@ -89,6 +89,7 @@ uint32_t cAnnexB::readNalu() {
     else if ((bufferLeft >= 4) && findStartCode (bufferPtr, 3)) // 0x00000001 startCode, return length
       return naluBytes;
     else {
+      // !!! only need to manipulate pointers, cNalu memcpy before emulation prevention byte removal !!!
       *naluBufferPtr++ = *bufferPtr++;
       naluBytes++;
       bufferLeft--;
@@ -101,18 +102,18 @@ uint32_t cAnnexB::readNalu() {
 //}}}
 
 
-// cNalu
+// cNalu - nalu extracted from stream
 //{{{
 cNalu::cNalu (uint32_t size) {
 
-  buf = (uint8_t*)malloc (size);
+  buffer = (uint8_t*)malloc (size);
   allocBufferSize = size;
   }
 //}}}
 //{{{
 cNalu::~cNalu() {
 
-  free (buf);
+  free (buffer);
   }
 //}}}
 
@@ -157,7 +158,7 @@ string cNalu::getNaluString() const {
 
   return fmt::format ("{} {}:{}:{}:{}:{}",
                       naluTypeString,
-                      startCodeLong ? 'l' : 's',
+                      longStartCode ? 'l' : 's',
                       forbiddenBit,
                       (int)refId,
                       (int)unitType,
@@ -167,17 +168,20 @@ string cNalu::getNaluString() const {
 
 //{{{
 uint32_t cNalu::readNalu (cDecoder264* decoder) {
+// simple parse of nalu, copy to own buffer before emulation preventation byte removal
 
   naluBytes = decoder->annexB->readNalu();
   if (naluBytes == 0)
     return naluBytes;
 
-  memcpy (buf, decoder->annexB->getNaluBuffer(), naluBytes);
+  // copy annexB data our buffer
+  memcpy (buffer, decoder->annexB->getNaluData(), naluBytes);
 
-  startCodeLong = decoder->annexB->getStartCodeLong();
-  forbiddenBit = ((*buf) >> 7) & 1;
-  refId = (eNalRefId)(((*buf) >> 5) & 3);
-  unitType = (eNaluType)((*buf) & 0x1f);
+  longStartCode = decoder->annexB->getLongStartCode();
+  forbiddenBit = (*buffer >> 7) & 1;
+  refId = eNalRefId((*buffer >> 5) & 3);
+  unitType = eNaluType(*buffer & 0x1f);
+
   if (decoder->param.naluDebug)
     debug();
 
@@ -185,6 +189,8 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
     cDecoder264::error ("NALU with forbiddenBit set");
 
   checkZeroByteNonVCL (decoder);
+
+  // remove emulation preventation bytes
   NALUtoRBSP();
   if (naluBytes < 0)
     cDecoder264::error ("NALU invalid startcode");
@@ -229,7 +235,7 @@ int cNalu::NALUtoRBSP() {
 // - remove emulation prevention byte sequences
 // - what is cabac_zero_word problem ???
 
-  uint8_t* bitStreamBuffer = buf;
+  uint8_t* bitStreamBuffer = buffer;
   int endBytePos = naluBytes;
   if (endBytePos < 1) {
     naluBytes = endBytePos;
@@ -246,16 +252,14 @@ int cNalu::NALUtoRBSP() {
       }
 
     if ((count == 2) && (bitStreamBuffer[i] == 0x03)) {
-      // check the 4th uint8_t after 0x000003,
-      // except when cabac_zero_word is used
-      // , in which case the last three bytes of this NAL unit must be 0x000003
+      // check the 4th uint8_t after 0x000003, except when cabac_zero_word is used
+      // - in which case the last three bytes of this NAL unit must be 0x000003
       if ((i < endBytePos-1) && (bitStreamBuffer[i+1] > 0x03)) {
         naluBytes = -1;
         return naluBytes;
         }
 
-      // if cabac_zero_word, final uint8_t of NALunit(0x03) is discarded
-      // and the last two bytes of RBSP must be 0x0000
+      // if cabac_zero_word, final uint8_t of NALunit(0x03) is discarded, last two bytes RBSP must be 0x0000
       if (i == endBytePos-1) {
         naluBytes = j;
         return naluBytes;

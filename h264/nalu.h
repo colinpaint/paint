@@ -8,8 +8,8 @@ public:
   ~cAnnexB();
 
   // gets
-  bool getStartCodeLong() const { return startCodeLong; }
-  uint8_t* getNaluBuffer() { return naluBuffer; }
+  bool getLongStartCode() const { return longStartCode; }
+  uint8_t* getNaluData() { return naluBuffer; }
 
   // actions
   void open (uint8_t* chunk, size_t chunkSize);
@@ -27,7 +27,7 @@ private:
   size_t    bufferLeft = 0;
 
   bool      startCodeFound = false;
-  bool      startCodeLong = false;
+  bool      longStartCode = false;
   uint8_t*  naluBuffer = nullptr;
   };
 
@@ -67,18 +67,22 @@ public:
   ~cNalu();
 
   // gets
-  std::string getNaluString() const;
-  uint8_t* getBuffer() { return buf; }
-  uint32_t getLength() const { return (uint32_t)naluBytes; }
-  uint8_t* getPayload() { return buf+1; }
-  uint32_t getPayloadLength() const { return (uint32_t)(naluBytes-1); }
+  uint8_t* getBuffer() { return buffer; }
+  uint32_t getLength() const { return uint32_t(naluBytes); }
+
+  uint8_t* getPayload() { return buffer+1; }
+  uint32_t getPayloadLength() const { return uint32_t(naluBytes-1); }
   eNaluType getUnitType() const { return unitType; }
   eNalRefId getRefId() const { return refId; }
 
+  std::string getNaluString() const;
+
   // actions
   uint32_t readNalu (cDecoder264* decoder);
+
   void checkZeroByteVCL (cDecoder264* decoder);
   void checkZeroByteNonVCL (cDecoder264* decoder);
+
   int NALUtoRBSP();
   int RBSPtoSODB (uint8_t* bitStreamBuffer);
 
@@ -86,12 +90,12 @@ private:
   void debug();
 
   // vars
-  uint8_t*   buf = nullptr;
+  uint8_t*  buffer = nullptr;
   uint32_t  allocBufferSize = 0;
-  int32_t    naluBytes = 0;
+  int32_t   naluBytes = 0;
 
-  bool       startCodeLong = false;
-  bool       forbiddenBit = false;
-  eNaluType  unitType = NALU_TYPE_NONE;
+  bool      longStartCode = false;
+  bool      forbiddenBit = false;
+  eNaluType unitType = NALU_TYPE_NONE;
   eNalRefId refId = NALU_PRIORITY_DISPOSABLE;
   };
