@@ -1473,7 +1473,7 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
 
   // init nalu, annexB
   decoder->nalu = new cNalu (sDataPartition::MAX_CODED_FRAME_SIZE);
-  decoder->annexB = new cAnnexB (decoder);
+  decoder->annexB = new cAnnexB (decoder, sDataPartition::MAX_CODED_FRAME_SIZE);
   decoder->annexB->open (chunk, chunkSize);
 
   // init slice
@@ -2653,14 +2653,14 @@ int cDecoder264::readNalu (cSlice* slice) {
       return eEOS;
 
   processNalu:
-    switch (nalu->unitType) {
+    switch (nalu->getUnitType()) {
       case cNalu::NALU_TYPE_SLICE:
       //{{{
       case cNalu::NALU_TYPE_IDR: {
         //{{{  recovery
-        if (recoveryPoint || nalu->unitType == cNalu::NALU_TYPE_IDR) {
+        if (recoveryPoint || (nalu->getUnitType() == cNalu::NALU_TYPE_IDR)) {
           if (!recoveryPointFound) {
-            if (nalu->unitType != cNalu::NALU_TYPE_IDR) {
+            if (nalu->getUnitType() != cNalu::NALU_TYPE_IDR) {
               cLog::log (LOGINFO,  "-> decoding without IDR");
               nonConformingStream = true;
               }
@@ -2673,8 +2673,8 @@ int cDecoder264::readNalu (cSlice* slice) {
           break;
         //}}}
 
-        slice->isIDR = (nalu->unitType == cNalu::NALU_TYPE_IDR);
-        slice->refId = nalu->refId;
+        slice->isIDR = (nalu->getUnitType() == cNalu::NALU_TYPE_IDR);
+        slice->refId = nalu->getRefId();
 
         slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
@@ -2682,7 +2682,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         bitStream.readLen = 0;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = 0;
-        memcpy (bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+        memcpy (bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
         bitStream.bitStreamLen = nalu->RBSPtoSODB (bitStream.bitStreamBuffer);
         bitStream.codeLen = bitStream.bitStreamLen;
         readSliceHeader (bitStream, slice);
@@ -2721,8 +2721,8 @@ int cDecoder264::readNalu (cSlice* slice) {
         // debug
         debug.sliceType = slice->sliceType;
         debug.sliceString = fmt::format ("{}:{}:{:6d} -> pps:{} frame:{:2d} {} {}{}",
-                                         (nalu->unitType == cNalu::NALU_TYPE_IDR) ? "IDR":"SLC",
-                                         slice->refId, nalu->len,
+                                         (nalu->getUnitType() == cNalu::NALU_TYPE_IDR) ? "IDR" : "SLC",
+                                         slice->refId, nalu->getLength(),
                                          slice->ppsId, slice->frameNum,
                                          slice->sliceType ? (slice->sliceType == 1) ?
                                            'B' : ((slice->sliceType == 2) ? 'I':'?') : 'P',
@@ -2736,12 +2736,12 @@ int cDecoder264::readNalu (cSlice* slice) {
 
       //{{{
       case cNalu::NALU_TYPE_DPA: {
-        cLog::log (LOGINFO, "DPA id:%d:%d len:%d", slice->refId, slice->sliceType, nalu->len);
+        cLog::log (LOGINFO, "DPA id:%d:%d len:%d", slice->refId, slice->sliceType, nalu->getLength());
         if (!recoveryPointFound)
           break;
 
         slice->isIDR = false;
-        slice->refId = nalu->refId;
+        slice->refId = nalu->getRefId();
 
         // read dataPartition A
         slice->noDataPartitionB = 1;
@@ -2751,7 +2751,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         cBitStream& bitStream = slice->dataPartitions[0].bitStream;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = bitStream.readLen = 0;
-        memcpy (&bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
+        memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
         bitStream.codeLen = bitStream.bitStreamLen = nalu->RBSPtoSODB (bitStream.bitStreamBuffer);
         readSliceHeader (bitStream, slice);
 
@@ -2778,17 +2778,17 @@ int cDecoder264::readNalu (cSlice* slice) {
 
         if (!nalu->readNalu (this))
           return curHeader;
-        if (nalu->unitType == cNalu::NALU_TYPE_DPB) {
+        if (nalu->getUnitType() == cNalu::NALU_TYPE_DPB) {
           //{{{  got nalu dataPartitionB
           bitStream = slice->dataPartitions[1].bitStream;
           bitStream.errorFlag = 0;
           bitStream.bitStreamOffset = bitStream.readLen = 0;
-          memcpy (&bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+          memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
           bitStream.codeLen = bitStream.bitStreamLen = nalu->RBSPtoSODB (bitStream.bitStreamBuffer);
           int sliceIdB = bitStream.readUeV ("NALU dataPartitionB sliceId");
           slice->noDataPartitionB = 0;
 
-          if ((sliceIdB != sliceIdA) || (nalu->lostPackets)) {
+          if (sliceIdB != sliceIdA) {
             cLog::log (LOGINFO, "NALU dataPartitionB does not match dataPartitionA");
             slice->noDataPartitionB = 1;
             slice->noDataPartitionC = 1;
@@ -2806,17 +2806,17 @@ int cDecoder264::readNalu (cSlice* slice) {
         else
           slice->noDataPartitionB = 1;
 
-        if (nalu->unitType == cNalu::NALU_TYPE_DPC) {
+        if (nalu->getUnitType() == cNalu::NALU_TYPE_DPC) {
           //{{{  got nalu dataPartitionC
           bitStream = slice->dataPartitions[2].bitStream;
           bitStream.errorFlag = 0;
           bitStream.bitStreamOffset = bitStream.readLen = 0;
-          memcpy (&bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+          memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
           bitStream.codeLen = bitStream.bitStreamLen = nalu->RBSPtoSODB (bitStream.bitStreamBuffer);
 
           slice->noDataPartitionC = 0;
           int sliceIdC = bitStream.readUeV ("NALU: dataPartitionC sliceId");
-          if ((sliceIdC != sliceIdA) || (nalu->lostPackets)) {
+          if (sliceIdC != sliceIdA) {
             cLog::log (LOGINFO, "dataPartitionC does not match dataPartitionA");
             slice->noDataPartitionC = 1;
             }
@@ -2831,8 +2831,8 @@ int cDecoder264::readNalu (cSlice* slice) {
           }
 
         // check if we read anything else than the expected dataPartitions
-        if ((nalu->unitType != cNalu::NALU_TYPE_DPB) &&
-            (nalu->unitType != cNalu::NALU_TYPE_DPC) && (!slice->noDataPartitionC))
+        if ((nalu->getUnitType() != cNalu::NALU_TYPE_DPB) &&
+            (nalu->getUnitType() != cNalu::NALU_TYPE_DPC) && (!slice->noDataPartitionC))
           goto processNalu;
 
         return curHeader;
@@ -2864,7 +2864,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         }
 
       case cNalu::NALU_TYPE_SEI:
-        processSei (nalu->buf, nalu->len, this, slice);
+        processSei (nalu->getPayload(), nalu->getPayloadLength(), this, slice);
         break;
 
       case cNalu::NALU_TYPE_AUD: break;
@@ -2873,7 +2873,7 @@ int cDecoder264::readNalu (cSlice* slice) {
       case cNalu::NALU_TYPE_EOSTREAM: break;
 
       default:
-        cLog::log (LOGINFO, "NALU:%d unknown:%d\n", nalu->len, nalu->unitType);
+        cLog::log (LOGINFO, "NALU:%d unknownType:%d\n", nalu->getLength(), nalu->getUnitType());
         break;
       }
     }

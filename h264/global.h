@@ -55,9 +55,6 @@
 #define RUNBEFORE_NUM_M1 6
 
 #define MAX_LIST_SIZE 33
-
-// Start code and Emulation Prevention need this to be defined in identical manner at encoder and decoder
-#define ZEROBYTES_SHORTSTARTCODE  2 // number of zero bytes in the int16_t start-code prefix
 //}}}
 
 //{{{
@@ -662,7 +659,6 @@ public:
 
   // nalu
   int          gotLastNalu = 0;
-  int          naluCount = 0;
   cNalu*       nalu = nullptr;
   cNalu*       pendingNalu = nullptr;
   cAnnexB*     annexB = nullptr;

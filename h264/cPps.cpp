@@ -48,15 +48,16 @@ namespace {
 //{{{
 int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
+  cPps pps;
+  pps.naluLen = nalu->getLength();
+
   sDataPartition* dataPartition = sDataPartition::allocDataPartitions (1);
   dataPartition->bitStream.errorFlag = 0;
   dataPartition->bitStream.readLen = dataPartition->bitStream.bitStreamOffset = 0;
-  memcpy (dataPartition->bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len - 1);
+  memcpy (dataPartition->bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
   dataPartition->bitStream.bitStreamLen = nalu->RBSPtoSODB (dataPartition->bitStream.bitStreamBuffer);
   dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
 
-  cPps pps;
-  pps.naluLen = nalu->len;
   pps.readFromStream (decoder, dataPartition);
   sDataPartition::freeDataPartitions (dataPartition, 1);
 

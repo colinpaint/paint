@@ -70,14 +70,15 @@ namespace {
 //{{{
 int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
 
+  cSps sps;
+  sps.naluLen = nalu->getLength();
+
   sDataPartition* dataPartition = sDataPartition::allocDataPartitions (1);
   dataPartition->bitStream.errorFlag = 0;
   dataPartition->bitStream.readLen = dataPartition->bitStream.bitStreamOffset = 0;
-  memcpy (dataPartition->bitStream.bitStreamBuffer, &nalu->buf[1], nalu->len-1);
+  memcpy (dataPartition->bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
   dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen = nalu->RBSPtoSODB (dataPartition->bitStream.bitStreamBuffer);
 
-  cSps sps;
-  sps.naluLen = nalu->len;
   sps.readFromStream (decoder, dataPartition);
   sDataPartition::freeDataPartitions (dataPartition, 1);
 

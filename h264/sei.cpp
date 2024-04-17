@@ -1154,7 +1154,7 @@ void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, cSlice* slice)
   if (decoder->param.seiDebug)
     cLog::log (LOGINFO, fmt::format ("SEI:%d -> ", naluLen));
 
-  int offset = 1;
+  int offset = 0;
   do {
     int payloadType = 0;
     uint8_t tempByte = msg[offset++];
