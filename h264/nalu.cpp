@@ -11,7 +11,7 @@ using namespace std;
 namespace {
   //{{{
   bool findStartCode (uint8_t* buf, uint32_t numZeros) {
-  // look for start code - numZeros:1
+  // look for start code with numZeros
 
     for (uint32_t i = 0; i < numZeros; i++)
       if (*buf++ != 0)
@@ -54,8 +54,9 @@ void cAnnexB::reset() {
 //{{{
 uint32_t cAnnexB::readNalu() {
 // dumb nalu parser, get nalu from after nextstartCode to next startCode or end
+// - !!! could be faster !!!
 
-  // find leading startCode, or end
+  // find leading startCode, or bufferEnd
   bool startCodeFound = false;
   while (!startCodeFound && (bufferLeft >= 4)) {
     if (findStartCode (bufferPtr, 2)) {
@@ -76,10 +77,10 @@ uint32_t cAnnexB::readNalu() {
       }
     }
 
-  if (!startCodeFound) // end of buffer
+  if (!startCodeFound) // bufferEnd
     return 0;
 
-  // copy from bufferPtr to next startCode or end, into naluBuffer, return bytes copied
+  // copy from bufferPtr to next startCode or bufferEnd, into naluBuffer, return bytes copied
   uint8_t* naluBufferPtr = naluBuffer;
   uint32_t naluBytes = 0;
   while (bufferLeft > 0) {
@@ -94,10 +95,11 @@ uint32_t cAnnexB::readNalu() {
       }
     }
 
-  // no trailing startCode, end of buffer, return length
+  // no trailing startCode, bufferEnd, return length
   return naluBytes;
   }
 //}}}
+
 
 // cNalu
 //{{{
@@ -190,6 +192,7 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
   return (uint32_t)naluBytes;
   }
 //}}}
+
 //{{{
 void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 
@@ -219,9 +222,12 @@ void cNalu::checkZeroByteNonVCL (cDecoder264* decoder) {
       decoder->gotLastNalu = 0;
   }
 //}}}
+
 //{{{
 int cNalu::NALUtoRBSP() {
 // NetworkAbstractionLayerUnit to RawByteSequencePayload
+// - remove emulation prevention byte sequences
+// - what is cabac_zero_word problem ???
 
   uint8_t* bitStreamBuffer = buf;
   int endBytePos = naluBytes;
