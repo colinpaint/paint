@@ -52,13 +52,13 @@ public:
     NALU_TYPE_VDRD     = 24  // View and Dependency Representation Delimiter NAL Unit
     } eNaluType;
   //}}}
-  //{{{  enum eNalRefId
+  //{{{  enum eNaluRefId
   typedef enum {
     NALU_PRIORITY_DISPOSABLE  = 0,
     NALU_PRIORITY_LOW         = 1,
     NALU_PRIORITY_HIGH        = 2,
     NALU_PRIORITY_HIGHEST     = 3
-    } eNalRefId;
+    } eNaluRefId;
   //}}}
   cNalu (uint32_t size);
   ~cNalu();
@@ -71,7 +71,7 @@ public:
 
   bool isIdr() const { return unitType == cNalu::NALU_TYPE_IDR; }
   eNaluType getUnitType() const { return unitType; }
-  eNalRefId getRefId() const { return refId; }
+  eNaluRefId getRefId() const { return refId; }
 
   std::string getNaluString() const;
 
@@ -89,12 +89,12 @@ private:
   void debug();
 
   // vars
-  uint8_t*  buffer = nullptr;
-  uint32_t  allocBufferSize = 0;
-  int32_t   naluBytes = 0;
+  uint8_t*   buffer = nullptr;
+  uint32_t   allocBufferSize = 0;
+  int32_t    naluBytes = 0;
 
-  bool      longStartCode = false;
-  bool      forbiddenBit = false;
-  eNaluType unitType = NALU_TYPE_NONE;
-  eNalRefId refId = NALU_PRIORITY_DISPOSABLE;
+  bool       longStartCode = false;
+  bool       forbiddenBit = false;
+  eNaluType  unitType = NALU_TYPE_NONE;
+  eNaluRefId refId = NALU_PRIORITY_DISPOSABLE;
   };

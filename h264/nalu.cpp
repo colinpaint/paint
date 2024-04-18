@@ -166,7 +166,7 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
 
   longStartCode = decoder->annexB->getLongStartCode();
   forbiddenBit = (*buffer >> 7) & 1;
-  refId = eNalRefId((*buffer >> 5) & 3);
+  refId = eNaluRefId((*buffer >> 5) & 3);
   unitType = eNaluType(*buffer & 0x1f);
 
   if (decoder->param.naluDebug)
@@ -202,7 +202,7 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 uint32_t cNalu::getSodb (uint8_t* bitStreamBuffer) {
 
   // does this need to be a copy ???
-  memcpy (bitStreamBuffer, getPayload(), getPayloadLength());
+  memcpy (bitStreamBuffer, buffer+1, naluBytes-1);
 
   return rbspToSodb (bitStreamBuffer);
   }
@@ -227,7 +227,7 @@ void cNalu::checkZeroByteNonVCL (cDecoder264* decoder) {
 //}}}
 //{{{
 int cNalu::naluToRbsp() {
-// NetworkAbstractionLayerUnit to RawByteSequencePayload
+// networkAbstractionLayerUnit to rawByteSequencePayload
 // - remove emulation prevention byte sequences
 // - what is cabacZeroWord problem ???
 
@@ -279,19 +279,19 @@ uint8_t* bufferPtr = buffer;
 //}}}
 //{{{
 int cNalu::rbspToSodb (uint8_t* bitStreamBuffer) {
-// RawByteSequencePayload to StringOfDataBits
+// rawByteSequencePayload to stringOfDataBits
+// - find trailing 1 bit
 
+  int bitOffset = 0;
   int lastBytePos = naluBytes - 1;
 
-  // find trailing 1
-  int bitOffset = 0;
   bool controlBit = bitStreamBuffer[lastBytePos-1] & (0x01 << bitOffset);
   while (!controlBit) {
     // find trailing 1 bit
-    ++bitOffset;
+    bitOffset++;
     if (bitOffset == 8) {
       if (!lastBytePos)
-        cLog::log (LOGERROR, "RBSPtoSODB allZero data in RBSP");
+        cLog::log (LOGERROR, "rbspToSodb allZero data in rbsp");
       --lastBytePos;
       bitOffset = 0;
       }
