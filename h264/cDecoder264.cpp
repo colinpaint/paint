@@ -2658,9 +2658,9 @@ int cDecoder264::readNalu (cSlice* slice) {
       //{{{
       case cNalu::NALU_TYPE_IDR: {
         //{{{  recovery
-        if (recoveryPoint || (nalu->getUnitType() == cNalu::NALU_TYPE_IDR)) {
+        if (recoveryPoint || nalu->isIdr()) {
           if (!recoveryPointFound) {
-            if (nalu->getUnitType() != cNalu::NALU_TYPE_IDR) {
+            if (!nalu->isIdr()) {
               cLog::log (LOGINFO,  "-> decoding without IDR");
               nonConformingStream = true;
               }
@@ -2673,7 +2673,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           break;
         //}}}
 
-        slice->isIDR = (nalu->getUnitType() == cNalu::NALU_TYPE_IDR);
+        slice->isIDR = nalu->isIdr();
         slice->refId = nalu->getRefId();
 
         slice->dataPartitionMode = eDataPartition1;
@@ -2719,7 +2719,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         // debug
         debug.sliceType = slice->sliceType;
         debug.sliceString = fmt::format ("{}:{}:{:6d} -> pps:{} frame:{:2d} {} {}{}",
-                                         (nalu->getUnitType() == cNalu::NALU_TYPE_IDR) ? "IDR" : "SLC",
+                                         nalu->isIdr() ? "IDR" : "SLC",
                                          slice->refId, nalu->getLength(),
                                          slice->ppsId, slice->frameNum,
                                          slice->sliceType ? (slice->sliceType == 1) ?

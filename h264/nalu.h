@@ -69,6 +69,7 @@ public:
   uint8_t* getPayload() { return buffer+1; }
   uint32_t getPayloadLength() const { return uint32_t(naluBytes-1); }
 
+  bool isIdr() const { return unitType == cNalu::NALU_TYPE_IDR; }
   eNaluType getUnitType() const { return unitType; }
   eNalRefId getRefId() const { return refId; }
 
