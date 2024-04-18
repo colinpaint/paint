@@ -22,25 +22,13 @@ namespace {
   //}}}
   }
 
-// cAnnexB - stream with startCodes
-//{{{
-cAnnexB::cAnnexB (cDecoder264* decoder, uint32_t size) {
-
-  naluBuffer = (uint8_t*)malloc (size);
-  allocBufferSize = size;
-  }
-//}}}
-//{{{
-cAnnexB::~cAnnexB() {
-  free (naluBuffer);
-  }
-//}}}
-
+// cAnnexB - nalu stream with startCodes
 //{{{
 void cAnnexB::open (uint8_t* chunk, size_t chunkSize) {
 
   buffer = chunk;
   bufferSize = chunkSize;
+
   reset();
   }
 //}}}
@@ -52,7 +40,7 @@ void cAnnexB::reset() {
   }
 //}}}
 //{{{
-uint32_t cAnnexB::readNalu() {
+uint32_t cAnnexB::findNalu() {
 // extract nalu from stream between startCodes or bufferEnd
 // - !!! could be faster !!!
 
@@ -80,8 +68,8 @@ uint32_t cAnnexB::readNalu() {
   if (!startCodeFound) // bufferEnd
     return 0;
 
-  // copy from bufferPtr to next startCode or bufferEnd, into naluBuffer, return bytes copied
-  uint8_t* naluBufferPtr = naluBuffer;
+  // point start of nalu, return naluBytes to next startVCode or endBuffer
+  naluBufferPtr = bufferPtr;
   uint32_t naluBytes = 0;
   while (bufferLeft > 0) {
     if ((bufferLeft >= 3) && findStartCode (bufferPtr, 2)) // 0x000001 startCode, return length
@@ -89,10 +77,9 @@ uint32_t cAnnexB::readNalu() {
     else if ((bufferLeft >= 4) && findStartCode (bufferPtr, 3)) // 0x00000001 startCode, return length
       return naluBytes;
     else {
-      // !!! only need to manipulate pointers, cNalu memcpy before emulation prevention byte removal !!!
-      *naluBufferPtr++ = *bufferPtr++;
-      naluBytes++;
+      bufferPtr++;
       bufferLeft--;
+      naluBytes++;
       }
     }
 
@@ -170,12 +157,12 @@ string cNalu::getNaluString() const {
 uint32_t cNalu::readNalu (cDecoder264* decoder) {
 // simple parse of nalu, copy to own buffer before emulation preventation byte removal
 
-  naluBytes = decoder->annexB->readNalu();
+  naluBytes = decoder->annexB->findNalu();
   if (naluBytes == 0)
     return naluBytes;
 
   // copy annexB data our buffer
-  memcpy (buffer, decoder->annexB->getNaluData(), naluBytes);
+  memcpy (buffer, decoder->annexB->getNaluBuffer(), naluBytes);
 
   longStartCode = decoder->annexB->getLongStartCode();
   forbiddenBit = (*buffer >> 7) & 1;
@@ -191,7 +178,7 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
   checkZeroByteNonVCL (decoder);
 
   // remove emulation preventation bytes
-  NALUtoRBSP();
+  naluToRbsp();
   if (naluBytes < 0)
     cDecoder264::error ("NALU invalid startcode");
 
@@ -199,6 +186,33 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
   }
 //}}}
 
+
+//{{{
+int cNalu::rbspToSodb (uint8_t* bitStreamBuffer) {
+// RawByteSequencePayload to StringOfDataBits
+
+  int lastBytePos = naluBytes - 1;
+
+  // find trailing 1
+  int bitOffset = 0;
+  bool controlBit = bitStreamBuffer[lastBytePos-1] & (0x01 << bitOffset);
+  while (!controlBit) {
+    // find trailing 1 bit
+    ++bitOffset;
+    if (bitOffset == 8) {
+      if (!lastBytePos)
+        cLog::log (LOGERROR, "RBSPtoSODB allZero data in RBSP");
+      --lastBytePos;
+      bitOffset = 0;
+      }
+    controlBit = bitStreamBuffer[lastBytePos - 1] & (0x01 << bitOffset);
+    }
+
+  return lastBytePos;
+  }
+//}}}
+
+// private
 //{{{
 void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 
@@ -230,7 +244,7 @@ void cNalu::checkZeroByteNonVCL (cDecoder264* decoder) {
 //}}}
 
 //{{{
-int cNalu::NALUtoRBSP() {
+int cNalu::naluToRbsp() {
 // NetworkAbstractionLayerUnit to RawByteSequencePayload
 // - remove emulation prevention byte sequences
 // - what is cabac_zero_word problem ???
@@ -281,32 +295,7 @@ int cNalu::NALUtoRBSP() {
   return naluBytes;
   }
 //}}}
-//{{{
-int cNalu::RBSPtoSODB (uint8_t* bitStreamBuffer) {
-// RawByteSequencePayload to StringOfDataBits
 
-  int lastBytePos = naluBytes - 1;
-
-  // find trailing 1
-  int bitOffset = 0;
-  bool controlBit = bitStreamBuffer[lastBytePos-1] & (0x01 << bitOffset);
-  while (!controlBit) {
-    // find trailing 1 bit
-    ++bitOffset;
-    if (bitOffset == 8) {
-      if (!lastBytePos)
-        cLog::log (LOGERROR, "RBSPtoSODB allZero data in RBSP");
-      --lastBytePos;
-      bitOffset = 0;
-      }
-    controlBit = bitStreamBuffer[lastBytePos - 1] & (0x01 << bitOffset);
-    }
-
-  return lastBytePos;
-  }
-//}}}
-
-// private
 //{{{
 void cNalu::debug() {
   cLog::log (LOGINFO, getNaluString());

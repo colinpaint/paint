@@ -1471,10 +1471,10 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   memcpy (&decoder->param, param, sizeof(sParam));
   decoder->concealMode = param->concealMode;
 
-  // init nalu, annexB
+  // init annexB, nalu
+  decoder->annexB = new cAnnexB();
+  decoder->annexB->open(chunk, chunkSize);
   decoder->nalu = new cNalu (sDataPartition::MAX_CODED_FRAME_SIZE);
-  decoder->annexB = new cAnnexB (decoder, sDataPartition::MAX_CODED_FRAME_SIZE);
-  decoder->annexB->open (chunk, chunkSize);
 
   // init slice
   decoder->sliceList = (cSlice**)calloc (MAX_NUM_DECSLICES, sizeof(cSlice*));
@@ -2683,7 +2683,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = 0;
         memcpy (bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
-        bitStream.bitStreamLen = nalu->RBSPtoSODB (bitStream.bitStreamBuffer);
+        bitStream.bitStreamLen = nalu->rbspToSodb (bitStream.bitStreamBuffer);
         bitStream.codeLen = bitStream.bitStreamLen;
         readSliceHeader (bitStream, slice);
 
@@ -2752,7 +2752,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = bitStream.readLen = 0;
         memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
-        bitStream.codeLen = bitStream.bitStreamLen = nalu->RBSPtoSODB (bitStream.bitStreamBuffer);
+        bitStream.codeLen = bitStream.bitStreamLen = nalu->rbspToSodb (bitStream.bitStreamBuffer);
         readSliceHeader (bitStream, slice);
 
         if (isNewPicture (picture, slice, oldSlice)) {
@@ -2784,7 +2784,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           bitStream.errorFlag = 0;
           bitStream.bitStreamOffset = bitStream.readLen = 0;
           memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
-          bitStream.codeLen = bitStream.bitStreamLen = nalu->RBSPtoSODB (bitStream.bitStreamBuffer);
+          bitStream.codeLen = bitStream.bitStreamLen = nalu->rbspToSodb (bitStream.bitStreamBuffer);
           int sliceIdB = bitStream.readUeV ("NALU dataPartitionB sliceId");
           slice->noDataPartitionB = 0;
 
@@ -2812,7 +2812,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           bitStream.errorFlag = 0;
           bitStream.bitStreamOffset = bitStream.readLen = 0;
           memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
-          bitStream.codeLen = bitStream.bitStreamLen = nalu->RBSPtoSODB (bitStream.bitStreamBuffer);
+          bitStream.codeLen = bitStream.bitStreamLen = nalu->rbspToSodb (bitStream.bitStreamBuffer);
 
           slice->noDataPartitionC = 0;
           int sliceIdC = bitStream.readUeV ("NALU: dataPartitionC sliceId");

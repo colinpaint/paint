@@ -77,7 +77,7 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   dataPartition->bitStream.errorFlag = 0;
   dataPartition->bitStream.readLen = dataPartition->bitStream.bitStreamOffset = 0;
   memcpy (dataPartition->bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
-  dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen = nalu->RBSPtoSODB (dataPartition->bitStream.bitStreamBuffer);
+  dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen = nalu->rbspToSodb (dataPartition->bitStream.bitStreamBuffer);
 
   sps.readFromStream (decoder, dataPartition);
   sDataPartition::freeDataPartitions (dataPartition, 1);

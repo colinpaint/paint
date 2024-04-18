@@ -4,17 +4,14 @@ class cDecoder264;
 
 class cAnnexB {
 public:
-  cAnnexB (cDecoder264* decoder, uint32_t size);
-  ~cAnnexB();
-
   // gets
   bool getLongStartCode() const { return longStartCode; }
-  uint8_t* getNaluData() { return naluBuffer; }
+  uint8_t* getNaluBuffer() { return naluBufferPtr; }
 
   // actions
   void open (uint8_t* chunk, size_t chunkSize);
   void reset();
-  uint32_t readNalu();
+  uint32_t findNalu();
 
 private:
   // vars
@@ -28,7 +25,7 @@ private:
 
   bool      startCodeFound = false;
   bool      longStartCode = false;
-  uint8_t*  naluBuffer = nullptr;
+  uint8_t*  naluBufferPtr = nullptr;
   };
 
 class cNalu {
@@ -80,13 +77,13 @@ public:
   // actions
   uint32_t readNalu (cDecoder264* decoder);
 
-  void checkZeroByteVCL (cDecoder264* decoder);
-  void checkZeroByteNonVCL (cDecoder264* decoder);
-
-  int NALUtoRBSP();
-  int RBSPtoSODB (uint8_t* bitStreamBuffer);
+  int rbspToSodb (uint8_t* bitStreamBuffer);
 
 private:
+  void checkZeroByteVCL (cDecoder264* decoder);
+  void checkZeroByteNonVCL (cDecoder264* decoder);
+  int naluToRbsp();
+
   void debug();
 
   // vars
