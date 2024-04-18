@@ -2682,8 +2682,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         bitStream.readLen = 0;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = 0;
-        bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
-        bitStream.codeLen = bitStream.bitStreamLen;
+        bitStream.codeLen = bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
         readSliceHeader (bitStream, slice);
 
         // if primary slice replaced by redundant slice, set correct image type
