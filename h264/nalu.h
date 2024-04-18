@@ -66,9 +66,9 @@ public:
   // gets
   uint8_t* getBuffer() { return buffer; }
   uint32_t getLength() const { return uint32_t(naluBytes); }
-
   uint8_t* getPayload() { return buffer+1; }
   uint32_t getPayloadLength() const { return uint32_t(naluBytes-1); }
+
   eNaluType getUnitType() const { return unitType; }
   eNalRefId getRefId() const { return refId; }
 
@@ -76,11 +76,12 @@ public:
 
   // actions
   uint32_t readNalu (cDecoder264* decoder);
-
-  int rbspToSodb (uint8_t* bitStreamBuffer);
+  void checkZeroByteVCL (cDecoder264* decoder);
+  uint32_t getSodb (uint8_t* bitStreamBuffer);
 
 private:
-  void checkZeroByteVCL (cDecoder264* decoder);
+  int rbspToSodb (uint8_t* bitStreamBuffer);
+
   void checkZeroByteNonVCL (cDecoder264* decoder);
   int naluToRbsp();
 

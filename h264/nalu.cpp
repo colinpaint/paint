@@ -175,18 +175,108 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
   if (forbiddenBit)
     cDecoder264::error ("NALU with forbiddenBit set");
 
-  checkZeroByteNonVCL (decoder);
-
   // remove emulation preventation bytes
+  checkZeroByteNonVCL (decoder);
   naluToRbsp();
+
   if (naluBytes < 0)
     cDecoder264::error ("NALU invalid startcode");
 
   return (uint32_t)naluBytes;
   }
 //}}}
+//{{{
+void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 
+  // This function deals only with VCL NAL units
+  if (!(unitType >= NALU_TYPE_SLICE && unitType <= NALU_TYPE_IDR))
+    return;
 
+  // the first VCL NAL unit that is the first NAL unit after last VCL NAL unit indicates
+  // the start of a new access unit and hence the first NAL unit of the new access unit.
+  // (sounds like a tongue twister :-)
+  decoder->gotLastNalu = 1;
+  }
+//}}}
+//{{{
+uint32_t cNalu::getSodb (uint8_t* bitStreamBuffer) {
+
+  // does this need to be a copy ???
+  memcpy (bitStreamBuffer, getPayload(), getPayloadLength());
+
+  return rbspToSodb (bitStreamBuffer);
+  }
+//}}}
+
+// private
+//{{{
+void cNalu::checkZeroByteNonVCL (cDecoder264* decoder) {
+
+  // This function deals only with non-VCL NAL units
+  if ((unitType >= 1) && (unitType <= 5))
+    return;
+
+  // check the possibility of the current NALU to be the start of a new access unit, according to 7.4.1.2.3
+  if (unitType == NALU_TYPE_AUD || unitType == NALU_TYPE_SPS ||
+      unitType == NALU_TYPE_PPS || unitType == NALU_TYPE_SEI ||
+      (unitType >= 13 && unitType <= 18))
+    if (decoder->gotLastNalu)
+      // deliver the last access unit to decoder
+      decoder->gotLastNalu = 0;
+  }
+//}}}
+//{{{
+int cNalu::naluToRbsp() {
+// NetworkAbstractionLayerUnit to RawByteSequencePayload
+// - remove emulation prevention byte sequences
+// - what is cabacZeroWord problem ???
+
+uint8_t* bufferPtr = buffer;
+  int endBytePos = naluBytes;
+  if (endBytePos < 1) {
+    naluBytes = endBytePos;
+    return naluBytes;
+    }
+
+  int zeroCount = 0;
+  int toIndex = 1;
+  for (int fromIndex = 1; fromIndex < endBytePos; fromIndex++) {
+    // in nalu, 0x000000, 0x000001, 0x000002 shall not occur at any uint8_t-aligned position
+    if (zeroCount == 2) {
+      if (bufferPtr[fromIndex] < 0x03) {
+        naluBytes = -1;
+        return naluBytes;
+        }
+
+      if (bufferPtr[fromIndex] == 0x03) {
+        // check the 4th uint8_t after 0x000003
+        // - except if cabacZeroWord, last 3 bytes of nalu are 0x000003
+        // if cabacZeroWord, final byte of nalu(0x03) is discarded, last 2 bytes RBSP must be 0x0000
+        if ((fromIndex < endBytePos-1) && (bufferPtr[fromIndex+1] > 0x03)) {
+          naluBytes = -1;
+          return naluBytes;
+          }
+        if (fromIndex == endBytePos-1) {
+          naluBytes = toIndex;
+          return naluBytes;
+          }
+        fromIndex++;
+        zeroCount = 0;
+        }
+      }
+
+    bufferPtr[toIndex] = bufferPtr[fromIndex];
+    if (bufferPtr[fromIndex] == 0x00)
+      zeroCount++;
+    else
+      zeroCount = 0;
+    toIndex++;
+    }
+
+  naluBytes = toIndex;
+  return naluBytes;
+  }
+//}}}
 //{{{
 int cNalu::rbspToSodb (uint8_t* bitStreamBuffer) {
 // RawByteSequencePayload to StringOfDataBits
@@ -209,90 +299,6 @@ int cNalu::rbspToSodb (uint8_t* bitStreamBuffer) {
     }
 
   return lastBytePos;
-  }
-//}}}
-
-// private
-//{{{
-void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
-
-  // This function deals only with VCL NAL units
-  if (!(unitType >= NALU_TYPE_SLICE && unitType <= NALU_TYPE_IDR))
-    return;
-
-  // the first VCL NAL unit that is the first NAL unit after last VCL NAL unit indicates
-  // the start of a new access unit and hence the first NAL unit of the new access unit.
-  // (sounds like a tongue twister :-)
-  decoder->gotLastNalu = 1;
-  }
-//}}}
-//{{{
-void cNalu::checkZeroByteNonVCL (cDecoder264* decoder) {
-
-  // This function deals only with non-VCL NAL units
-  if ((unitType >= 1) && (unitType <= 5))
-    return;
-
-  // check the possibility of the current NALU to be the start of a new access unit, according to 7.4.1.2.3
-  if (unitType == NALU_TYPE_AUD || unitType == NALU_TYPE_SPS ||
-      unitType == NALU_TYPE_PPS || unitType == NALU_TYPE_SEI ||
-      (unitType >= 13 && unitType <= 18))
-    if (decoder->gotLastNalu)
-      // deliver the last access unit to decoder
-      decoder->gotLastNalu = 0;
-  }
-//}}}
-
-//{{{
-int cNalu::naluToRbsp() {
-// NetworkAbstractionLayerUnit to RawByteSequencePayload
-// - remove emulation prevention byte sequences
-// - what is cabac_zero_word problem ???
-
-  uint8_t* bitStreamBuffer = buffer;
-  int endBytePos = naluBytes;
-  if (endBytePos < 1) {
-    naluBytes = endBytePos;
-    return naluBytes;
-    }
-
-  int count = 0;
-  int j = 1;
-  for (int i = 1; i < endBytePos; ++i) {
-    // in NAL unit, 0x000000, 0x000001 or 0x000002 shall not occur at any uint8_t-aligned position
-    if ((count == 2) && (bitStreamBuffer[i] < 0x03)) {
-      naluBytes = -1;
-      return naluBytes;
-      }
-
-    if ((count == 2) && (bitStreamBuffer[i] == 0x03)) {
-      // check the 4th uint8_t after 0x000003, except when cabac_zero_word is used
-      // - in which case the last three bytes of this NAL unit must be 0x000003
-      if ((i < endBytePos-1) && (bitStreamBuffer[i+1] > 0x03)) {
-        naluBytes = -1;
-        return naluBytes;
-        }
-
-      // if cabac_zero_word, final uint8_t of NALunit(0x03) is discarded, last two bytes RBSP must be 0x0000
-      if (i == endBytePos-1) {
-        naluBytes = j;
-        return naluBytes;
-        }
-
-      ++i;
-      count = 0;
-      }
-
-    bitStreamBuffer[j] = bitStreamBuffer[i];
-    if (bitStreamBuffer[i] == 0x00)
-      ++count;
-    else
-      count = 0;
-    ++j;
-    }
-
-  naluBytes = j;
-  return naluBytes;
   }
 //}}}
 

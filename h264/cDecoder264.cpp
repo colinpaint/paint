@@ -2682,8 +2682,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         bitStream.readLen = 0;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = 0;
-        memcpy (bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
-        bitStream.bitStreamLen = nalu->rbspToSodb (bitStream.bitStreamBuffer);
+        bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
         bitStream.codeLen = bitStream.bitStreamLen;
         readSliceHeader (bitStream, slice);
 
@@ -2751,8 +2750,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         cBitStream& bitStream = slice->dataPartitions[0].bitStream;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = bitStream.readLen = 0;
-        memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
-        bitStream.codeLen = bitStream.bitStreamLen = nalu->rbspToSodb (bitStream.bitStreamBuffer);
+        bitStream.codeLen = bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
         readSliceHeader (bitStream, slice);
 
         if (isNewPicture (picture, slice, oldSlice)) {
@@ -2783,8 +2781,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           bitStream = slice->dataPartitions[1].bitStream;
           bitStream.errorFlag = 0;
           bitStream.bitStreamOffset = bitStream.readLen = 0;
-          memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
-          bitStream.codeLen = bitStream.bitStreamLen = nalu->rbspToSodb (bitStream.bitStreamBuffer);
+          bitStream.codeLen = bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
           int sliceIdB = bitStream.readUeV ("NALU dataPartitionB sliceId");
           slice->noDataPartitionB = 0;
 
@@ -2812,7 +2809,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           bitStream.errorFlag = 0;
           bitStream.bitStreamOffset = bitStream.readLen = 0;
           memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
-          bitStream.codeLen = bitStream.bitStreamLen = nalu->rbspToSodb (bitStream.bitStreamBuffer);
+          bitStream.codeLen = bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
 
           slice->noDataPartitionC = 0;
           int sliceIdC = bitStream.readUeV ("NALU: dataPartitionC sliceId");
