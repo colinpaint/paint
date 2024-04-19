@@ -221,12 +221,12 @@ public:
   int readSyntaxElementRun (sSyntaxElement* se);
 
   // vars cavlc
-  uint8_t* bitStreamBuffer; // codebuffer for read bytes
-  int      bitStreamOffset; // position in the codebuffer, bit-oriented
-  int      bitStreamLen;    // over codebuffer length, uint8_t oriented
-  int      errorFlag;       // error, 0: no error, else unspecified error
+  uint8_t* bitStreamBuffer = nullptr; // codebuffer for read bytes
+  int      bitStreamOffset = 0;       // position in the codebuffer, bit-oriented
+  int      bitStreamLen = 0;          // over codebuffer length, uint8_t oriented
+  int      errorFlag = 0;             // error, 0: no error, else unspecified error
 
   // vars cabac
-  int      readLen;         // position in the codebuffer
-  int      codeLen;         // overall codebuffer length
+  int      readLen = 0;               // position in the codebuffer
+  int      codeLen = 0;               // overall codebuffer length
   };
