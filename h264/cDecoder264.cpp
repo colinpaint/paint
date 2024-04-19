@@ -2682,7 +2682,9 @@ int cDecoder264::readNalu (cSlice* slice) {
         bitStream.readLen = 0;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = 0;
-        bitStream.codeLen = bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
+        bitStream.bitStreamLen = nalu->getSodb(bitStream.bitStreamBuffer);
+        bitStream.codeLen = bitStream.bitStreamLen;
+
         readSliceHeader (bitStream, slice);
 
         // if primary slice replaced by redundant slice, set correct image type
@@ -2748,8 +2750,11 @@ int cDecoder264::readNalu (cSlice* slice) {
         slice->maxDataPartitions = 3;
         cBitStream& bitStream = slice->dataPartitions[0].bitStream;
         bitStream.errorFlag = 0;
-        bitStream.bitStreamOffset = bitStream.readLen = 0;
-        bitStream.codeLen = bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
+        bitStream.bitStreamOffset = 0;
+        bitStream.readLen = 0;
+        bitStream.bitStreamLen = nalu->getSodb(bitStream.bitStreamBuffer);
+        bitStream.codeLen = bitStream.bitStreamLen;
+
         readSliceHeader (bitStream, slice);
 
         if (isNewPicture (picture, slice, oldSlice)) {
@@ -2779,11 +2784,13 @@ int cDecoder264::readNalu (cSlice* slice) {
           //{{{  got nalu dataPartitionB
           bitStream = slice->dataPartitions[1].bitStream;
           bitStream.errorFlag = 0;
-          bitStream.bitStreamOffset = bitStream.readLen = 0;
-          bitStream.codeLen = bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
+          bitStream.bitStreamOffset = 0;
+          bitStream.readLen = 0;
+          bitStream.bitStreamLen = nalu->getSodb(bitStream.bitStreamBuffer);
+          bitStream.codeLen = bitStream.bitStreamLen;
+
           int sliceIdB = bitStream.readUeV ("NALU dataPartitionB sliceId");
           slice->noDataPartitionB = 0;
-
           if (sliceIdB != sliceIdA) {
             cLog::log (LOGINFO, "NALU dataPartitionB does not match dataPartitionA");
             slice->noDataPartitionB = 1;
@@ -2806,8 +2813,10 @@ int cDecoder264::readNalu (cSlice* slice) {
           //{{{  got nalu dataPartitionC
           bitStream = slice->dataPartitions[2].bitStream;
           bitStream.errorFlag = 0;
-          bitStream.bitStreamOffset = bitStream.readLen = 0;
-          bitStream.codeLen = bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
+          bitStream.bitStreamOffset = 0;
+          bitStream.readLen = 0;
+          bitStream.bitStreamLen = nalu->getSodb(bitStream.bitStreamBuffer);
+          bitStream.codeLen = bitStream.bitStreamLen;
 
           slice->noDataPartitionC = 0;
           int sliceIdC = bitStream.readUeV ("NALU: dataPartitionC sliceId");
