@@ -22,7 +22,7 @@ namespace {
   //}}}
   }
 
-// cAnnexB - nalu stream with startCodes
+// cAnnexB - stream of startCode,nalu ...
 //{{{
 void cAnnexB::open (uint8_t* chunk, size_t chunkSize) {
 
@@ -89,7 +89,7 @@ uint32_t cAnnexB::findNalu() {
 //}}}
 
 
-// cNalu - nalu extracted from stream
+// cNalu - nalu extracted from annexB stream
 //{{{
 cNalu::cNalu (uint32_t size) {
 

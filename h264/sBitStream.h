@@ -224,7 +224,7 @@ struct sBitStream {
   uint8_t* bitStreamBuffer; // codebuffer for read bytes
   int      bitStreamOffset; // position in the codebuffer, bit-oriented
   int      bitStreamLen;    // over codebuffer length, uint8_t oriented
-  int      errorFlag;       // error, 0: no error, else unspecified error
+  int      errorFlag;       // error 0=noError
 
   // vars cabac
   int      readLen;         // position in the codebuffer

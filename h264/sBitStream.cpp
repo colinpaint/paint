@@ -53,7 +53,7 @@ namespace {
   //}}}
   }
 
-// statics
+// static members
 //{{{
 void sBitStream::infoUe (int len, int info, int* value1, int* dummy) {
   *value1 = (int) (((uint32_t) 1 << (len >> 1)) + (uint32_t) (info) - 1);

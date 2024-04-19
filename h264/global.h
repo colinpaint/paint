@@ -249,10 +249,10 @@ enum eDecodeResult {
 //{{{
 struct sDataPartition {
   // this are really dataPartitionArray routines
-  static const int kMaxFrameSize = 500000;  // bytes for one frame
+  static const int kMaxFrameSize = 200000;  // bytes for one frame
   //{{{
   static sDataPartition* allocDataPartitionArray (uint32_t numPartitions) {
-  // trick to allocate array as contiguous sDataPartition 
+  // trick to allocate array as contiguous sDataPartition
 
     sDataPartition* dataPartitions = (sDataPartition*)calloc (1, numPartitions * sizeof(sDataPartition));
     for (uint32_t i = 0; i < numPartitions; ++i)

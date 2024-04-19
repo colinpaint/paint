@@ -181,6 +181,8 @@ static const int kQuantA[4][4] = {
 
 class cSlice {
 public:
+  static const int kMaxNumSlices = 4;
+
   static cSlice* allocSlice();
   ~cSlice();
 

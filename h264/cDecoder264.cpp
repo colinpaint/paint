@@ -1477,9 +1477,9 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->nalu = new cNalu (sDataPartition::kMaxFrameSize);
 
   // init slice
-  decoder->sliceList = (cSlice**)calloc (MAX_NUM_DECSLICES, sizeof(cSlice*));
-  decoder->numAllocatedSlices = MAX_NUM_DECSLICES;
-  decoder->oldSlice = (sOldSlice*)malloc(sizeof(sOldSlice));
+  decoder->sliceList = (cSlice**)calloc (cSlice::kMaxNumSlices, sizeof(cSlice*));
+  decoder->numAllocatedSlices = cSlice::kMaxNumSlices;
+  decoder->oldSlice = (sOldSlice*)malloc (sizeof(sOldSlice));
   decoder->coding.sliceType = eSliceI;
   decoder->recoveryPoc = 0x7fffffff;
   decoder->deblockEnable = 0x3;
