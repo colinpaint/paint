@@ -153,9 +153,9 @@ void sBitStream::infoLevelRunc2x2 (int len, int info, int* level, int* irun) {
 int sBitStream::vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
-  sDataPartition& dataPartition = slice->dataPartitionArray[partitionIndex];
-  sBitStream& s = dataPartition.bitStream;
-  return !moreRbspData (s.bitStreamBuffer, s.bitStreamOffset, s.bitStreamLen);
+  sDataPartition* dataPartition = &slice->dataPartitionArray[partitionIndex];
+  return !moreRbspData (dataPartition->bitStream.bitStreamBuffer, 
+                        dataPartition->bitStream.bitStreamOffset, dataPartition->bitStream.bitStreamLen);
   }
 //}}}
 //{{{
