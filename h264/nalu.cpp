@@ -201,8 +201,8 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 //{{{
 uint32_t cNalu::getSodb (uint8_t* bitStreamBuffer) {
 
-  if ((naluBytes-1) > sDataPartition::MAX_CODED_FRAME_SIZE)
-    cDecoder264::error ("nalu > MAX_CODED_FRAME_SIZE");
+  if ((naluBytes-1) > sDataPartition::kMaxFrameSize)
+    cDecoder264::error ("nalu > kMaxFrameSize");
 
   // does this need to be a copy ???
   memcpy (bitStreamBuffer, buffer+1, naluBytes-1);

@@ -1748,7 +1748,7 @@ namespace {
 
     if (numRefIndexActive > 1) {
       if (mb->decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag) {
-        se->mapping = cBitStream::infoUe;
+        se->mapping = sBitStream::infoUe;
         if (refidx_present)
           mb->readRefPictureIndex = (numRefIndexActive == 2) ? readRefPictureIdxFLC : readRefPictureIdxVLC;
         else
@@ -2287,7 +2287,7 @@ namespace {
       dataPartition = &(slice->dataPartitions[dpMap[SE_INTRAPREDMODE]]);
 
       if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
-        se.mapping = cBitStream::infoUe;
+        se.mapping = sBitStream::infoUe;
       else
         se.reading = readCiPredModCabac;
 
@@ -2382,7 +2382,7 @@ namespace {
       }
 
     for (int i = 0; i < dpNum;++i) {
-      cBitStream& bitStream = slice->dataPartitions[i].bitStream;
+      sBitStream& bitStream = slice->dataPartitions[i].bitStream;
       int byteStartPosition = bitStream.readLen;
       slice->dataPartitions[i].cabacDecode.startDecoding (bitStream.bitStreamBuffer, byteStartPosition, &bitStream.readLen);
       }
@@ -2783,7 +2783,7 @@ namespace {
 
     // read MB mode
     sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
-    se.mapping = cBitStream::infoUe;
+    se.mapping = sBitStream::infoUe;
     // read MB aff
     if (slice->mbAffFrame && (mbNum & 0x01) == 0) {
       se.len = (int64_t) 1;
@@ -2830,7 +2830,7 @@ namespace {
       //  read MB mode
       se.type = SE_MBTYPE;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
-      se.mapping = cBitStream::infoUe;
+      se.mapping = sBitStream::infoUe;
 
       // VLC Non-Intra
       if (slice->codCount == -1) {
@@ -2883,7 +2883,7 @@ namespace {
       //  read MB mode
       se.type = SE_MBTYPE;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
-      se.mapping = cBitStream::infoUe;
+      se.mapping = sBitStream::infoUe;
 
       // VLC Non-Intra
       if (slice->codCount == -1) {
@@ -2955,7 +2955,7 @@ namespace {
       readIntra4x4macroblocCavlc (mb, dpMap);
     else if (mb->mbType == P8x8) {
       se.type = SE_MBTYPE;
-      se.mapping = cBitStream::infoUe;
+      se.mapping = sBitStream::infoUe;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       readI8x8macroBlock (mb, dataPartition, &se);
       }
@@ -2986,7 +2986,7 @@ namespace {
       //  read MB mode
       se.type = SE_MBTYPE;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
-      se.mapping = cBitStream::infoUe;
+      se.mapping = sBitStream::infoUe;
 
       if (slice->codCount == -1) {
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -3035,7 +3035,7 @@ namespace {
       //  read MB mode
       se.type = SE_MBTYPE;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
-      se.mapping = cBitStream::infoUe;
+      se.mapping = sBitStream::infoUe;
       if (slice->codCount == -1) {
         dataPartition->readSyntaxElement (mb, &se, dataPartition);
         slice->codCount = se.value1;
@@ -3105,7 +3105,7 @@ namespace {
     else if (mb->mbType == P8x8) {
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       se.type = SE_MBTYPE;
-      se.mapping = cBitStream::infoUe;
+      se.mapping = sBitStream::infoUe;
       readI8x8macroBlock (mb, dataPartition, &se);
       }
     else if (mb->mbType == BSKIP_DIRECT) {
@@ -3150,7 +3150,7 @@ namespace {
     se.type = SE_MBTYPE;
     sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
     if (dataPartition->bitStream.errorFlag)
-      se.mapping = cBitStream::infoUe;
+      se.mapping = sBitStream::infoUe;
 
     // read MB aff
     if (slice->mbAffFrame && (mbNum & 0x01) == 0) {
@@ -3237,7 +3237,7 @@ namespace {
       se.type = SE_MBTYPE;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       if (dataPartition->bitStream.errorFlag)
-        se.mapping = cBitStream::infoUe;
+        se.mapping = sBitStream::infoUe;
 
       checkNeighbourCabac(mb);
       se.reading = readSkipCabacSliceP;
@@ -3283,7 +3283,7 @@ namespace {
       se.type = SE_MBTYPE;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       if (dataPartition->bitStream.errorFlag)
-        se.mapping = cBitStream::infoUe;
+        se.mapping = sBitStream::infoUe;
 
       // read MB skipFlag
       if (((mbNum & 0x01) == 0||prevMbSkipped))
@@ -3350,7 +3350,7 @@ namespace {
       se.type = SE_MBTYPE;
 
       if (dataPartition->bitStream.errorFlag)
-        se.mapping = cBitStream::infoUe;
+        se.mapping = sBitStream::infoUe;
       else
         se.reading = readB8TypeCabacSliceP;
 
@@ -3385,7 +3385,7 @@ namespace {
       se.type = SE_MBTYPE;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       if (dataPartition->bitStream.errorFlag)
-        se.mapping = cBitStream::infoUe;
+        se.mapping = sBitStream::infoUe;
 
       checkNeighbourCabac(mb);
       se.reading = readSkipCabacSliceB;
@@ -3436,7 +3436,7 @@ namespace {
       se.type = SE_MBTYPE;
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       if (dataPartition->bitStream.errorFlag)
-        se.mapping = cBitStream::infoUe;
+        se.mapping = sBitStream::infoUe;
 
       // read MB skipFlag
       if ((mbNum & 0x01) == 0 || prevMbSkipped)
@@ -3503,7 +3503,7 @@ namespace {
       sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
       se.type = SE_MBTYPE;
       if (dataPartition->bitStream.errorFlag)
-        se.mapping = cBitStream::infoUe;
+        se.mapping = sBitStream::infoUe;
       else
         se.reading = readB8TypeCabacSliceB;
       readI8x8macroBlock (mb, dataPartition, &se);
@@ -3756,7 +3756,7 @@ namespace {
     se.type = SE_MVD;
     dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
     if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
-      se.mapping = cBitStream::infoSe;
+      se.mapping = sBitStream::infoSe;
     else
       se.reading = slice->mbAffFrame ? readMvdCabacMbAff : readMvdCabac;
 
@@ -3814,7 +3814,7 @@ namespace {
     se.type = SE_MVD;
     dataPartition = &(slice->dataPartitions[dpMap[SE_MVD]]);
     if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
-      se.mapping = cBitStream::infoSe;
+      se.mapping = sBitStream::infoSe;
     else
       se.reading = slice->mbAffFrame ? readMvdCabacMbAff : readMvdCabac;
 
@@ -5014,7 +5014,7 @@ void readDeltaQuant (sSyntaxElement* se, sDataPartition* dataPartition, sMacroBl
   se->type = type;
   dataPartition = &slice->dataPartitions[dpMap[se->type]];
   if (decoder->activePps->entropyCoding == eCavlc || dataPartition->bitStream.errorFlag)
-    se->mapping = cBitStream::infoSe;
+    se->mapping = sBitStream::infoSe;
   else
     se->reading = readQuantCabac;
 

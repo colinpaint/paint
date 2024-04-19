@@ -238,26 +238,25 @@ enum eDecodeResult {
 //}}}
 
 #include "nalu.h"
+#include "sBitStream.h"
 #include "cSps.h"
 #include "cPps.h"
 #include "cCabacDecode.h"
-#include "cBitStream.h"
 #include "cSlice.h"
 #include "cFrameStore.h"
 #include "sPicture.h"
 #include "cDpb.h"
-
-struct sMacroBlock;
 //{{{
 struct sDataPartition {
   // this are really dataPartitionArray routines
-  static const int MAX_CODED_FRAME_SIZE = 500000;  // bytes for one frame
+  static const int kMaxFrameSize = 500000;  // bytes for one frame
   //{{{
   static sDataPartition* allocDataPartitionArray (uint32_t numPartitions) {
+  // trick to allocate array as contiguous sDataPartition 
 
-    sDataPartition* dataPartitions = (sDataPartition*)malloc (numPartitions * sizeof(sDataPartition));
+    sDataPartition* dataPartitions = (sDataPartition*)calloc (1, numPartitions * sizeof(sDataPartition));
     for (uint32_t i = 0; i < numPartitions; ++i)
-      dataPartitions[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (MAX_CODED_FRAME_SIZE);
+      dataPartitions[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (kMaxFrameSize);
 
     return dataPartitions;
     }
@@ -265,7 +264,7 @@ struct sDataPartition {
   //{{{
   static void freeDataPartitionArray (sDataPartition* dataPartitions, int numPartitions) {
 
-    if (dataPartitions) 
+    if (dataPartitions)
       for (int i = 0; i < numPartitions; ++i)
         free (dataPartitions[i].bitStream.bitStreamBuffer);
 
@@ -273,7 +272,7 @@ struct sDataPartition {
     }
   //}}}
 
-  cBitStream   bitStream;
+  sBitStream   bitStream;
   cCabacDecode cabacDecode;
 
   int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
@@ -829,8 +828,8 @@ private:
   void useParameterSet (cSlice* slice);
 
   int readNalu (cSlice* slice);
-  void readDecRefPicMarking (cBitStream& bitStream, cSlice* slice);
-  void readSliceHeader (cBitStream& bitStream, cSlice* slice);
+  void readDecRefPicMarking (sBitStream& bitStream, cSlice* slice);
+  void readSliceHeader (sBitStream& bitStream, cSlice* slice);
   void decodeSlice (cSlice* slice);
 
   void endDecodeFrame();

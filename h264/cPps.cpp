@@ -10,7 +10,7 @@ using namespace std;
 //}}}
 namespace {
   //{{{
-  static void scalingList (cBitStream& s, int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix) {
+  static void scalingList (sBitStream& s, int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix) {
   // syntax for scaling list matrix values
 
     //{{{
@@ -52,9 +52,6 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   pps.naluLen = nalu->getLength();
 
   sDataPartition* dataPartition = sDataPartition::allocDataPartitionArray (1);
-  dataPartition->bitStream.errorFlag = 0;
-  dataPartition->bitStream.readLen = 0;
-  dataPartition->bitStream.bitStreamOffset = 0;
   dataPartition->bitStream.bitStreamLen = nalu->getSodb (dataPartition->bitStream.bitStreamBuffer);
   dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
 
@@ -183,7 +180,7 @@ bool cPps::isEqual (cPps& pps) {
 void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) {
 // read PPS from NALU
 
-  cBitStream& s = dataPartition->bitStream;
+  sBitStream& s = dataPartition->bitStream;
 
   id = s.readUeV ("PPS ppsId");
   spsId = s.readUeV ("PPS spsId");
@@ -254,7 +251,7 @@ void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
   hasConstrainedIntraPred = s.readU1 ("PPS hasConstrainedIntraPred");
   redundantPicCountPresent = s.readU1 ("PPS redundantPicCountPresent");
 
-  hasMoreData = cBitStream::moreRbspData (s.bitStreamBuffer, s.bitStreamOffset,s.bitStreamLen);
+  hasMoreData = sBitStream::moreRbspData (s.bitStreamBuffer, s.bitStreamOffset,s.bitStreamLen);
   if (hasMoreData) {
     //{{{  read fidelity range
     hasTransform8x8mode = s.readU1 ("PPS hasTransform8x8mode");

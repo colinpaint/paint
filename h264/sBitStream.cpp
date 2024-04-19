@@ -13,7 +13,7 @@ namespace {
     }
   //}}}
   //{{{
-  int code2d (sSyntaxElement* se, cBitStream* s,
+  int code2d (sSyntaxElement* se, sBitStream* s,
               const uint8_t* lentab, const uint8_t* codtab,
               int tabwidth, int tabheight, int* code) {
 
@@ -23,7 +23,7 @@ namespace {
     uint8_t* buf = &s->bitStreamBuffer[*bitStreamOffset >> 3];
 
     // Apply bitOffset to three bytes (maximum that may be traversed by showBitsThreshold)
-    // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by MAX_CODED_FRAME_SIZE
+    // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by kMaxFrameSize
     uint32_t inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
     // Offset is constant so apply before extracting different numbers of bits
     inf <<= (*bitStreamOffset & 0x07);
@@ -55,12 +55,12 @@ namespace {
 
 // statics
 //{{{
-void cBitStream::infoUe (int len, int info, int* value1, int* dummy) {
+void sBitStream::infoUe (int len, int info, int* value1, int* dummy) {
   *value1 = (int) (((uint32_t) 1 << (len >> 1)) + (uint32_t) (info) - 1);
   }
 //}}}
 //{{{
-void cBitStream::infoSe (int len, int info, int* value1, int* dummy) {
+void sBitStream::infoSe (int len, int info, int* value1, int* dummy) {
 
   uint32_t n = ((uint32_t) 1 << (len >> 1)) + (uint32_t) info - 1;
   *value1 = (n + 1) >> 1;
@@ -71,52 +71,52 @@ void cBitStream::infoSe (int len, int info, int* value1, int* dummy) {
   }
 //}}}
 //{{{
-void cBitStream::infoCbpIntraNormal (int len, int info, int* codedBlockPattern, int* dummy) {
+void sBitStream::infoCbpIntraNormal (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   infoUe (len, info, &cbp_idx, dummy);
-  *codedBlockPattern = cBitStream::kNCBP[1][cbp_idx][0];
+  *codedBlockPattern = sBitStream::kNCBP[1][cbp_idx][0];
   }
 //}}}
 //{{{
-void cBitStream::infoCbpIntraOther (int len, int info, int* codedBlockPattern, int* dummy) {
+void sBitStream::infoCbpIntraOther (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   infoUe (len, info, &cbp_idx, dummy);
-  *codedBlockPattern = cBitStream::kNCBP[0][cbp_idx][0];
+  *codedBlockPattern = sBitStream::kNCBP[0][cbp_idx][0];
   }
 //}}}
 //{{{
-void cBitStream::infoCbpInterNormal (int len, int info, int* codedBlockPattern, int* dummy) {
+void sBitStream::infoCbpInterNormal (int len, int info, int* codedBlockPattern, int* dummy) {
 
   int cbp_idx;
   infoUe (len, info, &cbp_idx, dummy);
-  *codedBlockPattern = cBitStream::kNCBP[1][cbp_idx][1];
+  *codedBlockPattern = sBitStream::kNCBP[1][cbp_idx][1];
   }
 //}}}
 //{{{
-void cBitStream::infoCbpInterOther (int len, int info, int* codedBlockPattern, int *dummy) {
+void sBitStream::infoCbpInterOther (int len, int info, int* codedBlockPattern, int *dummy) {
 
   int cbp_idx;
   infoUe (len, info, &cbp_idx, dummy);
-  *codedBlockPattern = cBitStream::kNCBP[0][cbp_idx][1];
+  *codedBlockPattern = sBitStream::kNCBP[0][cbp_idx][1];
   }
 //}}}
 //{{{
-void cBitStream::infoLevelRunInter (int len, int info, int* level, int* irun) {
+void sBitStream::infoLevelRunInter (int len, int info, int* level, int* irun) {
 
   if (len <= 9) {
     int l2 = imax(0,(len >> 1)-1);
     int inf = info >> 1;
-    *level = cBitStream::kNTAB1[l2][inf][0];
-    *irun = cBitStream::kNTAB1[l2][inf][1];
+    *level = sBitStream::kNTAB1[l2][inf][0];
+    *irun = sBitStream::kNTAB1[l2][inf][1];
     if ((info & 0x01) == 1)
       *level = -*level; // make sign
     }
   else {
     // if len > 9, skip using the array
     *irun = (info & 0x1e) >> 1;
-    *level = cBitStream::kLEVRUN1[*irun] + (info >> 5) + ( 1 << ((len >> 1) - 5));
+    *level = sBitStream::kLEVRUN1[*irun] + (info >> 5) + ( 1 << ((len >> 1) - 5));
     if ((info & 0x01) == 1)
       *level = -*level;
     }
@@ -126,20 +126,20 @@ void cBitStream::infoLevelRunInter (int len, int info, int* level, int* irun) {
   }
 //}}}
 //{{{
-void cBitStream::infoLevelRunc2x2 (int len, int info, int* level, int* irun) {
+void sBitStream::infoLevelRunc2x2 (int len, int info, int* level, int* irun) {
 
   if (len <= 5) {
     int l2 = imax(0, (len >> 1) - 1);
     int inf = info >> 1;
-    *level = cBitStream::kNTAB3[l2][inf][0];
-    *irun = cBitStream::kNTAB3[l2][inf][1];
+    *level = sBitStream::kNTAB3[l2][inf][0];
+    *irun = sBitStream::kNTAB3[l2][inf][1];
     if ((info & 0x01) == 1)
       *level = -*level; // make sign
     }
   else {
     // if len > 5, skip using the array
     *irun  = (info & 0x06) >> 1;
-    *level = cBitStream::kLEVRUN3[*irun] + (info >> 3) + (1 << ((len >> 1) - 3));
+    *level = sBitStream::kLEVRUN3[*irun] + (info >> 3) + (1 << ((len >> 1) - 3));
     if ((info & 0x01) == 1)
       *level = -*level;
     }
@@ -150,22 +150,22 @@ void cBitStream::infoLevelRunc2x2 (int len, int info, int* level, int* irun) {
 //}}}
 
 //{{{
-int cBitStream::vlcStartCode (cSlice* slice, int dummy) {
+int sBitStream::vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
   sDataPartition& dataPartition = slice->dataPartitions[partitionIndex];
-  cBitStream& s = dataPartition.bitStream;
+  sBitStream& s = dataPartition.bitStream;
   return !moreRbspData (s.bitStreamBuffer, s.bitStreamOffset, s.bitStreamLen);
   }
 //}}}
 //{{{
-int cBitStream::readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
+int sBitStream::readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
   return dataPartition->bitStream.readSyntaxElementVLC (se);
   }
 //}}}
 
 //{{{
-int cBitStream::getVlcSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
+int sBitStream::getVlcSymbol (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
   long byteoffset = totalBitOffset >> 3;        // uint8_t from start of buffer
   int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
@@ -203,7 +203,7 @@ int cBitStream::getVlcSymbol (uint8_t buffer[], int totalBitOffset, int* info, i
   }
 //}}}
 //{{{
-int cBitStream::getVlcSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
+int sBitStream::getVlcSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int* info, int bytecount) {
 
   int byteoffset = (totalBitOffset >> 3);        // uint8_t from start of buffer
   int bitOffset = (7 - (totalBitOffset & 0x07)); // bit from start of uint8_t
@@ -229,7 +229,7 @@ int cBitStream::getVlcSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int
   }
 //}}}
 //{{{
-int cBitStream::getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
+int sBitStream::getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits) {
 
   if ((totalBitOffset + numBits) > bitCount)
     return -1;
@@ -259,7 +259,7 @@ int cBitStream::getBits (uint8_t buffer[], int totalBitOffset, int* info, int bi
   }
 //}}}
 //{{{
-int cBitStream::showBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits) {
+int sBitStream::showBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits) {
 
   if ((totalBitOffset + numBits) > bitCount)
     return -1;
@@ -284,7 +284,7 @@ int cBitStream::showBits (uint8_t buffer[], int totalBitOffset, int bitCount, in
   }
 //}}}
 //{{{
-int cBitStream::moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
+int sBitStream::moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
 
   // there is more until we're in the last uint8_t
   long byteoffset = (totalBitOffset >> 3);      // uint8_t from start of buffer
@@ -311,7 +311,7 @@ int cBitStream::moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount
 
 // members
 //{{{
-int cBitStream::readUeV (const string& label) {
+int sBitStream::readUeV (const string& label) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -326,7 +326,7 @@ int cBitStream::readUeV (const string& label) {
   }
 //}}}
 //{{{
-int cBitStream::readSeV (const string& label) {
+int sBitStream::readSeV (const string& label) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -341,7 +341,7 @@ int cBitStream::readSeV (const string& label) {
   }
 //}}}
 //{{{
-int cBitStream::readUv (int lenInBits, const string& label) {
+int sBitStream::readUv (int lenInBits, const string& label) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -358,7 +358,7 @@ int cBitStream::readUv (int lenInBits, const string& label) {
   }
 //}}}
 //{{{
-int cBitStream::readIv (int lenInBits, const string& label) {
+int sBitStream::readIv (int lenInBits, const string& label) {
 
   sSyntaxElement symbol;
   symbol.value1 = 0;
@@ -378,13 +378,13 @@ int cBitStream::readIv (int lenInBits, const string& label) {
   }
 //}}}
 //{{{
-bool cBitStream::readU1 (const string& label) {
+bool sBitStream::readU1 (const string& label) {
   return (bool)readUv (1, label);
   }
 //}}}
 
 //{{{
-int cBitStream::readSyntaxElementVLC (sSyntaxElement* se) {
+int sBitStream::readSyntaxElementVLC (sSyntaxElement* se) {
 
   se->len = getVlcSymbol (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
   if (se->len == -1)
@@ -397,7 +397,7 @@ int cBitStream::readSyntaxElementVLC (sSyntaxElement* se) {
   }
 //}}}
 //{{{
-int cBitStream::readSyntaxElementFLC (sSyntaxElement* se) {
+int sBitStream::readSyntaxElementFLC (sSyntaxElement* se) {
 
   int bitstreamLengthInBits  = (bitStreamLen << 3) + 7;
   if (getBits(bitStreamBuffer, bitStreamOffset, &(se->inf), bitstreamLengthInBits, se->len) < 0)
@@ -410,7 +410,7 @@ int cBitStream::readSyntaxElementFLC (sSyntaxElement* se) {
   }
 //}}}
 //{{{
-int cBitStream::readSyntaxElementIntra4x4PredictionMode (sSyntaxElement* se) {
+int sBitStream::readSyntaxElementIntra4x4PredictionMode (sSyntaxElement* se) {
 
   se->len = getVlcSymbolIntraMode (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
   if (se->len == -1)
@@ -424,7 +424,7 @@ int cBitStream::readSyntaxElementIntra4x4PredictionMode (sSyntaxElement* se) {
 //}}}
 
 //{{{
-int cBitStream::readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char *type) {
+int sBitStream::readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char *type) {
 
   //{{{
   static const uint8_t lentab[3][4][17] =
@@ -508,7 +508,7 @@ int cBitStream::readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char 
   }
 //}}}
 //{{{
-int cBitStream::readSyntaxElementNumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se) {
+int sBitStream::readSyntaxElementNumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se) {
 
   //{{{
   static const uint8_t lentab[3][4][17] =
@@ -564,7 +564,7 @@ int cBitStream::readSyntaxElementNumCoeffTrailingOnesChromaDC (cDecoder264* deco
 //}}}
 
 //{{{
-int cBitStream::readSyntaxElementLevelVlc0 (sSyntaxElement* se) {
+int sBitStream::readSyntaxElementLevelVlc0 (sSyntaxElement* se) {
 
   int offset = bitStreamOffset;
   int bitstreamLengthInBytes = bitStreamLen;
@@ -613,7 +613,7 @@ int cBitStream::readSyntaxElementLevelVlc0 (sSyntaxElement* se) {
   }
 //}}}
 //{{{
-int cBitStream::readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc) {
+int sBitStream::readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc) {
 
   int offset = bitStreamOffset;
   int bitstreamLengthInBytes = bitStreamLen;
@@ -675,7 +675,7 @@ int cBitStream::readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc) {
 //}}}
 
 //{{{
-int cBitStream::readSyntaxElementTotalZeros (sSyntaxElement* se) {
+int sBitStream::readSyntaxElementTotalZeros (sSyntaxElement* se) {
 
   //{{{
   static const uint8_t lentab[TOTRUN_NUM][16] =
@@ -729,7 +729,7 @@ int cBitStream::readSyntaxElementTotalZeros (sSyntaxElement* se) {
   }
 //}}}
 //{{{
-int cBitStream::readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se) {
+int sBitStream::readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se) {
 
   //{{{
   static const uint8_t lentab[3][TOTRUN_NUM][16] =
@@ -809,7 +809,7 @@ int cBitStream::readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSynt
   }
 //}}}
 //{{{
-int cBitStream::readSyntaxElementRun (sSyntaxElement* se) {
+int sBitStream::readSyntaxElementRun (sSyntaxElement* se) {
 
   //{{{
   static const uint8_t lentab[TOTRUN_NUM][16] =

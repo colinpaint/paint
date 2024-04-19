@@ -167,7 +167,7 @@ namespace {
       return;
       }
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -318,7 +318,7 @@ namespace {
   //{{{
   void processPanScan (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -347,7 +347,7 @@ namespace {
   //{{{
   void processRecoveryPoint (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -369,7 +369,7 @@ namespace {
   //{{{
   void processDecRefPicMarkingRepetition (uint8_t* payload, int size, cDecoder264* decoder, cSlice *slice) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -404,7 +404,7 @@ namespace {
     int m, n, left, right, top, bottom,directx, directy;
     uint8_t*** map;
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -562,7 +562,7 @@ namespace {
   //{{{
   void process_subsequence_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -598,7 +598,7 @@ namespace {
   {
     long num_sub_layers, accurate_statisticsFlag, average_bit_rate, average_frame_rate;
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamLen = size;
     s->bitStreamOffset = 0;
@@ -625,7 +625,7 @@ namespace {
   //{{{
   void process_subsequence_characteristics_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamLen = size;
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
@@ -681,7 +681,7 @@ namespace {
   void process_scene_information (uint8_t* payload, int size, cDecoder264* decoder) {
 
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamLen = size;
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
@@ -723,7 +723,7 @@ namespace {
   //{{{
   void process_full_frame_freeze_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -745,7 +745,7 @@ namespace {
   //{{{
   void process_full_frame_snapshot_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -761,7 +761,7 @@ namespace {
   //{{{
   void process_progressive_refinement_start_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -778,7 +778,7 @@ namespace {
   //{{{
   void process_progressive_refinement_end_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -793,7 +793,7 @@ namespace {
   //{{{
   void process_motion_constrained_slice_group_set_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -834,7 +834,7 @@ namespace {
     int comp_model_value;
     int film_grain_characteristics_repetition_period;
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -900,7 +900,7 @@ namespace {
   //{{{
   void processDeblockFilterDisplayPref (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -923,7 +923,7 @@ namespace {
   //{{{
   void processStereoVideo (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -952,7 +952,7 @@ namespace {
   //{{{
   void processBufferingPeriod (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -999,7 +999,7 @@ namespace {
 
     frame_packing_arrangement_information_struct seiFramePackingArrangement;
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -1063,7 +1063,7 @@ namespace {
   //{{{
   void process_post_filter_hints_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;
@@ -1100,7 +1100,7 @@ namespace {
   //{{{
   void process_green_metadata_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    cBitStream* s = (cBitStream*)malloc (sizeof(cBitStream));
+    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
     s->bitStreamBuffer = payload;
     s->bitStreamOffset = 0;
     s->bitStreamLen = size;

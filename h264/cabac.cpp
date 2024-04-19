@@ -732,7 +732,7 @@ namespace {
           se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
           dataPartition = &slice->dataPartitions[dpMap[se->type]];
           if (dataPartition->bitStream.errorFlag)
-            se->mapping = cBitStream::infoLevelRunInter;
+            se->mapping = sBitStream::infoLevelRunInter;
           else
             se->reading = readRunLevelCabac;
           dataPartition->readSyntaxElement (mb, se, dataPartition);
@@ -752,7 +752,7 @@ namespace {
           se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
           dataPartition = &slice->dataPartitions[dpMap[se->type]];
           if (dataPartition->bitStream.errorFlag)
-            se->mapping = cBitStream::infoLevelRunInter;
+            se->mapping = sBitStream::infoLevelRunInter;
           else
             se->reading = readRunLevelCabac;
 
@@ -1928,7 +1928,7 @@ void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition) {
   cDecoder264* decoder = slice->decoder;
   sPicture* picture = slice->picture;
 
-  cBitStream* s = &dataPartition->bitStream;
+  sBitStream* s = &dataPartition->bitStream;
   cCabacDecode* cabacDecode = &dataPartition->cabacDecode;
   uint8_t* buf = s->bitStreamBuffer;
   int bitStreamLengthInBits = (dataPartition->bitStream.bitStreamLen << 3) + 7;
@@ -1948,7 +1948,7 @@ void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition) {
   int bitDepth = decoder->bitDepthLuma;
   for (int i = 0; i < MB_BLOCK_SIZE; ++i) {
     for (int j = 0; j < MB_BLOCK_SIZE; ++j) {
-      bitsRead += cBitStream::getBits (buf, bitOffset, &val, bitStreamLengthInBits, bitDepth);
+      bitsRead += sBitStream::getBits (buf, bitOffset, &val, bitStreamLengthInBits, bitDepth);
       slice->cof[0][i][j] = val;
       bitOffset += bitDepth;
       }
@@ -1960,7 +1960,7 @@ void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition) {
     for (int uv = 1; uv < 3; ++uv) {
       for (int i = 0; i < decoder->mbCrSizeY; ++i) {
         for (int j = 0; j < decoder->mbCrSizeX; ++j) {
-          bitsRead += cBitStream::getBits (buf, bitOffset, &val, bitStreamLengthInBits, bitDepth);
+          bitsRead += sBitStream::getBits (buf, bitOffset, &val, bitStreamLengthInBits, bitDepth);
           slice->cof[uv][i][j] = val;
           bitOffset += bitDepth;
           }

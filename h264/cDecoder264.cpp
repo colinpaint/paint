@@ -1474,7 +1474,7 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   // init annexB, nalu
   decoder->annexB = new cAnnexB();
   decoder->annexB->open(chunk, chunkSize);
-  decoder->nalu = new cNalu (sDataPartition::MAX_CODED_FRAME_SIZE);
+  decoder->nalu = new cNalu (sDataPartition::kMaxFrameSize);
 
   // init slice
   decoder->sliceList = (cSlice**)calloc (MAX_NUM_DECSLICES, sizeof(cSlice*));
@@ -2505,12 +2505,12 @@ void cDecoder264::initSlice (cSlice* slice) {
 
   if (!slice->activeSps->chromaFormatIdc ||
       (slice->activeSps->chromaFormatIdc == 3)) {
-    slice->infoCbpIntra = cBitStream::infoCbpIntraOther;
-    slice->infoCbpInter = cBitStream::infoCbpInterOther;
+    slice->infoCbpIntra = sBitStream::infoCbpIntraOther;
+    slice->infoCbpInter = sBitStream::infoCbpInterOther;
     }
   else {
-    slice->infoCbpIntra = cBitStream::infoCbpIntraNormal;
-    slice->infoCbpInter = cBitStream::infoCbpInterNormal;
+    slice->infoCbpIntra = sBitStream::infoCbpIntraNormal;
+    slice->infoCbpInter = sBitStream::infoCbpInterNormal;
     }
   }
 //}}}
@@ -2625,9 +2625,9 @@ void cDecoder264::useParameterSet (cSlice* slice) {
 
   // slice->dataPartitionMode is set by read_new_slice (NALU first uint8_t ok there)
   if (activePps->entropyCoding == eCavlc) {
-    slice->nalStartCode = cBitStream::vlcStartCode;
+    slice->nalStartCode = sBitStream::vlcStartCode;
     for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = cBitStream::readSyntaxElementVLC;
+      slice->dataPartitions[i].readSyntaxElement = sBitStream::readSyntaxElementVLC;
     }
   else {
     slice->nalStartCode = cabacStartCode;
@@ -2678,7 +2678,7 @@ int cDecoder264::readNalu (cSlice* slice) {
 
         slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
-        cBitStream& bitStream = slice->dataPartitions[0].bitStream;
+        sBitStream& bitStream = slice->dataPartitions[0].bitStream;
         bitStream.readLen = 0;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = 0;
@@ -2748,7 +2748,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         slice->noDataPartitionC = 1;
         slice->dataPartitionMode = eDataPartition3;
         slice->maxDataPartitions = 3;
-        cBitStream& bitStream = slice->dataPartitions[0].bitStream;
+        sBitStream& bitStream = slice->dataPartitions[0].bitStream;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = 0;
         bitStream.readLen = 0;
@@ -2886,7 +2886,7 @@ int cDecoder264::readNalu (cSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::readDecRefPicMarking (cBitStream& bitStream, cSlice* slice) {
+void cDecoder264::readDecRefPicMarking (sBitStream& bitStream, cSlice* slice) {
 
   // free old buffer content
   while (slice->decRefPicMarkBuffer) {
@@ -2933,7 +2933,7 @@ void cDecoder264::readDecRefPicMarking (cBitStream& bitStream, cSlice* slice) {
   }
 //}}}
 //{{{
-void cDecoder264::readSliceHeader (cBitStream& bitStream, cSlice* slice) {
+void cDecoder264::readSliceHeader (sBitStream& bitStream, cSlice* slice) {
 // Some slice syntax depends on parameterSet depends on parameterSetID of the slice header
 // - read the ppsId of the slice header first
 //   - then setup the active parameter sets

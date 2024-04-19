@@ -13,7 +13,7 @@ namespace {
   //{{{
   void readHrdFromStream (sDataPartition* dataPartition, cHrd* hrd) {
 
-    cBitStream& s = dataPartition->bitStream;
+    sBitStream& s = dataPartition->bitStream;
     hrd->cpb_cnt_minus1 = s.readUeV ("VUI cpb_cnt_minus1");
     hrd->bit_rate_scale = s.readUv (4, "VUI bit_rate_scale");
     hrd->cpb_size_scale = s.readUv (4, "VUI cpb_size_scale");
@@ -33,7 +33,7 @@ namespace {
     }
   //}}}
   //{{{
-  void scalingList (cBitStream& s, int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix) {
+  void scalingList (sBitStream& s, int* scalingList, int scalingListSize, bool* useDefaultScalingMatrix) {
 
     //{{{
     static const uint8_t ZZ_SCAN[16] = {
@@ -74,9 +74,6 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   sps.naluLen = nalu->getLength();
 
   sDataPartition* dataPartition = sDataPartition::allocDataPartitionArray (1);
-  dataPartition->bitStream.errorFlag = 0;
-  dataPartition->bitStream.readLen = 0; 
-  dataPartition->bitStream.bitStreamOffset = 0;
   dataPartition->bitStream.bitStreamLen = nalu->getSodb (dataPartition->bitStream.bitStreamBuffer);
   dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
 
@@ -108,7 +105,7 @@ string cSps::getString() {
 //{{{
 void cSps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) {
 
-  cBitStream& s = dataPartition->bitStream;
+  sBitStream& s = dataPartition->bitStream;
 
   profileIdc = (eProfileIDC)s.readUv (8, "SPS profileIdc");
   if ((profileIdc != BASELINE) && (profileIdc != MAIN) && (profileIdc != EXTENDED) &&
@@ -277,7 +274,7 @@ bool cSps::isEqual (cSps& sps) {
 //{{{
 void cSps::readVuiFromStream (sDataPartition* dataPartition) {
 
-  cBitStream& s = dataPartition->bitStream;
+  sBitStream& s = dataPartition->bitStream;
   if (hasVui) {
     vuiSeqParams.aspect_ratio_info_presentFlag = s.readU1 ("VUI aspect_ratio_info_presentFlag");
     if (vuiSeqParams.aspect_ratio_info_presentFlag) {
