@@ -241,7 +241,7 @@ enum eDecodeResult {
 #include "sBitStream.h"
 #include "cSps.h"
 #include "cPps.h"
-#include "cCabacDecode.h"
+#include "sCabacDecode.h"
 #include "cSlice.h"
 #include "cFrameStore.h"
 #include "sPicture.h"
@@ -250,6 +250,7 @@ enum eDecodeResult {
 struct sDataPartition {
   // this are really dataPartitionArray routines
   static const int kMaxFrameSize = 200000;  // bytes for one frame
+
   //{{{
   static sDataPartition* allocDataPartitionArray (uint32_t numPartitions) {
   // trick to allocate array as contiguous sDataPartition
@@ -273,7 +274,7 @@ struct sDataPartition {
   //}}}
 
   sBitStream   bitStream;
-  cCabacDecode cabacDecode;
+  sCabacDecode cabacDecode;
 
   int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
   };
@@ -435,7 +436,7 @@ struct sMacroBlock {
   void (*iTrans4x4) (sMacroBlock*, eColorPlane, int, int);
   void (*iTrans8x8) (sMacroBlock*, eColorPlane, int, int);
   void (*GetMVPredictor) (sMacroBlock*, sPixelPos*, sMotionVec*, int16_t, sPicMotion**, int, int, int, int, int);
-  int  (*readCbp) (sMacroBlock*, cCabacDecode*, int);
+  int  (*readCbp) (sMacroBlock*, sCabacDecode*, int);
   char (*readRefPictureIndex) (sMacroBlock*, sSyntaxElement*, sDataPartition*, char, int);
   void (*readCompCoef4x4cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane, int(*)[4], int, int);
   void (*readCompCoef8x8cabac) (sMacroBlock*, sSyntaxElement*, eColorPlane);

@@ -2,7 +2,7 @@
 #include "global.h"
 #include "memory.h"
 
-#include "cCabacDecode.h"
+#include "sCabacDecode.h"
 #include "cabac.h"
 #include "cavlcRead.h"
 #include "intraPred.h"

@@ -2,7 +2,7 @@
 #include "global.h"
 #include "memory.h"
 
-#include "cCabacDecode.h"
+#include "sCabacDecode.h"
 #include "cabac.h"
 #include "macroblock.h"
 
@@ -168,7 +168,7 @@ namespace {
   //}}}
 
   //{{{
-  int readCbpNormal (sMacroBlock* mb, cCabacDecode* cabacDecode, int type) {
+  int readCbpNormal (sMacroBlock* mb, sCabacDecode* cabacDecode, int type) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -423,7 +423,7 @@ namespace {
     }
   //}}}
   //{{{
-  int readCbp444 (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type) {
+  int readCbp444 (sMacroBlock* mb, sCabacDecode*  cabacDecode, int type) {
 
     cDecoder264* decoder = mb->decoder;
     cSlice* slice = mb->slice;
@@ -632,7 +632,7 @@ namespace {
   //}}}
 
   //{{{
-  int readSignificanceMap (sMacroBlock* mb, cCabacDecode*  cabacDecode, int type, int coeff[]) {
+  int readSignificanceMap (sMacroBlock* mb, sCabacDecode*  cabacDecode, int type, int coeff[]) {
 
     cSlice* slice = mb->slice;
 
@@ -677,7 +677,7 @@ namespace {
     }
   //}}}
   //{{{
-  void readSignificantCoefs (cCabacDecode* cabacDecode, sTextureContexts* textureContexts, int type, int* coeff) {
+  void readSignificantCoefs (sCabacDecode* cabacDecode, sTextureContexts* textureContexts, int type, int* coeff) {
 
     sBiContext* oneContexts = textureContexts->oneContexts[type2ctx_one[type]];
     sBiContext* absContexts = textureContexts->absContexts[type2ctx_abs[type]];
@@ -1020,7 +1020,7 @@ int cabacStartCode (cSlice* slice, int eos_bit) {
   if (eos_bit) {
     const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
-    cCabacDecode* cabacDecode = &dataPartition->cabacDecode;
+    sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
     bit = cabacDecode->getFinal();
     }
   else
@@ -1054,7 +1054,7 @@ void checkNeighbourCabac (sMacroBlock* mb) {
 //{{{
 int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp) {
 
-  cCabacDecode* cabacDecode = &act_dp->cabacDecode;
+  sCabacDecode* cabacDecode = &act_dp->cabacDecode;
   sMotionContexts* motionContexts  = slice->motionContexts;
 
   // get next MB
@@ -1071,8 +1071,8 @@ int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartiti
   checkNeighbourCabac (mb);
 
   // copy
-  cCabacDecode cabacDecodeCopy;
-  memcpy (&cabacDecodeCopy, cabacDecode, sizeof(cCabacDecode));
+  sCabacDecode cabacDecodeCopy;
+  memcpy (&cabacDecodeCopy, cabacDecode, sizeof(sCabacDecode));
   int codeStreamLen = *(cabacDecodeCopy.codeStreamLen) = *(cabacDecode->codeStreamLen);
   sBiContext mbAffContextCopy[NUM_MB_AFF_CTX];
   memcpy (&mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX*sizeof(sBiContext) );
@@ -1093,7 +1093,7 @@ int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartiti
   slice->mbIndex--;
 
   // restore
-  memcpy (cabacDecode, &cabacDecodeCopy, sizeof(cCabacDecode));
+  memcpy (cabacDecode, &cabacDecodeCopy, sizeof(sCabacDecode));
   *(cabacDecode->codeStreamLen) = codeStreamLen;
   memcpy (motionContexts->mbAffContexts, &mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext));
   for (int i = 0; i < 3; ++i)
@@ -1107,7 +1107,7 @@ int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartiti
 //{{{
 int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition  *act_dp) {
 
-  cCabacDecode* cabacDecode = &act_dp->cabacDecode;
+  sCabacDecode* cabacDecode = &act_dp->cabacDecode;
   sMotionContexts* motionContexts = slice->motionContexts;
 
   // get next MB
@@ -1124,8 +1124,8 @@ int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartiti
   checkNeighbourCabac (mb);
 
   // copy
-  cCabacDecode cabacDecodeCopy;
-  memcpy (&cabacDecodeCopy, cabacDecode, sizeof(cCabacDecode));
+  sCabacDecode cabacDecodeCopy;
+  memcpy (&cabacDecodeCopy, cabacDecode, sizeof(sCabacDecode));
   int codeStreamLen = *(cabacDecodeCopy.codeStreamLen) = *(cabacDecode->codeStreamLen);
   sBiContext mbAffContextCopy[NUM_MB_AFF_CTX];
   memcpy (&mbAffContextCopy, motionContexts->mbAffContexts, NUM_MB_AFF_CTX * sizeof(sBiContext));
@@ -1146,7 +1146,7 @@ int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartiti
   slice->mbIndex--;
 
   // restore
-  memcpy (cabacDecode, &cabacDecodeCopy, sizeof(cCabacDecode));
+  memcpy (cabacDecode, &cabacDecodeCopy, sizeof(sCabacDecode));
   *(cabacDecode->codeStreamLen) = codeStreamLen;
   memcpy (motionContexts->mbAffContexts, &mbAffContextCopy, NUM_MB_AFF_CTX * sizeof(sBiContext));
   for (int i = 0; i < 3; ++i)
@@ -1161,7 +1161,7 @@ int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartiti
 //{{{
 int readSyntaxElementCabac (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
 
-  cCabacDecode* cabacDecode = &this_dataPart->cabacDecode;
+  sCabacDecode* cabacDecode = &this_dataPart->cabacDecode;
   int curLen = cabacDecode->getBitsRead();
 
   // perform the actual decoding by calling the appropriate method
@@ -1175,7 +1175,7 @@ int readSyntaxElementCabac (sMacroBlock* mb, sSyntaxElement* se, sDataPartition*
 //}}}
 
 //{{{
-void readMbTypeCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readMbTypeCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* context = slice->motionContexts;
@@ -1294,7 +1294,7 @@ void readMbTypeCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* c
   }
 //}}}
 //{{{
-void readMbTypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readMbTypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* motionContexts = slice->motionContexts;
@@ -1361,7 +1361,7 @@ void readMbTypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* c
   }
 //}}}
 //{{{
-void readMbTypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readMbTypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
@@ -1452,7 +1452,7 @@ void readMbTypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* c
   }
 //}}}
 //{{{
-void readB8TypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readB8TypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sMotionContexts* motionContexts = slice->motionContexts;
@@ -1472,7 +1472,7 @@ void readB8TypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* c
   }
 //}}}
 //{{{
-void readB8TypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readB8TypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
@@ -1516,7 +1516,7 @@ void readB8TypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* c
 //}}}
 
 //{{{
-void readRefFrameCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readRefFrameCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cDecoder264* decoder = mb->decoder;
   cSlice* slice = mb->slice;
@@ -1577,7 +1577,7 @@ void readRefFrameCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
   }
 //}}}
 //{{{
-void readIntraPredModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readIntraPredModeCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
   sTextureContexts* context = slice->textureContexts;
@@ -1597,7 +1597,7 @@ void readIntraPredModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* 
 //}}}
 
 //{{{
-void readMvdCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readMvdCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   int* mbSize = mb->decoder->mbSize[eLuma];
   cSlice* slice = mb->slice;
@@ -1641,7 +1641,7 @@ void readMvdCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecod
   }
 //}}}
 //{{{
-void readMvdCabacMbAff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readMvdCabacMbAff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cDecoder264* decoder = mb->decoder;
   cSlice* slice = mb->slice;
@@ -1702,7 +1702,7 @@ void readMvdCabacMbAff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
 //}}}
 
 //{{{
-void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cDecoder264* decoder = mb->decoder;
   sPicture* picture = mb->slice->picture;
@@ -1804,7 +1804,7 @@ void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecod
   }
 //}}}
 //{{{
-void readQuantCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readQuantCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
@@ -1826,7 +1826,7 @@ void readQuantCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDec
   }
 //}}}
 //{{{
-void readRunLevelCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readRunLevelCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
@@ -1863,7 +1863,7 @@ void readRunLevelCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabac
   }
 //}}}
 //{{{
-void readCiPredModCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readCiPredModCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   sMacroBlock* MbUp = mb->mbCabacUp;
   sMacroBlock* MbLeft = mb->mbCabacLeft;
@@ -1878,7 +1878,7 @@ void readCiPredModCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* caba
 //}}}
 
 //{{{
-void readSkipCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readSkipCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp  ->skipFlag == 0) : 0;
@@ -1890,7 +1890,7 @@ void readSkipCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cab
   }
 //}}}
 //{{{
-void readSkipCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readSkipCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   int a = (mb->mbCabacLeft != NULL) ? (mb->mbCabacLeft->skipFlag == 0) : 0;
   int b = (mb->mbCabacUp != NULL) ? (mb->mbCabacUp->skipFlag == 0) : 0;
@@ -1903,7 +1903,7 @@ void readSkipCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cab
 //}}}
 
 //{{{
-void readFieldModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readFieldModeCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   cSlice* slice = mb->slice;
 
@@ -1914,7 +1914,7 @@ void readFieldModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* caba
   }
 //}}}
 //{{{
-void readMbTransformSizeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode) {
+void readMbTransformSizeCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode) {
 
   int a = (mb->mbCabacLeft == NULL) ? 0 : mb->mbCabacLeft->lumaTransformSize8x8flag;
   int b = (mb->mbCabacUp == NULL) ? 0 : mb->mbCabacUp->lumaTransformSize8x8flag;
@@ -1929,7 +1929,7 @@ void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition) {
   sPicture* picture = slice->picture;
 
   sBitStream* s = &dataPartition->bitStream;
-  cCabacDecode* cabacDecode = &dataPartition->cabacDecode;
+  sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
   uint8_t* buf = s->bitStreamBuffer;
   int bitStreamLengthInBits = (dataPartition->bitStream.bitStreamLen << 3) + 7;
 

@@ -1,7 +1,7 @@
 #pragma once
 struct sDataPartition;
 struct sMacroBlock;
-class cCabacDecode;
+struct sCabacDecode;
 class cDecoder;
 class cSlice;
 
@@ -117,7 +117,7 @@ struct sSyntaxElement {
   void (*mapping) (int, int, int*, int*);
 
   // eCabac actual coding method of each individual syntax element type
-  void (*reading) (sMacroBlock*, sSyntaxElement*, cCabacDecode*);
+  void (*reading) (sMacroBlock*, sSyntaxElement*, sCabacDecode*);
   };
 //}}}
 

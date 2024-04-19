@@ -7,11 +7,13 @@ struct sBiContext {
   };
 void biContextInit (sBiContext* context, int qp, const char* ini);
 
-class cCabacDecode {
-public:
+struct sCabacDecode {
   void startDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen);
 
   int getBitsRead();
+  uint32_t getByte();
+  uint32_t getWord();
+
   uint32_t getSymbol (sBiContext* biContext);
   uint32_t getSymbolEqProb();
   uint32_t getFinal();
@@ -28,9 +30,4 @@ public:
   int      bitsLeft;
   uint8_t* codeStream;
   int*     codeStreamLen;
-
-private:
-  uint32_t getByte();
-  uint32_t getWord();
   };
-

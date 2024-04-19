@@ -13,28 +13,28 @@ int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartiti
 
 int readSyntaxElementCabac (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
 
-void readMbTypeCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readMbTypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readMbTypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readB8TypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readB8TypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readMbTypeCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readMbTypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readMbTypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readB8TypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readB8TypeCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
 
-void readRefFrameCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readIntraPredModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readRefFrameCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readIntraPredModeCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
 
-void readMvdCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readMvdCabacMbAff (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readMvdCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readMvdCabacMbAff (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
 
-void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readQuantCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readRunLevelCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readCiPredModCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readCbpCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readQuantCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readRunLevelCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readCiPredModCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
 
-void readSkipCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readSkipCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readSkipCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readSkipCabacSliceB (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
 
-void readFieldModeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
-void readMbTransformSizeCabac (sMacroBlock* mb, sSyntaxElement* se, cCabacDecode* cabacDecode);
+void readFieldModeCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
+void readMbTransformSizeCabac (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
 
 void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition);
 
