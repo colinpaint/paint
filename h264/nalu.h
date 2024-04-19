@@ -25,6 +25,8 @@ private:
 
   bool      startCodeFound = false;
   bool      longStartCode = false;
+
+  // start of nalu
   uint8_t*  naluBufferPtr = nullptr;
   };
 

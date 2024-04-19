@@ -1906,7 +1906,7 @@ cSlice* cSlice::allocSlice() {
   slice->textureContexts = (sTextureContexts*)calloc (1, sizeof(sTextureContexts));
 
   slice->maxDataPartitions = 3;
-  slice->dataPartitions = sDataPartition::allocDataPartitions (slice->maxDataPartitions);
+  slice->dataPartitions = sDataPartition::allocDataPartitionArray (slice->maxDataPartitions);
 
   getMem3Dint (&slice->weightedPredWeight, 2, MAX_REFERENCE_PICTURES, 3);
   getMem3Dint (&slice->weightedPredOffset, 6, MAX_REFERENCE_PICTURES, 3);
@@ -1959,7 +1959,7 @@ cSlice::~cSlice() {
   freeMem3Dint (weightedPredOffset);
   freeMem4Dint (weightedBiPredWeight);
 
-  sDataPartition::freeDataPartitions (dataPartitions, 3);
+  sDataPartition::freeDataPartitionArray (dataPartitions, 3);
 
   free (motionContexts);
   free (textureContexts);

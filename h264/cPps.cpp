@@ -51,14 +51,14 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   cPps pps;
   pps.naluLen = nalu->getLength();
 
-  sDataPartition* dataPartition = sDataPartition::allocDataPartitions (1);
+  sDataPartition* dataPartition = sDataPartition::allocDataPartitionArray (1);
   dataPartition->bitStream.errorFlag = 0;
   dataPartition->bitStream.readLen = dataPartition->bitStream.bitStreamOffset = 0;
   dataPartition->bitStream.bitStreamLen = nalu->getSodb (dataPartition->bitStream.bitStreamBuffer);
   dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
 
   pps.readFromStream (decoder, dataPartition);
-  sDataPartition::freeDataPartitions (dataPartition, 1);
+  sDataPartition::freeDataPartitionArray (dataPartition, 1);
 
   if (decoder->pps[pps.id].ok)
     if (!pps.isEqual (decoder->pps[pps.id]))

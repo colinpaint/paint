@@ -5,11 +5,11 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
 #include <string.h> // for memset
+#include <vector>
 
-#include "win32.h"
 #include "functions.h"
+#include "win32.h"
 //}}}
 //{{{  defines
 #define MAX_NUM_SLICES       8
@@ -251,22 +251,23 @@ struct sMacroBlock;
 //{{{
 struct sDataPartition {
   // this are really dataPartitionArray routines
-  static const int MAX_CODED_FRAME_SIZE = 2000000;  // bytes for one frame
+  static const int MAX_CODED_FRAME_SIZE = 500000;  // bytes for one frame
   //{{{
-  static sDataPartition* allocDataPartitions (int numPartitions) {
+  static sDataPartition* allocDataPartitionArray (uint32_t numPartitions) {
 
     sDataPartition* dataPartitions = (sDataPartition*)malloc (numPartitions * sizeof(sDataPartition));
-    for (int i = 0; i < numPartitions; ++i)
+    for (uint32_t i = 0; i < numPartitions; ++i)
       dataPartitions[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (MAX_CODED_FRAME_SIZE);
 
     return dataPartitions;
     }
   //}}}
   //{{{
-  static void freeDataPartitions (sDataPartition* dataPartitions, int numPartitions) {
+  static void freeDataPartitionArray (sDataPartition* dataPartitions, int numPartitions) {
 
-    for (int i = 0; i < numPartitions; ++i)
-      free (dataPartitions[i].bitStream.bitStreamBuffer);
+    if (dataPartitions) 
+      for (int i = 0; i < numPartitions; ++i)
+        free (dataPartitions[i].bitStream.bitStreamBuffer);
 
     free (dataPartitions);
     }

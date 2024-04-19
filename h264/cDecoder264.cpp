@@ -2807,7 +2807,6 @@ int cDecoder264::readNalu (cSlice* slice) {
           bitStream = slice->dataPartitions[2].bitStream;
           bitStream.errorFlag = 0;
           bitStream.bitStreamOffset = bitStream.readLen = 0;
-          memcpy (&bitStream.bitStreamBuffer, nalu->getPayload(), nalu->getPayloadLength());
           bitStream.codeLen = bitStream.bitStreamLen = nalu->getSodb (bitStream.bitStreamBuffer);
 
           slice->noDataPartitionC = 0;
