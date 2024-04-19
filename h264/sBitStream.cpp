@@ -499,7 +499,7 @@ int sBitStream::readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char 
   else {
     retval = code2d (se, this, lentab[vlcnum][0], codtab[vlcnum][0], 17, 4, &code);
     if (retval)
-      cDecoder264::error ("ERROR: failed to find NumCoeff/TrailingOnes\n");
+      cDecoder264::error ("ERROR: failed to find NumCoeff/TrailingOnes");
     }
 
   return retval;
@@ -557,7 +557,7 @@ int sBitStream::readSyntaxElementNumCoeffTrailingOnesChromaDC (cDecoder264* deco
   int retval = code2d (se, this, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
 
   if (retval)
-    cDecoder264::error ("ERROR: failed to find NumCoeff/TrailingOnes ChromaDC\n");
+    cDecoder264::error ("ERROR: failed to find NumCoeff/TrailingOnes ChromaDC");
 
   return retval;
   }
@@ -721,7 +721,7 @@ int sBitStream::readSyntaxElementTotalZeros (sSyntaxElement* se) {
   int vlcnum = se->value1;
   int retval = code2d (se, this, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
   if (retval)
-    cDecoder264::error ("failed to find Total Zeros !cdc\n");
+    cDecoder264::error ("failed to find Total Zeros !cdc");
 
   return retval;
   }
@@ -803,7 +803,7 @@ int sBitStream::readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSynt
   int vlcnum = se->value1;
   int retval = code2d(se, this, &lentab[yuv][vlcnum][0], &codtab[yuv][vlcnum][0], 16, 1, &code);
   if (retval)
-    cDecoder264::error ("failed to find Total Zeros\n");
+    cDecoder264::error ("failed to find Total Zeros");
 
   return retval;
   }
@@ -838,7 +838,7 @@ int sBitStream::readSyntaxElementRun (sSyntaxElement* se) {
   int vlcnum = se->value1;
   int retval = code2d (se, this, &lentab[vlcnum][0], &codtab[vlcnum][0], 16, 1, &code);
   if (retval)
-    cDecoder264::error ("failed to find Run\n");
+    cDecoder264::error ("failed to find Run");
 
   return retval;
   }
