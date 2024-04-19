@@ -264,8 +264,7 @@ public:
   uint8_t botField;
   int startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
   int endMbNumPlus1;
-  int maxDataPartitions;
-  int dataPartitionMode;
+
   int curHeader;
   int nextHeader;
   int lastDquant;
@@ -284,7 +283,9 @@ public:
   char listXsize[6];
   sPicture** listX[6];
 
-  sDataPartition*   dataPartitions;      // array of dataPartition
+  uint32_t          maxDataPartitions;
+  int               dataPartitionMode;
+  sDataPartition*   dataPartitionArray; 
   sMotionContexts*  motionContexts;  // pointer to struct of context models for use in eCabac
   sTextureContexts* textureContexts; // pointer to struct of context models for use in eCabac
 

@@ -540,7 +540,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
   sSyntaxElement se;
   se.type = dptype;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-  sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
+  sDataPartition* dataPartition = &slice->dataPartitionArray[dpMap[dptype]];
   sBitStream& s = dataPartition->bitStream;
 
   if (!cdc) {
@@ -717,7 +717,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
   sSyntaxElement se;
   se.type = dptype;
   const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-  sDataPartition* dataPartition = &(slice->dataPartitions[dpMap[dptype]]);
+  sDataPartition* dataPartition = &slice->dataPartitionArray[dpMap[dptype]];
   sBitStream& s = dataPartition->bitStream;
 
   if (!cdc) {

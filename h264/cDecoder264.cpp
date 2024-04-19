@@ -2627,12 +2627,12 @@ void cDecoder264::useParameterSet (cSlice* slice) {
   if (activePps->entropyCoding == eCavlc) {
     slice->nalStartCode = sBitStream::vlcStartCode;
     for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = sBitStream::readSyntaxElementVLC;
+      slice->dataPartitionArray[i].readSyntaxElement = sBitStream::readSyntaxElementVLC;
     }
   else {
     slice->nalStartCode = cabacStartCode;
     for (int i = 0; i < 3; i++)
-      slice->dataPartitions[i].readSyntaxElement = readSyntaxElementCabac;
+      slice->dataPartitionArray[i].readSyntaxElement = readSyntaxElementCabac;
     }
 
   coding.sliceType = slice->sliceType;
@@ -2678,7 +2678,7 @@ int cDecoder264::readNalu (cSlice* slice) {
 
         slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
-        sBitStream& bitStream = slice->dataPartitions[0].bitStream;
+        sBitStream& bitStream = slice->dataPartitionArray[0].bitStream;
         bitStream.readLen = 0;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = 0;
@@ -2712,7 +2712,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           int byteStartPosition = bitStream.bitStreamOffset / 8;
           if (bitStream.bitStreamOffset % 8)
             ++byteStartPosition;
-          slice->dataPartitions[0].cabacDecode.startDecoding (bitStream.bitStreamBuffer, byteStartPosition, &bitStream.readLen);
+          slice->dataPartitionArray[0].cabacDecode.startDecoding (bitStream.bitStreamBuffer, byteStartPosition, &bitStream.readLen);
           }
           //}}}
 
@@ -2748,7 +2748,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         slice->noDataPartitionC = 1;
         slice->dataPartitionMode = eDataPartition3;
         slice->maxDataPartitions = 3;
-        sBitStream& bitStream = slice->dataPartitions[0].bitStream;
+        sBitStream& bitStream = slice->dataPartitionArray[0].bitStream;
         bitStream.errorFlag = 0;
         bitStream.bitStreamOffset = 0;
         bitStream.readLen = 0;
@@ -2782,7 +2782,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           return curHeader;
         if (nalu->getUnitType() == cNalu::NALU_TYPE_DPB) {
           //{{{  got nalu dataPartitionB
-          bitStream = slice->dataPartitions[1].bitStream;
+          bitStream = slice->dataPartitionArray[1].bitStream;
           bitStream.errorFlag = 0;
           bitStream.bitStreamOffset = 0;
           bitStream.readLen = 0;
@@ -2811,7 +2811,7 @@ int cDecoder264::readNalu (cSlice* slice) {
 
         if (nalu->getUnitType() == cNalu::NALU_TYPE_DPC) {
           //{{{  got nalu dataPartitionC
-          bitStream = slice->dataPartitions[2].bitStream;
+          bitStream = slice->dataPartitionArray[2].bitStream;
           bitStream.errorFlag = 0;
           bitStream.bitStreamOffset = 0;
           bitStream.readLen = 0;

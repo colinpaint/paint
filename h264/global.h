@@ -253,23 +253,23 @@ struct sDataPartition {
 
   //{{{
   static sDataPartition* allocDataPartitionArray (uint32_t numPartitions) {
-  // trick to allocate array as contiguous sDataPartition
+  // trick to allocate array as contiguous sDataPartition, calloc clear of all struct vars except the bitStreams
 
-    sDataPartition* dataPartitions = (sDataPartition*)calloc (1, numPartitions * sizeof(sDataPartition));
+    sDataPartition* dataPartitionArray = (sDataPartition*)calloc (1, numPartitions * sizeof(sDataPartition));
     for (uint32_t i = 0; i < numPartitions; ++i)
-      dataPartitions[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (kMaxFrameSize);
+      dataPartitionArray[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (kMaxFrameSize);
 
-    return dataPartitions;
+    return dataPartitionArray;
     }
   //}}}
   //{{{
-  static void freeDataPartitionArray (sDataPartition* dataPartitions, int numPartitions) {
+  static void freeDataPartitionArray (sDataPartition* dataPartitionArray, uint32_t numPartitions) {
 
-    if (dataPartitions)
-      for (int i = 0; i < numPartitions; ++i)
-        free (dataPartitions[i].bitStream.bitStreamBuffer);
+    if (dataPartitionArray)
+      for (uint32_t i = 0; i < numPartitions; ++i)
+        free (dataPartitionArray[i].bitStream.bitStreamBuffer);
 
-    free (dataPartitions);
+    free (dataPartitionArray);
     }
   //}}}
 
@@ -391,16 +391,16 @@ struct sMacroBlock {
   int     DeblockCall;
 
   int16_t sliceNum;
-  char    errorFlag;            // error indicator flag that enables conceal
-  char    dplFlag;           // error indicator flag that signals a missing data dataPartition
-  int16_t deltaQuant;        // for rate control
-  int16_t listOffset;
+  char    errorFlag;        // error indicator flag that enables conceal
+  char    dplFlag;          // error indicator flag that signals a missing data dataPartition
+  int16_t deltaQuant;       // for rate control
 
+  int16_t listOffset;
   sMacroBlock* mbCabacUp;   // pointer to neighboring MB (eCabac)
   sMacroBlock* mbCabacLeft; // pointer to neighboring MB (eCabac)
 
-  sMacroBlock* mbUp;    // neighbors for loopfilter
-  sMacroBlock* mbLeft;  // neighbors for loopfilter
+  sMacroBlock* mbUp;        // neighbors for loopfilter
+  sMacroBlock* mbLeft;      // neighbors for loopfilter
 
   // some storage of macroBlock syntax elements for global access
   int16_t mbType;

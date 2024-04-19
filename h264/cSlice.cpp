@@ -128,7 +128,7 @@ namespace {
     if (!IS_I16MB (mb)) {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
 
-      dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+      dataPartition = &(slice->dataPartitionArray[dpMap[se.type]]);
       if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
           ? slice->infoCbpIntra : slice->infoCbpInter;
@@ -148,7 +148,7 @@ namespace {
 
       if (need_transform_sizeFlag) {
         se.type =  SE_HEADER;
-        dataPartition = &slice->dataPartitions[dpMap[SE_HEADER]];
+        dataPartition = &slice->dataPartitionArray[dpMap[SE_HEADER]];
         se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
@@ -202,7 +202,7 @@ namespace {
 
         {
           se.type = SE_LUM_DC_INTRA;
-          dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+          dataPartition = &(slice->dataPartitionArray[dpMap[se.type]]);
 
           se.context      = LUMA_16DC;
           se.type         = SE_LUM_DC_INTRA;
@@ -284,7 +284,7 @@ namespace {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? SE_CBP_INTRA : SE_CBP_INTER;
 
-      dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+      dataPartition = &(slice->dataPartitionArray[dpMap[se.type]]);
       if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
           ? slice->infoCbpIntra : slice->infoCbpInter;
@@ -304,7 +304,7 @@ namespace {
 
       if (need_transform_sizeFlag) {
         se.type =  SE_HEADER;
-        dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
+        dataPartition = &slice->dataPartitionArray[dpMap[SE_HEADER]];
         se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
@@ -358,7 +358,7 @@ namespace {
 
         {
           se.type = SE_LUM_DC_INTRA;
-          dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+          dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
           se.context = LUMA_16DC;
           se.type = SE_LUM_DC_INTRA;
 
@@ -415,12 +415,12 @@ namespace {
         //{{{  read DC coeffs for new intra modes
         {
           se.type = SE_LUM_DC_INTRA;
-          dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+          dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
 
-          if( (decoder->coding.isSeperateColourPlane != 0) )
+          if (decoder->coding.isSeperateColourPlane != 0)
             se.context = LUMA_16DC;
           else
-            se.context = (uv==0) ? CB_16DC : CR_16DC;
+            se.context = (uv == 0) ? CB_16DC : CR_16DC;
 
           if (dataPartition->bitStream.errorFlag)
             se.mapping = sBitStream::infoLevelRunInter;
@@ -430,8 +430,8 @@ namespace {
           coef_ctr = -1;
           level = 1;                            // just to get inside the loop
 
-          for(k=0;(k<17) && (level!=0);++k) {
-            dataPartition->readSyntaxElement(mb, &se, dataPartition);
+          for (k = 0; (k< 17) && (level != 0); ++k) {
+            dataPartition->readSyntaxElement (mb, &se, dataPartition);
             level = se.value1;
 
             if (level != 0) {
@@ -511,7 +511,7 @@ namespace {
       // codedBlockPattern
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
                   ? SE_CBP_INTRA : SE_CBP_INTER;
-      dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+      dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
       if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
                        ? slice->infoCbpIntra : slice->infoCbpInter;
@@ -530,7 +530,7 @@ namespace {
 
       if (need_transform_sizeFlag) {
         se.type = SE_HEADER;
-        dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
+        dataPartition = &slice->dataPartitionArray[dpMap[SE_HEADER]];
         se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
@@ -583,7 +583,7 @@ namespace {
 
         {
           se.type = SE_LUM_DC_INTRA;
-          dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+          dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
           se.context = LUMA_16DC;
           se.type = SE_LUM_DC_INTRA;
 
@@ -660,7 +660,7 @@ namespace {
               se.type = ((mb->isIntraBlock == true) ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
               mb->isVblock = ll;
 
-              dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+              dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
               if (dataPartition->bitStream.errorFlag)
                 se.mapping = sBitStream::infoLevelRunc2x2;
               else
@@ -723,7 +723,7 @@ namespace {
       {
         se.context = CHROMA_AC;
         se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
-        dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+        dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
         if (dataPartition->bitStream.errorFlag)
           se.mapping = sBitStream::infoLevelRunInter;
         else
@@ -828,7 +828,7 @@ namespace {
       // CBP
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
 
-      dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+      dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
       if (dataPartition->bitStream.errorFlag)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
           ? slice->infoCbpIntra : slice->infoCbpInter;
@@ -847,7 +847,7 @@ namespace {
 
       if (need_transform_sizeFlag) {
         se.type = SE_HEADER;
-        dataPartition = &slice->dataPartitions[dpMap[SE_HEADER]];
+        dataPartition = &slice->dataPartitionArray[dpMap[SE_HEADER]];
         se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
@@ -901,7 +901,7 @@ namespace {
         pos_scan_4x4 = pos_scan4x4[0];
 
         se.type = SE_LUM_DC_INTRA;
-        dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+        dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
         se.context = LUMA_16DC;
         se.type = SE_LUM_DC_INTRA;
         if (dataPartition->bitStream.errorFlag)
@@ -961,7 +961,7 @@ namespace {
         mb->isVblock = ll;
         se.context = CHROMA_DC;
         se.type = (intra ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
-        dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+        dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
         if (dataPartition->bitStream.errorFlag)
           se.mapping = sBitStream::infoLevelRunc2x2;
         else
@@ -1008,7 +1008,7 @@ namespace {
     if (codedBlockPattern > 31) {
       se.context = CHROMA_AC;
       se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
-      dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+      dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
       if (dataPartition->bitStream.errorFlag)
         se.mapping = sBitStream::infoLevelRunInter;
       else
@@ -1115,7 +1115,7 @@ namespace {
     // read CBP if not new intra mode
     if (!IS_I16MB (mb)) {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
-      dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+      dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->infoCbpIntra : slice->infoCbpInter;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -1132,7 +1132,7 @@ namespace {
       if (need_transform_sizeFlag) {
         //{{{  read eCavlc transform_size_8x8Flag
         se.type =  SE_HEADER;
-        dataPartition = &slice->dataPartitions[dpMap[SE_HEADER]];
+        dataPartition = &slice->dataPartitionArray[dpMap[SE_HEADER]];
         se.len = 1;
         dataPartition->bitStream.readSyntaxElementFLC (&se);
         mb->lumaTransformSize8x8flag = (bool) se.value1;
@@ -1254,7 +1254,7 @@ namespace {
 
     if (!IS_I16MB (mb)) {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
-      dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+      dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->infoCbpIntra : slice->infoCbpInter;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -1270,7 +1270,7 @@ namespace {
       if (need_transform_sizeFlag) {
         //{{{  Transform size flag for INTER MBs
         se.type   =  SE_HEADER;
-        dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
+        dataPartition = &slice->dataPartitionArray[dpMap[SE_HEADER]];
 
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
@@ -1522,7 +1522,7 @@ namespace {
     if (!IS_I16MB (mb)) {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? SE_CBP_INTRA : SE_CBP_INTER;
-      dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+      dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->infoCbpIntra : slice->infoCbpInter;
       dataPartition->readSyntaxElement (mb, &se, dataPartition);
@@ -1538,7 +1538,7 @@ namespace {
 
       if (need_transform_sizeFlag) {
         se.type   =  SE_HEADER;
-        dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
+        dataPartition = &slice->dataPartitionArray[dpMap[SE_HEADER]];
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
         dataPartition->bitStream.readSyntaxElementFLC (&se);
@@ -1704,7 +1704,7 @@ namespace {
     if (!IS_I16MB (mb)) {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? SE_CBP_INTRA : SE_CBP_INTER;
-      dataPartition = &(slice->dataPartitions[dpMap[se.type]]);
+      dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
       se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
         ? slice->infoCbpIntra : slice->infoCbpInter;
       dataPartition->readSyntaxElement(mb, &se, dataPartition);
@@ -1719,7 +1719,7 @@ namespace {
       if (need_transform_sizeFlag) {
         //{{{  Transform size flag for INTER MBs
         se.type =  SE_HEADER;
-        dataPartition = &(slice->dataPartitions[dpMap[SE_HEADER]]);
+        dataPartition = &slice->dataPartitionArray[dpMap[SE_HEADER]];
         // read eCavlc transform_size_8x8Flag
         se.len = 1;
         dataPartition->bitStream.readSyntaxElementFLC (&se);
@@ -1906,7 +1906,7 @@ cSlice* cSlice::allocSlice() {
   slice->textureContexts = (sTextureContexts*)calloc (1, sizeof(sTextureContexts));
 
   slice->maxDataPartitions = 3;
-  slice->dataPartitions = sDataPartition::allocDataPartitionArray (slice->maxDataPartitions);
+  slice->dataPartitionArray = sDataPartition::allocDataPartitionArray (slice->maxDataPartitions);
 
   getMem3Dint (&slice->weightedPredWeight, 2, MAX_REFERENCE_PICTURES, 3);
   getMem3Dint (&slice->weightedPredOffset, 6, MAX_REFERENCE_PICTURES, 3);
@@ -1959,7 +1959,7 @@ cSlice::~cSlice() {
   freeMem3Dint (weightedPredOffset);
   freeMem4Dint (weightedBiPredWeight);
 
-  sDataPartition::freeDataPartitionArray (dataPartitions, 3);
+  sDataPartition::freeDataPartitionArray (dataPartitionArray, 3);
 
   free (motionContexts);
   free (textureContexts);

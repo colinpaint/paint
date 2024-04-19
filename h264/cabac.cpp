@@ -730,7 +730,7 @@ namespace {
         if (start_scan == 0) {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
-          dataPartition = &slice->dataPartitions[dpMap[se->type]];
+          dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
           if (dataPartition->bitStream.errorFlag)
             se->mapping = sBitStream::infoLevelRunInter;
           else
@@ -750,7 +750,7 @@ namespace {
         if (level != 0) {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
-          dataPartition = &slice->dataPartitions[dpMap[se->type]];
+          dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
           if (dataPartition->bitStream.errorFlag)
             se->mapping = sBitStream::infoLevelRunInter;
           else
@@ -906,7 +906,7 @@ namespace {
 
       // read DC
       se->type = ((mb->isIntraBlock == 1) ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER ); // Intra or Inter?
-      sDataPartition* dataPartition = &slice->dataPartitions[dpMap[se->type]];
+      sDataPartition* dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
       dataPartition->readSyntaxElement(mb, se, dataPartition);
       level = se->value1;
       if (level != 0) {
@@ -914,11 +914,11 @@ namespace {
         pos_scan8x8 += 2 * (se->value2);
         int i = *pos_scan8x8++;
         int j = *pos_scan8x8++;
-        tcoeffs[j][boff_x + i] = rshift_rnd_sf((level * InvLevelScale8x8[j][i]) << qp_per, 6); // dequantization
+        tcoeffs[j][boff_x + i] = rshift_rnd_sf ((level * InvLevelScale8x8[j][i]) << qp_per, 6); // dequantization
 
         // read AC
-        se->type = ((mb->isIntraBlock == 1) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
-        dataPartition = &slice->dataPartitions[dpMap[se->type]];
+        se->type = (mb->isIntraBlock == 1) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
+        dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
         for (int k = 1; (k < 65) && (level != 0);++k) {
           dataPartition->readSyntaxElement(mb, se, dataPartition);
           level = se->value1;
@@ -981,7 +981,7 @@ namespace {
         // make distinction between INTRA and INTER codedluminance coefficients
         se->type  = ((mb->isIntraBlock == 1) ? (k == 0 ? SE_LUM_DC_INTRA : SE_LUM_AC_INTRA)
                                              : (k == 0 ? SE_LUM_DC_INTER : SE_LUM_AC_INTER));
-        dataPartition = &(slice->dataPartitions[dpMap[se->type]]);
+        dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
         se->reading = readRunLevelCabac;
         dataPartition->readSyntaxElement (mb, se, dataPartition);
         level = se->value1;
@@ -1019,7 +1019,7 @@ int cabacStartCode (cSlice* slice, int eos_bit) {
   uint32_t bit;
   if (eos_bit) {
     const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-    sDataPartition* dataPartition = &slice->dataPartitions[dpMap[SE_MBTYPE]];
+    sDataPartition* dataPartition = &slice->dataPartitionArray[dpMap[SE_MBTYPE]];
     sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
     bit = cabacDecode->getFinal();
     }
