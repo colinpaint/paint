@@ -427,8 +427,7 @@ int sBitStream::readSyntaxElementIntra4x4PredictionMode (sSyntaxElement* se) {
 int sBitStream::readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char *type) {
 
   //{{{
-  static const uint8_t lentab[3][4][17] =
-  {
+  static const uint8_t lentab[3][4][17] = {
     {   // 0702
       { 1, 6, 8, 9,10,11,13,13,13,14,14,15,15,16,16,16,16},
       { 0, 2, 6, 8, 9,10,11,13,13,14,14,15,15,15,16,16,16},
@@ -450,8 +449,7 @@ int sBitStream::readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char 
   };
   //}}}
   //{{{
-  static const uint8_t codtab[3][4][17] =
-  {
+  static const uint8_t codtab[3][4][17] = {
     {
       { 1, 5, 7, 7, 7, 7,15,11, 8,15,11,15,11,15,11, 7,4},
       { 0, 1, 4, 6, 6, 6, 6,14,10,14,10,14,10, 1,14,10,6},
@@ -511,18 +509,19 @@ int sBitStream::readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char 
 int sBitStream::readSyntaxElementNumCoeffTrailingOnesChromaDC (cDecoder264* decoder, sSyntaxElement* se) {
 
   //{{{
-  static const uint8_t lentab[3][4][17] =
-  {
+  static const uint8_t lentab[3][4][17] = {
     //YUV420
     {{ 2, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 1, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 0, 3, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 0, 0, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+
     //YUV422
     {{ 1, 7, 7, 9, 9,10,11,12,13, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 2, 7, 7, 9,10,11,12,12, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 0, 3, 7, 7, 9,10,11,12, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 0, 0, 5, 6, 7, 7,10,11, 0, 0, 0, 0, 0, 0, 0, 0}},
+
     //YUV444
     {{ 1, 6, 8, 9,10,11,13,13,13,14,14,15,15,16,16,16,16},
     { 0, 2, 6, 8, 9,10,11,13,13,14,14,15,15,15,16,16,16},
@@ -531,18 +530,19 @@ int sBitStream::readSyntaxElementNumCoeffTrailingOnesChromaDC (cDecoder264* deco
   };
   //}}}
   //{{{
-  static const uint8_t codtab[3][4][17] =
-  {
+  static const uint8_t codtab[3][4][17] = {
     //YUV420
     {{ 1, 7, 4, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 1, 6, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+
     //YUV422
     {{ 1,15,14, 7, 6, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 1,13,12, 5, 6, 6, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 0, 1,11,10, 4, 5, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0},
     { 0, 0, 0, 1, 1, 9, 8, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0}},
+
     //YUV444
     {{ 1, 5, 7, 7, 7, 7,15,11, 8,15,11,15,11,15,11, 7, 4},
     { 0, 1, 4, 6, 6, 6, 6,14,10,14,10,14,10, 1,14,10, 6},
