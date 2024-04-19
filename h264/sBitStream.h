@@ -108,8 +108,10 @@ struct sSyntaxElement {
   int      value1;      // numerical value of syntax element
   int      value2;      // for blocked symbols, e.g. run/level
   int      len;         // length of code
+
   int      inf;         // info part of eCavlc code
   uint32_t bitpattern;  // cavlc bitpattern
+
   int      context;     // cabac context
   int      k;           // cabac context for coeff_count,uv
 
@@ -124,8 +126,7 @@ struct sSyntaxElement {
 struct sBitStream {
   //{{{
   //! gives CBP value from codeword number, both for intra and inter
-  static inline const uint8_t kNCBP[2][48][2]=
-  {
+  static inline const uint8_t kNCBP[2][48][2] = {
     {  // 0      1        2       3       4       5       6       7       8       9      10      11
       {15, 0},{ 0, 1},{ 7, 2},{11, 4},{13, 8},{14, 3},{ 3, 5},{ 5,10},{10,12},{12,15},{ 1, 7},{ 2,11},
       { 4,13},{ 8,14},{ 6, 6},{ 9, 9},{ 0, 0},{ 0, 0},{ 0, 0},{ 0, 0},{ 0, 0},{ 0, 0},{ 0, 0},{ 0, 0},
@@ -142,8 +143,7 @@ struct sBitStream {
   //}}}
   //{{{
   //! for the infoLevRunInter routine
-  static inline const uint8_t kNTAB1[4][8][2] =
-  {
+  static inline const uint8_t kNTAB1[4][8][2] = {
     {{1,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
     {{1,1},{1,2},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
     {{2,0},{1,3},{1,4},{1,5},{0,0},{0,0},{0,0},{0,0}},
@@ -151,14 +151,12 @@ struct sBitStream {
   };
   //}}}
   //{{{
-  static inline const uint8_t kLEVRUN1[16]=
-  {
+  static inline const uint8_t kLEVRUN1[16] = {
     4,2,2,1,1,1,1,1,1,1,0,0,0,0,0,0,
   };
   //}}}
   //{{{
-  static inline const uint8_t kNTAB2[4][8][2] =
-  {
+  static inline const uint8_t kNTAB2[4][8][2] = {
     {{1,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
     {{1,1},{2,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
     {{1,2},{3,0},{4,0},{5,0},{0,0},{0,0},{0,0},{0,0}},
@@ -167,14 +165,12 @@ struct sBitStream {
   //}}}
   //{{{
   //! for the linfo_levrun__c2x2 routine
-  static inline const uint8_t kLEVRUN3[4] =
-  {
+  static inline const uint8_t kLEVRUN3[4] = {
     2,1,0,0
   };
   //}}}
   //{{{
-  static inline const uint8_t kNTAB3[2][2][2] =
-  {
+  static inline const uint8_t kNTAB3[2][2][2] = {
     {{1,0},{0,0}},
     {{2,0},{1,1}},
   };
@@ -220,13 +216,13 @@ struct sBitStream {
   int readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se);
   int readSyntaxElementRun (sSyntaxElement* se);
 
-  // vars cavlc
+  // vars 
   uint8_t* bitStreamBuffer; // codebuffer for read bytes
   int      bitStreamOffset; // position in the codebuffer, bit-oriented
   int      bitStreamLen;    // over codebuffer length, uint8_t oriented
   int      errorFlag;       // error 0=noError
 
-  // vars cabac
+  // - cabac
   int      readLen;         // position in the codebuffer
   int      codeLen;         // overall codebuffer length
   };

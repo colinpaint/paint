@@ -2639,6 +2639,7 @@ void cDecoder264::useParameterSet (cSlice* slice) {
   }
 //}}}
 
+// decode frame
 //{{{
 int cDecoder264::readNalu (cSlice* slice) {
 
@@ -3255,7 +3256,6 @@ void cDecoder264::decodeSlice (cSlice* slice) {
     }
   }
 //}}}
-
 //{{{
 void cDecoder264::endDecodeFrame() {
 
@@ -3847,6 +3847,7 @@ void cDecoder264::setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* outp
   output->yuvFormat = source->yuvFormat = (eYuvFormat)sps->chromaFormatIdc;
   }
 //}}}
+
 //{{{  flexibleMacroblockOrdering
 //{{{
 void cDecoder264::initFmo (cSlice* slice) {

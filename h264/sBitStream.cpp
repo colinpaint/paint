@@ -154,7 +154,7 @@ int sBitStream::vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
   sDataPartition* dataPartition = &slice->dataPartitionArray[partitionIndex];
-  return !moreRbspData (dataPartition->bitStream.bitStreamBuffer, 
+  return !moreRbspData (dataPartition->bitStream.bitStreamBuffer,
                         dataPartition->bitStream.bitStreamOffset, dataPartition->bitStream.bitStreamLen);
   }
 //}}}
@@ -284,24 +284,24 @@ int sBitStream::showBits (uint8_t buffer[], int totalBitOffset, int bitCount, in
   }
 //}}}
 //{{{
-int sBitStream::moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount) {
+int sBitStream::moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount) {
 
   // there is more until we're in the last uint8_t
-  long byteoffset = (totalBitOffset >> 3);      // uint8_t from start of buffer
+  long byteoffset = totalBitOffset >> 3;      // uint8_t from start of buffer
   if (byteoffset < (bytecount - 1))
     return true;
   else {
-    int bitOffset   = (7 - (totalBitOffset & 0x07));      // bit from start of uint8_t
-    uint8_t* cur_byte  = &(buffer[byteoffset]);
+    int bitOffset = 7 - (totalBitOffset & 0x07);      // bit from start of uint8_t
+    uint8_t* cur_byte  = &buffer[byteoffset];
     // read one bit
-    int controlBit = ((*cur_byte)>> (bitOffset--)) & 0x01;   // control bit for current bit posision
+    int controlBit = ((*cur_byte) >> (bitOffset--)) & 0x01;   // control bit for current bit posision
 
     // a stop bit has to be one
     if (controlBit == 0)
       return true;
     else {
       int cnt = 0;
-      while (bitOffset>=0 && !cnt)
+      while (bitOffset >= 0 && !cnt)
         cnt |= ((*cur_byte)>> (bitOffset--)) & 0x01;   // set up control bit
       return cnt;
       }
@@ -314,8 +314,8 @@ int sBitStream::moreRbspData (uint8_t buffer[], int totalBitOffset,int bytecount
 int sBitStream::readUeV (const string& label) {
 
   sSyntaxElement symbol;
-  symbol.value1 = 0;
   symbol.type = SE_HEADER;
+  symbol.value1 = 0;
   symbol.mapping = infoUe;
   readSyntaxElementVLC (&symbol);
 
@@ -329,8 +329,8 @@ int sBitStream::readUeV (const string& label) {
 int sBitStream::readSeV (const string& label) {
 
   sSyntaxElement symbol;
-  symbol.value1 = 0;
   symbol.type = SE_HEADER;
+  symbol.value1 = 0;
   symbol.mapping = infoSe;
   readSyntaxElementVLC (&symbol);
 
@@ -344,11 +344,11 @@ int sBitStream::readSeV (const string& label) {
 int sBitStream::readUv (int lenInBits, const string& label) {
 
   sSyntaxElement symbol;
-  symbol.value1 = 0;
-  symbol.inf = 0;
   symbol.type = SE_HEADER;
-  symbol.mapping = infoUe;
+  symbol.value1 = 0;
   symbol.len = lenInBits;
+  symbol.inf = 0;
+  symbol.mapping = infoUe;
   readSyntaxElementFLC (&symbol);
 
   if (cDecoder264::gDecoder->param.vlcDebug)
@@ -361,11 +361,11 @@ int sBitStream::readUv (int lenInBits, const string& label) {
 int sBitStream::readIv (int lenInBits, const string& label) {
 
   sSyntaxElement symbol;
-  symbol.value1 = 0;
-  symbol.inf = 0;
   symbol.type = SE_HEADER;
-  symbol.mapping = infoUe;
+  symbol.value1 = 0;
   symbol.len = lenInBits;
+  symbol.inf = 0;
+  symbol.mapping = infoUe;
   readSyntaxElementFLC (&symbol);
 
   // can be negative
@@ -399,8 +399,8 @@ int sBitStream::readSyntaxElementVLC (sSyntaxElement* se) {
 //{{{
 int sBitStream::readSyntaxElementFLC (sSyntaxElement* se) {
 
-  int bitstreamLengthInBits  = (bitStreamLen << 3) + 7;
-  if (getBits(bitStreamBuffer, bitStreamOffset, &(se->inf), bitstreamLengthInBits, se->len) < 0)
+  int bitstreamLengthInBits = (bitStreamLen << 3) + 7;
+  if (getBits (bitStreamBuffer, bitStreamOffset, &(se->inf), bitstreamLengthInBits, se->len) < 0)
     return -1;
 
   se->value1 = se->inf;
@@ -482,7 +482,7 @@ int sBitStream::readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char 
   int vlcnum = se->value1;
 
   // vlcnum is the index of Table used to code coeff_token
-  // vlcnum==3 means (8<=nC) which uses 6bit FLC
+  // vlcnum == 3 means (8<=nC) which uses 6bit FLC
   if (vlcnum == 3) {
     // read 6 bit FLC
     code = showBits (buf, offset, BitstreamLengthInBits, 6);
@@ -570,6 +570,7 @@ int sBitStream::readSyntaxElementLevelVlc0 (sSyntaxElement* se) {
   int bitstreamLengthInBytes = bitStreamLen;
   int bitstreamLengthInBits = (bitstreamLengthInBytes << 3) + 7;
   uint8_t* buf = bitStreamBuffer;
+
   int len = 1;
   int sign = 0;
   int level = 0;
@@ -678,9 +679,7 @@ int sBitStream::readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc) {
 int sBitStream::readSyntaxElementTotalZeros (sSyntaxElement* se) {
 
   //{{{
-  static const uint8_t lentab[TOTRUN_NUM][16] =
-  {
-
+  static const uint8_t lentab[TOTRUN_NUM][16] = {
     { 1,3,3,4,4,5,5,6,6,7,7,8,8,9,9,9},
     { 3,3,3,3,3,4,4,4,4,5,5,6,6,6,6},
     { 4,3,3,3,4,4,3,3,4,5,5,6,5,6},
@@ -699,8 +698,7 @@ int sBitStream::readSyntaxElementTotalZeros (sSyntaxElement* se) {
   };
   //}}}
   //{{{
-  static const uint8_t codtab[TOTRUN_NUM][16] =
-  {
+  static const uint8_t codtab[TOTRUN_NUM][16] = {
     {1,3,2,3,2,3,2,3,2,3,2,3,2,3,2,1},
     {7,6,5,4,3,5,4,3,2,3,2,3,2,1,0},
     {5,7,6,5,4,3,4,3,2,3,2,1,1,0},
@@ -732,12 +730,12 @@ int sBitStream::readSyntaxElementTotalZeros (sSyntaxElement* se) {
 int sBitStream::readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se) {
 
   //{{{
-  static const uint8_t lentab[3][TOTRUN_NUM][16] =
-  {
+  static const uint8_t lentab[3][TOTRUN_NUM][16] = {
     //YUV420
    {{ 1,2,3,3},
     { 1,2,2},
     { 1,1}},
+
     //YUV422
    {{ 1,3,3,4,4,4,5,5},
     { 3,2,3,3,3,3,3},
@@ -746,6 +744,7 @@ int sBitStream::readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSynt
     { 2,2,2,2},
     { 2,2,1},
     { 1,1}},
+
     //YUV444
    {{ 1,3,3,4,4,5,5,6,6,7,7,8,8,9,9,9},
     { 3,3,3,3,3,4,4,4,4,5,5,6,6,6,6},
@@ -765,12 +764,12 @@ int sBitStream::readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSynt
   };
   //}}}
   //{{{
-  static const uint8_t codtab[3][TOTRUN_NUM][16] =
-  {
+  static const uint8_t codtab[3][TOTRUN_NUM][16] = {
     //YUV420
    {{ 1,1,1,0},
     { 1,1,0},
     { 1,0}},
+
     //YUV422
    {{ 1,2,3,2,3,1,1,0},
     { 0,1,1,4,5,6,7},
@@ -779,6 +778,7 @@ int sBitStream::readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSynt
     { 0,1,2,3},
     { 0,1,1},
     { 0,1}},
+
     //YUV444
    {{1,3,2,3,2,3,2,3,2,3,2,3,2,3,2,1},
     {7,6,5,4,3,5,4,3,2,3,2,3,2,1,0},
@@ -812,8 +812,7 @@ int sBitStream::readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSynt
 int sBitStream::readSyntaxElementRun (sSyntaxElement* se) {
 
   //{{{
-  static const uint8_t lentab[TOTRUN_NUM][16] =
-  {
+  static const uint8_t lentab[TOTRUN_NUM][16] = {
     {1,1},
     {1,2,2},
     {2,2,2,2},
@@ -824,8 +823,7 @@ int sBitStream::readSyntaxElementRun (sSyntaxElement* se) {
   };
   //}}}
   //{{{
-  static const uint8_t codtab[TOTRUN_NUM][16] =
-  {
+  static const uint8_t codtab[TOTRUN_NUM][16] = {
     {1,0},
     {1,1,0},
     {3,2,1,0},

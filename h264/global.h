@@ -488,7 +488,7 @@ public:
   uint32_t picOrderCountLsb = UINT_MAX;
 
   int      deltaPicOrderCountBot = INT_MAX;
-  int      deltaPicOrderCount[2] = {INT_MAX};
+  int      deltaPicOrderCount[2] = { INT_MAX };
 
   int      botField = 0;
   int      isIDR = false;
