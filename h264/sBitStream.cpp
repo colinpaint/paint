@@ -557,7 +557,7 @@ int sBitStream::readSyntaxElementNumCoeffTrailingOnesChromaDC (cDecoder264* deco
   int retval = code2d (se, this, &lentab[yuv][0][0], &codtab[yuv][0][0], 17, 4, &code);
 
   if (retval)
-    cDecoder264::error ("ERROR: failed to find NumCoeff/TrailingOnes ChromaDC");
+    cDecoder264::error ("failed to find NumCoeff/TrailingOnes ChromaDC");
 
   return retval;
   }
@@ -589,7 +589,7 @@ int sBitStream::readSyntaxElementLevelVlc0 (sSyntaxElement* se) {
     code |= showBits(buf, offset, bitstreamLengthInBits, 4);
     len  += 4;
     offset += 4;
-    sign = (code & 0x01);
+    sign = code & 0x01;
     level = ((code >> 1) & 0x07) + 8;
     }
   else if (len >= 16) {
@@ -598,15 +598,15 @@ int sBitStream::readSyntaxElementLevelVlc0 (sSyntaxElement* se) {
     int offset1 = (2048 << addbit) - 2032;
     len -= 4;
     code = showBits (buf, offset, bitstreamLengthInBits, len);
-    sign = (code & 0x01);
+    sign = code & 0x01;
     offset += len;
     level = (code >> 1) + offset1;
 
-    code |= (1 << (len)); // for display purpose only
+    code |= (1 << len); // for display purpose only
     len += addbit + 16;
     }
 
-  se->inf = (sign) ? -level : level ;
+  se->inf = sign ? -level : level;
   se->len = len;
 
   bitStreamOffset = offset;
