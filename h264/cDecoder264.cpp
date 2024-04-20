@@ -1512,6 +1512,7 @@ void cDecoder264::error (const string& text) {
   if (cDecoder264::gDecoder)
     cDecoder264::gDecoder->dpb.flush();
 
+  Sleep (5000);
   exit (0);
   }
 //}}}

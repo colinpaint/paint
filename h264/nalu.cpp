@@ -88,7 +88,6 @@ uint32_t cAnnexB::findNalu() {
   }
 //}}}
 
-
 // cNalu - nalu extracted from annexB stream
 //{{{
 cNalu::cNalu (uint32_t size) {
@@ -202,7 +201,8 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 uint32_t cNalu::getSodb (uint8_t* bitStreamBuffer) {
 
   if ((naluBytes-1) > sDataPartition::kMaxFrameSize)
-    cDecoder264::error ("nalu > kMaxFrameSize");
+    cDecoder264::error (fmt::format ("naluSize:{} > kMaxFrameSize:{}",
+                        naluBytes-1, sDataPartition::kMaxFrameSize));
 
   // does this need to be a copy ???
   memcpy (bitStreamBuffer, buffer+1, naluBytes-1);

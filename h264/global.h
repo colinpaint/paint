@@ -249,7 +249,7 @@ enum eDecodeResult {
 //{{{
 struct sDataPartition {
   // this are really dataPartitionArray routines
-  static const int kMaxFrameSize = 200000;  // bytes for one frame
+  static const int kMaxFrameSize = 500000;  // bytes for one frame
 
   //{{{
   static sDataPartition* allocDataPartitionArray (uint32_t numPartitions) {
