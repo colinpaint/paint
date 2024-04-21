@@ -231,7 +231,7 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
   }
 //}}}
 //{{{
-uint32_t cNalu::getSodb (uint8_t*& buffer, uint32_t bufferSize) {
+uint32_t cNalu::getSodb (uint8_t*& buffer, uint32_t& bufferSize) {
 
   if ((naluBytes-1) > sDataPartition::kMaxFrameSize)
     cDecoder264::error (fmt::format ("naluSize:{} > kMaxFrameSize:{}",
