@@ -66,13 +66,13 @@ public:
 
   // gets
   uint8_t* getBuffer() { return mBuffer; }
-  uint32_t getLength() const { return uint32_t(naluBytes); }
+  uint32_t getLength() const { return uint32_t(mNaluBytes); }
   uint8_t* getPayload() { return mBuffer+1; }
-  uint32_t getPayloadLength() const { return uint32_t(naluBytes-1); }
+  uint32_t getPayloadLength() const { return uint32_t(mNaluBytes-1); }
 
-  bool isIdr() const { return unitType == cNalu::NALU_TYPE_IDR; }
-  eNaluType getUnitType() const { return unitType; }
-  eNaluRefId getRefId() const { return refId; }
+  bool isIdr() const { return mUnitType == cNalu::NALU_TYPE_IDR; }
+  eNaluType getUnitType() const { return mUnitType; }
+  eNaluRefId getRefId() const { return mRefId; }
 
   std::string getNaluString() const;
 
@@ -89,11 +89,11 @@ private:
 
   // vars
   uint8_t*   mBuffer = nullptr;
-  uint32_t   allocSize = 0;
-  int32_t    naluBytes = 0;
+  uint32_t   mAllocSize = 0;
+  int32_t    mNaluBytes = 0;
 
-  bool       longStartCode = false;
-  bool       forbiddenBit = false;
-  eNaluType  unitType = NALU_TYPE_NONE;
-  eNaluRefId refId = NALU_PRIORITY_DISPOSABLE;
+  bool       mLongStartCode = false;
+  bool       mForbiddenBit = false;
+  eNaluType  mUnitType = NALU_TYPE_NONE;
+  eNaluRefId mRefId = NALU_PRIORITY_DISPOSABLE;
   };

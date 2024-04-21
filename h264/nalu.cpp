@@ -8,7 +8,7 @@
 
 using namespace std;
 //}}}
-constexpr uint32_t kBufferInitSize = 0x8000; // bytes for one frame
+constexpr uint32_t kBufferInitSize = 32; // bytes for one frame
 namespace {
   //{{{
   bool findStartCode (uint8_t* buf, uint32_t numZeros) {
@@ -144,7 +144,7 @@ cNalu::~cNalu() {
 string cNalu::getNaluString() const {
 
   string naluTypeString;
-  switch (unitType) {
+  switch (mUnitType) {
     case NALU_TYPE_IDR:
       naluTypeString = "IDR";
       break;
@@ -181,11 +181,11 @@ string cNalu::getNaluString() const {
 
   return fmt::format ("{}{}{} {}:{}:{}",
                       naluTypeString,
-                      longStartCode ? "" : "short",
-                      forbiddenBit ?  "forbidden":"",
-                      (int)refId,
-                      (int)unitType,
-                      naluBytes);
+                      mLongStartCode ? "" : "short",
+                      mForbiddenBit ?  "forbidden":"",
+                      (int)mRefId,
+                      (int)mUnitType,
+                      mNaluBytes);
   }
 //}}}
 
@@ -193,40 +193,40 @@ string cNalu::getNaluString() const {
 uint32_t cNalu::readNalu (cDecoder264* decoder) {
 // simple parse of nalu, copy to own buffer before emulation preventation byte removal
 
-  naluBytes = decoder->annexB->findNalu();
-  if (naluBytes == 0)
-    return naluBytes;
+  mNaluBytes = decoder->annexB->findNalu();
+  if (mNaluBytes == 0)
+    return mNaluBytes;
 
   // copy annexB data to our mBuffer
-  allocBuffer (mBuffer, allocSize, naluBytes);
-  memcpy (mBuffer, decoder->annexB->getNaluBuffer(), naluBytes);
+  allocBuffer (mBuffer, mAllocSize, mNaluBytes);
+  memcpy (mBuffer, decoder->annexB->getNaluBuffer(), mNaluBytes);
 
-  longStartCode = decoder->annexB->getLongStartCode();
-  forbiddenBit = (*mBuffer >> 7) & 1;
-  refId = eNaluRefId((*mBuffer >> 5) & 3);
-  unitType = eNaluType(*mBuffer & 0x1f);
+  mLongStartCode = decoder->annexB->getLongStartCode();
+  mForbiddenBit = (*mBuffer >> 7) & 1;
+  mRefId = eNaluRefId((*mBuffer >> 5) & 3);
+  mUnitType = eNaluType(*mBuffer & 0x1f);
 
   if (decoder->param.naluDebug)
     debug();
 
-  if (forbiddenBit)
+  if (mForbiddenBit)
     cDecoder264::error ("NALU with forbiddenBit set");
 
   // remove emulation preventation bytes
   checkZeroByteNonVCL (decoder);
   naluToRbsp();
 
-  if (naluBytes < 0)
+  if (mNaluBytes < 0)
     cDecoder264::error ("NALU invalid startcode");
 
-  return (uint32_t)naluBytes;
+  return (uint32_t)mNaluBytes;
   }
 //}}}
 //{{{
 void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 
   // This function deals only with VCL NAL units
-  if (!(unitType >= NALU_TYPE_SLICE && unitType <= NALU_TYPE_IDR))
+  if (!(mUnitType >= NALU_TYPE_SLICE && mUnitType <= NALU_TYPE_IDR))
     return;
 
   // the first VCL NAL unit that is the first NAL unit after last VCL NAL unit indicates
@@ -239,9 +239,9 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
 uint32_t cNalu::getSodb (uint8_t*& buffer, uint32_t& allocSize) {
 
   // copy naluBuffer to buffer
-  allocBuffer (buffer, allocSize, naluBytes-1);
-  memcpy (buffer, mBuffer+1, naluBytes-1);
-  return rbspToSodb (buffer, naluBytes-1);
+  allocBuffer (buffer, allocSize, mNaluBytes-1);
+  memcpy (buffer, mBuffer+1, mNaluBytes-1);
+  return rbspToSodb (buffer, mNaluBytes-1);
   }
 //}}}
 
@@ -250,13 +250,13 @@ uint32_t cNalu::getSodb (uint8_t*& buffer, uint32_t& allocSize) {
 void cNalu::checkZeroByteNonVCL (cDecoder264* decoder) {
 
   // This function deals only with non-VCL NAL units
-  if ((unitType >= 1) && (unitType <= 5))
+  if ((mUnitType >= 1) && (mUnitType <= 5))
     return;
 
   // check the possibility of the current NALU to be the start of a new access unit, according to 7.4.1.2.3
-  if (unitType == NALU_TYPE_AUD || unitType == NALU_TYPE_SPS ||
-      unitType == NALU_TYPE_PPS || unitType == NALU_TYPE_SEI ||
-      (unitType >= 13 && unitType <= 18))
+  if (mUnitType == NALU_TYPE_AUD || mUnitType == NALU_TYPE_SPS ||
+      mUnitType == NALU_TYPE_PPS || mUnitType == NALU_TYPE_SEI ||
+      (mUnitType >= 13 && mUnitType <= 18))
     if (decoder->gotLastNalu)
       // deliver the last access unit to decoder
       decoder->gotLastNalu = 0;
@@ -269,10 +269,10 @@ int cNalu::naluToRbsp() {
 // - what is the cabacZeroWord problem ???
 
   uint8_t* bufferPtr = mBuffer;
-  int endBytePos = naluBytes;
+  int endBytePos = mNaluBytes;
   if (endBytePos < 1) {
-    naluBytes = endBytePos;
-    return naluBytes;
+    mNaluBytes = endBytePos;
+    return mNaluBytes;
     }
 
   int zeroCount = 0;
@@ -281,8 +281,8 @@ int cNalu::naluToRbsp() {
     // in nalu, 0x000000, 0x000001, 0x000002 shall not occur at any uint8_t-aligned position
     if (zeroCount == 2) {
       if (bufferPtr[fromIndex] < 0x03) {
-        naluBytes = -1;
-        return naluBytes;
+        mNaluBytes = -1;
+        return mNaluBytes;
         }
 
       if (bufferPtr[fromIndex] == 0x03) {
@@ -290,12 +290,12 @@ int cNalu::naluToRbsp() {
         // - except if cabacZeroWord, last 3 bytes of nalu are 0x000003
         // if cabacZeroWord, final byte of nalu(0x03) is discarded, last 2 bytes RBSP must be 0x0000
         if ((fromIndex < endBytePos-1) && (bufferPtr[fromIndex+1] > 0x03)) {
-          naluBytes = -1;
-          return naluBytes;
+          mNaluBytes = -1;
+          return mNaluBytes;
           }
         if (fromIndex == endBytePos-1) {
-          naluBytes = toIndex;
-          return naluBytes;
+          mNaluBytes = toIndex;
+          return mNaluBytes;
           }
         fromIndex++;
         zeroCount = 0;
@@ -310,8 +310,8 @@ int cNalu::naluToRbsp() {
     toIndex++;
     }
 
-  naluBytes = toIndex;
-  return naluBytes;
+  mNaluBytes = toIndex;
+  return mNaluBytes;
   }
 //}}}
 
