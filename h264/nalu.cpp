@@ -211,7 +211,7 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
     debug();
 
   if (mForbiddenBit)
-    cDecoder264::error ("NALU with forbiddenBit set");
+    cDecoder264::error ("NALU forbiddenBit");
 
   // remove emulation preventation bytes
   checkZeroByteNonVCL (decoder);
