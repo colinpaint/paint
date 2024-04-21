@@ -66,8 +66,8 @@ namespace {
 //{{{
 void cAnnexB::open (uint8_t* chunk, size_t chunkSize) {
 
-  buffer = chunk;
-  bufferSize = chunkSize;
+  mBuffer = chunk;
+  mBufferSize = chunkSize;
 
   reset();
   }
@@ -75,8 +75,8 @@ void cAnnexB::open (uint8_t* chunk, size_t chunkSize) {
 //{{{
 void cAnnexB::reset() {
 
-  bufferPtr = buffer;
-  bufferLeft = bufferSize;
+  mBufferPtr = mBuffer;
+  mBufferLeft = mBufferSize;
   }
 //}}}
 //{{{
@@ -86,22 +86,22 @@ uint32_t cAnnexB::findNalu() {
 
   // find leading startCode, or bufferEnd
   bool startCodeFound = false;
-  while (!startCodeFound && (bufferLeft >= 4)) {
-    if (findStartCode (bufferPtr, 2)) {
+  while (!startCodeFound && (mBufferLeft >= 4)) {
+    if (findStartCode (mBufferPtr, 2)) {
       startCodeFound = true;
-      longStartCode = false;
-      bufferPtr += 3;
-      bufferLeft -= 3;
+      mLongStartCode = false;
+      mBufferPtr += 3;
+      mBufferLeft -= 3;
       }
-    else if (findStartCode (bufferPtr, 3)) {
+    else if (findStartCode (mBufferPtr, 3)) {
       startCodeFound = true;
-      longStartCode = true;
-      bufferPtr += 4;
-      bufferLeft -= 4;
+      mLongStartCode = true;
+      mBufferPtr += 4;
+      mBufferLeft -= 4;
       }
     else {
-      bufferPtr++;
-      bufferLeft--;
+      mBufferPtr++;
+      mBufferLeft--;
       }
     }
 
@@ -109,16 +109,16 @@ uint32_t cAnnexB::findNalu() {
     return 0;
 
   // point start of nalu, return naluBytes to next startVCode or endBuffer
-  naluBufferPtr = bufferPtr;
+  mNaluBufferPtr = mBufferPtr;
   uint32_t naluBytes = 0;
-  while (bufferLeft > 0) {
-    if ((bufferLeft >= 3) && findStartCode (bufferPtr, 2)) // 0x000001 startCode, return length
+  while (mBufferLeft > 0) {
+    if ((mBufferLeft >= 3) && findStartCode (mBufferPtr, 2)) // 0x000001 startCode, return length
       return naluBytes;
-    else if ((bufferLeft >= 4) && findStartCode (bufferPtr, 3)) // 0x00000001 startCode, return length
+    else if ((mBufferLeft >= 4) && findStartCode (mBufferPtr, 3)) // 0x00000001 startCode, return length
       return naluBytes;
     else {
-      bufferPtr++;
-      bufferLeft--;
+      mBufferPtr++;
+      mBufferLeft--;
       naluBytes++;
       }
     }

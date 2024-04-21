@@ -5,8 +5,8 @@ class cDecoder264;
 class cAnnexB {
 public:
   // gets
-  bool getLongStartCode() const { return longStartCode; }
-  uint8_t* getNaluBuffer() { return naluBufferPtr; }
+  bool getLongStartCode() const { return mLongStartCode; }
+  uint8_t* getNaluBuffer() { return mNaluBufferPtr; }
 
   // actions
   void open (uint8_t* chunk, size_t chunkSize);
@@ -15,18 +15,18 @@ public:
 
 private:
   // vars
-  uint8_t*  buffer = nullptr;
-  size_t    bufferSize = 0;
+  uint8_t*  mBuffer = nullptr;
+  size_t    mBufferSize = 0;
 
   // current ptr
-  uint8_t*  bufferPtr = nullptr;
-  size_t    bufferLeft = 0;
+  uint8_t*  mBufferPtr = nullptr;
+  size_t    mBufferLeft = 0;
 
-  bool      startCodeFound = false;
-  bool      longStartCode = false;
+  bool      mStartCodeFound = false;
+  bool      mLongStartCode = false;
 
   // start of nalu
-  uint8_t*  naluBufferPtr = nullptr;
+  uint8_t*  mNaluBufferPtr = nullptr;
   };
 
 class cNalu {
