@@ -2684,7 +2684,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         bitStream.mReadLen = 0;
         bitStream.mError = 0;
         bitStream.mOffset = 0;
-        bitStream.mLength = nalu->getSodb(bitStream.mBuffer);
+        bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
         bitStream.mCodeLen = bitStream.mLength;
 
         readSliceHeader (bitStream, slice);
@@ -2754,7 +2754,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         bitStream.mError = 0;
         bitStream.mOffset = 0;
         bitStream.mReadLen = 0;
-        bitStream.mLength = nalu->getSodb(bitStream.mBuffer);
+        bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
         bitStream.mCodeLen = bitStream.mLength;
 
         readSliceHeader (bitStream, slice);
@@ -2788,7 +2788,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           bitStream.mError = 0;
           bitStream.mOffset = 0;
           bitStream.mReadLen = 0;
-          bitStream.mLength = nalu->getSodb(bitStream.mBuffer);
+          bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
           bitStream.mCodeLen = bitStream.mLength;
 
           int sliceIdB = bitStream.readUeV ("NALU dataPartitionB sliceId");
@@ -2817,7 +2817,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           bitStream.mError = 0;
           bitStream.mOffset = 0;
           bitStream.mReadLen = 0;
-          bitStream.mLength = nalu->getSodb(bitStream.mBuffer);
+          bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
           bitStream.mCodeLen = bitStream.mLength;
 
           slice->noDataPartitionC = 0;

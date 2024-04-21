@@ -124,6 +124,7 @@ struct sSyntaxElement {
 //}}}
 
 struct sBitStream {
+  //{{{  static memebers
   //{{{
   //! gives CBP value from codeword number, both for intra and inter
   static inline const uint8_t kNCBP[2][48][2] = {
@@ -176,7 +177,6 @@ struct sBitStream {
   };
   //}}}
 
-  // statics
   static void infoUe (int len, int info, int* value1, int* dummy);
   static void infoSe (int len, int info, int* value1, int* dummy);
   static void infoCbpIntraNormal (int len, int info,int* codedBlockPattern, int* dummy);
@@ -194,6 +194,7 @@ struct sBitStream {
   static int getBits (uint8_t buffer[], int totalBitOffset, int* info, int bitCount, int numBits);
   static int showBits (uint8_t buffer[], int totalBitOffset, int bitCount, int numBits);
   static int moreRbspData (uint8_t buffer[], int totalBitOffset, int bytecount);
+  //}}}
 
   // members
   int readSeV (const std::string& label);
@@ -216,14 +217,14 @@ struct sBitStream {
   int readSyntaxElementTotalZerosChromaDC (cDecoder264* decoder, sSyntaxElement* se);
   int readSyntaxElementRun (sSyntaxElement* se);
 
-  // vars 
-  uint8_t* mBuffer; // codebuffer for read bytes
+  // vars
+  uint8_t* mBuffer;    // codebuffer for read bytes
   int32_t  mAllocSize; // allocated buffer size
-  int      mOffset; // position in the codebuffer, bit-oriented
-  int      mLength; // over codebuffer length, uint8_t oriented
-  int      mError;  // error 0=noError
+  int      mOffset;    // position in the codebuffer, bit-oriented
+  int      mLength;    // over codebuffer length, uint8_t oriented
+  int      mError;     // error 0=noError
 
   // - cabac
-  int      mReadLen; // position in the codebuffer
-  int      mCodeLen; // overall codebuffer length
+  int      mReadLen;   // position in the codebuffer
+  int      mCodeLen;   // overall codebuffer length
   };

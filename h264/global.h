@@ -256,8 +256,10 @@ struct sDataPartition {
   // trick to allocate array as contiguous sDataPartition, calloc clear of all struct vars except the bitStreams
 
     sDataPartition* dataPartitionArray = (sDataPartition*)calloc (1, numPartitions * sizeof(sDataPartition));
-    for (uint32_t i = 0; i < numPartitions; ++i)
+    for (uint32_t i = 0; i < numPartitions; ++i) {
       dataPartitionArray[i].bitStream.mBuffer = (uint8_t*)malloc (kMaxFrameSize);
+      dataPartitionArray[i].bitStream.mAllocSize = kMaxFrameSize;
+      }
 
     return dataPartitionArray;
     }
