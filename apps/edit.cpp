@@ -3697,7 +3697,112 @@ namespace {
     //}}}
     ~cMemEdit() = default;
 
-    //{{{  draws
+    //{{{
+    void setMem (uint8_t* memData, size_t memSize) {
+      mInfo.mMemData = memData;
+      mInfo.mMemSize = memSize;
+      }
+    //}}}
+    //{{{
+    void setAddressHighlight (size_t addressMin, size_t addressMax) {
+
+      mEdit.mGotoAddress = addressMin;
+
+      mEdit.mHighlightMin = addressMin;
+      mEdit.mHighlightMax = addressMax;
+      }
+    //}}}
+
+    //{{{
+    void moveLeft() {
+      if (isValid (mEdit.mEditAddress)) {
+        if (mEdit.mEditAddress > 0) {
+          mEdit.mNextEditAddress = mEdit.mEditAddress - 1;
+          mEdit.mEditTakeFocus = true;
+          }
+        }
+      }
+    //}}}
+    //{{{
+    void moveRight() {
+      if (isValid (mEdit.mEditAddress)) {
+        if (mEdit.mEditAddress < mInfo.mMemSize - 2) {
+          mEdit.mNextEditAddress = mEdit.mEditAddress + 1;
+          mEdit.mEditTakeFocus = true;
+          }
+        }
+      }
+    //}}}
+    //{{{
+    void moveLineUp() {
+      if (isValid (mEdit.mEditAddress)) {
+        if (mEdit.mEditAddress >= (size_t)mOptions.mColumns) {
+          mEdit.mNextEditAddress = mEdit.mEditAddress - mOptions.mColumns;
+          mEdit.mEditTakeFocus = true;
+          }
+        }
+      }
+    //}}}
+    //{{{
+    void moveLineDown() {
+      if (isValid (mEdit.mEditAddress)) {
+        if (mEdit.mEditAddress < mInfo.mMemSize - mOptions.mColumns) {
+          mEdit.mNextEditAddress = mEdit.mEditAddress + mOptions.mColumns;
+          mEdit.mEditTakeFocus = true;
+          }
+        }
+      }
+    //}}}
+    //{{{
+    void movePageUp() {
+      if (isValid (mEdit.mEditAddress)) {
+        if (mEdit.mEditAddress >= (size_t)mOptions.mColumns) {
+          // could be better
+          mEdit.mNextEditAddress = mEdit.mEditAddress;
+          int lines = mContext.mNumPageLines;
+          while ((lines-- > 0) && (mEdit.mNextEditAddress >= (size_t)mOptions.mColumns))
+            mEdit.mNextEditAddress -= mOptions.mColumns;
+          mEdit.mEditTakeFocus = true;
+          }
+        }
+      }
+    //}}}
+    //{{{
+    void movePageDown() {
+      if (isValid (mEdit.mEditAddress)) {
+        if (mEdit.mEditAddress < mInfo.mMemSize - mOptions.mColumns) {
+          // could be better
+          mEdit.mNextEditAddress = mEdit.mEditAddress;
+          int lines = mContext.mNumPageLines;
+          while ((lines-- > 0)  && (mEdit.mNextEditAddress < (mInfo.mMemSize - mOptions.mColumns)))
+            mEdit.mNextEditAddress += mOptions.mColumns;
+          mEdit.mEditTakeFocus = true;
+          }
+        }
+      }
+    //}}}
+    //{{{
+    void moveHome() {
+      if (isValid (mEdit.mEditAddress)) {
+        if (mEdit.mEditAddress > 0) {
+          mEdit.mNextEditAddress = 0;
+          mEdit.mEditTakeFocus = true;
+          }
+        }
+      }
+    //}}}
+    //{{{
+    void moveEnd() {
+
+      if (isValid (mEdit.mEditAddress)) {
+        if (mEdit.mEditAddress < (mInfo.mMemSize - 2)) {
+          mEdit.mNextEditAddress = mInfo.mMemSize - 1;
+          mEdit.mEditTakeFocus = true;
+          }
+        }
+      }
+    //}}}
+
     //{{{
     void drawWindow (const string& title, size_t baseAddress) {
     // standalone Memory Editor window
@@ -3774,123 +3879,6 @@ namespace {
         mEdit.mDataAddress = mEdit.mNextEditAddress;
         }
       }
-    //}}}
-    //}}}
-    //{{{  sets
-    //{{{
-    void setMem (uint8_t* memData, size_t memSize) {
-      mInfo.mMemData = memData;
-      mInfo.mMemSize = memSize;
-      }
-    //}}}
-    //{{{
-    void setAddressHighlight (size_t addressMin, size_t addressMax) {
-
-      mEdit.mGotoAddress = addressMin;
-
-      mEdit.mHighlightMin = addressMin;
-      mEdit.mHighlightMax = addressMax;
-      }
-    //}}}
-    //}}}
-    //{{{  actions
-
-    //{{{
-    void moveLeft() {
-
-      if (isValid (mEdit.mEditAddress)) {
-        if (mEdit.mEditAddress > 0) {
-          mEdit.mNextEditAddress = mEdit.mEditAddress - 1;
-          mEdit.mEditTakeFocus = true;
-          }
-        }
-      }
-    //}}}
-    //{{{
-    void moveRight() {
-
-      if (isValid (mEdit.mEditAddress)) {
-        if (mEdit.mEditAddress < mInfo.mMemSize - 2) {
-          mEdit.mNextEditAddress = mEdit.mEditAddress + 1;
-          mEdit.mEditTakeFocus = true;
-          }
-        }
-      }
-    //}}}
-    //{{{
-    void moveLineUp() {
-
-      if (isValid (mEdit.mEditAddress)) {
-        if (mEdit.mEditAddress >= (size_t)mOptions.mColumns) {
-          mEdit.mNextEditAddress = mEdit.mEditAddress - mOptions.mColumns;
-          mEdit.mEditTakeFocus = true;
-          }
-        }
-      }
-    //}}}
-    //{{{
-    void moveLineDown() {
-
-      if (isValid (mEdit.mEditAddress)) {
-        if (mEdit.mEditAddress < mInfo.mMemSize - mOptions.mColumns) {
-          mEdit.mNextEditAddress = mEdit.mEditAddress + mOptions.mColumns;
-          mEdit.mEditTakeFocus = true;
-          }
-        }
-      }
-    //}}}
-    //{{{
-    void movePageUp() {
-
-      if (isValid (mEdit.mEditAddress)) {
-        if (mEdit.mEditAddress >= (size_t)mOptions.mColumns) {
-          // could be better
-          mEdit.mNextEditAddress = mEdit.mEditAddress;
-          int lines = mContext.mNumPageLines;
-          while ((lines-- > 0) && (mEdit.mNextEditAddress >= (size_t)mOptions.mColumns))
-            mEdit.mNextEditAddress -= mOptions.mColumns;
-          mEdit.mEditTakeFocus = true;
-          }
-        }
-      }
-    //}}}
-    //{{{
-    void movePageDown() {
-
-      if (isValid (mEdit.mEditAddress)) {
-        if (mEdit.mEditAddress < mInfo.mMemSize - mOptions.mColumns) {
-          // could be better
-          mEdit.mNextEditAddress = mEdit.mEditAddress;
-          int lines = mContext.mNumPageLines;
-          while ((lines-- > 0)  && (mEdit.mNextEditAddress < (mInfo.mMemSize - mOptions.mColumns)))
-            mEdit.mNextEditAddress += mOptions.mColumns;
-          mEdit.mEditTakeFocus = true;
-          }
-        }
-      }
-    //}}}
-    //{{{
-    void moveHome() {
-
-      if (isValid (mEdit.mEditAddress)) {
-        if (mEdit.mEditAddress > 0) {
-          mEdit.mNextEditAddress = 0;
-          mEdit.mEditTakeFocus = true;
-          }
-        }
-      }
-    //}}}
-    //{{{
-    void moveEnd() {
-
-      if (isValid (mEdit.mEditAddress)) {
-        if (mEdit.mEditAddress < (mInfo.mMemSize - 2)) {
-          mEdit.mNextEditAddress = mInfo.mMemSize - 1;
-          mEdit.mEditTakeFocus = true;
-          }
-        }
-      }
-    //}}}
     //}}}
 
   private:
@@ -4522,7 +4510,6 @@ namespace {
 
     //{{{
     void keyboard() {
-
       struct sActionKey {
         bool mAlt;
         bool mCtrl;
