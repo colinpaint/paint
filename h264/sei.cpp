@@ -102,11 +102,11 @@ typedef struct {
 
 namespace {
   //{{{
-  sBitStream* allocBitStream (uint8_t* payload, int size) {
+  sBitStream* allocBitStream (uint8_t* buffer, int len) {
 
     sBitStream* bitStream = (sBitStream*)calloc (1, sizeof(sBitStream));
-    bitStream->bitStreamBuffer = payload;
-    bitStream->bitStreamLen = size;
+    bitStream->bitStreamBuffer = buffer;
+    bitStream->bitStreamLen = len;
     return bitStream;
     }
   //}}}
