@@ -96,4 +96,6 @@ private:
   bool       mForbiddenBit = false;
   eNaluType  mUnitType = NALU_TYPE_NONE;
   eNaluRefId mRefId = NALU_PRIORITY_DISPOSABLE;
+
+  uint32_t   mRemoveCount = 0;
   };

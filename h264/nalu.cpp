@@ -179,12 +179,13 @@ string cNalu::getNaluString() const {
       break;
     }
 
-  return fmt::format ("{}{}{} {}:{}:{}",
+  return fmt::format ("{}{}{} {}:{}:{}:{}",
                       naluTypeString,
                       mLongStartCode ? "" : "short",
                       mForbiddenBit ?  "forbidden":"",
                       (int)mRefId,
                       (int)mUnitType,
+                      (int)mRemoveCount,
                       mNaluBytes);
   }
 //}}}
@@ -275,6 +276,7 @@ int cNalu::naluToRbsp() {
     return mNaluBytes;
     }
 
+  mRemoveCount = 0;
   int zeroCount = 0;
   int toIndex = 1;
   for (int fromIndex = 1; fromIndex < endBytePos; fromIndex++) {
@@ -299,6 +301,7 @@ int cNalu::naluToRbsp() {
           }
         fromIndex++;
         zeroCount = 0;
+        mRemoveCount++;
         }
       }
 
