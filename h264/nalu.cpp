@@ -21,12 +21,12 @@ namespace {
     }
   //}}}
   //{{{
-  int rbspToSodb (uint8_t* buffer, int len) {
+  uint32_t rbspToSodb (uint8_t* buffer, uint32_t len) {
   // rawByteSequencePayload to stringOfDataBits
   // - find trailing 1 bit
 
-    int bitOffset = 0;
-    int lastBytePos = len;
+    uint32_t bitOffset = 0;
+    uint32_t lastBytePos = len;
 
     bool controlBit = buffer[lastBytePos-1] & (0x01 << bitOffset);
     while (!controlBit) {
@@ -231,7 +231,7 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
   }
 //}}}
 //{{{
-uint32_t cNalu::getSodb (uint8_t* buffer) {
+uint32_t cNalu::getSodb (uint8_t*& buffer) {
 
   if ((naluBytes-1) > sDataPartition::kMaxFrameSize)
     cDecoder264::error (fmt::format ("naluSize:{} > kMaxFrameSize:{}",
@@ -268,7 +268,7 @@ int cNalu::naluToRbsp() {
 // - remove emulation prevention byte sequences
 // - what is the cabacZeroWord problem ???
 
-uint8_t* bufferPtr = mBuffer;
+  uint8_t* bufferPtr = mBuffer;
   int endBytePos = naluBytes;
   if (endBytePos < 1) {
     naluBytes = endBytePos;

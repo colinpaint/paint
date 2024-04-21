@@ -80,7 +80,7 @@ public:
   // actions
   uint32_t readNalu (cDecoder264* decoder);
   void checkZeroByteVCL (cDecoder264* decoder);
-  uint32_t getSodb (uint8_t* buffer);
+  uint32_t getSodb (uint8_t*& buffer);
 
 private:
   void checkZeroByteNonVCL (cDecoder264* decoder);
