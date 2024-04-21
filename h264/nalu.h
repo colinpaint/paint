@@ -83,8 +83,6 @@ public:
   uint32_t getSodb (uint8_t* buffer);
 
 private:
-  int rbspToSodb (uint8_t* buffer);
-
   void checkZeroByteNonVCL (cDecoder264* decoder);
   int naluToRbsp();
 

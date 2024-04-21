@@ -20,6 +20,30 @@ namespace {
     return *buf == 1;
     }
   //}}}
+  //{{{
+  int rbspToSodb (uint8_t* buffer, int len) {
+  // rawByteSequencePayload to stringOfDataBits
+  // - find trailing 1 bit
+
+    int bitOffset = 0;
+    int lastBytePos = len;
+
+    bool controlBit = buffer[lastBytePos-1] & (0x01 << bitOffset);
+    while (!controlBit) {
+      // find trailing 1 bit
+      bitOffset++;
+      if (bitOffset == 8) {
+        if (!lastBytePos)
+          cLog::log (LOGERROR, "rbspToSodb allZero data in rbsp");
+        --lastBytePos;
+        bitOffset = 0;
+        }
+      controlBit = buffer[lastBytePos - 1] & (0x01 << bitOffset);
+      }
+
+    return lastBytePos;
+    }
+  //}}}
   }
 
 // cAnnexB - stream of startCode,nalu ...
@@ -217,7 +241,7 @@ uint32_t cNalu::getSodb (uint8_t* buffer) {
   memcpy (buffer, mBuffer+1, naluBytes-1);
   //mBuffer = buffer+1;
 
-  return rbspToSodb (buffer);
+  return rbspToSodb (buffer, naluBytes-1);
   }
 //}}}
 
@@ -288,30 +312,6 @@ uint8_t* bufferPtr = mBuffer;
 
   naluBytes = toIndex;
   return naluBytes;
-  }
-//}}}
-//{{{
-int cNalu::rbspToSodb (uint8_t* buffer) {
-// rawByteSequencePayload to stringOfDataBits
-// - find trailing 1 bit
-
-  int bitOffset = 0;
-  int lastBytePos = naluBytes - 1;
-
-  bool controlBit = buffer[lastBytePos-1] & (0x01 << bitOffset);
-  while (!controlBit) {
-    // find trailing 1 bit
-    bitOffset++;
-    if (bitOffset == 8) {
-      if (!lastBytePos)
-        cLog::log (LOGERROR, "rbspToSodb allZero data in rbsp");
-      --lastBytePos;
-      bitOffset = 0;
-      }
-    controlBit = buffer[lastBytePos - 1] & (0x01 << bitOffset);
-    }
-
-  return lastBytePos;
   }
 //}}}
 
