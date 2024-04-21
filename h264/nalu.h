@@ -2,6 +2,9 @@
 #include "global.h"
 class cDecoder264;
 
+constexpr uint32_t kNaluBufferInitSize = 0x10000; // bytes for one frame
+//constexpr uint32_t kNaluBufferInitSize = 500000;
+
 class cAnnexB {
 public:
   // gets
@@ -62,7 +65,7 @@ public:
     NALU_PRIORITY_HIGHEST     = 3
     } eNaluRefId;
   //}}}
-  cNalu (uint32_t size);
+  cNalu();
   ~cNalu();
 
   // gets
@@ -92,7 +95,7 @@ private:
 
   // vars
   uint8_t*   buffer = nullptr;
-  uint32_t   allocBufferSize = 0;
+  int32_t    bufferAllocatedSize = 0;
   int32_t    naluBytes = 0;
 
   bool       longStartCode = false;

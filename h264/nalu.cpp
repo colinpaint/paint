@@ -90,10 +90,10 @@ uint32_t cAnnexB::findNalu() {
 
 // cNalu - nalu extracted from annexB stream
 //{{{
-cNalu::cNalu (uint32_t size) {
+cNalu::cNalu() {
 
-  buffer = (uint8_t*)malloc (size);
-  allocBufferSize = size;
+  buffer = (uint8_t*)malloc (kNaluBufferInitSize);
+  bufferAllocatedSize = kNaluBufferInitSize;
   }
 //}}}
 //{{{
@@ -159,6 +159,15 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
   naluBytes = decoder->annexB->findNalu();
   if (naluBytes == 0)
     return naluBytes;
+
+  // copy annexB data to our buffer
+  if (naluBytes > bufferAllocatedSize) {
+    // simple buffer grow algorithm
+    while (naluBytes > bufferAllocatedSize)
+      bufferAllocatedSize *= 2;
+    cLog::log (LOGINFO, fmt::format ("cNalu buffer size doubled to {}", bufferAllocatedSize));
+    buffer = (uint8_t*)realloc (buffer, bufferAllocatedSize);
+    }
 
   // copy annexB data our buffer
   memcpy (buffer, decoder->annexB->getNaluBuffer(), naluBytes);

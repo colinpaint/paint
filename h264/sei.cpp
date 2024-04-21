@@ -102,6 +102,16 @@ typedef struct {
 
 namespace {
   //{{{
+  sBitStream* allocBitStream (uint8_t* payload, int size) {
+
+    sBitStream* bitStream = (sBitStream*)calloc (1, sizeof(sBitStream));
+    bitStream->bitStreamBuffer = payload;
+    bitStream->bitStreamLen = size;
+    return bitStream;
+    }
+  //}}}
+
+  //{{{
   void processUserDataUnregistered (uint8_t* payload, int size, cDecoder264* decoder) {
 
     if (decoder->param.seiDebug) {
@@ -167,10 +177,7 @@ namespace {
       return;
       }
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     if (decoder->param.seiDebug) {
       printf ("pictureTiming");
@@ -318,10 +325,7 @@ namespace {
   //{{{
   void processPanScan (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int pan_scan_rect_id = s->readUeV ("SEI pan_scan_rect_id");
     int pan_scan_rect_cancelFlag = s->readU1 ("SEI pan_scan_rect_cancelFlag");
@@ -347,10 +351,7 @@ namespace {
   //{{{
   void processRecoveryPoint (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int recoveryFrameCount = s->readUeV ("SEI recoveryFrameCount");
     int exact_matchFlag = s->readU1 ("SEI exact_matchFlag");
@@ -369,10 +370,7 @@ namespace {
   //{{{
   void processDecRefPicMarkingRepetition (uint8_t* payload, int size, cDecoder264* decoder, cSlice *slice) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int original_idrFlag = s->readU1 ("SEI original_idrFlag");
     int original_frame_num = s->readUeV ("SEI original_frame_num");
@@ -404,10 +402,7 @@ namespace {
     int m, n, left, right, top, bottom,directx, directy;
     uint8_t*** map;
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     target_frame_num = s->readUeV ("SEI target_frame_num");
     num_spare_pics = 1 + s->readUeV ("SEI num_spare_pics_minus1");
@@ -562,10 +557,7 @@ namespace {
   //{{{
   void process_subsequence_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int sub_seq_layer_num = s->readUeV ("SEI sub_seq_layer_num");
     int sub_seq_id = s->readUeV ("SEI sub_seq_id");
@@ -598,10 +590,7 @@ namespace {
   {
     long num_sub_layers, accurate_statisticsFlag, average_bit_rate, average_frame_rate;
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamLen = size;
-    s->bitStreamOffset = 0;
+    sBitStream* s = allocBitStream (payload, size);
 
     num_sub_layers = 1 + s->readUeV("SEI num_sub_layers_minus1");
 
@@ -625,10 +614,7 @@ namespace {
   //{{{
   void process_subsequence_characteristics_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamLen = size;
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
+    sBitStream* s = allocBitStream (payload, size);
 
     int sub_seq_layer_num = s->readUeV ("SEI sub_seq_layer_num");
     int sub_seq_id = s->readUeV ("SEI sub_seq_id");
@@ -680,11 +666,7 @@ namespace {
   //{{{
   void process_scene_information (uint8_t* payload, int size, cDecoder264* decoder) {
 
-
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamLen = size;
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
+    sBitStream* s = allocBitStream (payload, size);
 
     int second_scene_id;
     int scene_id = s->readUeV ("SEI scene_id");
@@ -723,10 +705,7 @@ namespace {
   //{{{
   void process_full_frame_freeze_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int full_frame_freeze_repetition_period = s->readUeV ("SEI full_frame_freeze_repetition_period");
     printf ("full_frame_freeze_repetition_period = %d\n", full_frame_freeze_repetition_period);
@@ -745,10 +724,7 @@ namespace {
   //{{{
   void process_full_frame_snapshot_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int snapshot_id = s->readUeV ("SEI snapshot_id");
 
@@ -761,10 +737,7 @@ namespace {
   //{{{
   void process_progressive_refinement_start_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int progressive_refinement_id   = s->readUeV("SEI progressive_refinement_id"  );
     int num_refinement_steps_minus1 = s->readUeV("SEI num_refinement_steps_minus1");
@@ -778,10 +751,7 @@ namespace {
   //{{{
   void process_progressive_refinement_end_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int progressive_refinement_id   = s->readUeV ("SEI progressive_refinement_id"  );
     printf ("progressive refinement segment end\n");
@@ -793,10 +763,7 @@ namespace {
   //{{{
   void process_motion_constrained_slice_group_set_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int numSliceGroupsMinus1 = s->readUeV ("SEI numSliceGroupsMinus1" );
     int sliceGroupSize = ceilLog2 (numSliceGroupsMinus1 + 1);
@@ -834,10 +801,7 @@ namespace {
     int comp_model_value;
     int film_grain_characteristics_repetition_period;
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     film_grain_characteristics_cancelFlag = s->readU1 ("SEI film_grain_characteristics_cancelFlag");
     printf ("film_grain_characteristics_cancelFlag = %d\n", film_grain_characteristics_cancelFlag);
@@ -900,10 +864,7 @@ namespace {
   //{{{
   void processDeblockFilterDisplayPref (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int deblocking_display_preference_cancelFlag = s->readU1("SEI deblocking_display_preference_cancelFlag");
     printf ("deblocking_display_preference_cancelFlag = %d\n", deblocking_display_preference_cancelFlag);
@@ -923,10 +884,7 @@ namespace {
   //{{{
   void processStereoVideo (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int field_viewsFlags = s->readU1 ("SEI field_viewsFlags");
     printf ("field_viewsFlags = %d\n", field_viewsFlags);
@@ -952,10 +910,7 @@ namespace {
   //{{{
   void processBufferingPeriod (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     int spsId = s->readUeV ("SEI spsId");
     cSps* sps = &decoder->sps[spsId];
@@ -999,10 +954,7 @@ namespace {
 
     frame_packing_arrangement_information_struct seiFramePackingArrangement;
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     printf ("Frame packing arrangement\n");
 
@@ -1063,10 +1015,7 @@ namespace {
   //{{{
   void process_post_filter_hints_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     uint32_t filter_hint_size_y = s->readUeV("SEI filter_hint_size_y"); // interpret post-filter hint SEI here
     uint32_t filter_hint_size_x = s->readUeV("SEI filter_hint_size_x"); // interpret post-filter hint SEI here
@@ -1100,10 +1049,7 @@ namespace {
   //{{{
   void process_green_metadata_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
-    sBitStream* s = (sBitStream*)malloc (sizeof(sBitStream));
-    s->bitStreamBuffer = payload;
-    s->bitStreamOffset = 0;
-    s->bitStreamLen = size;
+    sBitStream* s = allocBitStream (payload, size);
 
     printf ("GreenMetadataInfo\n");
 

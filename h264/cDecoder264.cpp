@@ -1473,8 +1473,8 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
 
   // init annexB, nalu
   decoder->annexB = new cAnnexB();
-  decoder->annexB->open(chunk, chunkSize);
-  decoder->nalu = new cNalu (sDataPartition::kMaxFrameSize);
+  decoder->annexB->open (chunk, chunkSize);
+  decoder->nalu = new cNalu();
 
   // init slice
   decoder->sliceList = (cSlice**)calloc (cSlice::kMaxNumSlices, sizeof(cSlice*));
