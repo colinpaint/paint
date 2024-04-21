@@ -248,20 +248,12 @@ enum eDecodeResult {
 #include "cDpb.h"
 //{{{
 struct sDataPartition {
-  // this are really dataPartitionArray routines
-  static const int kMaxFrameSize = 500000;  // bytes for one frame
-
   //{{{
   static sDataPartition* allocDataPartitionArray (uint32_t numPartitions) {
-  // trick to allocate array as contiguous sDataPartition, calloc clear of all struct vars except the bitStreams
+  // trick to allocate array as contiguous sDataPartition
+  // - calloc clear of all struct vars except the bitStream buffers
 
-    sDataPartition* dataPartitionArray = (sDataPartition*)calloc (1, numPartitions * sizeof(sDataPartition));
-    for (uint32_t i = 0; i < numPartitions; ++i) {
-      dataPartitionArray[i].bitStream.mBuffer = (uint8_t*)malloc (kMaxFrameSize);
-      dataPartitionArray[i].bitStream.mAllocSize = kMaxFrameSize;
-      }
-
-    return dataPartitionArray;
+    return (sDataPartition*)calloc (1, numPartitions * sizeof(sDataPartition));
     }
   //}}}
   //{{{

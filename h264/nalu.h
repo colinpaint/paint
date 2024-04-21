@@ -31,7 +31,6 @@ private:
 
 class cNalu {
 public:
-  static constexpr uint32_t kNaluBufferInitSize = 0x8000; // bytes for one frame
   //{{{  enum eNaluType
   typedef enum {
     NALU_TYPE_NONE     = 0,
@@ -80,7 +79,7 @@ public:
   // actions
   uint32_t readNalu (cDecoder264* decoder);
   void checkZeroByteVCL (cDecoder264* decoder);
-  uint32_t getSodb (uint8_t*& buffer, uint32_t& bufferSize);
+  uint32_t getSodb (uint8_t*& buffer, uint32_t& allocSize);
 
 private:
   void checkZeroByteNonVCL (cDecoder264* decoder);
@@ -90,7 +89,7 @@ private:
 
   // vars
   uint8_t*   mBuffer = nullptr;
-  int32_t    allocSize = 0;
+  uint32_t   allocSize = 0;
   int32_t    naluBytes = 0;
 
   bool       longStartCode = false;

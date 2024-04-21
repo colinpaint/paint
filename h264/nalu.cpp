@@ -8,6 +8,7 @@
 
 using namespace std;
 //}}}
+constexpr uint32_t kBufferInitSize = 0x8000; // bytes for one frame
 namespace {
   //{{{
   bool findStartCode (uint8_t* buf, uint32_t numZeros) {
@@ -42,6 +43,21 @@ namespace {
       }
 
     return lastBytePos;
+    }
+  //}}}
+
+  //{{{
+  void allocBuffer (uint8_t*& buffer, uint32_t& allocSize, uint32_t size) {
+
+    if (size > allocSize) {
+      // simple buffer grow algorithm
+      if (allocSize < kBufferInitSize)
+        allocSize = kBufferInitSize;
+      while (size > allocSize)
+        allocSize *= 2;
+      cLog::log (LOGINFO, fmt::format ("cNalu buffer size changed to {} for {}", allocSize, size));
+      buffer = (uint8_t*)realloc (buffer, allocSize);
+      }
     }
   //}}}
   }
@@ -115,9 +131,6 @@ uint32_t cAnnexB::findNalu() {
 // cNalu - nalu extracted from annexB stream
 //{{{
 cNalu::cNalu() {
-
-  mBuffer = (uint8_t*)malloc (kNaluBufferInitSize);
-  allocSize = kNaluBufferInitSize;
   }
 //}}}
 //{{{
@@ -184,16 +197,8 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
   if (naluBytes == 0)
     return naluBytes;
 
-  // copy annexB data to our buffer
-  if (naluBytes > allocSize) {
-    // simple buffer grow algorithm
-    while (naluBytes > allocSize)
-      allocSize *= 2;
-    cLog::log (LOGINFO, fmt::format ("cNalu buffer size doubled to {}", allocSize));
-    mBuffer = (uint8_t*)realloc (mBuffer, allocSize);
-    }
-
-  // copy annexB data our buffer
+  // copy annexB data to our mBuffer
+  allocBuffer (mBuffer, allocSize, naluBytes);
   memcpy (mBuffer, decoder->annexB->getNaluBuffer(), naluBytes);
 
   longStartCode = decoder->annexB->getLongStartCode();
@@ -231,16 +236,11 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
   }
 //}}}
 //{{{
-uint32_t cNalu::getSodb (uint8_t*& buffer, uint32_t& bufferSize) {
+uint32_t cNalu::getSodb (uint8_t*& buffer, uint32_t& allocSize) {
 
-  if ((naluBytes-1) > sDataPartition::kMaxFrameSize)
-    cDecoder264::error (fmt::format ("naluSize:{} > kMaxFrameSize:{}",
-                        naluBytes-1, sDataPartition::kMaxFrameSize));
-
-  // does this need to be a copy ???
+  // copy naluBuffer to buffer
+  allocBuffer (buffer, allocSize, naluBytes-1);
   memcpy (buffer, mBuffer+1, naluBytes-1);
-  //mBuffer = buffer+1;
-
   return rbspToSodb (buffer, naluBytes-1);
   }
 //}}}
