@@ -92,14 +92,14 @@ uint32_t cAnnexB::findNalu() {
 //{{{
 cNalu::cNalu() {
 
-  buffer = (uint8_t*)malloc (kNaluBufferInitSize);
+  mBuffer = (uint8_t*)malloc (kNaluBufferInitSize);
   allocSize = kNaluBufferInitSize;
   }
 //}}}
 //{{{
 cNalu::~cNalu() {
 
-  free (buffer);
+  free (mBuffer);
   }
 //}}}
 
@@ -166,16 +166,16 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
     while (naluBytes > allocSize)
       allocSize *= 2;
     cLog::log (LOGINFO, fmt::format ("cNalu buffer size doubled to {}", allocSize));
-    buffer = (uint8_t*)realloc (buffer, allocSize);
+    mBuffer = (uint8_t*)realloc (mBuffer, allocSize);
     }
 
   // copy annexB data our buffer
-  memcpy (buffer, decoder->annexB->getNaluBuffer(), naluBytes);
+  memcpy (mBuffer, decoder->annexB->getNaluBuffer(), naluBytes);
 
   longStartCode = decoder->annexB->getLongStartCode();
-  forbiddenBit = (*buffer >> 7) & 1;
-  refId = eNaluRefId((*buffer >> 5) & 3);
-  unitType = eNaluType(*buffer & 0x1f);
+  forbiddenBit = (*mBuffer >> 7) & 1;
+  refId = eNaluRefId((*mBuffer >> 5) & 3);
+  unitType = eNaluType(*mBuffer & 0x1f);
 
   if (decoder->param.naluDebug)
     debug();
@@ -207,17 +207,17 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
   }
 //}}}
 //{{{
-uint32_t cNalu::getSodb (uint8_t* mBuffer) {
+uint32_t cNalu::getSodb (uint8_t* buffer) {
 
   if ((naluBytes-1) > sDataPartition::kMaxFrameSize)
     cDecoder264::error (fmt::format ("naluSize:{} > kMaxFrameSize:{}",
                         naluBytes-1, sDataPartition::kMaxFrameSize));
 
   // does this need to be a copy ???
-  memcpy (mBuffer, buffer+1, naluBytes-1);
+  memcpy (buffer, mBuffer+1, naluBytes-1);
   //mBuffer = buffer+1;
 
-  return rbspToSodb (mBuffer);
+  return rbspToSodb (buffer);
   }
 //}}}
 
@@ -244,7 +244,7 @@ int cNalu::naluToRbsp() {
 // - remove emulation prevention byte sequences
 // - what is the cabacZeroWord problem ???
 
-uint8_t* bufferPtr = buffer;
+uint8_t* bufferPtr = mBuffer;
   int endBytePos = naluBytes;
   if (endBytePos < 1) {
     naluBytes = endBytePos;
@@ -291,14 +291,14 @@ uint8_t* bufferPtr = buffer;
   }
 //}}}
 //{{{
-int cNalu::rbspToSodb (uint8_t* mBuffer) {
+int cNalu::rbspToSodb (uint8_t* buffer) {
 // rawByteSequencePayload to stringOfDataBits
 // - find trailing 1 bit
 
   int bitOffset = 0;
   int lastBytePos = naluBytes - 1;
 
-  bool controlBit = mBuffer[lastBytePos-1] & (0x01 << bitOffset);
+  bool controlBit = buffer[lastBytePos-1] & (0x01 << bitOffset);
   while (!controlBit) {
     // find trailing 1 bit
     bitOffset++;
@@ -308,7 +308,7 @@ int cNalu::rbspToSodb (uint8_t* mBuffer) {
       --lastBytePos;
       bitOffset = 0;
       }
-    controlBit = mBuffer[lastBytePos - 1] & (0x01 << bitOffset);
+    controlBit = buffer[lastBytePos - 1] & (0x01 << bitOffset);
     }
 
   return lastBytePos;

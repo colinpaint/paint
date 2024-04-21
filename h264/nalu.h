@@ -66,9 +66,9 @@ public:
   ~cNalu();
 
   // gets
-  uint8_t* getBuffer() { return buffer; }
+  uint8_t* getBuffer() { return mBuffer; }
   uint32_t getLength() const { return uint32_t(naluBytes); }
-  uint8_t* getPayload() { return buffer+1; }
+  uint8_t* getPayload() { return mBuffer+1; }
   uint32_t getPayloadLength() const { return uint32_t(naluBytes-1); }
 
   bool isIdr() const { return unitType == cNalu::NALU_TYPE_IDR; }
@@ -80,10 +80,10 @@ public:
   // actions
   uint32_t readNalu (cDecoder264* decoder);
   void checkZeroByteVCL (cDecoder264* decoder);
-  uint32_t getSodb (uint8_t* mBuffer);
+  uint32_t getSodb (uint8_t* buffer);
 
 private:
-  int rbspToSodb (uint8_t* mBuffer);
+  int rbspToSodb (uint8_t* buffer);
 
   void checkZeroByteNonVCL (cDecoder264* decoder);
   int naluToRbsp();
@@ -91,7 +91,7 @@ private:
   void debug();
 
   // vars
-  uint8_t*   buffer = nullptr;
+  uint8_t*   mBuffer = nullptr;
   int32_t    allocSize = 0;
   int32_t    naluBytes = 0;
 
