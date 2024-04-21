@@ -22,6 +22,21 @@ namespace {
     }
   //}}}
   //{{{
+  void allocBuffer (uint8_t*& buffer, uint32_t& allocSize, uint32_t len) {
+  // simple buffer grow algorithm
+
+    if (len > allocSize) {
+      if (allocSize < kBufferInitSize)
+        allocSize = kBufferInitSize;
+      while (len > allocSize)
+        allocSize *= 2;
+      cLog::log (LOGINFO, fmt::format ("allocBuffer size changed to:{} for:{}", allocSize, len));
+
+      buffer = (uint8_t*)realloc (buffer, allocSize);
+      }
+    }
+  //}}}
+  //{{{
   uint32_t rbspToSodb (uint8_t* buffer, uint32_t len) {
   // rawByteSequencePayload to stringOfDataBits
   // - find trailing 1 bit and return length
@@ -43,21 +58,6 @@ namespace {
       }
 
     return lastBytePos;
-    }
-  //}}}
-
-  //{{{
-  void allocBuffer (uint8_t*& buffer, uint32_t& allocSize, uint32_t size) {
-
-    if (size > allocSize) {
-      // simple buffer grow algorithm
-      if (allocSize < kBufferInitSize)
-        allocSize = kBufferInitSize;
-      while (size > allocSize)
-        allocSize *= 2;
-      cLog::log (LOGINFO, fmt::format ("cNalu buffer size changed to {} for {}", allocSize, size));
-      buffer = (uint8_t*)realloc (buffer, allocSize);
-      }
     }
   //}}}
   }
