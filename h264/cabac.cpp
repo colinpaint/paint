@@ -731,7 +731,7 @@ namespace {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
           dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
-          if (dataPartition->bitStream.mError)
+          if (dataPartition->mBitStream.mError)
             se->mapping = sBitStream::infoLevelRunInter;
           else
             se->reading = readRunLevelCabac;
@@ -751,7 +751,7 @@ namespace {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
           dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
-          if (dataPartition->bitStream.mError)
+          if (dataPartition->mBitStream.mError)
             se->mapping = sBitStream::infoLevelRunInter;
           else
             se->reading = readRunLevelCabac;
@@ -1020,8 +1020,7 @@ int cabacStartCode (cSlice* slice, int eos_bit) {
   if (eos_bit) {
     const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     sDataPartition* dataPartition = &slice->dataPartitionArray[dpMap[SE_MBTYPE]];
-    sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
-    bit = cabacDecode->getFinal();
+    bit = dataPartition->mCabacDecode.getFinal();
     }
   else
     bit = 0;
@@ -1054,7 +1053,7 @@ void checkNeighbourCabac (sMacroBlock* mb) {
 //{{{
 int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp) {
 
-  sCabacDecode* cabacDecode = &act_dp->cabacDecode;
+  sCabacDecode* cabacDecode = &act_dp->mCabacDecode;
   sMotionContexts* motionContexts  = slice->motionContexts;
 
   // get next MB
@@ -1107,7 +1106,7 @@ int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartiti
 //{{{
 int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition  *act_dp) {
 
-  sCabacDecode* cabacDecode = &act_dp->cabacDecode;
+  sCabacDecode* cabacDecode = &act_dp->mCabacDecode;
   sMotionContexts* motionContexts = slice->motionContexts;
 
   // get next MB
@@ -1161,7 +1160,7 @@ int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartiti
 //{{{
 int readSyntaxElementCabac (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
 
-  sCabacDecode* cabacDecode = &this_dataPart->cabacDecode;
+  sCabacDecode* cabacDecode = &this_dataPart->mCabacDecode;
   int curLen = cabacDecode->getBitsRead();
 
   // perform the actual decoding by calling the appropriate method
@@ -1928,10 +1927,10 @@ void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition) {
   cDecoder264* decoder = slice->decoder;
   sPicture* picture = slice->picture;
 
-  sBitStream* s = &dataPartition->bitStream;
-  sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
+  sBitStream* s = &dataPartition->mBitStream;
+  sCabacDecode* cabacDecode = &dataPartition->mCabacDecode;
   uint8_t* buf = s->mBuffer;
-  int bitStreamLengthInBits = (dataPartition->bitStream.mLength << 3) + 7;
+  int bitStreamLengthInBits = (dataPartition->mBitStream.mLength << 3) + 7;
 
   int val = 0;
   int bitsRead = 0;

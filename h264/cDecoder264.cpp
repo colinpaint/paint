@@ -2680,7 +2680,7 @@ int cDecoder264::readNalu (cSlice* slice) {
 
         slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
-        sBitStream& bitStream = slice->dataPartitionArray[0].bitStream;
+        sBitStream& bitStream = slice->dataPartitionArray[0].mBitStream;
         bitStream.mOffset = 0;
         bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
         bitStream.mError = 0;
@@ -2714,7 +2714,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           int byteStartPosition = bitStream.mOffset / 8;
           if (bitStream.mOffset % 8)
             ++byteStartPosition;
-          slice->dataPartitionArray[0].cabacDecode.startDecoding (bitStream.mBuffer, byteStartPosition, &bitStream.mReadLen);
+          slice->dataPartitionArray[0].mCabacDecode.startDecoding (bitStream.mBuffer, byteStartPosition, &bitStream.mReadLen);
           }
           //}}}
 
@@ -2750,7 +2750,7 @@ int cDecoder264::readNalu (cSlice* slice) {
         slice->noDataPartitionC = 1;
         slice->dataPartitionMode = eDataPartition3;
         slice->maxDataPartitions = 3;
-        sBitStream& bitStream = slice->dataPartitionArray[0].bitStream;
+        sBitStream& bitStream = slice->dataPartitionArray[0].mBitStream;
         bitStream.mOffset = 0;
         bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
         bitStream.mError = 0;
@@ -2784,7 +2784,7 @@ int cDecoder264::readNalu (cSlice* slice) {
           return curHeader;
         if (nalu->getUnitType() == cNalu::NALU_TYPE_DPB) {
           //{{{  got nalu dataPartitionB
-          bitStream = slice->dataPartitionArray[1].bitStream;
+          bitStream = slice->dataPartitionArray[1].mBitStream;
           bitStream.mOffset = 0;
           bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
           bitStream.mError = 0;
@@ -2813,7 +2813,7 @@ int cDecoder264::readNalu (cSlice* slice) {
 
         if (nalu->getUnitType() == cNalu::NALU_TYPE_DPC) {
           //{{{  got nalu dataPartitionC
-          bitStream = slice->dataPartitionArray[2].bitStream;
+          bitStream = slice->dataPartitionArray[2].mBitStream;
           bitStream.mOffset = 0;
           bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
           bitStream.mError = 0;

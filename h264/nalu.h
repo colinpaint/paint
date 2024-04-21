@@ -15,18 +15,18 @@ public:
 
 private:
   // vars
-  uint8_t*  mBuffer = nullptr;
-  size_t    mBufferSize = 0;
+  uint8_t* mBuffer = nullptr;
+  size_t   mBufferSize = 0;
 
   // current ptr
-  uint8_t*  mBufferPtr = nullptr;
-  size_t    mBufferLeft = 0;
+  uint8_t* mBufferPtr = nullptr;
+  size_t   mBufferLeft = 0;
 
-  bool      mStartCodeFound = false;
-  bool      mLongStartCode = false;
+  bool     mStartCodeFound = false;
+  bool     mLongStartCode = false;
 
   // start of nalu
-  uint8_t*  mNaluBufferPtr = nullptr;
+  uint8_t* mNaluBufferPtr = nullptr;
   };
 
 class cNalu {

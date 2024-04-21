@@ -154,13 +154,13 @@ int sBitStream::vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
   sDataPartition* dataPartition = &slice->dataPartitionArray[partitionIndex];
-  return !moreRbspData (dataPartition->bitStream.mBuffer,
-                        dataPartition->bitStream.mOffset, dataPartition->bitStream.mLength);
+  return !moreRbspData (dataPartition->mBitStream.mBuffer,
+                        dataPartition->mBitStream.mOffset, dataPartition->mBitStream.mLength);
   }
 //}}}
 //{{{
 int sBitStream::readSyntaxElementVLC (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
-  return dataPartition->bitStream.readSyntaxElementVLC (se);
+  return dataPartition->mBitStream.readSyntaxElementVLC (se);
   }
 //}}}
 

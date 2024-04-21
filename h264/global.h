@@ -261,14 +261,14 @@ struct sDataPartition {
 
     if (dataPartitionArray)
       for (uint32_t i = 0; i < numPartitions; ++i)
-        free (dataPartitionArray[i].bitStream.mBuffer);
+        free (dataPartitionArray[i].mBitStream.mBuffer);
 
     free (dataPartitionArray);
     }
   //}}}
 
-  sBitStream   bitStream;
-  sCabacDecode cabacDecode;
+  sBitStream   mBitStream;
+  sCabacDecode mCabacDecode;
 
   int (*readSyntaxElement) (sMacroBlock*, sSyntaxElement*, sDataPartition*);
   };
