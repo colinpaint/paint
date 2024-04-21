@@ -250,7 +250,7 @@ public:
   int directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
   int numRefIndexActive[2];    // number of ok list references
 
-  int errorFlag;   // 0 if the dataPartitons[0] contains valid information
+  int mError;   // 0 if the dataPartitons[0] contains valid information
   int qp;
   int sliceQpDelta;
   int qs;
@@ -262,7 +262,7 @@ public:
   ePicStructure picStructure;
   uint32_t fieldPic;
   uint8_t botField;
-  int startMbNum;   // MUST be set by NAL even in case of errorFlag == 1
+  int startMbNum;   // MUST be set by NAL even in case of mError == 1
   int endMbNumPlus1;
 
   int curHeader;

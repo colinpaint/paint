@@ -217,13 +217,13 @@ struct sBitStream {
   int readSyntaxElementRun (sSyntaxElement* se);
 
   // vars 
-  uint8_t* bitStreamBuffer; // codebuffer for read bytes
-  int32_t  bitStreamBufferAllocatedSize;
-  int      bitStreamOffset; // position in the codebuffer, bit-oriented
-  int      bitStreamLen;    // over codebuffer length, uint8_t oriented
-  int      errorFlag;       // error 0=noError
+  uint8_t* mBuffer; // codebuffer for read bytes
+  int32_t  mAllocSize; // allocated buffer size
+  int      mOffset; // position in the codebuffer, bit-oriented
+  int      mLength; // over codebuffer length, uint8_t oriented
+  int      mError;  // error 0=noError
 
   // - cabac
-  int      readLen;         // position in the codebuffer
-  int      codeLen;         // overall codebuffer length
+  int      mReadLen; // position in the codebuffer
+  int      mCodeLen; // overall codebuffer length
   };

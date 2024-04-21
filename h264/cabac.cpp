@@ -731,7 +731,7 @@ namespace {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
           dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
-          if (dataPartition->bitStream.errorFlag)
+          if (dataPartition->bitStream.mError)
             se->mapping = sBitStream::infoLevelRunInter;
           else
             se->reading = readRunLevelCabac;
@@ -751,7 +751,7 @@ namespace {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
           dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
-          if (dataPartition->bitStream.errorFlag)
+          if (dataPartition->bitStream.mError)
             se->mapping = sBitStream::infoLevelRunInter;
           else
             se->reading = readRunLevelCabac;
@@ -1930,8 +1930,8 @@ void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition) {
 
   sBitStream* s = &dataPartition->bitStream;
   sCabacDecode* cabacDecode = &dataPartition->cabacDecode;
-  uint8_t* buf = s->bitStreamBuffer;
-  int bitStreamLengthInBits = (dataPartition->bitStream.bitStreamLen << 3) + 7;
+  uint8_t* buf = s->mBuffer;
+  int bitStreamLengthInBits = (dataPartition->bitStream.mLength << 3) + 7;
 
   int val = 0;
   int bitsRead = 0;

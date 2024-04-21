@@ -113,10 +113,10 @@ namespace {
   }
 
 //{{{
-void sCabacDecode::startDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen) {
+void sCabacDecode::startDecoding (uint8_t* code_buffer, int firstbyte, int* mCodeLen) {
 
   codeStream = code_buffer;
-  codeStreamLen = codeLen;
+  codeStreamLen = mCodeLen;
   *codeStreamLen = firstbyte;
 
   // lookahead of 2 bytes: always make sure that s buffer contains 2 more bytes than actual s

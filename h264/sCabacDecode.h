@@ -8,7 +8,7 @@ struct sBiContext {
 void biContextInit (sBiContext* context, int qp, const char* ini);
 
 struct sCabacDecode {
-  void startDecoding (uint8_t* code_buffer, int firstbyte, int* codeLen);
+  void startDecoding (uint8_t* code_buffer, int firstbyte, int* mCodeLen);
 
   int getBitsRead();
   uint32_t getByte();

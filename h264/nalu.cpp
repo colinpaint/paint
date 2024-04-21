@@ -93,7 +93,7 @@ uint32_t cAnnexB::findNalu() {
 cNalu::cNalu() {
 
   buffer = (uint8_t*)malloc (kNaluBufferInitSize);
-  bufferAllocatedSize = kNaluBufferInitSize;
+  allocSize = kNaluBufferInitSize;
   }
 //}}}
 //{{{
@@ -142,10 +142,10 @@ string cNalu::getNaluString() const {
       break;
     }
 
-  return fmt::format ("{} {}:{}:{}:{}:{}",
+  return fmt::format ("{}{}{} {}:{}:{}",
                       naluTypeString,
-                      longStartCode ? 'l' : 's',
-                      forbiddenBit,
+                      longStartCode ? "" : "short",
+                      forbiddenBit ?  "forbidden":"",
                       (int)refId,
                       (int)unitType,
                       naluBytes);
@@ -161,12 +161,12 @@ uint32_t cNalu::readNalu (cDecoder264* decoder) {
     return naluBytes;
 
   // copy annexB data to our buffer
-  if (naluBytes > bufferAllocatedSize) {
+  if (naluBytes > allocSize) {
     // simple buffer grow algorithm
-    while (naluBytes > bufferAllocatedSize)
-      bufferAllocatedSize *= 2;
-    cLog::log (LOGINFO, fmt::format ("cNalu buffer size doubled to {}", bufferAllocatedSize));
-    buffer = (uint8_t*)realloc (buffer, bufferAllocatedSize);
+    while (naluBytes > allocSize)
+      allocSize *= 2;
+    cLog::log (LOGINFO, fmt::format ("cNalu buffer size doubled to {}", allocSize));
+    buffer = (uint8_t*)realloc (buffer, allocSize);
     }
 
   // copy annexB data our buffer
@@ -207,17 +207,17 @@ void cNalu::checkZeroByteVCL (cDecoder264* decoder) {
   }
 //}}}
 //{{{
-uint32_t cNalu::getSodb (uint8_t* bitStreamBuffer) {
+uint32_t cNalu::getSodb (uint8_t* mBuffer) {
 
   if ((naluBytes-1) > sDataPartition::kMaxFrameSize)
     cDecoder264::error (fmt::format ("naluSize:{} > kMaxFrameSize:{}",
                         naluBytes-1, sDataPartition::kMaxFrameSize));
 
   // does this need to be a copy ???
-  memcpy (bitStreamBuffer, buffer+1, naluBytes-1);
-  //bitStreamBuffer = buffer+1;
+  memcpy (mBuffer, buffer+1, naluBytes-1);
+  //mBuffer = buffer+1;
 
-  return rbspToSodb (bitStreamBuffer);
+  return rbspToSodb (mBuffer);
   }
 //}}}
 
@@ -291,14 +291,14 @@ uint8_t* bufferPtr = buffer;
   }
 //}}}
 //{{{
-int cNalu::rbspToSodb (uint8_t* bitStreamBuffer) {
+int cNalu::rbspToSodb (uint8_t* mBuffer) {
 // rawByteSequencePayload to stringOfDataBits
 // - find trailing 1 bit
 
   int bitOffset = 0;
   int lastBytePos = naluBytes - 1;
 
-  bool controlBit = bitStreamBuffer[lastBytePos-1] & (0x01 << bitOffset);
+  bool controlBit = mBuffer[lastBytePos-1] & (0x01 << bitOffset);
   while (!controlBit) {
     // find trailing 1 bit
     bitOffset++;
@@ -308,7 +308,7 @@ int cNalu::rbspToSodb (uint8_t* bitStreamBuffer) {
       --lastBytePos;
       bitOffset = 0;
       }
-    controlBit = bitStreamBuffer[lastBytePos - 1] & (0x01 << bitOffset);
+    controlBit = mBuffer[lastBytePos - 1] & (0x01 << bitOffset);
     }
 
   return lastBytePos;

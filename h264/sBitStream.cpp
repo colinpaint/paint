@@ -19,14 +19,14 @@ namespace {
 
     const uint8_t* len = &lentab[0], *cod = &codtab[0];
 
-    int* bitStreamOffset = &s->bitStreamOffset;
-    uint8_t* buf = &s->bitStreamBuffer[*bitStreamOffset >> 3];
+    int* mOffset = &s->mOffset;
+    uint8_t* buf = &s->mBuffer[*mOffset >> 3];
 
     // Apply bitOffset to three bytes (maximum that may be traversed by showBitsThreshold)
     // Even at the end of a stream we will still be pulling out of allocated memory as alloc is done by kMaxFrameSize
     uint32_t inf = ((*buf) << 16) + (*(buf + 1) << 8) + *(buf + 2);
     // Offset is constant so apply before extracting different numbers of bits
-    inf <<= (*bitStreamOffset & 0x07);
+    inf <<= (*mOffset & 0x07);
     // Arithmetic shift so wipe any sign which may be extended inside showBitsThreshold
     inf  &= 0xFFFFFF;
 
@@ -39,7 +39,7 @@ namespace {
           }
         else {
           se->len = *len;
-          *bitStreamOffset += *len; // move s pointer
+          *mOffset += *len; // move s pointer
           *code = *cod;
           se->value1 = i;
           se->value2 = j;
@@ -154,8 +154,8 @@ int sBitStream::vlcStartCode (cSlice* slice, int dummy) {
 
   uint8_t partitionIndex = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode][SE_MBTYPE];
   sDataPartition* dataPartition = &slice->dataPartitionArray[partitionIndex];
-  return !moreRbspData (dataPartition->bitStream.bitStreamBuffer,
-                        dataPartition->bitStream.bitStreamOffset, dataPartition->bitStream.bitStreamLen);
+  return !moreRbspData (dataPartition->bitStream.mBuffer,
+                        dataPartition->bitStream.mOffset, dataPartition->bitStream.mLength);
   }
 //}}}
 //{{{
@@ -386,11 +386,11 @@ bool sBitStream::readU1 (const string& label) {
 //{{{
 int sBitStream::readSyntaxElementVLC (sSyntaxElement* se) {
 
-  se->len = getVlcSymbol (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
+  se->len = getVlcSymbol (mBuffer, mOffset, &se->inf, mLength);
   if (se->len == -1)
     return -1;
 
-  bitStreamOffset += se->len;
+  mOffset += se->len;
   se->mapping (se->len, se->inf, &se->value1, &se->value2);
 
   return 1;
@@ -399,12 +399,12 @@ int sBitStream::readSyntaxElementVLC (sSyntaxElement* se) {
 //{{{
 int sBitStream::readSyntaxElementFLC (sSyntaxElement* se) {
 
-  int bitstreamLengthInBits = (bitStreamLen << 3) + 7;
-  if (getBits (bitStreamBuffer, bitStreamOffset, &(se->inf), bitstreamLengthInBits, se->len) < 0)
+  int bitstreamLengthInBits = (mLength << 3) + 7;
+  if (getBits (mBuffer, mOffset, &(se->inf), bitstreamLengthInBits, se->len) < 0)
     return -1;
 
   se->value1 = se->inf;
-  bitStreamOffset += se->len; // move s pointer
+  mOffset += se->len; // move s pointer
 
   return 1;
   }
@@ -412,11 +412,11 @@ int sBitStream::readSyntaxElementFLC (sSyntaxElement* se) {
 //{{{
 int sBitStream::readSyntaxElementIntra4x4PredictionMode (sSyntaxElement* se) {
 
-  se->len = getVlcSymbolIntraMode (bitStreamBuffer, bitStreamOffset, &se->inf, bitStreamLen);
+  se->len = getVlcSymbolIntraMode (mBuffer, mOffset, &se->inf, mLength);
   if (se->len == -1)
     return -1;
 
-  bitStreamOffset += se->len;
+  mOffset += se->len;
   se->value1 = (se->len == 1) ? -1 : se->inf;
 
   return 1;
@@ -471,10 +471,10 @@ int sBitStream::readSyntaxElementNumCoeffTrailingOnes (sSyntaxElement* se, char 
   };
   //}}}
 
-  int offset = bitStreamOffset;
-  int BitstreamLengthInBytes = bitStreamLen;
+  int offset = mOffset;
+  int BitstreamLengthInBytes = mLength;
   int BitstreamLengthInBits = (BitstreamLengthInBytes << 3) + 7;
-  uint8_t* buf = bitStreamBuffer;
+  uint8_t* buf = mBuffer;
 
   int retval = 0, code;
   int vlcnum = se->value1;
@@ -566,10 +566,10 @@ int sBitStream::readSyntaxElementNumCoeffTrailingOnesChromaDC (cDecoder264* deco
 //{{{
 int sBitStream::readSyntaxElementLevelVlc0 (sSyntaxElement* se) {
 
-  int offset = bitStreamOffset;
-  int bitstreamLengthInBytes = bitStreamLen;
+  int offset = mOffset;
+  int bitstreamLengthInBytes = mLength;
   int bitstreamLengthInBits = (bitstreamLengthInBytes << 3) + 7;
-  uint8_t* buf = bitStreamBuffer;
+  uint8_t* buf = mBuffer;
 
   int len = 1;
   int sign = 0;
@@ -609,15 +609,15 @@ int sBitStream::readSyntaxElementLevelVlc0 (sSyntaxElement* se) {
   se->inf = sign ? -level : level;
   se->len = len;
 
-  bitStreamOffset = offset;
+  mOffset = offset;
   return 0;
   }
 //}}}
 //{{{
 int sBitStream::readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc) {
 
-  int offset = bitStreamOffset;
-  int bitstreamLengthInBytes = bitStreamLen;
+  int offset = mOffset;
+  int bitstreamLengthInBytes = mLength;
   int bitstreamLengthInBits  = (bitstreamLengthInBytes << 3) + 7;
 
   int levabs;
@@ -628,7 +628,7 @@ int sBitStream::readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc) {
   int shift = vlc - 1;
 
   // read pre zeros
-  while (!showBits (bitStreamBuffer, offset ++, bitstreamLengthInBits, 1))
+  while (!showBits (mBuffer, offset ++, bitstreamLengthInBits, 1))
     len++;
 
   offset -= len;
@@ -638,14 +638,14 @@ int sBitStream::readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc) {
 
     // read (vlc-1) bits -> suffix
     if (shift) {
-      sb =  showBits (bitStreamBuffer, offset + len, bitstreamLengthInBits, shift);
+      sb =  showBits (mBuffer, offset + len, bitstreamLengthInBits, shift);
       code = (code << (shift) )| sb;
       levabs += sb;
       len += (shift);
     }
 
     // read 1 bit -> sign
-    sign = showBits (bitStreamBuffer, offset + len, bitstreamLengthInBits, 1);
+    sign = showBits (mBuffer, offset + len, bitstreamLengthInBits, 1);
     code = (code << 1)| sign;
     len ++;
     }
@@ -654,14 +654,14 @@ int sBitStream::readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc) {
     int addbit = len - 5;
     int offset1 = (1 << addbit) + (15 << shift) - 2047;
 
-    sb = showBits (bitStreamBuffer, offset1 + len, bitstreamLengthInBits, addbit);
+    sb = showBits (mBuffer, offset1 + len, bitstreamLengthInBits, addbit);
     code = (code << addbit ) | sb;
     len   += addbit;
 
     levabs = sb + offset1;
 
     // read 1 bit -> sign
-    sign = showBits (bitStreamBuffer, offset1 + len, bitstreamLengthInBits, 1);
+    sign = showBits (mBuffer, offset1 + len, bitstreamLengthInBits, 1);
     code = (code << 1)| sign;
     len++;
     }
@@ -669,7 +669,7 @@ int sBitStream::readSyntaxElementLevelVlcN (sSyntaxElement* se, int vlc) {
   se->inf = (sign)? -levabs : levabs;
   se->len = len;
 
-  bitStreamOffset = offset + len;
+  mOffset = offset + len;
 
   return 0;
 }

@@ -2,9 +2,6 @@
 #include "global.h"
 class cDecoder264;
 
-constexpr uint32_t kNaluBufferInitSize = 0x10000; // bytes for one frame
-//constexpr uint32_t kNaluBufferInitSize = 500000;
-
 class cAnnexB {
 public:
   // gets
@@ -19,7 +16,6 @@ public:
 private:
   // vars
   uint8_t*  buffer = nullptr;
-  size_t    allocBufferSize = 0;
   size_t    bufferSize = 0;
 
   // current ptr
@@ -35,6 +31,7 @@ private:
 
 class cNalu {
 public:
+  static constexpr uint32_t kNaluBufferInitSize = 0x8000; // bytes for one frame
   //{{{  enum eNaluType
   typedef enum {
     NALU_TYPE_NONE     = 0,
@@ -83,10 +80,10 @@ public:
   // actions
   uint32_t readNalu (cDecoder264* decoder);
   void checkZeroByteVCL (cDecoder264* decoder);
-  uint32_t getSodb (uint8_t* bitStreamBuffer);
+  uint32_t getSodb (uint8_t* mBuffer);
 
 private:
-  int rbspToSodb (uint8_t* bitStreamBuffer);
+  int rbspToSodb (uint8_t* mBuffer);
 
   void checkZeroByteNonVCL (cDecoder264* decoder);
   int naluToRbsp();
@@ -95,7 +92,7 @@ private:
 
   // vars
   uint8_t*   buffer = nullptr;
-  int32_t    bufferAllocatedSize = 0;
+  int32_t    allocSize = 0;
   int32_t    naluBytes = 0;
 
   bool       longStartCode = false;

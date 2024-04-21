@@ -52,8 +52,8 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   pps.naluLen = nalu->getLength();
 
   sDataPartition* dataPartition = sDataPartition::allocDataPartitionArray (1);
-  dataPartition->bitStream.bitStreamLen = nalu->getSodb (dataPartition->bitStream.bitStreamBuffer);
-  dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
+  dataPartition->bitStream.mLength = nalu->getSodb (dataPartition->bitStream.mBuffer);
+  dataPartition->bitStream.mCodeLen = dataPartition->bitStream.mLength;
 
   pps.readFromStream (decoder, dataPartition);
   sDataPartition::freeDataPartitionArray (dataPartition, 1);
@@ -251,7 +251,7 @@ void cPps::readFromStream (cDecoder264* decoder, sDataPartition* dataPartition) 
   hasConstrainedIntraPred = s.readU1 ("PPS hasConstrainedIntraPred");
   redundantPicCountPresent = s.readU1 ("PPS redundantPicCountPresent");
 
-  hasMoreData = sBitStream::moreRbspData (s.bitStreamBuffer, s.bitStreamOffset,s.bitStreamLen);
+  hasMoreData = sBitStream::moreRbspData (s.mBuffer, s.mOffset,s.mLength);
   if (hasMoreData) {
     //{{{  read fidelity range
     hasTransform8x8mode = s.readU1 ("PPS hasTransform8x8mode");

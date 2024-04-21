@@ -2420,7 +2420,7 @@ void cDecoder264::initPicture (cSlice* slice) {
       char* intraBlock = intraBlockJV[nplane];
       for (int i = 0; i < (int)picSizeInMbs; ++i) {
         //{{{  resetMb
-        mb->errorFlag = 1;
+        mb->mError = 1;
         mb->dplFlag = 0;
         mb->sliceNum = -1;
         mb++;
@@ -2436,7 +2436,7 @@ void cDecoder264::initPicture (cSlice* slice) {
     sMacroBlock* mb = mbData;
     for (int i = 0; i < (int)picSizeInMbs; ++i) {
       //{{{  resetMb
-      mb->errorFlag = 1;
+      mb->mError = 1;
       mb->dplFlag = 0;
       mb->sliceNum = -1;
       mb++;
@@ -2681,11 +2681,11 @@ int cDecoder264::readNalu (cSlice* slice) {
         slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
         sBitStream& bitStream = slice->dataPartitionArray[0].bitStream;
-        bitStream.readLen = 0;
-        bitStream.errorFlag = 0;
-        bitStream.bitStreamOffset = 0;
-        bitStream.bitStreamLen = nalu->getSodb(bitStream.bitStreamBuffer);
-        bitStream.codeLen = bitStream.bitStreamLen;
+        bitStream.mReadLen = 0;
+        bitStream.mError = 0;
+        bitStream.mOffset = 0;
+        bitStream.mLength = nalu->getSodb(bitStream.mBuffer);
+        bitStream.mCodeLen = bitStream.mLength;
 
         readSliceHeader (bitStream, slice);
 
@@ -2711,10 +2711,10 @@ int cDecoder264::readNalu (cSlice* slice) {
 
         if (activePps->entropyCoding == eCabac) {
           //{{{  init cabac decode
-          int byteStartPosition = bitStream.bitStreamOffset / 8;
-          if (bitStream.bitStreamOffset % 8)
+          int byteStartPosition = bitStream.mOffset / 8;
+          if (bitStream.mOffset % 8)
             ++byteStartPosition;
-          slice->dataPartitionArray[0].cabacDecode.startDecoding (bitStream.bitStreamBuffer, byteStartPosition, &bitStream.readLen);
+          slice->dataPartitionArray[0].cabacDecode.startDecoding (bitStream.mBuffer, byteStartPosition, &bitStream.mReadLen);
           }
           //}}}
 
@@ -2751,11 +2751,11 @@ int cDecoder264::readNalu (cSlice* slice) {
         slice->dataPartitionMode = eDataPartition3;
         slice->maxDataPartitions = 3;
         sBitStream& bitStream = slice->dataPartitionArray[0].bitStream;
-        bitStream.errorFlag = 0;
-        bitStream.bitStreamOffset = 0;
-        bitStream.readLen = 0;
-        bitStream.bitStreamLen = nalu->getSodb(bitStream.bitStreamBuffer);
-        bitStream.codeLen = bitStream.bitStreamLen;
+        bitStream.mError = 0;
+        bitStream.mOffset = 0;
+        bitStream.mReadLen = 0;
+        bitStream.mLength = nalu->getSodb(bitStream.mBuffer);
+        bitStream.mCodeLen = bitStream.mLength;
 
         readSliceHeader (bitStream, slice);
 
@@ -2785,11 +2785,11 @@ int cDecoder264::readNalu (cSlice* slice) {
         if (nalu->getUnitType() == cNalu::NALU_TYPE_DPB) {
           //{{{  got nalu dataPartitionB
           bitStream = slice->dataPartitionArray[1].bitStream;
-          bitStream.errorFlag = 0;
-          bitStream.bitStreamOffset = 0;
-          bitStream.readLen = 0;
-          bitStream.bitStreamLen = nalu->getSodb(bitStream.bitStreamBuffer);
-          bitStream.codeLen = bitStream.bitStreamLen;
+          bitStream.mError = 0;
+          bitStream.mOffset = 0;
+          bitStream.mReadLen = 0;
+          bitStream.mLength = nalu->getSodb(bitStream.mBuffer);
+          bitStream.mCodeLen = bitStream.mLength;
 
           int sliceIdB = bitStream.readUeV ("NALU dataPartitionB sliceId");
           slice->noDataPartitionB = 0;
@@ -2814,11 +2814,11 @@ int cDecoder264::readNalu (cSlice* slice) {
         if (nalu->getUnitType() == cNalu::NALU_TYPE_DPC) {
           //{{{  got nalu dataPartitionC
           bitStream = slice->dataPartitionArray[2].bitStream;
-          bitStream.errorFlag = 0;
-          bitStream.bitStreamOffset = 0;
-          bitStream.readLen = 0;
-          bitStream.bitStreamLen = nalu->getSodb(bitStream.bitStreamBuffer);
-          bitStream.codeLen = bitStream.bitStreamLen;
+          bitStream.mError = 0;
+          bitStream.mOffset = 0;
+          bitStream.mReadLen = 0;
+          bitStream.mLength = nalu->getSodb(bitStream.mBuffer);
+          bitStream.mCodeLen = bitStream.mLength;
 
           slice->noDataPartitionC = 0;
           int sliceIdC = bitStream.readUeV ("NALU: dataPartitionC sliceId");
@@ -3283,11 +3283,11 @@ void cDecoder264::endDecodeFrame() {
     // generate the segments according to the macroBlock map
     int i;
     for (i = 1; i < (int)(picture->picSizeInMbs); ++i) {
-      if (mbData[i].errorFlag != mbData[i-1].errorFlag) {
+      if (mbData[i].mError != mbData[i-1].mError) {
         ercStopSegment (i-1, ercSegment, 0, ercErrorVar); //! stop current segment
 
         // mark current segment as lost or OK
-        if(mbData[i-1].errorFlag)
+        if(mbData[i-1].mError)
           ercMarksegmentLost (picture->sizeX, ercErrorVar);
         else
           ercMarksegmentOK (picture->sizeX, ercErrorVar);
@@ -3299,7 +3299,7 @@ void cDecoder264::endDecodeFrame() {
 
     // mark end of the last segment
     ercStopSegment (picture->picSizeInMbs-1, ercSegment, 0, ercErrorVar);
-    if (mbData[i-1].errorFlag)
+    if (mbData[i-1].mError)
       ercMarksegmentLost (picture->sizeX, ercErrorVar);
     else
       ercMarksegmentOK (picture->sizeX, ercErrorVar);
@@ -3538,7 +3538,7 @@ int cDecoder264::decodeFrame() {
         (slice->activePps->hasWeightedPred && (slice->sliceType != eSliceI)))
       slice->fillWeightedPredParam();
 
-    if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->errorFlag)
+    if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->mError)
       decodeSlice (slice);
 
     numDecodedSlices++;

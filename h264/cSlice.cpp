@@ -129,7 +129,7 @@ namespace {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
 
       dataPartition = &(slice->dataPartitionArray[dpMap[se.type]]);
-      if (dataPartition->bitStream.errorFlag)
+      if (dataPartition->bitStream.mError)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
           ? slice->infoCbpIntra : slice->infoCbpInter;
       else
@@ -152,7 +152,7 @@ namespace {
         se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
-        if (dataPartition->bitStream.errorFlag) {
+        if (dataPartition->bitStream.mError) {
           se.len = 1;
           dataPartition->bitStream.readSyntaxElementFLC (&se);
           }
@@ -169,7 +169,7 @@ namespace {
             mb->dplFlag = 1;
 
           if (intra && slice->noDataPartitionB)  {
-            mb->errorFlag = 1;
+            mb->mError = 1;
             mb->dplFlag = 1;
             }
 
@@ -189,7 +189,7 @@ namespace {
 
       if (slice->dataPartitionMode) {
         if (slice->noDataPartitionB) {
-          mb->errorFlag  = 1;
+          mb->mError  = 1;
           mb->dplFlag = 1;
          }
          checkDpNeighbours (mb);
@@ -207,7 +207,7 @@ namespace {
           se.context      = LUMA_16DC;
           se.type         = SE_LUM_DC_INTRA;
 
-          if (dataPartition->bitStream.errorFlag)
+          if (dataPartition->bitStream.mError)
             se.mapping = sBitStream::infoLevelRunInter;
           else
             se.reading = readRunLevelCabac;
@@ -285,7 +285,7 @@ namespace {
         ? SE_CBP_INTRA : SE_CBP_INTER;
 
       dataPartition = &(slice->dataPartitionArray[dpMap[se.type]]);
-      if (dataPartition->bitStream.errorFlag)
+      if (dataPartition->bitStream.mError)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
           ? slice->infoCbpIntra : slice->infoCbpInter;
       else
@@ -308,7 +308,7 @@ namespace {
         se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
-        if (dataPartition->bitStream.errorFlag) {
+        if (dataPartition->bitStream.mError) {
           se.len = 1;
           dataPartition->bitStream.readSyntaxElementFLC (&se);
           }
@@ -326,7 +326,7 @@ namespace {
             mb->dplFlag = 1;
 
           if (intra && slice->noDataPartitionB ) {
-            mb->errorFlag = 1;
+            mb->mError = 1;
             mb->dplFlag = 1;
             }
 
@@ -345,7 +345,7 @@ namespace {
       readDeltaQuant (&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
       if (slice->dataPartitionMode) {
         if (slice->noDataPartitionB) {
-          mb->errorFlag  = 1;
+          mb->mError  = 1;
           mb->dplFlag = 1;
           }
         checkDpNeighbours (mb);
@@ -362,7 +362,7 @@ namespace {
           se.context = LUMA_16DC;
           se.type = SE_LUM_DC_INTRA;
 
-          if (dataPartition->bitStream.errorFlag)
+          if (dataPartition->bitStream.mError)
             se.mapping = sBitStream::infoLevelRunInter;
           else
             se.reading = readRunLevelCabac;
@@ -422,7 +422,7 @@ namespace {
           else
             se.context = (uv == 0) ? CB_16DC : CR_16DC;
 
-          if (dataPartition->bitStream.errorFlag)
+          if (dataPartition->bitStream.mError)
             se.mapping = sBitStream::infoLevelRunInter;
           else
             se.reading = readRunLevelCabac;
@@ -512,7 +512,7 @@ namespace {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
                   ? SE_CBP_INTRA : SE_CBP_INTER;
       dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
-      if (dataPartition->bitStream.errorFlag)
+      if (dataPartition->bitStream.mError)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
                        ? slice->infoCbpIntra : slice->infoCbpInter;
       else
@@ -534,7 +534,7 @@ namespace {
         se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
-        if (dataPartition->bitStream.errorFlag) {
+        if (dataPartition->bitStream.mError) {
           se.len = 1;
           dataPartition->bitStream.readSyntaxElementFLC (&se);
           }
@@ -550,7 +550,7 @@ namespace {
           if ((mb->isIntraBlock == false) && slice->noDataPartitionC)
             mb->dplFlag = 1;
           if (intra && slice->noDataPartitionB) {
-            mb->errorFlag = 1;
+            mb->mError = 1;
             mb->dplFlag = 1;
             }
 
@@ -570,7 +570,7 @@ namespace {
 
       if (slice->dataPartitionMode) {
         if (slice->noDataPartitionB) {
-          mb->errorFlag = 1;
+          mb->mError = 1;
           mb->dplFlag = 1;
           }
         checkDpNeighbours (mb);
@@ -587,7 +587,7 @@ namespace {
           se.context = LUMA_16DC;
           se.type = SE_LUM_DC_INTRA;
 
-          if (dataPartition->bitStream.errorFlag)
+          if (dataPartition->bitStream.mError)
             se.mapping = sBitStream::infoLevelRunInter;
           else
             se.reading = readRunLevelCabac;
@@ -661,7 +661,7 @@ namespace {
               mb->isVblock = ll;
 
               dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
-              if (dataPartition->bitStream.errorFlag)
+              if (dataPartition->bitStream.mError)
                 se.mapping = sBitStream::infoLevelRunc2x2;
               else
                 se.reading = readRunLevelCabac;
@@ -724,7 +724,7 @@ namespace {
         se.context = CHROMA_AC;
         se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
         dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
-        if (dataPartition->bitStream.errorFlag)
+        if (dataPartition->bitStream.mError)
           se.mapping = sBitStream::infoLevelRunInter;
         else
           se.reading = readRunLevelCabac;
@@ -829,7 +829,7 @@ namespace {
       se.type = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB) ? SE_CBP_INTRA : SE_CBP_INTER;
 
       dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
-      if (dataPartition->bitStream.errorFlag)
+      if (dataPartition->bitStream.mError)
         se.mapping = (mb->mbType == I4MB || mb->mbType == SI4MB || mb->mbType == I8MB)
           ? slice->infoCbpIntra : slice->infoCbpInter;
       else
@@ -851,7 +851,7 @@ namespace {
         se.reading = readMbTransformSizeCabac;
 
         // read eCavlc transform_size_8x8Flag
-        if (dataPartition->bitStream.errorFlag) {
+        if (dataPartition->bitStream.mError) {
           se.len = 1;
           dataPartition->bitStream.readSyntaxElementFLC (&se);
           }
@@ -867,7 +867,7 @@ namespace {
           if ((mb->isIntraBlock == false) && slice->noDataPartitionC )
             mb->dplFlag = 1;
           if (intra && slice->noDataPartitionB ) {
-            mb->errorFlag = 1;
+            mb->mError = 1;
             mb->dplFlag = 1;
             }
 
@@ -887,7 +887,7 @@ namespace {
       readDeltaQuant(&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
       if (slice->dataPartitionMode) {
         if (slice->noDataPartitionB) {
-          mb->errorFlag  = 1;
+          mb->mError  = 1;
           mb->dplFlag = 1;
         }
         checkDpNeighbours (mb);
@@ -904,7 +904,7 @@ namespace {
         dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
         se.context = LUMA_16DC;
         se.type = SE_LUM_DC_INTRA;
-        if (dataPartition->bitStream.errorFlag)
+        if (dataPartition->bitStream.mError)
           se.mapping = sBitStream::infoLevelRunInter;
         else
           se.reading = readRunLevelCabac;
@@ -962,7 +962,7 @@ namespace {
         se.context = CHROMA_DC;
         se.type = (intra ? SE_CHR_DC_INTRA : SE_CHR_DC_INTER);
         dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
-        if (dataPartition->bitStream.errorFlag)
+        if (dataPartition->bitStream.mError)
           se.mapping = sBitStream::infoLevelRunc2x2;
         else
           se.reading = readRunLevelCabac;
@@ -1009,7 +1009,7 @@ namespace {
       se.context = CHROMA_AC;
       se.type = (mb->isIntraBlock ? SE_CHR_AC_INTRA : SE_CHR_AC_INTER);
       dataPartition = &slice->dataPartitionArray[dpMap[se.type]];
-      if (dataPartition->bitStream.errorFlag)
+      if (dataPartition->bitStream.mError)
         se.mapping = sBitStream::infoLevelRunInter;
       else
         se.reading = readRunLevelCabac;
@@ -1147,7 +1147,7 @@ namespace {
             mb->dplFlag = 1;
 
           if( intra && slice->noDataPartitionB ) {
-            mb->errorFlag = 1;
+            mb->mError = 1;
             mb->dplFlag = 1;
             }
 
@@ -1167,7 +1167,7 @@ namespace {
       readDeltaQuant (&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
       if (slice->dataPartitionMode) {
         if (slice->noDataPartitionB) {
-          mb->errorFlag  = 1;
+          mb->mError  = 1;
           mb->dplFlag = 1;
         }
         checkDpNeighbours (mb);
@@ -1287,7 +1287,7 @@ namespace {
             mb->dplFlag = 1;
 
           if( intra && slice->noDataPartitionB ) {
-            mb->errorFlag = 1;
+            mb->mError = 1;
             mb->dplFlag = 1;
           }
 
@@ -1309,7 +1309,7 @@ namespace {
 
       if (slice->dataPartitionMode) {
         if (slice->noDataPartitionB) {
-          mb->errorFlag  = 1;
+          mb->mError  = 1;
           mb->dplFlag = 1;
         }
         checkDpNeighbours (mb);
@@ -1554,7 +1554,7 @@ namespace {
             mb->dplFlag = 1;
 
           if( intra && slice->noDataPartitionB ) {
-            mb->errorFlag = 1;
+            mb->mError = 1;
             mb->dplFlag = 1;
           }
 
@@ -1573,7 +1573,7 @@ namespace {
       readDeltaQuant (&se, dataPartition, mb, dpMap, SE_DELTA_QUANT_INTRA);
       if (slice->dataPartitionMode) {
         if (slice->noDataPartitionB) {
-          mb->errorFlag  = 1;
+          mb->mError  = 1;
           mb->dplFlag = 1;
           }
         checkDpNeighbours (mb);
@@ -1734,7 +1734,7 @@ namespace {
           if ((mb->isIntraBlock == false) && slice->noDataPartitionC )
             mb->dplFlag = 1;
           if (intra && slice->noDataPartitionB) {
-            mb->errorFlag = 1;
+            mb->mError = 1;
             mb->dplFlag = 1;
             }
 
@@ -1753,7 +1753,7 @@ namespace {
 
       if (slice->dataPartitionMode) {
         if (slice->noDataPartitionB) {
-          mb->errorFlag  = 1;
+          mb->mError  = 1;
           mb->dplFlag = 1;
           }
         checkDpNeighbours (mb);

@@ -257,7 +257,7 @@ struct sDataPartition {
 
     sDataPartition* dataPartitionArray = (sDataPartition*)calloc (1, numPartitions * sizeof(sDataPartition));
     for (uint32_t i = 0; i < numPartitions; ++i)
-      dataPartitionArray[i].bitStream.bitStreamBuffer = (uint8_t*)malloc (kMaxFrameSize);
+      dataPartitionArray[i].bitStream.mBuffer = (uint8_t*)malloc (kMaxFrameSize);
 
     return dataPartitionArray;
     }
@@ -267,7 +267,7 @@ struct sDataPartition {
 
     if (dataPartitionArray)
       for (uint32_t i = 0; i < numPartitions; ++i)
-        free (dataPartitionArray[i].bitStream.bitStreamBuffer);
+        free (dataPartitionArray[i].bitStream.mBuffer);
 
     free (dataPartitionArray);
     }
@@ -391,7 +391,7 @@ struct sMacroBlock {
   int     DeblockCall;
 
   int16_t sliceNum;
-  char    errorFlag;        // error indicator flag that enables conceal
+  char    mError;        // error indicator flag that enables conceal
   char    dplFlag;          // error indicator flag that signals a missing data dataPartition
   int16_t deltaQuant;       // for rate control
 

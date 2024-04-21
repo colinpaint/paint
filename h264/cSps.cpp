@@ -74,8 +74,8 @@ int cSps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   sps.naluLen = nalu->getLength();
 
   sDataPartition* dataPartition = sDataPartition::allocDataPartitionArray (1);
-  dataPartition->bitStream.bitStreamLen = nalu->getSodb (dataPartition->bitStream.bitStreamBuffer);
-  dataPartition->bitStream.codeLen = dataPartition->bitStream.bitStreamLen;
+  dataPartition->bitStream.mLength = nalu->getSodb (dataPartition->bitStream.mBuffer);
+  dataPartition->bitStream.mCodeLen = dataPartition->bitStream.mLength;
 
   sps.readFromStream (decoder, dataPartition);
   sDataPartition::freeDataPartitionArray (dataPartition, 1);

@@ -105,8 +105,8 @@ namespace {
   sBitStream* allocBitStream (uint8_t* buffer, int len) {
 
     sBitStream* bitStream = (sBitStream*)calloc (1, sizeof(sBitStream));
-    bitStream->bitStreamBuffer = buffer;
-    bitStream->bitStreamLen = len;
+    bitStream->mBuffer = buffer;
+    bitStream->mLength = len;
     return bitStream;
     }
   //}}}
