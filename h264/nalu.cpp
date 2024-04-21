@@ -23,7 +23,7 @@ namespace {
   //{{{
   uint32_t rbspToSodb (uint8_t* buffer, uint32_t len) {
   // rawByteSequencePayload to stringOfDataBits
-  // - find trailing 1 bit
+  // - find trailing 1 bit and return length
 
     uint32_t bitOffset = 0;
     uint32_t lastBytePos = len;
