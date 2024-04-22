@@ -266,6 +266,7 @@ void cSps::readFromNalu (cNalu* nalu, cDecoder264* decoder) {
   vuiSeqParams.matrix_coefficients = 2;
   readVuiFromStream (bitStream);
 
+  free (bitStream.mBuffer);
   ok = true;
   }
 //}}}

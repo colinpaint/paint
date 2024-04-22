@@ -1459,7 +1459,7 @@ namespace {
   //}}}
   }
 
-// cDecoder264
+// static 
 //{{{
 cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize) {
 
@@ -1517,6 +1517,8 @@ void cDecoder264::error (const string& text) {
   exit (0);
   }
 //}}}
+
+// public
 //{{{
 cDecoder264::~cDecoder264() {
 
@@ -2343,7 +2345,7 @@ void cDecoder264::initPicture (cSlice* slice) {
         }
       else
         // Advanced Error Concealment would be called here to combat unintentional loss of pictures
-        error ("initPicture - unintentional loss of picture\n");
+        error ("initPicture - unintentional loss of picture");
       }
       //}}}
     if (!concealMode)
@@ -2845,16 +2847,10 @@ int cDecoder264::readNalu (cSlice* slice) {
         return curHeader;
         }
       //}}}
-      //{{{
       case cNalu::NALU_TYPE_DPB:
-        cLog::log (LOGINFO, "dataPartitionB without dataPartitonA");
-        break;
-      //}}}
-      //{{{
+        cLog::log (LOGINFO, "dataPartitionB without dataPartitonA"); break;
       case cNalu::NALU_TYPE_DPC:
-        cLog::log (LOGINFO, "dataPartitionC without dataPartitonA");
-        break;
-      //}}}
+        cLog::log (LOGINFO, "dataPartitionC without dataPartitonA"); break;
 
       case cNalu::NALU_TYPE_SPS: {
         int spsId = cSps::readNalu (nalu, this);
@@ -2880,7 +2876,7 @@ int cDecoder264::readNalu (cSlice* slice) {
       case cNalu::NALU_TYPE_EOSTREAM: break;
 
       default:
-        cLog::log (LOGINFO, "NALU:%d unknownType:%d\n", nalu->getLength(), nalu->getUnitType());
+        cLog::log (LOGINFO, "NALU:%d unknownType:%d", nalu->getLength(), nalu->getUnitType());
         break;
       }
     }
@@ -3282,18 +3278,18 @@ void cDecoder264::endDecodeFrame() {
   if (!picture->mbAffFrame) {
     ercStartSegment (0, ercSegment, 0 , ercErrorVar);
     // generate the segments according to the macroBlock map
-    int i;
-    for (i = 1; i < (int)(picture->picSizeInMbs); ++i) {
+    uint32_t i;
+    for (i = 1; i < picture->picSizeInMbs; i++) {
       if (mbData[i].mError != mbData[i-1].mError) {
         ercStopSegment (i-1, ercSegment, 0, ercErrorVar); //! stop current segment
 
         // mark current segment as lost or OK
-        if(mbData[i-1].mError)
+        if (mbData[i-1].mError)
           ercMarksegmentLost (picture->sizeX, ercErrorVar);
         else
           ercMarksegmentOK (picture->sizeX, ercErrorVar);
 
-        ++ercSegment;  //! next segment
+        ercSegment++;
         ercStartSegment (i, ercSegment, 0 , ercErrorVar); //! start new segment
         }
       }
@@ -3311,8 +3307,7 @@ void cDecoder264::endDecodeFrame() {
       ercConcealIntraFrame (this, &recfr, picture->sizeX, picture->sizeY, ercErrorVar);
     else
       ercConcealInterFrame (&recfr, ercObjectList,
-                            picture->sizeX, picture->sizeY, ercErrorVar,
-                            picture->chromaFormatIdc);
+                            picture->sizeX, picture->sizeY, ercErrorVar, picture->chromaFormatIdc);
     }
   //}}}
   if (!deblockMode &&
@@ -3339,7 +3334,7 @@ void cDecoder264::endDecodeFrame() {
   if (picture->mbAffFrame)
     mbAffPostProc();
   if (coding.picStructure != eFrame)
-     idrFrameNum /= 2;
+    idrFrameNum /= 2;
   if (picture->usedForRef)
     padPicture (picture);
 
@@ -3350,6 +3345,7 @@ void cDecoder264::endDecodeFrame() {
   int qp = picture->qp;
   int picNum = picture->picNum;
   int isIdr = picture->isIDR;
+
   dpb.storePicture (picture);
   picture = NULL;
 
@@ -3357,7 +3353,7 @@ void cDecoder264::endDecodeFrame() {
     preFrameNum = 0;
 
   if (picStructure == eTopField || picStructure == eFrame) {
-    //{{{
+    //{{{  sliceTypeString
     if (sliceType == eSliceI && isIdr)
       debug.sliceTypeString = "IDR";
     else if (sliceType == eSliceI)
@@ -3375,7 +3371,7 @@ void cDecoder264::endDecodeFrame() {
     }
     //}}}
   else if (picStructure == eBotField) {
-    //{{{
+    //{{{  sliceTypeString
     if (sliceType == eSliceI && isIdr)
       debug.sliceTypeString += "|IDR";
     else if (sliceType == eSliceI)
@@ -3455,7 +3451,7 @@ int cDecoder264::decodeFrame() {
 
     cSlice* slice = sliceList[picSliceIndex];
     slice->decoder = this;
-    slice->dpb = &dpb; //set default value;
+    slice->dpb = &dpb;
     slice->nextHeader = -8888;
     slice->numDecodedMbs = 0;
     slice->coefCount = -1;

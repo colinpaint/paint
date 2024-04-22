@@ -550,23 +550,20 @@ namespace {
     }
   //}}}
   //{{{
-  void process_subsequence_layer_characteristics_info (sBitStream& bitStream, cDecoder264* decoder)
-  {
-    long num_sub_layers, accurate_statisticsFlag, average_bit_rate, average_frame_rate;
+  void process_subsequence_layer_characteristics_info (sBitStream& bitStream, cDecoder264* decoder) {
 
-    num_sub_layers = 1 + bitStream.readUeV("SEI num_sub_layers_minus1");
-
-    if (decoder->param.seiDebug)
+    if (decoder->param.seiDebug) {
+      long num_sub_layers, accurate_statisticsFlag, average_bit_rate, average_frame_rate;
+      num_sub_layers = 1 + bitStream.readUeV ("SEI num_sub_layers_minus1");
       cLog::log (LOGINFO, "Sub-sequence layer characteristics num_sub_layers_minus1 %ld", num_sub_layers - 1);
-    for (int i = 0; i < num_sub_layers; i++) {
-      accurate_statisticsFlag = bitStream.readU1 ("SEI accurate_statisticsFlag");
-      average_bit_rate = bitStream.readUv (16,"SEI average_bit_rate");
-      average_frame_rate = bitStream.readUv (16,"SEI average_frame_rate");
 
-      if (decoder->param.seiDebug) {
-        printf("layer %d: accurate_statisticsFlag = %ld", i, accurate_statisticsFlag);
-        printf("layer %d: average_bit_rate = %ld", i, average_bit_rate);
-        printf("layer %d: average_frame_rate= %ld", i, average_frame_rate);
+      for (int i = 0; i < num_sub_layers; i++) {
+        accurate_statisticsFlag = bitStream.readU1 ("SEI accurate_statisticsFlag");
+        cLog::log (LOGINFO, "layer %d: accurate_statisticsFlag = %ld", i, accurate_statisticsFlag);
+        average_bit_rate = bitStream.readUv (16,"SEI average_bit_rate");
+        cLog::log (LOGINFO, "layer %d: average_bit_rate = %ld", i, average_bit_rate);
+        average_frame_rate = bitStream.readUv (16,"SEI average_frame_rate");
+        cLog::log (LOGINFO, "layer %d: average_frame_rate= %ld", i, average_frame_rate);
         }
       }
     }
@@ -623,9 +620,10 @@ namespace {
   //{{{
   void process_scene_information (sBitStream& bitStream, cDecoder264* decoder) {
 
-    int second_scene_id;
     int scene_id = bitStream.readUeV ("SEI scene_id");
     int scene_transition_type = bitStream.readUeV ("SEI scene_transition_type");
+
+    int second_scene_id = 0;
     if (scene_transition_type > 3)
       second_scene_id = bitStream.readUeV ("SEI scene_transition_type");
 
@@ -774,8 +772,8 @@ namespace {
         if (comp_model_presentFlag[c]) {
           num_intensity_intervals_minus1 = bitStream.readUv(8, "SEI num_intensity_intervals_minus1");
           num_model_values_minus1 = bitStream.readUv(3, "SEI num_model_values_minus1");
-          printf("num_intensity_intervals_minus1 = %d", num_intensity_intervals_minus1);
-          printf("num_model_values_minus1 = %d", num_model_values_minus1);
+          cLog::log (LOGINFO, "num_intensity_intervals_minus1 = %d", num_intensity_intervals_minus1);
+          cLog::log (LOGINFO, "num_model_values_minus1 = %d", num_model_values_minus1);
           for (int i = 0; i <= num_intensity_intervals_minus1; i ++) {
             intensity_interval_lower_bound = bitStream.readUv(8, "SEI intensity_interval_lower_bound");
             intensity_interval_upper_bound = bitStream.readUv(8, "SEI intensity_interval_upper_bound");
@@ -881,8 +879,8 @@ namespace {
       (uint32_t)bitStream.readUeV( "SEI frame_packing_arrangement_id");
     seiFramePackingArrangement.frame_packing_arrangement_cancelFlag =
       bitStream.readU1( "SEI frame_packing_arrangement_cancelFlag");
-    printf("frame_packing_arrangement_id = %d", seiFramePackingArrangement.frame_packing_arrangement_id);
-    printf("frame_packing_arrangement_cancelFlag = %d", seiFramePackingArrangement.frame_packing_arrangement_cancelFlag);
+    cLog::log (LOGINFO, "frame_packing_arrangement_id = %d", seiFramePackingArrangement.frame_packing_arrangement_id);
+    cLog::log (LOGINFO, "frame_packing_arrangement_cancelFlag = %d", seiFramePackingArrangement.frame_packing_arrangement_cancelFlag);
 
     if ( seiFramePackingArrangement.frame_packing_arrangement_cancelFlag == false ) {
       seiFramePackingArrangement.frame_packing_arrangement_type = (uint8_t)bitStream.readUv( 7, "SEI frame_packing_arrangement_type");
@@ -922,11 +920,11 @@ namespace {
         }
       seiFramePackingArrangement.frame_packing_arrangement_reserved_byte = (uint8_t)bitStream.readUv( 8, "SEI frame_packing_arrangement_reserved_byte");
       seiFramePackingArrangement.frame_packing_arrangement_repetition_period = (uint32_t)bitStream.readUeV( "SEI frame_packing_arrangement_repetition_period");
-      printf("frame_packing_arrangement_reserved_byte = %d", seiFramePackingArrangement.frame_packing_arrangement_reserved_byte);
-      printf("frame_packing_arrangement_repetition_period  = %d", seiFramePackingArrangement.frame_packing_arrangement_repetition_period);
+      cLog::log (LOGINFO, "frame_packing_arrangement_reserved_byte = %d", seiFramePackingArrangement.frame_packing_arrangement_reserved_byte);
+      cLog::log (LOGINFO, "frame_packing_arrangement_repetition_period  = %d", seiFramePackingArrangement.frame_packing_arrangement_repetition_period);
       }
     seiFramePackingArrangement.frame_packing_arrangement_extensionFlag = bitStream.readU1( "SEI frame_packing_arrangement_extensionFlag");
-    printf("frame_packing_arrangement_extensionFlag = %d", seiFramePackingArrangement.frame_packing_arrangement_extensionFlag);
+    cLog::log (LOGINFO, "frame_packing_arrangement_extensionFlag = %d", seiFramePackingArrangement.frame_packing_arrangement_extensionFlag);
     }
   //}}}
 
@@ -1029,8 +1027,7 @@ void processSei (uint8_t* naluPayload, int naluPayloadLen, cDecoder264* decoder,
       }
     payloadSize += tempByte;
 
-    sBitStream bitStream;
-    bitStream = {0};
+    sBitStream bitStream = {0};
     bitStream.mBuffer = naluPayload + offset;
     bitStream.mLength = payloadSize;
 

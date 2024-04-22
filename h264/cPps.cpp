@@ -275,6 +275,7 @@ void cPps::readFromNalu (cNalu* nalu, cDecoder264* decoder) {
   else
     chromaQpOffset2 = chromaQpOffset;
 
+  free (bitStream.mBuffer);
   ok = true;
   }
 //}}}

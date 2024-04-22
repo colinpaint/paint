@@ -56,7 +56,7 @@ namespace {
 // static members
 //{{{
 void sBitStream::infoUe (int len, int info, int* value1, int* dummy) {
-  *value1 = (int) (((uint32_t) 1 << (len >> 1)) + (uint32_t) (info) - 1);
+  *value1 = (int)(((uint32_t) 1 << (len >> 1)) + (uint32_t) (info) - 1);
   }
 //}}}
 //{{{
@@ -171,9 +171,9 @@ int sBitStream::getVlcSymbol (uint8_t buffer[], int totalBitOffset, int* info, i
   int bitOffset  = 7 - (totalBitOffset & 0x07); // bit from start of uint8_t
   int bitCounter = 1;
   int len = 0;
-  uint8_t* curByte  = &(buffer[byteoffset]);
-  int controlBit = ((*curByte) >> (bitOffset)) & 0x01;  // control bit for current bit posision
+  uint8_t* curByte = &(buffer[byteoffset]);
 
+  int controlBit = ((*curByte) >> (bitOffset)) & 0x01;  // control bit for current bit posision
   while (controlBit == 0) {
     // find leading 1 bit
     len++;
@@ -208,9 +208,9 @@ int sBitStream::getVlcSymbolIntraMode (uint8_t buffer[], int totalBitOffset, int
   int byteoffset = (totalBitOffset >> 3);        // uint8_t from start of buffer
   int bitOffset = (7 - (totalBitOffset & 0x07)); // bit from start of uint8_t
   uint8_t* cur_byte = &(buffer[byteoffset]);
-  int controlBit = (*cur_byte & (0x01 << bitOffset));      // control bit for current bit posision
 
   // first bit
+  int controlBit = (*cur_byte & (0x01 << bitOffset));      // control bit for current bit posision
   if (controlBit) {
     *info = 0;
     return 1;

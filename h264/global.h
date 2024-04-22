@@ -251,7 +251,7 @@ struct sDataPartition {
   //{{{
   static sDataPartition* allocDataPartitionArray (uint32_t numPartitions) {
   // trick to allocate array as contiguous sDataPartition
-  // - calloc clear of all struct vars except the bitStream buffers
+  // - calloc struct vars, no alloc of the bitStream buffers
 
     return (sDataPartition*)calloc (1, numPartitions * sizeof(sDataPartition));
     }
