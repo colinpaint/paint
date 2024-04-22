@@ -102,16 +102,6 @@ typedef struct {
 
 namespace {
   //{{{
-  sBitStream* allocBitStream (uint8_t* buffer, int len) {
-
-    sBitStream* bitStream = (sBitStream*)calloc (1, sizeof(sBitStream));
-    bitStream->mBuffer = buffer;
-    bitStream->mLength = len;
-    return bitStream;
-    }
-  //}}}
-
-  //{{{
   void processUserDataUnregistered (uint8_t* payload, int size, cDecoder264* decoder) {
 
     if (decoder->param.seiDebug) {
@@ -168,7 +158,7 @@ namespace {
   //}}}
 
   //{{{
-  void processPictureTiming (uint8_t* payload, int size, cDecoder264* decoder) {
+  void processPictureTiming (sBitStream& bitStream, cDecoder264* decoder) {
 
     cSps* activeSps = decoder->activeSps;
     if (!activeSps) {
@@ -176,8 +166,6 @@ namespace {
         printf ("pictureTiming - no active SPS\n");
       return;
       }
-
-    sBitStream* s = allocBitStream (payload, size);
 
     if (decoder->param.seiDebug) {
       printf ("pictureTiming");
@@ -203,8 +191,8 @@ namespace {
         if ((activeSps->vuiSeqParams.nal_hrd_parameters_presentFlag) ||
             (activeSps->vuiSeqParams.vcl_hrd_parameters_presentFlag)) {
           int cpb_removal_delay, dpb_output_delay;
-          cpb_removal_delay = s->readUv (cpb_removal_len, "SEI cpb_removal_delay");
-          dpb_output_delay = s->readUv (dpb_output_len,  "SEI dpb_output_delay");
+          cpb_removal_delay = bitStream.readUv (cpb_removal_len, "SEI cpb_removal_delay");
+          dpb_output_delay = bitStream.readUv (dpb_output_len,  "SEI dpb_output_delay");
           if (decoder->param.seiDebug) {
             printf (" cpb:%d", cpb_removal_delay);
             printf (" dpb:%d", dpb_output_delay);
@@ -220,7 +208,7 @@ namespace {
 
       int numClockTs = 0;
       if (pic_struct_presentFlag) {
-        pic_struct = s->readUv (4, "SEI pic_struct");
+        pic_struct = bitStream.readUv (4, "SEI pic_struct");
         switch (pic_struct) {
           case 0:
           case 1:
@@ -252,16 +240,16 @@ namespace {
         if (decoder->param.seiDebug)
           for (int i = 0; i < numClockTs; i++) {
             //{{{  print
-            int clock_timestampFlag = s->readU1 ("SEI clock_timestampFlag");
+            int clock_timestampFlag = bitStream.readU1 ("SEI clock_timestampFlag");
             if (clock_timestampFlag) {
               printf (" clockTs");
-              int ct_type = s->readUv (2, "SEI ct_type");
-              int nuit_field_basedFlag = s->readU1 ("SEI nuit_field_basedFlag");
-              int counting_type = s->readUv (5, "SEI counting_type");
-              int full_timestampFlag = s->readU1 ("SEI full_timestampFlag");
-              int discontinuityFlag = s->readU1 ("SEI discontinuityFlag");
-              int cnt_droppedFlag = s->readU1 ("SEI cnt_droppedFlag");
-              int nframes = s->readUv (8, "SEI nframes");
+              int ct_type = bitStream.readUv (2, "SEI ct_type");
+              int nuit_field_basedFlag = bitStream.readU1 ("SEI nuit_field_basedFlag");
+              int counting_type = bitStream.readUv (5, "SEI counting_type");
+              int full_timestampFlag = bitStream.readU1 ("SEI full_timestampFlag");
+              int discontinuityFlag = bitStream.readU1 ("SEI discontinuityFlag");
+              int cnt_droppedFlag = bitStream.readU1 ("SEI cnt_droppedFlag");
+              int nframes = bitStream.readUv (8, "SEI nframes");
 
               printf ("ct:%d",ct_type);
               printf ("nuit:%d",nuit_field_basedFlag);
@@ -271,28 +259,28 @@ namespace {
               printf ("nframes:%d",nframes);
 
               if (full_timestampFlag) {
-                int seconds_value = s->readUv (6, "SEI seconds_value");
-                int minutes_value = s->readUv (6, "SEI minutes_value");
-                int hours_value = s->readUv (5, "SEI hours_value");
+                int seconds_value = bitStream.readUv (6, "SEI seconds_value");
+                int minutes_value = bitStream.readUv (6, "SEI minutes_value");
+                int hours_value = bitStream.readUv (5, "SEI hours_value");
                 printf ("sec:%d", seconds_value);
                 printf ("min:%d", minutes_value);
                 printf ("hour:%d", hours_value);
                 }
               else {
-                int secondsFlag = s->readU1 ("SEI secondsFlag");
+                int secondsFlag = bitStream.readU1 ("SEI secondsFlag");
                 printf ("sec:%d",secondsFlag);
                 if (secondsFlag) {
-                  int seconds_value = s->readUv (6, "SEI seconds_value");
-                  int minutesFlag = s->readU1 ("SEI minutesFlag");
+                  int seconds_value = bitStream.readUv (6, "SEI seconds_value");
+                  int minutesFlag = bitStream.readU1 ("SEI minutesFlag");
                   printf ("sec:%d",seconds_value);
                   printf ("min:%d",minutesFlag);
                   if(minutesFlag) {
-                    int minutes_value = s->readUv(6, "SEI minutes_value");
-                    int hoursFlag = s->readU1 ("SEI hoursFlag");
+                    int minutes_value = bitStream.readUv(6, "SEI minutes_value");
+                    int hoursFlag = bitStream.readU1 ("SEI hoursFlag");
                     printf ("min:%d",minutes_value);
                     printf ("hour%d",hoursFlag);
                     if (hoursFlag) {
-                      int hours_value = s->readUv (5, "SEI hours_value");
+                      int hours_value = bitStream.readUv (5, "SEI hours_value");
                       printf ("hour:%d\n",hours_value);
                       }
                     }
@@ -308,7 +296,7 @@ namespace {
               else
                 time_offset_length = 24;
               if (time_offset_length)
-                time_offset = s->readIv (time_offset_length, "SEI time_offset");
+                time_offset = bitStream.readIv (time_offset_length, "SEI time_offset");
               else
                 time_offset = 0;
               printf ("time:%d", time_offset);
@@ -318,45 +306,37 @@ namespace {
         }
       printf ("\n");
       }
-
-    free (s);
     }
   //}}}
   //{{{
-  void processPanScan (uint8_t* payload, int size, cDecoder264* decoder) {
+  void processPanScan (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int pan_scan_rect_id = s->readUeV ("SEI pan_scan_rect_id");
-    int pan_scan_rect_cancelFlag = s->readU1 ("SEI pan_scan_rect_cancelFlag");
+    int pan_scan_rect_id =  bitStream.readUeV ("SEI pan_scan_rect_id");
+    int pan_scan_rect_cancelFlag =  bitStream.readU1 ("SEI pan_scan_rect_cancelFlag");
     if (!pan_scan_rect_cancelFlag) {
-      int pan_scan_cnt_minus1 = s->readUeV ("SEI pan_scan_cnt_minus1");
+      int pan_scan_cnt_minus1 =  bitStream.readUeV ("SEI pan_scan_cnt_minus1");
       for (int i = 0; i <= pan_scan_cnt_minus1; i++) {
-        int pan_scan_rect_left_offset = s->readSeV ("SEI pan_scan_rect_left_offset");
-        int pan_scan_rect_right_offset = s->readSeV ("SEI pan_scan_rect_right_offset");
-        int pan_scan_rect_top_offset = s->readSeV ("SEI pan_scan_rect_top_offset");
-        int pan_scan_rect_bottom_offset = s->readSeV ("SEI pan_scan_rect_bottom_offset");
+        int pan_scan_rect_left_offset =  bitStream.readSeV ("SEI pan_scan_rect_left_offset");
+        int pan_scan_rect_right_offset =  bitStream.readSeV ("SEI pan_scan_rect_right_offset");
+        int pan_scan_rect_top_offset =  bitStream.readSeV ("SEI pan_scan_rect_top_offset");
+        int pan_scan_rect_bottom_offset =  bitStream.readSeV ("SEI pan_scan_rect_bottom_offset");
         if (decoder->param.seiDebug)
           printf ("panScan %d/%d id:%d left:%d right:%d top:%d bot:%d\n",
                   i, pan_scan_cnt_minus1, pan_scan_rect_id,
                   pan_scan_rect_left_offset, pan_scan_rect_right_offset,
                   pan_scan_rect_top_offset, pan_scan_rect_bottom_offset);
         }
-      int pan_scan_rect_repetition_period = s->readUeV ("SEI pan_scan_rect_repetition_period");
+      int pan_scan_rect_repetition_period =  bitStream.readUeV ("SEI pan_scan_rect_repetition_period");
       }
-
-    free (s);
     }
   //}}}
   //{{{
-  void processRecoveryPoint (uint8_t* payload, int size, cDecoder264* decoder) {
+  void processRecoveryPoint (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int recoveryFrameCount = s->readUeV ("SEI recoveryFrameCount");
-    int exact_matchFlag = s->readU1 ("SEI exact_matchFlag");
-    int broken_linkFlag = s->readU1 ("SEI broken_linkFlag");
-    int changing_slice_group_idc = s->readUv (2, "SEI changing_slice_group_idc");
+    int recoveryFrameCount =  bitStream.readUeV ("SEI recoveryFrameCount");
+    int exact_matchFlag =  bitStream.readU1 ("SEI exact_matchFlag");
+    int broken_linkFlag =  bitStream.readU1 ("SEI broken_linkFlag");
+    int changing_slice_group_idc =  bitStream.readUv (2, "SEI changing_slice_group_idc");
 
     decoder->recoveryPoint = 1;
     decoder->recoveryFrameCount = recoveryFrameCount;
@@ -364,33 +344,28 @@ namespace {
     if (decoder->param.seiDebug)
       printf ("recovery - frame:%d exact:%d broken:%d changing:%d\n",
               recoveryFrameCount, exact_matchFlag, broken_linkFlag, changing_slice_group_idc);
-    free (s);
     }
   //}}}
   //{{{
-  void processDecRefPicMarkingRepetition (uint8_t* payload, int size, cDecoder264* decoder, cSlice *slice) {
+  void processDecRefPicMarkingRepetition (sBitStream& bitStream, cDecoder264* decoder, cSlice *slice) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int original_idrFlag = s->readU1 ("SEI original_idrFlag");
-    int original_frame_num = s->readUeV ("SEI original_frame_num");
+    int original_idrFlag =  bitStream.readU1 ("SEI original_idrFlag");
+    int original_frame_num =  bitStream.readUeV ("SEI original_frame_num");
 
     int original_bottom_fieldFlag = 0;
     if (!decoder->activeSps->frameMbOnly) {
-      int original_field_picFlag = s->readU1 ("SEI original_field_picFlag");
+      int original_field_picFlag =  bitStream.readU1 ("SEI original_field_picFlag");
       if (original_field_picFlag)
-        original_bottom_fieldFlag = s->readU1 ("SEI original_bottom_fieldFlag");
+        original_bottom_fieldFlag =  bitStream.readU1 ("SEI original_bottom_fieldFlag");
       }
 
     if (decoder->param.seiDebug)
       printf ("decPicRepetition orig:%d:%d", original_idrFlag, original_frame_num);
-
-    free (s);
     }
   //}}}
 
   //{{{
-  void process_spare_pic (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_spare_pic (sBitStream& bitStream, cDecoder264* decoder) {
 
     int x,y;
     int bit0, bit1, no_bit0;
@@ -402,10 +377,8 @@ namespace {
     int m, n, left, right, top, bottom,directx, directy;
     uint8_t*** map;
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    target_frame_num = s->readUeV ("SEI target_frame_num");
-    num_spare_pics = 1 + s->readUeV ("SEI num_spare_pics_minus1");
+    target_frame_num =  bitStream.readUeV ("SEI target_frame_num");
+    num_spare_pics = 1 +  bitStream.readUeV ("SEI num_spare_pics_minus1");
     if (decoder->param.seiDebug)
       printf ("sparePicture target_frame_num:%d num_spare_pics:%d\n",
               target_frame_num, num_spare_pics);
@@ -420,12 +393,12 @@ namespace {
       else
         CandidateSpareFrameNum = SpareFrameNum;
 
-      delta_spare_frame_num = s->readUeV ("SEI delta_spare_frame_num");
+      delta_spare_frame_num =  bitStream.readUeV ("SEI delta_spare_frame_num");
       SpareFrameNum = CandidateSpareFrameNum - delta_spare_frame_num;
       if (SpareFrameNum < 0 )
         SpareFrameNum = MAX_FN + SpareFrameNum;
 
-      ref_area_indicator = s->readUeV ("SEI ref_area_indicator");
+      ref_area_indicator =  bitStream.readUeV ("SEI ref_area_indicator");
       switch (ref_area_indicator) {
         //{{{
         case 0: // The whole frame can serve as spare picture
@@ -438,7 +411,7 @@ namespace {
         case 1: // The map is not compressed
           for (y=0; y<decoder->coding.height >> 4; y++)
             for (x=0; x<decoder->coding.width >> 4; x++)
-              map[i][y][x] = (uint8_t)s->readU1("SEI ref_mb_indicator");
+              map[i][y][x] = (uint8_t) bitStream.readU1("SEI ref_mb_indicator");
           break;
         //}}}
         //{{{
@@ -457,7 +430,7 @@ namespace {
           for (m = 0; m < decoder->coding.height >> 4; m++)
             for (n = 0; n < decoder->coding.width >> 4; n++) {
               if (no_bit0 < 0)
-                no_bit0 = s->readUeV ("SEI zero_run_length");
+                no_bit0 =  bitStream.readUeV ("SEI zero_run_length");
               if (no_bit0>0)
                 map[i][y][x] = (uint8_t) bit0;
               else
@@ -550,25 +523,22 @@ namespace {
       }
 
     freeMem3D (map);
-    free (s);
     }
   //}}}
 
   //{{{
-  void process_subsequence_info (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_subsequence_info (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int sub_seq_layer_num = s->readUeV ("SEI sub_seq_layer_num");
-    int sub_seq_id = s->readUeV ("SEI sub_seq_id");
-    int first_ref_picFlag = s->readU1 ("SEI first_ref_picFlag");
-    int leading_non_ref_picFlag = s->readU1 ("SEI leading_non_ref_picFlag");
-    int last_picFlag = s->readU1 ("SEI last_picFlag");
+    int sub_seq_layer_num =  bitStream.readUeV ("SEI sub_seq_layer_num");
+    int sub_seq_id = bitStream.readUeV ("SEI sub_seq_id");
+    int first_ref_picFlag = bitStream.readU1 ("SEI first_ref_picFlag");
+    int leading_non_ref_picFlag = bitStream.readU1 ("SEI leading_non_ref_picFlag");
+    int last_picFlag = bitStream.readU1 ("SEI last_picFlag");
 
     int sub_seq_frame_num = 0;
-    int sub_seq_frame_numFlag = s->readU1 ("SEI sub_seq_frame_numFlag");
+    int sub_seq_frame_numFlag = bitStream.readU1 ("SEI sub_seq_frame_numFlag");
     if (sub_seq_frame_numFlag)
-      sub_seq_frame_num = s->readUeV("SEI sub_seq_frame_num");
+      sub_seq_frame_num = bitStream.readUeV("SEI sub_seq_frame_num");
 
     if (decoder->param.seiDebug) {
       printf ("Sub-sequence information\n");
@@ -581,25 +551,21 @@ namespace {
       if (sub_seq_frame_numFlag)
         printf ("sub_seq_frame_num = %d\n", sub_seq_frame_num);
       }
-
-    free  (s);
     }
   //}}}
   //{{{
-  void process_subsequence_layer_characteristics_info (uint8_t* payload, int size, cDecoder264* decoder)
+  void process_subsequence_layer_characteristics_info (sBitStream& bitStream, cDecoder264* decoder)
   {
     long num_sub_layers, accurate_statisticsFlag, average_bit_rate, average_frame_rate;
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    num_sub_layers = 1 + s->readUeV("SEI num_sub_layers_minus1");
+    num_sub_layers = 1 + bitStream.readUeV("SEI num_sub_layers_minus1");
 
     if (decoder->param.seiDebug)
       printf ("Sub-sequence layer characteristics num_sub_layers_minus1 %ld\n", num_sub_layers - 1);
     for (int i = 0; i < num_sub_layers; i++) {
-      accurate_statisticsFlag = s->readU1 ("SEI accurate_statisticsFlag");
-      average_bit_rate = s->readUv (16,"SEI average_bit_rate");
-      average_frame_rate = s->readUv (16,"SEI average_frame_rate");
+      accurate_statisticsFlag = bitStream.readU1 ("SEI accurate_statisticsFlag");
+      average_bit_rate = bitStream.readUv (16,"SEI average_bit_rate");
+      average_frame_rate = bitStream.readUv (16,"SEI average_frame_rate");
 
       if (decoder->param.seiDebug) {
         printf("layer %d: accurate_statisticsFlag = %ld\n", i, accurate_statisticsFlag);
@@ -607,18 +573,14 @@ namespace {
         printf("layer %d: average_frame_rate= %ld\n", i, average_frame_rate);
         }
       }
-
-    free (s);
     }
   //}}}
   //{{{
-  void process_subsequence_characteristics_info (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_subsequence_characteristics_info (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int sub_seq_layer_num = s->readUeV ("SEI sub_seq_layer_num");
-    int sub_seq_id = s->readUeV ("SEI sub_seq_id");
-    int durationFlag = s->readU1 ("SEI durationFlag");
+    int sub_seq_layer_num = bitStream.readUeV ("SEI sub_seq_layer_num");
+    int sub_seq_id = bitStream.readUeV ("SEI sub_seq_id");
+    int durationFlag = bitStream.readU1 ("SEI durationFlag");
 
     if (decoder->param.seiDebug) {
       printf ("Sub-sequence characteristics\n");
@@ -628,18 +590,18 @@ namespace {
       }
 
     if (durationFlag) {
-      int sub_seq_duration = s->readUv (32, "SEI durationFlag");
+      int sub_seq_duration = bitStream.readUv (32, "SEI durationFlag");
       if (decoder->param.seiDebug)
         printf ("sub_seq_duration = %d\n", sub_seq_duration);
       }
 
-    int average_rateFlag = s->readU1 ("SEI average_rateFlag");
+    int average_rateFlag = bitStream.readU1 ("SEI average_rateFlag");
     if (decoder->param.seiDebug)
       printf ("average_rateFlag %d\n", average_rateFlag);
     if (average_rateFlag) {
-      int accurate_statisticsFlag = s->readU1 ("SEI accurate_statisticsFlag");
-      int average_bit_rate = s->readUv (16, "SEI average_bit_rate");
-      int average_frame_rate = s->readUv (16, "SEI average_frame_rate");
+      int accurate_statisticsFlag = bitStream.readU1 ("SEI accurate_statisticsFlag");
+      int average_bit_rate = bitStream.readUv (16, "SEI average_bit_rate");
+      int average_frame_rate = bitStream.readUv (16, "SEI average_frame_rate");
       if (decoder->param.seiDebug) {
         printf ("accurate_statisticsFlag %d\n", accurate_statisticsFlag);
         printf ("average_bit_rate %d\n", average_bit_rate);
@@ -647,32 +609,29 @@ namespace {
         }
       }
 
-    int num_referenced_subseqs  = s->readUeV("SEI num_referenced_subseqs");
+    int num_referenced_subseqs  = bitStream.readUeV("SEI num_referenced_subseqs");
     if (decoder->param.seiDebug)
       printf ("num_referenced_subseqs %d\n", num_referenced_subseqs);
     for (int i = 0; i < num_referenced_subseqs; i++) {
-      int ref_sub_seq_layer_num  = s->readUeV ("SEI ref_sub_seq_layer_num");
-      int ref_sub_seq_id = s->readUeV ("SEI ref_sub_seq_id");
-      int ref_sub_seq_direction = s->readU1  ("SEI ref_sub_seq_direction");
+      int ref_sub_seq_layer_num  = bitStream.readUeV ("SEI ref_sub_seq_layer_num");
+      int ref_sub_seq_id = bitStream.readUeV ("SEI ref_sub_seq_id");
+      int ref_sub_seq_direction = bitStream.readU1  ("SEI ref_sub_seq_direction");
       if (decoder->param.seiDebug) {
         printf ("ref_sub_seq_layer_num %d\n", ref_sub_seq_layer_num);
         printf ("ref_sub_seq_id %d\n", ref_sub_seq_id);
         printf ("ref_sub_seq_direction %d\n", ref_sub_seq_direction);
         }
       }
-    free (s);
     }
   //}}}
   //{{{
-  void process_scene_information (uint8_t* payload, int size, cDecoder264* decoder) {
-
-    sBitStream* s = allocBitStream (payload, size);
+  void process_scene_information (sBitStream& bitStream, cDecoder264* decoder) {
 
     int second_scene_id;
-    int scene_id = s->readUeV ("SEI scene_id");
-    int scene_transition_type = s->readUeV ("SEI scene_transition_type");
+    int scene_id = bitStream.readUeV ("SEI scene_id");
+    int scene_transition_type = bitStream.readUeV ("SEI scene_transition_type");
     if (scene_transition_type > 3)
-      second_scene_id = s->readUeV ("SEI scene_transition_type");
+      second_scene_id = bitStream.readUeV ("SEI scene_transition_type");
 
     if (decoder->param.seiDebug) {
       printf ("SceneInformation\n");
@@ -681,7 +640,6 @@ namespace {
       if (scene_transition_type > 3 )
         printf ("second_scene_id %d\n", second_scene_id);
       }
-    free (s);
     }
   //}}}
 
@@ -689,7 +647,7 @@ namespace {
   void process_filler_payload_info (uint8_t* payload, int size, cDecoder264* decoder) {
 
     int payload_cnt = 0;
-    while (payload_cnt<size)
+    while (payload_cnt < size)
       if (payload[payload_cnt] == 0xFF)
          payload_cnt++;
 
@@ -703,14 +661,11 @@ namespace {
     }
   //}}}
   //{{{
-  void process_full_frame_freeze_info (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_full_frame_freeze_info (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int full_frame_freeze_repetition_period = s->readUeV ("SEI full_frame_freeze_repetition_period");
+    int full_frame_freeze_repetition_period = bitStream.readUeV ("SEI full_frame_freeze_repetition_period");
     printf ("full_frame_freeze_repetition_period = %d\n", full_frame_freeze_repetition_period);
 
-    free (s);
     }
   //}}}
   //{{{
@@ -722,75 +677,61 @@ namespace {
     }
   //}}}
   //{{{
-  void process_full_frame_snapshot_info (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_full_frame_snapshot_info (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int snapshot_id = s->readUeV ("SEI snapshot_id");
+    int snapshot_id = bitStream.readUeV ("SEI snapshot_id");
 
     printf ("Full-frame snapshot\n");
     printf ("snapshot_id = %d\n", snapshot_id);
-    free (s);
     }
   //}}}
 
   //{{{
-  void process_progressive_refinement_start_info (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_progressive_refinement_start_info (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int progressive_refinement_id   = s->readUeV("SEI progressive_refinement_id"  );
-    int num_refinement_steps_minus1 = s->readUeV("SEI num_refinement_steps_minus1");
+    int progressive_refinement_id   = bitStream.readUeV("SEI progressive_refinement_id"  );
+    int num_refinement_steps_minus1 = bitStream.readUeV("SEI num_refinement_steps_minus1");
     printf ("Progressive refinement segment start\n");
     printf ("progressive_refinement_id   = %d\n", progressive_refinement_id);
     printf ("num_refinement_steps_minus1 = %d\n", num_refinement_steps_minus1);
-
-    free (s);
     }
   //}}}
   //{{{
-  void process_progressive_refinement_end_info (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_progressive_refinement_end_info (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int progressive_refinement_id   = s->readUeV ("SEI progressive_refinement_id"  );
+    int progressive_refinement_id   = bitStream.readUeV ("SEI progressive_refinement_id"  );
     printf ("progressive refinement segment end\n");
     printf ("progressive_refinement_id:%d\n", progressive_refinement_id);
-    free (s);
-  }
+    }
   //}}}
 
   //{{{
-  void process_motion_constrained_slice_group_set_info (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_motion_constrained_slice_group_set_info (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int numSliceGroupsMinus1 = s->readUeV ("SEI numSliceGroupsMinus1" );
+    int numSliceGroupsMinus1 = bitStream.readUeV ("SEI numSliceGroupsMinus1" );
     int sliceGroupSize = ceilLog2 (numSliceGroupsMinus1 + 1);
     printf ("Motion-constrained slice group set\n");
     printf ("numSliceGroupsMinus1 = %d\n", numSliceGroupsMinus1);
 
     for (int i = 0; i <= numSliceGroupsMinus1; i++) {
-      int sliceGroupId = s->readUv (sliceGroupSize, "SEI sliceGroupId" );
+      int sliceGroupId = bitStream.readUv (sliceGroupSize, "SEI sliceGroupId" );
       printf ("sliceGroupId = %d\n", sliceGroupId);
       }
 
-    int exact_matchFlag = s->readU1 ("SEI exact_matchFlag"  );
-    int pan_scan_rectFlag = s->readU1 ("SEI pan_scan_rectFlag"  );
+    int exact_matchFlag = bitStream.readU1 ("SEI exact_matchFlag"  );
+    int pan_scan_rectFlag = bitStream.readU1 ("SEI pan_scan_rectFlag"  );
 
     printf ("exact_matchFlag = %d\n", exact_matchFlag);
     printf ("pan_scan_rectFlag = %d\n", pan_scan_rectFlag);
 
     if (pan_scan_rectFlag) {
-      int pan_scan_rect_id = s->readUeV ("SEI pan_scan_rect_id"  );
+      int pan_scan_rect_id = bitStream.readUeV ("SEI pan_scan_rect_id"  );
       printf ("pan_scan_rect_id = %d\n", pan_scan_rect_id);
       }
-
-    free (s);
     }
   //}}}
   //{{{
-  void processFilmGrain (uint8_t* payload, int size, cDecoder264* decoder) {
+  void processFilmGrain (sBitStream& bitStream, cDecoder264* decoder) {
 
     int film_grain_characteristics_cancelFlag;
     int model_id, separate_colour_description_presentFlag;
@@ -801,23 +742,21 @@ namespace {
     int comp_model_value;
     int film_grain_characteristics_repetition_period;
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    film_grain_characteristics_cancelFlag = s->readU1 ("SEI film_grain_characteristics_cancelFlag");
+    film_grain_characteristics_cancelFlag = bitStream.readU1 ("SEI film_grain_characteristics_cancelFlag");
     printf ("film_grain_characteristics_cancelFlag = %d\n", film_grain_characteristics_cancelFlag);
     if (!film_grain_characteristics_cancelFlag) {
-      model_id = s->readUv(2, "SEI model_id");
-      separate_colour_description_presentFlag = s->readU1("SEI separate_colour_description_presentFlag");
+      model_id = bitStream.readUv(2, "SEI model_id");
+      separate_colour_description_presentFlag = bitStream.readU1("SEI separate_colour_description_presentFlag");
       printf ("model_id = %d\n", model_id);
       printf ("separate_colour_description_presentFlag = %d\n", separate_colour_description_presentFlag);
 
       if (separate_colour_description_presentFlag) {
-        film_grain_bit_depth_luma_minus8 = s->readUv(3, "SEI film_grain_bit_depth_luma_minus8");
-        film_grain_bit_depth_chroma_minus8 = s->readUv(3, "SEI film_grain_bit_depth_chroma_minus8");
-        film_grain_full_rangeFlag = s->readUv(1, "SEI film_grain_full_rangeFlag");
-        film_grain_colour_primaries = s->readUv(8, "SEI film_grain_colour_primaries");
-        film_grain_transfer_characteristics = s->readUv(8, "SEI film_grain_transfer_characteristics");
-        film_grain_matrix_coefficients = s->readUv(8, "SEI film_grain_matrix_coefficients");
+        film_grain_bit_depth_luma_minus8 = bitStream.readUv(3, "SEI film_grain_bit_depth_luma_minus8");
+        film_grain_bit_depth_chroma_minus8 = bitStream.readUv(3, "SEI film_grain_bit_depth_chroma_minus8");
+        film_grain_full_rangeFlag = bitStream.readUv(1, "SEI film_grain_full_rangeFlag");
+        film_grain_colour_primaries = bitStream.readUv(8, "SEI film_grain_colour_primaries");
+        film_grain_transfer_characteristics = bitStream.readUv(8, "SEI film_grain_transfer_characteristics");
+        film_grain_matrix_coefficients = bitStream.readUv(8, "SEI film_grain_matrix_coefficients");
         printf ("film_grain_bit_depth_luma_minus8 = %d\n", film_grain_bit_depth_luma_minus8);
         printf ("film_grain_bit_depth_chroma_minus8 = %d\n", film_grain_bit_depth_chroma_minus8);
         printf ("film_grain_full_rangeFlag = %d\n", film_grain_full_rangeFlag);
@@ -826,93 +765,81 @@ namespace {
         printf ("film_grain_matrix_coefficients = %d\n", film_grain_matrix_coefficients);
         }
 
-      blending_mode_id = s->readUv (2, "SEI blending_mode_id");
-      log2_scale_factor = s->readUv (4, "SEI log2_scale_factor");
+      blending_mode_id = bitStream.readUv (2, "SEI blending_mode_id");
+      log2_scale_factor = bitStream.readUv (4, "SEI log2_scale_factor");
       printf ("blending_mode_id = %d\n", blending_mode_id);
       printf ("log2_scale_factor = %d\n", log2_scale_factor);
       for (int c = 0; c < 3; c ++) {
-        comp_model_presentFlag[c] = s->readU1("SEI comp_model_presentFlag");
+        comp_model_presentFlag[c] = bitStream.readU1("SEI comp_model_presentFlag");
         printf ("comp_model_presentFlag = %d\n", comp_model_presentFlag[c]);
         }
 
       for (int c = 0; c < 3; c ++)
         if (comp_model_presentFlag[c]) {
-          num_intensity_intervals_minus1 = s->readUv(8, "SEI num_intensity_intervals_minus1");
-          num_model_values_minus1 = s->readUv(3, "SEI num_model_values_minus1");
+          num_intensity_intervals_minus1 = bitStream.readUv(8, "SEI num_intensity_intervals_minus1");
+          num_model_values_minus1 = bitStream.readUv(3, "SEI num_model_values_minus1");
           printf("num_intensity_intervals_minus1 = %d\n", num_intensity_intervals_minus1);
           printf("num_model_values_minus1 = %d\n", num_model_values_minus1);
           for (int i = 0; i <= num_intensity_intervals_minus1; i ++) {
-            intensity_interval_lower_bound = s->readUv(8, "SEI intensity_interval_lower_bound");
-            intensity_interval_upper_bound = s->readUv(8, "SEI intensity_interval_upper_bound");
+            intensity_interval_lower_bound = bitStream.readUv(8, "SEI intensity_interval_lower_bound");
+            intensity_interval_upper_bound = bitStream.readUv(8, "SEI intensity_interval_upper_bound");
             printf ("intensity_interval_lower_bound = %d\n", intensity_interval_lower_bound);
             printf ("intensity_interval_upper_bound = %d\n", intensity_interval_upper_bound);
             for (int j = 0; j <= num_model_values_minus1; j++) {
-              comp_model_value = s->readSeV("SEI comp_model_value");
+              comp_model_value = bitStream.readSeV("SEI comp_model_value");
               printf ("comp_model_value = %d\n", comp_model_value);
               }
             }
           }
       film_grain_characteristics_repetition_period =
-        s->readUeV ("SEI film_grain_characteristics_repetition_period");
+        bitStream.readUeV ("SEI film_grain_characteristics_repetition_period");
       printf ("film_grain_characteristics_repetition_period = %d\n",
               film_grain_characteristics_repetition_period);
       }
-
-    free (s);
     }
   //}}}
   //{{{
-  void processDeblockFilterDisplayPref (uint8_t* payload, int size, cDecoder264* decoder) {
+  void processDeblockFilterDisplayPref (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int deblocking_display_preference_cancelFlag = s->readU1("SEI deblocking_display_preference_cancelFlag");
+    int deblocking_display_preference_cancelFlag = bitStream.readU1("SEI deblocking_display_preference_cancelFlag");
     printf ("deblocking_display_preference_cancelFlag = %d\n", deblocking_display_preference_cancelFlag);
     if (!deblocking_display_preference_cancelFlag) {
-      int display_prior_to_deblocking_preferredFlag = s->readU1("SEI display_prior_to_deblocking_preferredFlag");
-      int dec_frame_buffering_constraintFlag = s->readU1("SEI dec_frame_buffering_constraintFlag");
-      int deblocking_display_preference_repetition_period = s->readUeV("SEI deblocking_display_preference_repetition_period");
+      int display_prior_to_deblocking_preferredFlag = bitStream.readU1("SEI display_prior_to_deblocking_preferredFlag");
+      int dec_frame_buffering_constraintFlag = bitStream.readU1("SEI dec_frame_buffering_constraintFlag");
+      int deblocking_display_preference_repetition_period = bitStream.readUeV("SEI deblocking_display_preference_repetition_period");
 
       printf ("display_prior_to_deblocking_preferredFlag = %d\n", display_prior_to_deblocking_preferredFlag);
       printf ("dec_frame_buffering_constraintFlag = %d\n", dec_frame_buffering_constraintFlag);
       printf ("deblocking_display_preference_repetition_period = %d\n", deblocking_display_preference_repetition_period);
       }
-
-    free (s);
     }
   //}}}
   //{{{
-  void processStereoVideo (uint8_t* payload, int size, cDecoder264* decoder) {
+  void processStereoVideo (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int field_viewsFlags = s->readU1 ("SEI field_viewsFlags");
+    int field_viewsFlags = bitStream.readU1 ("SEI field_viewsFlags");
     printf ("field_viewsFlags = %d\n", field_viewsFlags);
     if (field_viewsFlags) {
-      int top_field_is_left_viewFlag = s->readU1 ("SEI top_field_is_left_viewFlag");
+      int top_field_is_left_viewFlag = bitStream.readU1 ("SEI top_field_is_left_viewFlag");
       printf ("top_field_is_left_viewFlag = %d\n", top_field_is_left_viewFlag);
       }
     else {
-      int current_frame_is_left_viewFlag = s->readU1 ("SEI current_frame_is_left_viewFlag");
-      int next_frame_is_second_viewFlag = s->readU1 ("SEI next_frame_is_second_viewFlag");
+      int current_frame_is_left_viewFlag = bitStream.readU1 ("SEI current_frame_is_left_viewFlag");
+      int next_frame_is_second_viewFlag = bitStream.readU1 ("SEI next_frame_is_second_viewFlag");
       printf ("current_frame_is_left_viewFlag = %d\n", current_frame_is_left_viewFlag);
       printf ("next_frame_is_second_viewFlag = %d\n", next_frame_is_second_viewFlag);
       }
 
-    int left_view_self_containedFlag = s->readU1 ("SEI left_view_self_containedFlag");
-    int right_view_self_containedFlag = s->readU1 ("SEI right_view_self_containedFlag");
+    int left_view_self_containedFlag = bitStream.readU1 ("SEI left_view_self_containedFlag");
+    int right_view_self_containedFlag = bitStream.readU1 ("SEI right_view_self_containedFlag");
     printf ("left_view_self_containedFlag = %d\n", left_view_self_containedFlag);
     printf ("right_view_self_containedFlag = %d\n", right_view_self_containedFlag);
-
-    free (s);
     }
   //}}}
   //{{{
-  void processBufferingPeriod (uint8_t* payload, int size, cDecoder264* decoder) {
+  void processBufferingPeriod (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    int spsId = s->readUeV ("SEI spsId");
+    int spsId = bitStream.readUeV ("SEI spsId");
     cSps* sps = &decoder->sps[spsId];
     //useSps (decoder, sps);
 
@@ -925,8 +852,8 @@ namespace {
       int initial_cpb_removal_delay_offset;
       if (sps->vuiSeqParams.nal_hrd_parameters_presentFlag) {
         for (uint32_t k = 0; k < sps->vuiSeqParams.nal_hrd_parameters.cpb_cnt_minus1+1; k++) {
-          initial_cpb_removal_delay = s->readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        );
-          initial_cpb_removal_delay_offset = s->readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" );
+          initial_cpb_removal_delay = bitStream.readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        );
+          initial_cpb_removal_delay_offset = bitStream.readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" );
           if (decoder->param.seiDebug) {
             printf ("nal initial_cpb_removal_delay[%d] = %d\n", k, initial_cpb_removal_delay);
             printf ("nal initial_cpb_removal_delay_offset[%d] = %d\n", k, initial_cpb_removal_delay_offset);
@@ -936,8 +863,8 @@ namespace {
 
       if (sps->vuiSeqParams.vcl_hrd_parameters_presentFlag) {
         for (uint32_t k = 0; k < sps->vuiSeqParams.vcl_hrd_parameters.cpb_cnt_minus1+1; k++) {
-          initial_cpb_removal_delay = s->readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        );
-          initial_cpb_removal_delay_offset = s->readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" );
+          initial_cpb_removal_delay = bitStream.readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        );
+          initial_cpb_removal_delay_offset = bitStream.readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" );
           if (decoder->param.seiDebug) {
             printf ("vcl initial_cpb_removal_delay[%d] = %d\n", k, initial_cpb_removal_delay);
             printf ("vcl initial_cpb_removal_delay_offset[%d] = %d\n", k, initial_cpb_removal_delay_offset);
@@ -945,35 +872,31 @@ namespace {
           }
         }
       }
-
-    free (s);
     }
   //}}}
   //{{{
-  void process_frame_packing_arrangement_info (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_frame_packing_arrangement_info (sBitStream& bitStream, cDecoder264* decoder) {
 
     frame_packing_arrangement_information_struct seiFramePackingArrangement;
-
-    sBitStream* s = allocBitStream (payload, size);
 
     printf ("Frame packing arrangement\n");
 
     seiFramePackingArrangement.frame_packing_arrangement_id =
-      (uint32_t)s->readUeV( "SEI frame_packing_arrangement_id");
+      (uint32_t)bitStream.readUeV( "SEI frame_packing_arrangement_id");
     seiFramePackingArrangement.frame_packing_arrangement_cancelFlag =
-      s->readU1( "SEI frame_packing_arrangement_cancelFlag");
+      bitStream.readU1( "SEI frame_packing_arrangement_cancelFlag");
     printf("frame_packing_arrangement_id = %d\n", seiFramePackingArrangement.frame_packing_arrangement_id);
     printf("frame_packing_arrangement_cancelFlag = %d\n", seiFramePackingArrangement.frame_packing_arrangement_cancelFlag);
     if ( seiFramePackingArrangement.frame_packing_arrangement_cancelFlag == false ) {
-      seiFramePackingArrangement.frame_packing_arrangement_type = (uint8_t)s->readUv( 7, "SEI frame_packing_arrangement_type");
-      seiFramePackingArrangement.quincunx_samplingFlag = s->readU1 ("SEI quincunx_samplingFlag");
-      seiFramePackingArrangement.content_interpretation_type = (uint8_t)s->readUv( 6, "SEI content_interpretation_type");
-      seiFramePackingArrangement.spatial_flippingFlag = s->readU1 ("SEI spatial_flippingFlag");
-      seiFramePackingArrangement.frame0_flippedFlag = s->readU1 ("SEI frame0_flippedFlag");
-      seiFramePackingArrangement.field_viewsFlag = s->readU1 ("SEI field_viewsFlag");
-      seiFramePackingArrangement.current_frame_is_frame0Flag = s->readU1 ("SEI current_frame_is_frame0Flag");
-      seiFramePackingArrangement.frame0_self_containedFlag = s->readU1 ("SEI frame0_self_containedFlag");
-      seiFramePackingArrangement.frame1_self_containedFlag = s->readU1 ("SEI frame1_self_containedFlag");
+      seiFramePackingArrangement.frame_packing_arrangement_type = (uint8_t)bitStream.readUv( 7, "SEI frame_packing_arrangement_type");
+      seiFramePackingArrangement.quincunx_samplingFlag = bitStream.readU1 ("SEI quincunx_samplingFlag");
+      seiFramePackingArrangement.content_interpretation_type = (uint8_t)bitStream.readUv( 6, "SEI content_interpretation_type");
+      seiFramePackingArrangement.spatial_flippingFlag = bitStream.readU1 ("SEI spatial_flippingFlag");
+      seiFramePackingArrangement.frame0_flippedFlag = bitStream.readU1 ("SEI frame0_flippedFlag");
+      seiFramePackingArrangement.field_viewsFlag = bitStream.readU1 ("SEI field_viewsFlag");
+      seiFramePackingArrangement.current_frame_is_frame0Flag = bitStream.readU1 ("SEI current_frame_is_frame0Flag");
+      seiFramePackingArrangement.frame0_self_containedFlag = bitStream.readU1 ("SEI frame0_self_containedFlag");
+      seiFramePackingArrangement.frame1_self_containedFlag = bitStream.readU1 ("SEI frame1_self_containedFlag");
 
       printf ("frame_packing_arrangement_type = %d\n", seiFramePackingArrangement.frame_packing_arrangement_type);
       printf ("quincunx_samplingFlag          = %d\n", seiFramePackingArrangement.quincunx_samplingFlag);
@@ -987,39 +910,35 @@ namespace {
       if (seiFramePackingArrangement.quincunx_samplingFlag == false &&
           seiFramePackingArrangement.frame_packing_arrangement_type != 5 )  {
         seiFramePackingArrangement.frame0_grid_position_x =
-          (uint8_t)s->readUv( 4, "SEI frame0_grid_position_x");
+          (uint8_t)bitStream.readUv( 4, "SEI frame0_grid_position_x");
         seiFramePackingArrangement.frame0_grid_position_y =
-          (uint8_t)s->readUv( 4, "SEI frame0_grid_position_y");
+          (uint8_t)bitStream.readUv( 4, "SEI frame0_grid_position_y");
         seiFramePackingArrangement.frame1_grid_position_x =
-          (uint8_t)s->readUv( 4, "SEI frame1_grid_position_x");
+          (uint8_t)bitStream.readUv( 4, "SEI frame1_grid_position_x");
         seiFramePackingArrangement.frame1_grid_position_y =
-          (uint8_t)s->readUv( 4, "SEI frame1_grid_position_y");
+          (uint8_t)bitStream.readUv( 4, "SEI frame1_grid_position_y");
 
         printf ("frame0_grid_position_x = %d\n", seiFramePackingArrangement.frame0_grid_position_x);
         printf ("frame0_grid_position_y = %d\n", seiFramePackingArrangement.frame0_grid_position_y);
         printf ("frame1_grid_position_x = %d\n", seiFramePackingArrangement.frame1_grid_position_x);
         printf ("frame1_grid_position_y = %d\n", seiFramePackingArrangement.frame1_grid_position_y);
-      }
-      seiFramePackingArrangement.frame_packing_arrangement_reserved_byte = (uint8_t)s->readUv( 8, "SEI frame_packing_arrangement_reserved_byte");
-      seiFramePackingArrangement.frame_packing_arrangement_repetition_period = (uint32_t)s->readUeV( "SEI frame_packing_arrangement_repetition_period");
+        }
+      seiFramePackingArrangement.frame_packing_arrangement_reserved_byte = (uint8_t)bitStream.readUv( 8, "SEI frame_packing_arrangement_reserved_byte");
+      seiFramePackingArrangement.frame_packing_arrangement_repetition_period = (uint32_t)bitStream.readUeV( "SEI frame_packing_arrangement_repetition_period");
       printf("frame_packing_arrangement_reserved_byte = %d\n", seiFramePackingArrangement.frame_packing_arrangement_reserved_byte);
       printf("frame_packing_arrangement_repetition_period  = %d\n", seiFramePackingArrangement.frame_packing_arrangement_repetition_period);
-    }
-    seiFramePackingArrangement.frame_packing_arrangement_extensionFlag = s->readU1( "SEI frame_packing_arrangement_extensionFlag");
+      }
+    seiFramePackingArrangement.frame_packing_arrangement_extensionFlag = bitStream.readU1( "SEI frame_packing_arrangement_extensionFlag");
     printf("frame_packing_arrangement_extensionFlag = %d\n", seiFramePackingArrangement.frame_packing_arrangement_extensionFlag);
-
-    free (s);
-  }
+    }
   //}}}
 
   //{{{
-  void process_post_filter_hints_info (uint8_t* payload, int size, cDecoder264* decoder) {
+  void process_post_filter_hints_info (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sBitStream* s = allocBitStream (payload, size);
-
-    uint32_t filter_hint_size_y = s->readUeV("SEI filter_hint_size_y"); // interpret post-filter hint SEI here
-    uint32_t filter_hint_size_x = s->readUeV("SEI filter_hint_size_x"); // interpret post-filter hint SEI here
-    uint32_t filter_hint_type = s->readUv(2, "SEI filter_hint_type"); // interpret post-filter hint SEI here
+    uint32_t filter_hint_size_y = bitStream.readUeV("SEI filter_hint_size_y"); // interpret post-filter hint SEI here
+    uint32_t filter_hint_size_x = bitStream.readUeV("SEI filter_hint_size_x"); // interpret post-filter hint SEI here
+    uint32_t filter_hint_type = bitStream.readUv(2, "SEI filter_hint_type"); // interpret post-filter hint SEI here
 
     int** *filter_hint;
     getMem3Dint (&filter_hint, 3, filter_hint_size_y, filter_hint_size_x);
@@ -1027,9 +946,9 @@ namespace {
     for (uint32_t color_component = 0; color_component < 3; color_component ++)
       for (uint32_t cy = 0; cy < filter_hint_size_y; cy ++)
         for (uint32_t cx = 0; cx < filter_hint_size_x; cx ++)
-          filter_hint[color_component][cy][cx] = s->readSeV("SEI filter_hint"); // interpret post-filter hint SEI here
+          filter_hint[color_component][cy][cx] = bitStream.readSeV("SEI filter_hint"); // interpret post-filter hint SEI here
 
-    uint32_t additional_extensionFlag = s->readU1("SEI additional_extensionFlag"); // interpret post-filter hint SEI here
+    uint32_t additional_extensionFlag = bitStream.readU1("SEI additional_extensionFlag"); // interpret post-filter hint SEI here
 
     printf ("Post-filter hint\n");
     printf ("post_filter_hint_size_y %d \n", filter_hint_size_y);
@@ -1043,38 +962,35 @@ namespace {
     printf ("additional_extensionFlag %d \n", additional_extensionFlag);
 
     freeMem3Dint (filter_hint);
-    free (s);
     }
   //}}}
   //{{{
-  void process_green_metadata_info (uint8_t* payload, int size, cDecoder264* decoder) {
-
-    sBitStream* s = allocBitStream (payload, size);
+  void process_green_metadata_info (sBitStream& bitStream, cDecoder264* decoder) {
 
     printf ("GreenMetadataInfo\n");
 
     Green_metadata_information_struct seiGreenMetadataInfo;
-    seiGreenMetadataInfo.green_metadata_type = (uint8_t)s->readUv(8, "SEI green_metadata_type");
+    seiGreenMetadataInfo.green_metadata_type = (uint8_t)bitStream.readUv(8, "SEI green_metadata_type");
     printf ("green_metadata_type = %d\n", seiGreenMetadataInfo.green_metadata_type);
 
     if (seiGreenMetadataInfo.green_metadata_type == 0) {
-        seiGreenMetadataInfo.period_type=(uint8_t)s->readUv(8, "SEI green_metadata_period_type");
+        seiGreenMetadataInfo.period_type=(uint8_t)bitStream.readUv(8, "SEI green_metadata_period_type");
       printf ("green_metadata_period_type = %d\n", seiGreenMetadataInfo.period_type);
 
       if (seiGreenMetadataInfo.period_type == 2) {
-        seiGreenMetadataInfo.num_seconds = (uint16_t)s->readUv(16, "SEI green_metadata_num_seconds");
+        seiGreenMetadataInfo.num_seconds = (uint16_t)bitStream.readUv(16, "SEI green_metadata_num_seconds");
         printf ("green_metadata_num_seconds = %d\n", seiGreenMetadataInfo.num_seconds);
         }
       else if (seiGreenMetadataInfo.period_type == 3) {
-        seiGreenMetadataInfo.num_pictures = (uint16_t)s->readUv(16, "SEI green_metadata_num_pictures");
+        seiGreenMetadataInfo.num_pictures = (uint16_t)bitStream.readUv(16, "SEI green_metadata_num_pictures");
         printf ("green_metadata_num_pictures = %d\n", seiGreenMetadataInfo.num_pictures);
         }
 
-      seiGreenMetadataInfo.percent_non_zero_macroBlocks = (uint8_t)s->readUv(8, "SEI percent_non_zero_macroBlocks");
-      seiGreenMetadataInfo.percent_intra_coded_macroBlocks = (uint8_t)s->readUv(8, "SEI percent_intra_coded_macroBlocks");
-      seiGreenMetadataInfo.percent_six_tap_filtering = (uint8_t)s->readUv(8, "SEI percent_six_tap_filtering");
+      seiGreenMetadataInfo.percent_non_zero_macroBlocks = (uint8_t)bitStream.readUv(8, "SEI percent_non_zero_macroBlocks");
+      seiGreenMetadataInfo.percent_intra_coded_macroBlocks = (uint8_t)bitStream.readUv(8, "SEI percent_intra_coded_macroBlocks");
+      seiGreenMetadataInfo.percent_six_tap_filtering = (uint8_t)bitStream.readUv(8, "SEI percent_six_tap_filtering");
       seiGreenMetadataInfo.percent_alpha_point_deblocking_instance =
-        (uint8_t)s->readUv(8, "SEI percent_alpha_point_deblocking_instance");
+        (uint8_t)bitStream.readUv(8, "SEI percent_alpha_point_deblocking_instance");
 
       printf ("percent_non_zero_macroBlocks = %f\n", (float)seiGreenMetadataInfo.percent_non_zero_macroBlocks/255);
       printf ("percent_intra_coded_macroBlocks = %f\n", (float)seiGreenMetadataInfo.percent_intra_coded_macroBlocks/255);
@@ -1082,14 +998,12 @@ namespace {
       printf ("percent_alpha_point_deblocking_instance      = %f\n", (float)seiGreenMetadataInfo.percent_alpha_point_deblocking_instance/255);
       }
     else if (seiGreenMetadataInfo.green_metadata_type == 1) {
-      seiGreenMetadataInfo.xsd_metric_type = (uint8_t)s->readUv(8, "SEI: xsd_metric_type");
-      seiGreenMetadataInfo.xsd_metric_value = (uint16_t)s->readUv(16, "SEI xsd_metric_value");
+      seiGreenMetadataInfo.xsd_metric_type = (uint8_t)bitStream.readUv(8, "SEI: xsd_metric_type");
+      seiGreenMetadataInfo.xsd_metric_value = (uint16_t)bitStream.readUv(16, "SEI xsd_metric_value");
       printf ("xsd_metric_type      = %d\n", seiGreenMetadataInfo.xsd_metric_type);
       if (seiGreenMetadataInfo.xsd_metric_type == 0)
         printf ("xsd_metric_value      = %f\n", (float)seiGreenMetadataInfo.xsd_metric_value/100);
       }
-
-    free (s);
     }
   //}}}
   }
@@ -1118,59 +1032,64 @@ void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, cSlice* slice)
       }
     payloadSize += tempByte;
 
+    sBitStream bitStream;
+    bitStream = {0};
+    bitStream.mBuffer = msg + offset;
+    bitStream.mLength = payloadSize;
+
     switch (payloadType) {
       case  SEI_BUFFERING_PERIOD:
-        processBufferingPeriod (msg+offset, payloadSize, decoder); break;
+        processBufferingPeriod (bitStream, decoder); break;
       case  SEI_PIC_TIMING:
-        processPictureTiming (msg+offset, payloadSize, decoder); break;
+        processPictureTiming (bitStream, decoder); break;
       case  SEI_PAN_SCAN_RECT:
-        processPanScan (msg+offset, payloadSize, decoder); break;
+        processPanScan (bitStream, decoder); break;
       case  SEI_FILLER_PAYLOAD:
-        process_filler_payload_info (msg+offset, payloadSize, decoder); break;
+        process_filler_payload_info (msg + offset, payloadSize, decoder); break;
       case  SEI_USER_DATA_REGISTERED_ITU_T_T35:
-        processUserDataT35 (msg+offset, payloadSize, decoder); break;
+        processUserDataT35 (msg + offset, payloadSize, decoder); break;
       case  SEI_USER_DATA_UNREGISTERED:
-        processUserDataUnregistered (msg+offset, payloadSize, decoder); break;
+        processUserDataUnregistered (msg + offset, payloadSize, decoder); break;
       case  SEI_RECOVERY_POINT:
-        processRecoveryPoint (msg+offset, payloadSize, decoder); break;
+        processRecoveryPoint (bitStream, decoder); break;
       case  SEI_DEC_REF_PIC_MARKING_REPETITION:
-        processDecRefPicMarkingRepetition (msg+offset, payloadSize, decoder, slice); break;
+        processDecRefPicMarkingRepetition (bitStream, decoder, slice); break;
       case  SEI_SPARE_PIC:
-        process_spare_pic (msg+offset, payloadSize, decoder); break;
+        process_spare_pic (bitStream, decoder); break;
       case  SEI_SCENE_INFO:
-        process_scene_information (msg+offset, payloadSize, decoder); break;
+        process_scene_information (bitStream, decoder); break;
       case  SEI_SUB_SEQ_INFO:
-        process_subsequence_info (msg+offset, payloadSize, decoder); break;
+        process_subsequence_info (bitStream, decoder); break;
       case  SEI_SUB_SEQ_LAYER_CHARACTERISTICS:
-        process_subsequence_layer_characteristics_info (msg+offset, payloadSize, decoder); break;
+        process_subsequence_layer_characteristics_info (bitStream, decoder); break;
       case  SEI_SUB_SEQ_CHARACTERISTICS:
-        process_subsequence_characteristics_info (msg+offset, payloadSize, decoder); break;
+        process_subsequence_characteristics_info (bitStream, decoder); break;
       case  SEI_FULL_FRAME_FREEZE:
-        process_full_frame_freeze_info (msg+offset, payloadSize, decoder); break;
+        process_full_frame_freeze_info (bitStream, decoder); break;
       case  SEI_FULL_FRAME_FREEZE_RELEASE:
-        process_full_frame_freeze_release_info (msg+offset, payloadSize, decoder); break;
+        process_full_frame_freeze_release_info (msg + offset, payloadSize, decoder); break;
       case  SEI_FULL_FRAME_SNAPSHOT:
-        process_full_frame_snapshot_info (msg+offset, payloadSize, decoder); break;
+        process_full_frame_snapshot_info (bitStream, decoder); break;
       case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_START:
-        process_progressive_refinement_start_info (msg+offset, payloadSize, decoder); break;
+        process_progressive_refinement_start_info (bitStream, decoder); break;
       case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_END:
-        process_progressive_refinement_end_info (msg+offset, payloadSize, decoder); break;
+        process_progressive_refinement_end_info (bitStream, decoder); break;
       case  SEI_MOTION_CONSTRAINED_SLICE_GROUP_SET:
-        process_motion_constrained_slice_group_set_info (msg+offset, payloadSize, decoder); break;
+        process_motion_constrained_slice_group_set_info (bitStream, decoder); break;
       case  SEI_FILM_GRAIN_CHARACTERISTICS:
-        processFilmGrain (msg+offset, payloadSize, decoder); break;
+        processFilmGrain (bitStream, decoder); break;
       case  SEI_DEBLOCKING_FILTER_DISPLAY_PREFERENCE:
-        processDeblockFilterDisplayPref (msg+offset, payloadSize, decoder); break;
+        processDeblockFilterDisplayPref (bitStream, decoder); break;
       case  SEI_STEREO_VIDEO_INFO:
-        processStereoVideo  (msg+offset, payloadSize, decoder); break;
+        processStereoVideo  (bitStream, decoder); break;
       case  SEI_POST_FILTER_HINTS:
-        process_post_filter_hints_info (msg+offset, payloadSize, decoder); break;
+        process_post_filter_hints_info (bitStream, decoder); break;
       case  SEI_FRAME_PACKING_ARRANGEMENT:
-        process_frame_packing_arrangement_info (msg+offset, payloadSize, decoder); break;
+        process_frame_packing_arrangement_info (bitStream, decoder); break;
       case  SEI_GREEN_METADATA:
-        process_green_metadata_info (msg+offset, payloadSize, decoder); break;
+        process_green_metadata_info (bitStream, decoder); break;
       default:
-        processReserved (msg+offset, payloadSize, decoder); break;
+        processReserved (msg + offset, payloadSize, decoder); break;
       }
     offset += payloadSize;
     } while (msg[offset] != 0x80);    // moreRbspData()  msg[offset] != 0x80
