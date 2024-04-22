@@ -123,7 +123,7 @@ public:
     }
   //}}}
 
-  void readFromStream (cDecoder264* decoder, sDataPartition* dataPartition);
+  void readFromStream (cDecoder264* decoder, sBitStream* bitStream);
 
   //{{{  vars
   bool     ok = false;
@@ -196,5 +196,5 @@ public:
   //}}}
 
 private:
-  void readVuiFromStream (sDataPartition* dataPartition);
+  void readVuiFromStream (sBitStream* bitStream);
   };

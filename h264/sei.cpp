@@ -1098,7 +1098,7 @@ namespace {
 void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, cSlice* slice) {
 
   if (decoder->param.seiDebug)
-    cLog::log (LOGINFO, fmt::format ("SEI:%d -> ", naluLen));
+    cLog::log (LOGINFO, fmt::format ("SEI:{} -> ", naluLen));
 
   int offset = 0;
   do {
