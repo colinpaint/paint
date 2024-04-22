@@ -1009,32 +1009,32 @@ namespace {
   }
 
 //{{{
-void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, cSlice* slice) {
+void processSei (uint8_t* naluPayload, int naluPayloadLen, cDecoder264* decoder, cSlice* slice) {
 
   if (decoder->param.seiDebug)
-    cLog::log (LOGINFO, fmt::format ("SEI:{} -> ", naluLen));
+    cLog::log (LOGINFO, fmt::format ("SEI:{} -> ", naluPayloadLen));
 
   int offset = 0;
   do {
     int payloadType = 0;
-    uint8_t tempByte = msg[offset++];
+    uint8_t tempByte = naluPayload[offset++];
     while (tempByte == 0xFF) {
       payloadType += 255;
-      tempByte = msg[offset++];
+      tempByte = naluPayload[offset++];
       }
     payloadType += tempByte;
 
     int payloadSize = 0;
-    tempByte = msg[offset++];
+    tempByte = naluPayload[offset++];
     while (tempByte == 0xFF) {
       payloadSize += 255;
-      tempByte = msg[offset++];
+      tempByte = naluPayload[offset++];
       }
     payloadSize += tempByte;
 
     sBitStream bitStream;
     bitStream = {0};
-    bitStream.mBuffer = msg + offset;
+    bitStream.mBuffer = naluPayload + offset;
     bitStream.mLength = payloadSize;
 
     switch (payloadType) {
@@ -1045,11 +1045,11 @@ void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, cSlice* slice)
       case  SEI_PAN_SCAN_RECT:
         processPanScan (bitStream, decoder); break;
       case  SEI_FILLER_PAYLOAD:
-        process_filler_payload_info (msg + offset, payloadSize, decoder); break;
+        process_filler_payload_info (naluPayload + offset, payloadSize, decoder); break;
       case  SEI_USER_DATA_REGISTERED_ITU_T_T35:
-        processUserDataT35 (msg + offset, payloadSize, decoder); break;
+        processUserDataT35 (naluPayload + offset, payloadSize, decoder); break;
       case  SEI_USER_DATA_UNREGISTERED:
-        processUserDataUnregistered (msg + offset, payloadSize, decoder); break;
+        processUserDataUnregistered (naluPayload + offset, payloadSize, decoder); break;
       case  SEI_RECOVERY_POINT:
         processRecoveryPoint (bitStream, decoder); break;
       case  SEI_DEC_REF_PIC_MARKING_REPETITION:
@@ -1067,7 +1067,7 @@ void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, cSlice* slice)
       case  SEI_FULL_FRAME_FREEZE:
         process_full_frame_freeze_info (bitStream, decoder); break;
       case  SEI_FULL_FRAME_FREEZE_RELEASE:
-        process_full_frame_freeze_release_info (msg + offset, payloadSize, decoder); break;
+        process_full_frame_freeze_release_info (naluPayload + offset, payloadSize, decoder); break;
       case  SEI_FULL_FRAME_SNAPSHOT:
         process_full_frame_snapshot_info (bitStream, decoder); break;
       case  SEI_PROGRESSIVE_REFINEMENT_SEGMENT_START:
@@ -1089,10 +1089,10 @@ void processSei (uint8_t* msg, int naluLen, cDecoder264* decoder, cSlice* slice)
       case  SEI_GREEN_METADATA:
         process_green_metadata_info (bitStream, decoder); break;
       default:
-        processReserved (msg + offset, payloadSize, decoder); break;
+        processReserved (naluPayload + offset, payloadSize, decoder); break;
       }
     offset += payloadSize;
-    } while (msg[offset] != 0x80);    // moreRbspData()  msg[offset] != 0x80
+    } while (naluPayload[offset] != 0x80);    
 
   // ignore the trailing bits rbsp_trailing_bits();
   }
