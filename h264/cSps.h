@@ -90,7 +90,7 @@ public:
 
 class cSps {
 public:
-  static int readNalu (cDecoder264* decoder, cNalu* nalu);
+  static int readNalu (cNalu* nalu, cDecoder264* decoder);
 
   std::string getString();
   bool isEqual (cSps& sps);
@@ -123,7 +123,6 @@ public:
     }
   //}}}
 
-  void readFromStream (cDecoder264* decoder, sBitStream* bitStream);
 
   //{{{  vars
   bool     ok = false;
@@ -196,5 +195,6 @@ public:
   //}}}
 
 private:
-  void readVuiFromStream (sBitStream* bitStream);
+  void readFromNalu (cNalu* nalu, cDecoder264* decoder);
+  void readVuiFromStream (sBitStream& bitStream);
   };

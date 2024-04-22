@@ -10,7 +10,7 @@ using namespace std;
 //}}}
 namespace {
   //{{{
-  void scalingList (sBitStream* bitStream, int* list, int listSize, bool* useDefaultMatrix) {
+  void scalingList (sBitStream& bitStream, int* list, int listSize, bool* useDefaultMatrix) {
   // syntax for scaling list matrix values
 
     //{{{
@@ -32,7 +32,7 @@ namespace {
     for (int j = 0; j < listSize; j++) {
       int scanj = (listSize == 16) ? ZZ_SCAN[j] : ZZ_SCAN8[j];
       if (nextScale != 0) {
-        int deltaScale = bitStream->readSeV ("   : delta_sl   ");
+        int deltaScale = bitStream.readSeV ("   : delta_sl   ");
         nextScale = (lastScale + deltaScale + 256) % 256;
         *useDefaultMatrix = (scanj == 0) && (nextScale == 0);
         }
@@ -44,19 +44,12 @@ namespace {
   //}}}
   }
 
-// static
+// public static
 //{{{
-int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
+int cPps::readNalu (cNalu* nalu, cDecoder264* decoder) {
 
   cPps pps;
-  pps.naluLen = nalu->getLength();
-
-  // !!! no need to be dynamic !!!
-  sBitStream* bitStream = (sBitStream*)calloc (1, sizeof(sBitStream));
-  bitStream->mLength = nalu->getSodb (bitStream->mBuffer, bitStream->mAllocSize);
-  bitStream->mCodeLen = bitStream->mLength;
-  pps.readFromStream (decoder, bitStream);
-  free (bitStream);
+  pps.readFromNalu (nalu, decoder);
 
   if (decoder->pps[pps.id].ok)
     if (!pps.isEqual (decoder->pps[pps.id]))
@@ -73,6 +66,7 @@ int cPps::readNalu (cDecoder264* decoder, cNalu* nalu) {
   }
 //}}}
 
+// public members
 //{{{
 string cPps::getString() {
 
@@ -177,31 +171,37 @@ bool cPps::isEqual (cPps& pps) {
 
 // private
 //{{{
-void cPps::readFromStream (cDecoder264* decoder, sBitStream* bitStream) {
+void cPps::readFromNalu (cNalu* nalu, cDecoder264* decoder) {
 // read PPS from NALU
 
-  id = bitStream->readUeV ("PPS ppsId");
-  spsId = bitStream->readUeV ("PPS spsId");
+  naluLen = nalu->getLength();
 
-  entropyCoding = (eEntropyCodingType)bitStream->readU1 ("PPS entropyCoding");
-  frameBotField = bitStream->readU1 ("PPS frameBotField");
-  numSliceGroupsMinus1 = bitStream->readUeV ("PPS numSliceGroupsMinus1");
+  sBitStream bitStream = {0};
+  bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
+  bitStream.mCodeLen = bitStream.mLength;
+
+  id = bitStream.readUeV ("PPS ppsId");
+  spsId = bitStream.readUeV ("PPS spsId");
+
+  entropyCoding = (eEntropyCodingType)bitStream.readU1 ("PPS entropyCoding");
+  frameBotField = bitStream.readU1 ("PPS frameBotField");
+  numSliceGroupsMinus1 = bitStream.readUeV ("PPS numSliceGroupsMinus1");
 
   if (numSliceGroupsMinus1 > 0) {
     //{{{  FMO
-    sliceGroupMapType = bitStream->readUeV ("PPS sliceGroupMapType");
+    sliceGroupMapType = bitStream.readUeV ("PPS sliceGroupMapType");
 
     switch (sliceGroupMapType) {
       case 0: {
         for (uint32_t i = 0; i <= numSliceGroupsMinus1; i++)
-          runLengthMinus1 [i] = bitStream->readUeV ("PPS runLengthMinus1 [i]");
+          runLengthMinus1 [i] = bitStream.readUeV ("PPS runLengthMinus1 [i]");
         break;
         }
 
       case 2: {
         for (uint32_t i = 0; i < numSliceGroupsMinus1; i++) {
-          topLeft [i] = bitStream->readUeV ("PPS topLeft [i]");
-          botRight [i] = bitStream->readUeV ("PPS botRight [i]");
+          topLeft [i] = bitStream.readUeV ("PPS topLeft [i]");
+          botRight [i] = bitStream.readUeV ("PPS botRight [i]");
           }
         break;
         }
@@ -209,8 +209,8 @@ void cPps::readFromStream (cDecoder264* decoder, sBitStream* bitStream) {
       case 3:
       case 4:
       case 5:
-        sliceGroupChangeDirectionFlag = bitStream->readU1 ("PPS sliceGroupChangeDirectionFlag");
-        sliceGroupChangeRateMius1 = bitStream->readUeV ("PPS sliceGroupChangeRateMius1");
+        sliceGroupChangeDirectionFlag = bitStream.readU1 ("PPS sliceGroupChangeDirectionFlag");
+        sliceGroupChangeRateMius1 = bitStream.readUeV ("PPS sliceGroupChangeRateMius1");
         break;
 
       case 6: {
@@ -222,10 +222,10 @@ void cPps::readFromStream (cDecoder264* decoder, sBitStream* bitStream) {
         else
           NumberBitsPerSliceGroupId = 1;
 
-        picSizeMapUnitsMinus1 = bitStream->readUeV ("PPS picSizeMapUnitsMinus1");
+        picSizeMapUnitsMinus1 = bitStream.readUeV ("PPS picSizeMapUnitsMinus1");
         sliceGroupId = (uint8_t*)calloc (picSizeMapUnitsMinus1+1, 1);
         for (uint32_t i = 0; i <= picSizeMapUnitsMinus1; i++)
-          sliceGroupId[i] = (uint8_t)bitStream->readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]");
+          sliceGroupId[i] = (uint8_t)bitStream.readUv (NumberBitsPerSliceGroupId, "sliceGroupId[i]");
         break;
         }
 
@@ -234,32 +234,32 @@ void cPps::readFromStream (cDecoder264* decoder, sBitStream* bitStream) {
     }
     //}}}
 
-  numRefIndexL0defaultActiveMinus1 = bitStream->readUeV ("PPS numRefIndexL0defaultActiveMinus1");
-  numRefIndexL1defaultActiveMinus1 = bitStream->readUeV ("PPS numRefIndexL1defaultActiveMinus1");
+  numRefIndexL0defaultActiveMinus1 = bitStream.readUeV ("PPS numRefIndexL0defaultActiveMinus1");
+  numRefIndexL1defaultActiveMinus1 = bitStream.readUeV ("PPS numRefIndexL1defaultActiveMinus1");
 
-  hasWeightedPred = bitStream->readU1 ("PPS hasWeightedPred");
-  weightedBiPredIdc = bitStream->readUv (2, "PPS weightedBiPredIdc");
+  hasWeightedPred = bitStream.readU1 ("PPS hasWeightedPred");
+  weightedBiPredIdc = bitStream.readUv (2, "PPS weightedBiPredIdc");
 
-  picInitQpMinus26 = bitStream->readSeV ("PPS picInitQpMinus26");
-  picInitQsMinus26 = bitStream->readSeV ("PPS picInitQsMinus26");
+  picInitQpMinus26 = bitStream.readSeV ("PPS picInitQpMinus26");
+  picInitQsMinus26 = bitStream.readSeV ("PPS picInitQsMinus26");
 
-  chromaQpOffset = bitStream->readSeV ("PPS chromaQpOffset");
+  chromaQpOffset = bitStream.readSeV ("PPS chromaQpOffset");
 
-  hasDeblockFilterControl = bitStream->readU1 ("PPS hasDeblockFilterControl" );
-  hasConstrainedIntraPred = bitStream->readU1 ("PPS hasConstrainedIntraPred");
-  redundantPicCountPresent = bitStream->readU1 ("PPS redundantPicCountPresent");
+  hasDeblockFilterControl = bitStream.readU1 ("PPS hasDeblockFilterControl" );
+  hasConstrainedIntraPred = bitStream.readU1 ("PPS hasConstrainedIntraPred");
+  redundantPicCountPresent = bitStream.readU1 ("PPS redundantPicCountPresent");
 
-  hasMoreData = sBitStream::moreRbspData (bitStream->mBuffer, bitStream->mOffset,bitStream->mLength);
+  hasMoreData = sBitStream::moreRbspData (bitStream.mBuffer, bitStream.mOffset,bitStream.mLength);
   if (hasMoreData) {
     //{{{  read fidelity range
-    hasTransform8x8mode = bitStream->readU1 ("PPS hasTransform8x8mode");
+    hasTransform8x8mode = bitStream.readU1 ("PPS hasTransform8x8mode");
 
-    hasPicScalingMatrix = bitStream->readU1 ("PPS hasPicScalingMatrix");
+    hasPicScalingMatrix = bitStream.readU1 ("PPS hasPicScalingMatrix");
     if (hasPicScalingMatrix) {
       int chromaFormatIdc = decoder->sps[spsId].chromaFormatIdc;
       uint32_t n_ScalingList = 6 + ((chromaFormatIdc != YUV444) ? 2 : 6) * hasTransform8x8mode;
       for (uint32_t i = 0; i < n_ScalingList; i++) {
-        picScalingListPresentFlag[i]= bitStream->readU1 ("PPS picScalingListPresentFlag");
+        picScalingListPresentFlag[i]= bitStream.readU1 ("PPS picScalingListPresentFlag");
         if (picScalingListPresentFlag[i]) {
           if (i < 6)
             scalingList (bitStream, scalingList4x4[i], 16, &useDefaultScalingMatrix4x4Flag[i]);
@@ -269,7 +269,7 @@ void cPps::readFromStream (cDecoder264* decoder, sBitStream* bitStream) {
         }
       }
 
-    chromaQpOffset2 = bitStream->readSeV ("PPS chromaQpOffset2");
+    chromaQpOffset2 = bitStream.readSeV ("PPS chromaQpOffset2");
     }
     //}}}
   else

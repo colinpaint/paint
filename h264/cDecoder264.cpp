@@ -2679,8 +2679,8 @@ int cDecoder264::readNalu (cSlice* slice) {
         slice->isIDR = nalu->isIdr();
         slice->refId = nalu->getRefId();
 
-        slice->dataPartitionMode = eDataPartition1;
         slice->maxDataPartitions = 1;
+        slice->dataPartitionMode = eDataPartition1;
         sBitStream& bitStream = slice->dataPartitionArray[0].mBitStream;
         bitStream.mOffset = 0;
         bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
@@ -2747,10 +2747,10 @@ int cDecoder264::readNalu (cSlice* slice) {
         slice->refId = nalu->getRefId();
 
         // read dataPartition A
+        slice->maxDataPartitions = 3;
+        slice->dataPartitionMode = eDataPartition3;
         slice->noDataPartitionB = 1;
         slice->noDataPartitionC = 1;
-        slice->dataPartitionMode = eDataPartition3;
-        slice->maxDataPartitions = 3;
         sBitStream& bitStream = slice->dataPartitionArray[0].mBitStream;
         bitStream.mOffset = 0;
         bitStream.mLength = nalu->getSodb (bitStream.mBuffer, bitStream.mAllocSize);
@@ -2857,14 +2857,14 @@ int cDecoder264::readNalu (cSlice* slice) {
       //}}}
 
       case cNalu::NALU_TYPE_SPS: {
-        int spsId = cSps::readNalu (this, nalu);
+        int spsId = cSps::readNalu (nalu, this);
         if (param.spsDebug)
           cLog::log (LOGINFO, sps[spsId].getString());
         break;
         }
 
       case cNalu::NALU_TYPE_PPS: {
-        int ppsId = cPps::readNalu (this, nalu);
+        int ppsId = cPps::readNalu (nalu, this);
         if (param.ppsDebug)
           cLog::log (LOGINFO, pps[ppsId].getString());
         break;

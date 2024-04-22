@@ -8,7 +8,7 @@
 
 using namespace std;
 //}}}
-constexpr uint32_t kBufferInitSize = 32; // bytes for one frame
+constexpr uint32_t kBufferInitSize = 128; // bytes for one frame
 namespace {
   //{{{
   bool findStartCode (uint8_t* buf, uint32_t numZeros) {
@@ -26,12 +26,19 @@ namespace {
   // simple buffer grow algorithm
 
     if (len > allocSize) {
+      // minimum allocation
       if (allocSize < kBufferInitSize)
         allocSize = kBufferInitSize;
+
+      // next power of 2 above
       while (len > allocSize)
         allocSize *= 2;
-      cLog::log (LOGINFO, fmt::format ("allocBuffer size changed to:{} for:{}", allocSize, len));
 
+      // report for bigger buffer
+      if (allocSize > kBufferInitSize)
+        cLog::log (LOGINFO, fmt::format ("allocBuffer size changed to:{} for:{}", allocSize, len));
+
+      // realloc it
       buffer = (uint8_t*)realloc (buffer, allocSize);
       }
     }
