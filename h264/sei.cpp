@@ -1009,9 +1009,9 @@ void processSei (uint8_t* naluPayload, int naluPayloadLen, cDecoder264* decoder,
   if (decoder->param.seiDebug)
     cLog::log (LOGINFO, fmt::format ("SEI:{} -> ", naluPayloadLen));
 
-  int offset = 0;
+  uint32_t offset = 0;
   do {
-    int payloadType = 0;
+    uint32_t payloadType = 0;
     uint8_t tempByte = naluPayload[offset++];
     while (tempByte == 0xFF) {
       payloadType += 255;
@@ -1019,7 +1019,7 @@ void processSei (uint8_t* naluPayload, int naluPayloadLen, cDecoder264* decoder,
       }
     payloadType += tempByte;
 
-    int payloadSize = 0;
+    uint32_t payloadSize = 0;
     tempByte = naluPayload[offset++];
     while (tempByte == 0xFF) {
       payloadSize += 255;
@@ -1027,6 +1027,7 @@ void processSei (uint8_t* naluPayload, int naluPayloadLen, cDecoder264* decoder,
       }
     payloadSize += tempByte;
 
+    // simple use of bitStream.mBuffer, points into nalu, no alloc
     sBitStream bitStream = {0};
     bitStream.mBuffer = naluPayload + offset;
     bitStream.mLength = payloadSize;

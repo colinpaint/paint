@@ -632,7 +632,7 @@ public:
   void reset_ecFlags();
   int setEcFlag (int se);
   int getConcealElement (sSyntaxElement* se);
-  int fmoGetNextMBNr (int CurrentMbNr);
+  int fmoGetNextMbIndex (int curMbIndex);
 
   void decodePOC (cSlice* slice);
   void padPicture (sPicture* picture);
@@ -822,13 +822,12 @@ private:
   void copySliceInfo (cSlice* slice, sOldSlice* oldSlice);
   void useParameterSet (cSlice* slice);
 
+  int decodeFrame();
   int readNalu (cSlice* slice);
   void readDecRefPicMarking (sBitStream& bitStream, cSlice* slice);
   void readSliceHeader (sBitStream& bitStream, cSlice* slice);
   void decodeSlice (cSlice* slice);
-
   void endDecodeFrame();
-  int decodeFrame();
 
   void setCoding();
   void setCodingParam (cSps* sps);

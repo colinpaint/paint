@@ -5340,10 +5340,10 @@ bool cSlice::endMacroBlockDecode (int eos_bit) {
   // picture by checking the tr of the next slice header!
   ++numDecodedMbs;
 
-  if (mbIndex == decoder->picSizeInMbs - 1)
+  if (mbIndex == decoder->picSizeInMbs-1)
     return true;
   else {
-    mbIndex = decoder->fmoGetNextMBNr (mbIndex);
+    mbIndex = decoder->fmoGetNextMbIndex (mbIndex);
     if (mbIndex == -1) // End of cSlice group, MUST be end of slice
       return true;
 
