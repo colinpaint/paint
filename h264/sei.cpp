@@ -65,7 +65,7 @@ enum eSeiType {
 //}}}
 //{{{
 struct sGreenMetadataInfo {
-  uint8_t  green_metadata_type;
+  uint8_t  type;
   uint8_t  period_type;
   uint16_t num_seconds;
   uint16_t num_pictures;
@@ -79,9 +79,9 @@ struct sGreenMetadataInfo {
 //}}}
 //{{{
 struct sFramePackingArrangementInfo {
-  uint32_t frame_packing_arrangement_id;
-  bool     frame_packing_arrangement_cancelFlag;
-  uint8_t  frame_packing_arrangement_type;
+  uint32_t id;
+  bool     cancelFlag;
+  uint8_t  type;
   bool     quincunx_samplingFlag;
   uint8_t  content_interpretation_type;
   bool     spatial_flippingFlag;
@@ -94,9 +94,9 @@ struct sFramePackingArrangementInfo {
   uint8_t  frame0_grid_position_y;
   uint8_t  frame1_grid_position_x;
   uint8_t  frame1_grid_position_y;
-  uint8_t  frame_packing_arrangement_reserved_byte;
-  uint32_t frame_packing_arrangement_repetition_period;
-  bool     frame_packing_arrangement_extensionFlag;
+  uint8_t  reserved_byte;
+  uint32_t repetition_period;
+  bool     extensionFlag;
   };
 //}}}
 
@@ -189,7 +189,6 @@ namespace {
       bool cpbDpb = activeSps->hasVui &&
                     (activeSps->vuiSeqParams.nal_hrd_parameters_presentFlag ||
                      activeSps->vuiSeqParams.vcl_hrd_parameters_presentFlag);
-
       if (cpbDpb) {
         if (activeSps->hasVui) {
           if (activeSps->vuiSeqParams.nal_hrd_parameters_presentFlag) {
@@ -329,17 +328,17 @@ namespace {
       if (!pan_scan_rect_cancelFlag) {
         int pan_scan_cnt_minus1 =  bitStream.readUeV ("SEI pan_scan_cnt_minus1");
         for (int i = 0; i <= pan_scan_cnt_minus1; i++) {
-          int pan_scan_rect_left_offset =  bitStream.readSeV ("SEI pan_scan_rect_left_offset");
-          int pan_scan_rect_right_offset =  bitStream.readSeV ("SEI pan_scan_rect_right_offset");
-          int pan_scan_rect_top_offset =  bitStream.readSeV ("SEI pan_scan_rect_top_offset");
-          int pan_scan_rect_bottom_offset =  bitStream.readSeV ("SEI pan_scan_rect_bottom_offset");
+          int pan_scan_rect_left_offset = bitStream.readSeV ("SEI pan_scan_rect_left_offset");
+          int pan_scan_rect_right_offset = bitStream.readSeV ("SEI pan_scan_rect_right_offset");
+          int pan_scan_rect_top_offset = bitStream.readSeV ("SEI pan_scan_rect_top_offset");
+          int pan_scan_rect_bottom_offset = bitStream.readSeV ("SEI pan_scan_rect_bottom_offset");
           cLog::log (LOGINFO, fmt::format ("- panScan {}/{} id:{} left:{} right:{} top:{} bot:{}",
-                              i, pan_scan_cnt_minus1, pan_scan_rect_id,
-                              pan_scan_rect_left_offset, pan_scan_rect_right_offset,
-                              pan_scan_rect_top_offset, pan_scan_rect_bottom_offset));
+                                           i, pan_scan_cnt_minus1, pan_scan_rect_id,
+                                           pan_scan_rect_left_offset, pan_scan_rect_right_offset,
+                                           pan_scan_rect_top_offset, pan_scan_rect_bottom_offset));
           }
 
-        int pan_scan_rect_repetition_period =  bitStream.readUeV ("SEI pan_scan_rect_repetition_period");
+        int pan_scan_rect_repetition_period = bitStream.readUeV ("SEI pan_scan_rect_repetition_period");
         }
       }
     }
@@ -351,7 +350,7 @@ namespace {
       int recoveryFrameCount = bitStream.readUeV ("SEI recoveryFrameCount");
       int exact_matchFlag = bitStream.readU1 ("SEI exact_matchFlag");
       int broken_linkFlag = bitStream.readU1 ("SEI broken_linkFlag");
-     int changing_slice_group_idc = bitStream.readUv (2, "SEI changing_slice_group_idc");
+      int changing_slice_group_idc = bitStream.readUv (2, "SEI changing_slice_group_idc");
 
       decoder->recoveryPoint = 1;
       decoder->recoveryFrameCount = recoveryFrameCount;
@@ -372,8 +371,8 @@ namespace {
       if (!decoder->activeSps->frameMbOnly) {
         int original_field_picFlag =  bitStream.readU1 ("SEI original_field_picFlag");
         if (original_field_picFlag)
-          original_bottom_fieldFlag =  bitStream.readU1 ("SEI original_bottom_fieldFlag");
-       }
+          original_bottom_fieldFlag = bitStream.readU1 ("SEI original_bottom_fieldFlag");
+        }
 
       cLog::log (LOGINFO, fmt::format ("- decPicRepetition orig:{}:{}", original_idrFlag, original_frame_num));
       }
@@ -384,10 +383,10 @@ namespace {
   void processSpare (sBitStream& bitStream, cDecoder264* decoder) {
 
     if (decoder->param.seiDebug) {
-      int target_frame_num =  bitStream.readUeV ("SEI target_frame_num");
+      int target_frame_num = bitStream.readUeV ("SEI target_frame_num");
       int num_spare_pics = bitStream.readUeV ("SEI num_spare_pics_minus1") + 1;
       cLog::log (LOGINFO, fmt::format ("sparePicture target_frame_num:{} num_spare_pics:{}",
-                          target_frame_num, num_spare_pics));
+                                       target_frame_num, num_spare_pics));
 
       uint8_t*** map;
       getMem3D (&map, num_spare_pics, decoder->coding.height >> 4, decoder->coding.width >> 4);
@@ -402,12 +401,12 @@ namespace {
         else
           candidateSpareFrameNum = spareFrameNum;
 
-        delta_spare_frame_num =  bitStream.readUeV ("SEI delta_spare_frame_num");
+        delta_spare_frame_num = bitStream.readUeV ("SEI delta_spare_frame_num");
         spareFrameNum = candidateSpareFrameNum - delta_spare_frame_num;
         if (spareFrameNum < 0)
           spareFrameNum = kMaxFunction + spareFrameNum;
 
-        int ref_area_indicator =  bitStream.readUeV ("SEI ref_area_indicator");
+        int ref_area_indicator = bitStream.readUeV ("SEI ref_area_indicator");
         switch (ref_area_indicator) {
           //{{{
           case 0: // The whole frame can serve as spare picture
@@ -555,14 +554,14 @@ namespace {
         sub_seq_frame_num = bitStream.readUeV ("SEI sub_seq_frame_num");
 
       cLog::log (LOGINFO, fmt::format ("Sub-sequence information"));
-      cLog::log (LOGINFO, fmt::format ("- sub_seq_layer_num = {}", sub_seq_layer_num));
-      cLog::log (LOGINFO, fmt::format ("- sub_seq_id = {}", sub_seq_id));
-      cLog::log (LOGINFO, fmt::format ("- first_ref_picFlag = {}", first_ref_picFlag));
-      cLog::log (LOGINFO, fmt::format ("- leading_non_ref_picFlag = {}", leading_non_ref_picFlag));
-      cLog::log (LOGINFO, fmt::format ("- last_picFlag = {}", last_picFlag));
-      cLog::log (LOGINFO, fmt::format ("- sub_seq_frame_numFlag = {}", sub_seq_frame_numFlag));
+      cLog::log (LOGINFO, fmt::format ("- sub_seq_layer_num:{}", sub_seq_layer_num));
+      cLog::log (LOGINFO, fmt::format ("- sub_seq_id:{}", sub_seq_id));
+      cLog::log (LOGINFO, fmt::format ("- first_ref_picFlag:{}", first_ref_picFlag));
+      cLog::log (LOGINFO, fmt::format ("- leading_non_ref_picFlag:{}", leading_non_ref_picFlag));
+      cLog::log (LOGINFO, fmt::format ("- last_picFlag:{}", last_picFlag));
+      cLog::log (LOGINFO, fmt::format ("- sub_seq_frame_numFlag:{}", sub_seq_frame_numFlag));
       if (sub_seq_frame_numFlag)
-        cLog::log (LOGINFO, fmt::format ("- sub_seq_frame_num = {}", sub_seq_frame_num));
+        cLog::log (LOGINFO, fmt::format ("- sub_seq_frame_num:{}", sub_seq_frame_num));
       }
     }
   //}}}
@@ -570,16 +569,17 @@ namespace {
   void processSubsequenceLayerCharacteristics (sBitStream& bitStream, cDecoder264* decoder) {
 
     if (decoder->param.seiDebug) {
-      long num_sub_layers, accurate_statisticsFlag, average_bit_rate, average_frame_rate;
-      num_sub_layers = 1 + bitStream.readUeV ("SEI num_sub_layers_minus1");
-      cLog::log (LOGINFO, fmt::format ("Sub-sequence layer characteristics num_sub_layers_minus1 %ld", num_sub_layers - 1));
+      long num_sub_layers = bitStream.readUeV ("SEI num_sub_layers_minus1") + 1;
+      cLog::log (LOGINFO, fmt::format ("Sub-sequence layer characteristics num_sub_layers_minus1 %ld",
+                                       num_sub_layers - 1));
 
       for (int i = 0; i < num_sub_layers; i++) {
-        accurate_statisticsFlag = bitStream.readU1 ("SEI accurate_statisticsFlag");
+        long accurate_statisticsFlag = bitStream.readU1 ("SEI accurate_statisticsFlag");
+        long average_bit_rate = bitStream.readUv (16, "SEI average_bit_rate");
+        long average_frame_rate = bitStream.readUv (16, "SEI average_frame_rate");
+
         cLog::log (LOGINFO, fmt::format ("- layer {}: accurate_statisticsFlag = %ld", i, accurate_statisticsFlag));
-        average_bit_rate = bitStream.readUv (16,"SEI average_bit_rate");
         cLog::log (LOGINFO, fmt::format ("- layer {}: average_bit_rate = %ld", i, average_bit_rate));
-        average_frame_rate = bitStream.readUv (16,"SEI average_frame_rate");
         cLog::log (LOGINFO, fmt::format ("- layer {}: average_frame_rate= %ld", i, average_frame_rate));
         }
       }
@@ -600,7 +600,7 @@ namespace {
 
       if (durationFlag) {
         int sub_seq_duration = bitStream.readUv (32, "SEI durationFlag");
-        cLog::log (LOGINFO, fmt::format ("sub_seq_duration = {}", sub_seq_duration));
+        cLog::log (LOGINFO, fmt::format ("sub_seq_duration:{}", sub_seq_duration));
         }
 
       int average_rateFlag = bitStream.readU1 ("SEI average_rateFlag");
@@ -609,18 +609,19 @@ namespace {
         int accurate_statisticsFlag = bitStream.readU1 ("SEI accurate_statisticsFlag");
         int average_bit_rate = bitStream.readUv (16, "SEI average_bit_rate");
         int average_frame_rate = bitStream.readUv (16, "SEI average_frame_rate");
+
         cLog::log (LOGINFO, fmt::format ("accurate_statisticsFlag {}", accurate_statisticsFlag));
         cLog::log (LOGINFO, fmt::format ("average_bit_rate {}", average_bit_rate));
         cLog::log (LOGINFO, fmt::format ("average_frame_rate {}", average_frame_rate));
         }
 
       int num_referenced_subseqs  = bitStream.readUeV("SEI num_referenced_subseqs");
-      if (decoder->param.seiDebug)
-        cLog::log (LOGINFO, fmt::format ("num_referenced_subseqs {}", num_referenced_subseqs));
+      cLog::log (LOGINFO, fmt::format ("num_referenced_subseqs {}", num_referenced_subseqs));
       for (int i = 0; i < num_referenced_subseqs; i++) {
         int ref_sub_seq_layer_num  = bitStream.readUeV ("SEI ref_sub_seq_layer_num");
         int ref_sub_seq_id = bitStream.readUeV ("SEI ref_sub_seq_id");
         int ref_sub_seq_direction = bitStream.readU1  ("SEI ref_sub_seq_direction");
+
         cLog::log (LOGINFO, fmt::format ("ref_sub_seq_layer_num {}", ref_sub_seq_layer_num));
         cLog::log (LOGINFO, fmt::format ("ref_sub_seq_id {}", ref_sub_seq_id));
         cLog::log (LOGINFO, fmt::format ("ref_sub_seq_direction {}", ref_sub_seq_direction));
@@ -651,7 +652,7 @@ namespace {
   void processFullFrameFreeze (sBitStream& bitStream, cDecoder264* decoder) {
 
     int full_frame_freeze_repetition_period = bitStream.readUeV ("SEI full_frame_freeze_repetition_period");
-    cLog::log (LOGINFO, fmt::format ("full_frame_freeze_repetition_period = {}", full_frame_freeze_repetition_period));
+    cLog::log (LOGINFO, fmt::format ("full_frame_freeze_repetition_period:{}", full_frame_freeze_repetition_period));
     }
   //}}}
   //{{{
@@ -660,7 +661,7 @@ namespace {
     int snapshot_id = bitStream.readUeV ("SEI snapshot_id");
 
     cLog::log (LOGINFO, fmt::format ("Full-frame snapshot"));
-    cLog::log (LOGINFO, fmt::format ("snapshot_id = {}", snapshot_id));
+    cLog::log (LOGINFO, fmt::format ("snapshot_id:{}", snapshot_id));
     }
   //}}}
   //{{{
@@ -675,12 +676,12 @@ namespace {
   //{{{
   void processProgressiveRefinementStart (sBitStream& bitStream, cDecoder264* decoder) {
 
-    int progressive_refinement_id = bitStream.readUeV("SEI progressive_refinement_id"  );
-    int num_refinement_steps_minus1 = bitStream.readUeV("SEI num_refinement_steps_minus1");
+    int progressive_refinement_id = bitStream.readUeV ("SEI progressive_refinement_id"  );
+    int num_refinement_steps_minus1 = bitStream.readUeV ("SEI num_refinement_steps_minus1");
 
     cLog::log (LOGINFO, fmt::format ("Progressive refinement segment start"));
-    cLog::log (LOGINFO, fmt::format ("progressive_refinement_id   = {}", progressive_refinement_id));
-    cLog::log (LOGINFO, fmt::format ("num_refinement_steps_minus1 = {}", num_refinement_steps_minus1));
+    cLog::log (LOGINFO, fmt::format ("progressive_refinement_id  :{}", progressive_refinement_id));
+    cLog::log (LOGINFO, fmt::format ("num_refinement_steps_minus1:{}", num_refinement_steps_minus1));
     }
   //}}}
   //{{{
@@ -698,23 +699,24 @@ namespace {
 
     int numSliceGroupsMinus1 = bitStream.readUeV ("SEI numSliceGroupsMinus1" );
     int sliceGroupSize = ceilLog2 (numSliceGroupsMinus1 + 1);
+
     cLog::log (LOGINFO, fmt::format ("Motion-constrained slice group set"));
-    cLog::log (LOGINFO, fmt::format ("numSliceGroupsMinus1 = {}", numSliceGroupsMinus1));
+    cLog::log (LOGINFO, fmt::format ("numSliceGroupsMinus1:{}", numSliceGroupsMinus1));
 
     for (int i = 0; i <= numSliceGroupsMinus1; i++) {
       int sliceGroupId = bitStream.readUv (sliceGroupSize, "SEI sliceGroupId" );
-      cLog::log (LOGINFO, fmt::format ("sliceGroupId = %d", sliceGroupId));
+      cLog::log (LOGINFO, fmt::format ("sliceGroupId:{}", sliceGroupId));
       }
 
     int exact_matchFlag = bitStream.readU1 ("SEI exact_matchFlag"  );
     int pan_scan_rectFlag = bitStream.readU1 ("SEI pan_scan_rectFlag"  );
 
-    cLog::log (LOGINFO, fmt::format ("exact_matchFlag = {}", exact_matchFlag));
-    cLog::log (LOGINFO, fmt::format ("pan_scan_rectFlag = {}", pan_scan_rectFlag));
+    cLog::log (LOGINFO, fmt::format ("exact_matchFlag:{}", exact_matchFlag));
+    cLog::log (LOGINFO, fmt::format ("pan_scan_rectFlag:{}", pan_scan_rectFlag));
 
     if (pan_scan_rectFlag) {
       int pan_scan_rect_id = bitStream.readUeV ("SEI pan_scan_rect_id"  );
-      cLog::log (LOGINFO, fmt::format ("pan_scan_rect_id = {}", pan_scan_rect_id));
+      cLog::log (LOGINFO, fmt::format ("pan_scan_rect_id:{}", pan_scan_rect_id));
       }
     }
   //}}}
@@ -730,12 +732,12 @@ namespace {
     int film_grain_characteristics_repetition_period;
 
     int film_grain_characteristics_cancelFlag = bitStream.readU1 ("SEI film_grain_characteristics_cancelFlag");
-    cLog::log (LOGINFO, fmt::format ("film_grain_characteristics_cancelFlag = {}", film_grain_characteristics_cancelFlag));
+    cLog::log (LOGINFO, fmt::format ("film_grain_characteristics_cancelFlag:{}", film_grain_characteristics_cancelFlag));
     if (!film_grain_characteristics_cancelFlag) {
       model_id = bitStream.readUv(2, "SEI model_id");
       separate_colour_description_presentFlag = bitStream.readU1 ("SEI separate_colour_description_presentFlag");
-      cLog::log (LOGINFO, fmt::format ("model_id = {}", model_id));
-      cLog::log (LOGINFO, fmt::format ("separate_colour_description_presentFlag = {}", separate_colour_description_presentFlag));
+      cLog::log (LOGINFO, fmt::format ("model_id:{}", model_id));
+      cLog::log (LOGINFO, fmt::format ("separate_colour_description_presentFlag:{}", separate_colour_description_presentFlag));
 
       if (separate_colour_description_presentFlag) {
         film_grain_bit_depth_luma_minus8 = bitStream.readUv (3, "SEI film_grain_bit_depth_luma_minus8");
@@ -744,42 +746,44 @@ namespace {
         film_grain_colour_primaries = bitStream.readUv (8, "SEI film_grain_colour_primaries");
         film_grain_transfer_characteristics = bitStream.readUv (8, "SEI film_grain_transfer_characteristics");
         film_grain_matrix_coefficients = bitStream.readUv (8, "SEI film_grain_matrix_coefficients");
-        cLog::log (LOGINFO, fmt::format ("film_grain_bit_depth_luma_minus8 = {}", film_grain_bit_depth_luma_minus8));
-        cLog::log (LOGINFO, fmt::format ("film_grain_bit_depth_chroma_minus8 = {}", film_grain_bit_depth_chroma_minus8));
-        cLog::log (LOGINFO, fmt::format ("film_grain_full_rangeFlag = {}", film_grain_full_rangeFlag));
-        cLog::log (LOGINFO, fmt::format ("film_grain_colour_primaries = {}", film_grain_colour_primaries));
-        cLog::log (LOGINFO, fmt::format ("film_grain_transfer_characteristics = {}", film_grain_transfer_characteristics));
-        cLog::log (LOGINFO, fmt::format ("film_grain_matrix_coefficients = {}", film_grain_matrix_coefficients));
+
+        cLog::log (LOGINFO, fmt::format ("film_grain_bit_depth_luma_minus8:{}", film_grain_bit_depth_luma_minus8));
+        cLog::log (LOGINFO, fmt::format ("film_grain_bit_depth_chroma_minus8:{}", film_grain_bit_depth_chroma_minus8));
+        cLog::log (LOGINFO, fmt::format ("film_grain_full_rangeFlag:{}", film_grain_full_rangeFlag));
+        cLog::log (LOGINFO, fmt::format ("film_grain_colour_primaries:{}", film_grain_colour_primaries));
+        cLog::log (LOGINFO, fmt::format ("film_grain_transfer_characteristics:{}", film_grain_transfer_characteristics));
+        cLog::log (LOGINFO, fmt::format ("film_grain_matrix_coefficients:{}", film_grain_matrix_coefficients));
         }
 
       blending_mode_id = bitStream.readUv (2, "SEI blending_mode_id");
       log2_scale_factor = bitStream.readUv (4, "SEI log2_scale_factor");
-      cLog::log (LOGINFO, fmt::format ("blending_mode_id = {}", blending_mode_id));
-      cLog::log (LOGINFO, fmt::format ("log2_scale_factor = {}", log2_scale_factor));
+      cLog::log (LOGINFO, fmt::format ("blending_mode_id:{}", blending_mode_id));
+      cLog::log (LOGINFO, fmt::format ("log2_scale_factor:{}", log2_scale_factor));
       for (int c = 0; c < 3; c ++) {
         comp_model_presentFlag[c] = bitStream.readU1 ("SEI comp_model_presentFlag");
-        cLog::log (LOGINFO, fmt::format ("comp_model_presentFlag = {}", comp_model_presentFlag[c]));
+        cLog::log (LOGINFO, fmt::format ("comp_model_presentFlag:{}", comp_model_presentFlag[c]));
         }
 
       for (int c = 0; c < 3; c ++)
         if (comp_model_presentFlag[c]) {
           num_intensity_intervals_minus1 = bitStream.readUv (8, "SEI num_intensity_intervals_minus1");
           num_model_values_minus1 = bitStream.readUv (3, "SEI num_model_values_minus1");
-          cLog::log (LOGINFO, fmt::format ("num_intensity_intervals_minus1 = {}", num_intensity_intervals_minus1));
-          cLog::log (LOGINFO, fmt::format ("num_model_values_minus1 = {}", num_model_values_minus1));
+          cLog::log (LOGINFO, fmt::format ("num_intensity_intervals_minus1:{}", num_intensity_intervals_minus1));
+          cLog::log (LOGINFO, fmt::format ("num_model_values_minus1:{}", num_model_values_minus1));
           for (int i = 0; i <= num_intensity_intervals_minus1; i++) {
             intensity_interval_lower_bound = bitStream.readUv (8, "SEI intensity_interval_lower_bound");
             intensity_interval_upper_bound = bitStream.readUv (8, "SEI intensity_interval_upper_bound");
-            cLog::log (LOGINFO, fmt::format ("intensity_interval_lower_bound = {}", intensity_interval_lower_bound));
-            cLog::log (LOGINFO, fmt::format ("intensity_interval_upper_bound = {}", intensity_interval_upper_bound));
+
+            cLog::log (LOGINFO, fmt::format ("intensity_interval_lower_bound:{}", intensity_interval_lower_bound));
+            cLog::log (LOGINFO, fmt::format ("intensity_interval_upper_bound:{}", intensity_interval_upper_bound));
             for (int j = 0; j <= num_model_values_minus1; j++) {
               comp_model_value = bitStream.readSeV ("SEI comp_model_value");
-              cLog::log (LOGINFO, fmt::format ("comp_model_value = {}", comp_model_value));
+              cLog::log (LOGINFO, fmt::format ("comp_model_value:{}", comp_model_value));
               }
             }
           }
       film_grain_characteristics_repetition_period = bitStream.readUeV ("SEI film_grain_characteristics_repetition_period");
-      cLog::log (LOGINFO, fmt::format ("film_grain_characteristics_repetition_period = {}",
+      cLog::log (LOGINFO, fmt::format ("film_grain_characteristics_repetition_period:{}",
                                        film_grain_characteristics_repetition_period));
       }
     }
@@ -788,16 +792,16 @@ namespace {
   void processDeblockFilterDisplayPref (sBitStream& bitStream, cDecoder264* decoder) {
 
     int deblocking_display_preference_cancelFlag = bitStream.readU1("SEI deblocking_display_preference_cancelFlag");
-    cLog::log (LOGINFO, fmt::format ("deblocking_display_preference_cancelFlag = {}", deblocking_display_preference_cancelFlag));
+    cLog::log (LOGINFO, fmt::format ("deblocking_display_preference_cancelFlag:{}", deblocking_display_preference_cancelFlag));
 
     if (!deblocking_display_preference_cancelFlag) {
       int display_prior_to_deblocking_preferredFlag = bitStream.readU1("SEI display_prior_to_deblocking_preferredFlag");
       int dec_frame_buffering_constraintFlag = bitStream.readU1("SEI dec_frame_buffering_constraintFlag");
       int deblocking_display_preference_repetition_period = bitStream.readUeV("SEI deblocking_display_preference_repetition_period");
 
-      cLog::log (LOGINFO, fmt::format ("display_prior_to_deblocking_preferredFlag = {}", display_prior_to_deblocking_preferredFlag));
-      cLog::log (LOGINFO, fmt::format ("dec_frame_buffering_constraintFlag = {}", dec_frame_buffering_constraintFlag));
-      cLog::log (LOGINFO, fmt::format ("deblocking_display_preference_repetition_period = {}", deblocking_display_preference_repetition_period));
+      cLog::log (LOGINFO, fmt::format ("display_prior_to_deblocking_preferredFlag:{}", display_prior_to_deblocking_preferredFlag));
+      cLog::log (LOGINFO, fmt::format ("dec_frame_buffering_constraintFlag:{}", dec_frame_buffering_constraintFlag));
+      cLog::log (LOGINFO, fmt::format ("deblocking_display_preference_repetition_period:{}", deblocking_display_preference_repetition_period));
       }
     }
   //}}}
@@ -805,23 +809,25 @@ namespace {
   void processStereoVideo (sBitStream& bitStream, cDecoder264* decoder) {
 
     int field_viewsFlags = bitStream.readU1 ("SEI field_viewsFlags");
-    cLog::log (LOGINFO, fmt::format ("field_viewsFlags = {}", field_viewsFlags));
+    cLog::log (LOGINFO, fmt::format ("field_viewsFlags:{}", field_viewsFlags));
 
     if (field_viewsFlags) {
       int top_field_is_left_viewFlag = bitStream.readU1 ("SEI top_field_is_left_viewFlag");
-      cLog::log (LOGINFO, fmt::format ("top_field_is_left_viewFlag = {}", top_field_is_left_viewFlag));
+      cLog::log (LOGINFO, fmt::format ("top_field_is_left_viewFlag:{}", top_field_is_left_viewFlag));
       }
     else {
       int current_frame_is_left_viewFlag = bitStream.readU1 ("SEI current_frame_is_left_viewFlag");
       int next_frame_is_second_viewFlag = bitStream.readU1 ("SEI next_frame_is_second_viewFlag");
-      cLog::log (LOGINFO, fmt::format ("current_frame_is_left_viewFlag = {}", current_frame_is_left_viewFlag));
-      cLog::log (LOGINFO, fmt::format ("next_frame_is_second_viewFlag = {}", next_frame_is_second_viewFlag));
+
+      cLog::log (LOGINFO, fmt::format ("current_frame_is_left_viewFlag:{}", current_frame_is_left_viewFlag));
+      cLog::log (LOGINFO, fmt::format ("next_frame_is_second_viewFlag:{}", next_frame_is_second_viewFlag));
       }
 
     int left_view_self_containedFlag = bitStream.readU1 ("SEI left_view_self_containedFlag");
     int right_view_self_containedFlag = bitStream.readU1 ("SEI right_view_self_containedFlag");
-    cLog::log (LOGINFO, fmt::format ("left_view_self_containedFlag = {}", left_view_self_containedFlag));
-    cLog::log (LOGINFO, fmt::format ("right_view_self_containedFlag = {}", right_view_self_containedFlag));
+
+    cLog::log (LOGINFO, fmt::format ("left_view_self_containedFlag:{}", left_view_self_containedFlag));
+    cLog::log (LOGINFO, fmt::format ("right_view_self_containedFlag:{}", right_view_self_containedFlag));
     }
   //}}}
   //{{{
@@ -843,8 +849,8 @@ namespace {
           initial_cpb_removal_delay = bitStream.readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        );
           initial_cpb_removal_delay_offset = bitStream.readUv(sps->vuiSeqParams.nal_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" );
           if (decoder->param.seiDebug) {
-            cLog::log (LOGINFO, fmt::format ("nal initial_cpb_removal_delay[{}] = {}", k, initial_cpb_removal_delay));
-            cLog::log (LOGINFO, fmt::format ("nal initial_cpb_removal_delay_offset[{}] = {}", k, initial_cpb_removal_delay_offset));
+            cLog::log (LOGINFO, fmt::format ("nal initial_cpb_removal_delay[{}]:{}", k, initial_cpb_removal_delay));
+            cLog::log (LOGINFO, fmt::format ("nal initial_cpb_removal_delay_offset[{}]:{}", k, initial_cpb_removal_delay_offset));
             }
           }
         }
@@ -854,8 +860,8 @@ namespace {
           initial_cpb_removal_delay = bitStream.readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay"        );
           initial_cpb_removal_delay_offset = bitStream.readUv(sps->vuiSeqParams.vcl_hrd_parameters.initial_cpb_removal_delay_length_minus1+1, "SEI initial_cpb_removal_delay_offset" );
           if (decoder->param.seiDebug) {
-            cLog::log (LOGINFO, fmt::format ("vcl initial_cpb_removal_delay[{}] = {}", k, initial_cpb_removal_delay));
-            cLog::log (LOGINFO, fmt::format ("vcl initial_cpb_removal_delay_offset[{}] = {}", k, initial_cpb_removal_delay_offset));
+            cLog::log (LOGINFO, fmt::format ("vcl initial_cpb_removal_delay[{}]:{}", k, initial_cpb_removal_delay));
+            cLog::log (LOGINFO, fmt::format ("vcl initial_cpb_removal_delay_offset[{}]:{}", k, initial_cpb_removal_delay_offset));
             }
           }
         }
@@ -865,85 +871,85 @@ namespace {
   //{{{
   void processFramePackingArrangement (sBitStream& bitStream, cDecoder264* decoder) {
 
-    sFramePackingArrangementInfo seiFramePackingArrangement;
-
     cLog::log (LOGINFO, fmt::format ("Frame packing arrangement"));
 
-    seiFramePackingArrangement.frame_packing_arrangement_id =
-      (uint32_t)bitStream.readUeV( "SEI frame_packing_arrangement_id");
-    seiFramePackingArrangement.frame_packing_arrangement_cancelFlag =
-      bitStream.readU1( "SEI frame_packing_arrangement_cancelFlag");
-    cLog::log (LOGINFO, fmt::format ("frame_packing_arrangement_id = {}", seiFramePackingArrangement.frame_packing_arrangement_id));
-    cLog::log (LOGINFO, fmt::format ("frame_packing_arrangement_cancelFlag = {}", seiFramePackingArrangement.frame_packing_arrangement_cancelFlag));
+    sFramePackingArrangementInfo packing;
+    packing.id = (uint32_t)bitStream.readUeV ("SEI framePacking id");
+    packing.cancelFlag = bitStream.readU1 ("SEI framePacking cancelFlag");
 
-    if ( seiFramePackingArrangement.frame_packing_arrangement_cancelFlag == false ) {
-      seiFramePackingArrangement.frame_packing_arrangement_type = (uint8_t)bitStream.readUv( 7, "SEI frame_packing_arrangement_type");
-      seiFramePackingArrangement.quincunx_samplingFlag = bitStream.readU1 ("SEI quincunx_samplingFlag");
-      seiFramePackingArrangement.content_interpretation_type = (uint8_t)bitStream.readUv( 6, "SEI content_interpretation_type");
-      seiFramePackingArrangement.spatial_flippingFlag = bitStream.readU1 ("SEI spatial_flippingFlag");
-      seiFramePackingArrangement.frame0_flippedFlag = bitStream.readU1 ("SEI frame0_flippedFlag");
-      seiFramePackingArrangement.field_viewsFlag = bitStream.readU1 ("SEI field_viewsFlag");
-      seiFramePackingArrangement.current_frame_is_frame0Flag = bitStream.readU1 ("SEI current_frame_is_frame0Flag");
-      seiFramePackingArrangement.frame0_self_containedFlag = bitStream.readU1 ("SEI frame0_self_containedFlag");
-      seiFramePackingArrangement.frame1_self_containedFlag = bitStream.readU1 ("SEI frame1_self_containedFlag");
+    cLog::log (LOGINFO, fmt::format ("id:{}", packing.id));
+    cLog::log (LOGINFO, fmt::format ("cancelFlag:{}", packing.cancelFlag));
 
-      cLog::log (LOGINFO, fmt::format ("frame_packing_arrangement_type = {}", seiFramePackingArrangement.frame_packing_arrangement_type));
-      cLog::log (LOGINFO, fmt::format ("quincunx_samplingFlag          = {}", seiFramePackingArrangement.quincunx_samplingFlag));
-      cLog::log (LOGINFO, fmt::format ("content_interpretation_type    = {}", seiFramePackingArrangement.content_interpretation_type));
-      cLog::log (LOGINFO, fmt::format ("spatial_flippingFlag           = {}", seiFramePackingArrangement.spatial_flippingFlag));
-      cLog::log (LOGINFO, fmt::format ("frame0_flippedFlag             = {}", seiFramePackingArrangement.frame0_flippedFlag));
-      cLog::log (LOGINFO, fmt::format ("field_viewsFlag                = {}", seiFramePackingArrangement.field_viewsFlag));
-      cLog::log (LOGINFO, fmt::format ("current_frame_is_frame0Flag    = {}", seiFramePackingArrangement.current_frame_is_frame0Flag));
-      cLog::log (LOGINFO, fmt::format ("frame0_self_containedFlag      = {}", seiFramePackingArrangement.frame0_self_containedFlag));
-      cLog::log (LOGINFO, fmt::format ("frame1_self_containedFlag      = {}", seiFramePackingArrangement.frame1_self_containedFlag));
-      if (!seiFramePackingArrangement.quincunx_samplingFlag &&
-          seiFramePackingArrangement.frame_packing_arrangement_type != 5 )  {
-        seiFramePackingArrangement.frame0_grid_position_x = (uint8_t)bitStream.readUv( 4, "SEI frame0_grid_position_x");
-        seiFramePackingArrangement.frame0_grid_position_y = (uint8_t)bitStream.readUv( 4, "SEI frame0_grid_position_y");
-        seiFramePackingArrangement.frame1_grid_position_x = (uint8_t)bitStream.readUv( 4, "SEI frame1_grid_position_x");
-        seiFramePackingArrangement.frame1_grid_position_y = (uint8_t)bitStream.readUv( 4, "SEI frame1_grid_position_y");
+    if (!packing.cancelFlag) {
+      packing.type = (uint8_t)bitStream.readUv( 7, "SEI framePacking type");
+      packing.quincunx_samplingFlag = bitStream.readU1 ("SEI framePacking quincunx_samplingFlag");
+      packing.content_interpretation_type = (uint8_t)bitStream.readUv( 6, "SEI framePacking content_interpretation_type");
+      packing.spatial_flippingFlag = bitStream.readU1 ("SEI framePacking spatial_flippingFlag");
+      packing.frame0_flippedFlag = bitStream.readU1 ("SEI framePacking frame0_flippedFlag");
+      packing.field_viewsFlag = bitStream.readU1 ("SEI framePacking field_viewsFlag");
+      packing.current_frame_is_frame0Flag = bitStream.readU1 ("SEI framePacking current_frame_is_frame0Flag");
+      packing.frame0_self_containedFlag = bitStream.readU1 ("SEI framePacking frame0_self_containedFlag");
+      packing.frame1_self_containedFlag = bitStream.readU1 ("SEI framePacking frame1_self_containedFlag");
 
-        cLog::log (LOGINFO, fmt::format ("frame0_grid_position_x = {}", seiFramePackingArrangement.frame0_grid_position_x));
-        cLog::log (LOGINFO, fmt::format ("frame0_grid_position_y = {}", seiFramePackingArrangement.frame0_grid_position_y));
-        cLog::log (LOGINFO, fmt::format ("frame1_grid_position_x = {}", seiFramePackingArrangement.frame1_grid_position_x));
-        cLog::log (LOGINFO, fmt::format ("frame1_grid_position_y = {}", seiFramePackingArrangement.frame1_grid_position_y));
+      cLog::log (LOGINFO, fmt::format ("type:{}", packing.type));
+      cLog::log (LOGINFO, fmt::format ("quincunx_samplingFlag         :{}", packing.quincunx_samplingFlag));
+      cLog::log (LOGINFO, fmt::format ("content_interpretation_type   :{}", packing.content_interpretation_type));
+      cLog::log (LOGINFO, fmt::format ("spatial_flippingFlag          :{}", packing.spatial_flippingFlag));
+      cLog::log (LOGINFO, fmt::format ("frame0_flippedFlag            :{}", packing.frame0_flippedFlag));
+      cLog::log (LOGINFO, fmt::format ("field_viewsFlag               :{}", packing.field_viewsFlag));
+      cLog::log (LOGINFO, fmt::format ("current_frame_is_frame0Flag   :{}", packing.current_frame_is_frame0Flag));
+      cLog::log (LOGINFO, fmt::format ("frame0_self_containedFlag     :{}", packing.frame0_self_containedFlag));
+      cLog::log (LOGINFO, fmt::format ("frame1_self_containedFlag     :{}", packing.frame1_self_containedFlag));
+
+      if (!packing.quincunx_samplingFlag &&
+          packing.type != 5 )  {
+        packing.frame0_grid_position_x = (uint8_t)bitStream.readUv (4, "SEI framePacking frame0_grid_position_x");
+        packing.frame0_grid_position_y = (uint8_t)bitStream.readUv (4, "SEI framePacking frame0_grid_position_y");
+        packing.frame1_grid_position_x = (uint8_t)bitStream.readUv (4, "SEI framePacking frame1_grid_position_x");
+        packing.frame1_grid_position_y = (uint8_t)bitStream.readUv (4, "SEI framePacking frame1_grid_position_y");
+
+        cLog::log (LOGINFO, fmt::format ("frame0_grid_position_x:{}", packing.frame0_grid_position_x));
+        cLog::log (LOGINFO, fmt::format ("frame0_grid_position_y:{}", packing.frame0_grid_position_y));
+        cLog::log (LOGINFO, fmt::format ("frame1_grid_position_x:{}", packing.frame1_grid_position_x));
+        cLog::log (LOGINFO, fmt::format ("frame1_grid_position_y:{}", packing.frame1_grid_position_y));
         }
-      seiFramePackingArrangement.frame_packing_arrangement_reserved_byte = (uint8_t)bitStream.readUv( 8, "SEI frame_packing_arrangement_reserved_byte");
-      seiFramePackingArrangement.frame_packing_arrangement_repetition_period = (uint32_t)bitStream.readUeV( "SEI frame_packing_arrangement_repetition_period");
-      cLog::log (LOGINFO, fmt::format ("frame_packing_arrangement_reserved_byte = {}", seiFramePackingArrangement.frame_packing_arrangement_reserved_byte));
-      cLog::log (LOGINFO, fmt::format ("frame_packing_arrangement_repetition_period  = {}", seiFramePackingArrangement.frame_packing_arrangement_repetition_period));
+
+      packing.reserved_byte = (uint8_t)bitStream.readUv (8, "SEI framePacking reserved_byte");
+      packing.repetition_period = (uint32_t)bitStream.readUeV ("SEI framePacking repetition_period");
+      cLog::log (LOGINFO, fmt::format ("reserved_byte:{}", packing.reserved_byte));
+      cLog::log (LOGINFO, fmt::format ("repetition_period:{}", packing.repetition_period));
       }
-    seiFramePackingArrangement.frame_packing_arrangement_extensionFlag = bitStream.readU1( "SEI frame_packing_arrangement_extensionFlag");
-    cLog::log (LOGINFO, fmt::format ("frame_packing_arrangement_extensionFlag = {}", seiFramePackingArrangement.frame_packing_arrangement_extensionFlag));
+
+    packing.extensionFlag = bitStream.readU1 ("SEI framePacking extensionFlag");
+    cLog::log (LOGINFO, fmt::format ("extensionFlag:{}", packing.extensionFlag));
     }
   //}}}
 
   //{{{
   void processPostFilterHints (sBitStream& bitStream, cDecoder264* decoder) {
 
-    uint32_t filter_hint_size_y = bitStream.readUeV("SEI filter_hint_size_y"); // interpret post-filter hint SEI here
-    uint32_t filter_hint_size_x = bitStream.readUeV("SEI filter_hint_size_x"); // interpret post-filter hint SEI here
-    uint32_t filter_hint_type = bitStream.readUv(2, "SEI filter_hint_type"); // interpret post-filter hint SEI here
+    uint32_t filter_hint_size_y = bitStream.readUeV ("SEI filter_hint_size_y"); // interpret post-filter hint SEI here
+    uint32_t filter_hint_size_x = bitStream.readUeV ("SEI filter_hint_size_x"); // interpret post-filter hint SEI here
+    uint32_t filter_hint_type = bitStream.readUv (2, "SEI filter_hint_type"); // interpret post-filter hint SEI here
 
-    int** *filter_hint;
+    int*** filter_hint;
     getMem3Dint (&filter_hint, 3, filter_hint_size_y, filter_hint_size_x);
 
-    for (uint32_t color_component = 0; color_component < 3; color_component ++)
-      for (uint32_t cy = 0; cy < filter_hint_size_y; cy ++)
-        for (uint32_t cx = 0; cx < filter_hint_size_x; cx ++)
-          filter_hint[color_component][cy][cx] = bitStream.readSeV("SEI filter_hint"); // interpret post-filter hint SEI here
+    for (uint32_t color_component = 0; color_component < 3; color_component++)
+      for (uint32_t cy = 0; cy < filter_hint_size_y; cy++)
+        for (uint32_t cx = 0; cx < filter_hint_size_x; cx++)
+          filter_hint[color_component][cy][cx] = bitStream.readSeV ("SEI filter_hint"); // interpret post-filter hint SEI here
 
-    uint32_t additional_extensionFlag = bitStream.readU1("SEI additional_extensionFlag"); // interpret post-filter hint SEI here
+    uint32_t additional_extensionFlag = bitStream.readU1 ("SEI additional_extensionFlag"); // interpret post-filter hint SEI here
 
     cLog::log (LOGINFO, fmt::format ("Post-filter hint"));
     cLog::log (LOGINFO, fmt::format ("post_filter_hint_size_y {} ", filter_hint_size_y));
     cLog::log (LOGINFO, fmt::format ("post_filter_hint_size_x {} ", filter_hint_size_x));
-    cLog::log (LOGINFO, fmt::format ("post_filter_hint_type {} ",   filter_hint_type));
+    cLog::log (LOGINFO, fmt::format ("post_filter_hint_type {} ", filter_hint_type));
     for (uint32_t color_component = 0; color_component < 3; color_component ++)
-      for (uint32_t cy = 0; cy < filter_hint_size_y; cy ++)
-        for (uint32_t cx = 0; cx < filter_hint_size_x; cx ++)
+      for (uint32_t cy = 0; cy < filter_hint_size_y; cy++)
+        for (uint32_t cx = 0; cx < filter_hint_size_x; cx++)
           cLog::log (LOGINFO, fmt::format (" post_filter_hint[{}][{}][{}] {} ", color_component, cy, cx, filter_hint[color_component][cy][cx]));
-
     cLog::log (LOGINFO, fmt::format ("additional_extensionFlag {} ", additional_extensionFlag));
 
     freeMem3Dint (filter_hint);
@@ -954,41 +960,40 @@ namespace {
 
     cLog::log (LOGINFO, fmt::format ("GreenMetadataInfo"));
 
-    sGreenMetadataInfo seiGreenMetadataInfo;
-    seiGreenMetadataInfo.green_metadata_type = (uint8_t)bitStream.readUv(8, "SEI green_metadata_type");
-    cLog::log (LOGINFO, fmt::format ("green_metadata_type = {}", seiGreenMetadataInfo.green_metadata_type));
+    sGreenMetadataInfo metadata;
+    metadata.type = (uint8_t)bitStream.readUv (8, "SEI greenMetadata_type");
+    cLog::log (LOGINFO, fmt::format ("greenMetadata type:{}", metadata.type));
 
-    if (seiGreenMetadataInfo.green_metadata_type == 0) {
-        seiGreenMetadataInfo.period_type=(uint8_t)bitStream.readUv(8, "SEI green_metadata_period_type");
-      cLog::log (LOGINFO, fmt::format ("green_metadata_period_type = {}", seiGreenMetadataInfo.period_type));
+    if (metadata.type == 0) {
+        metadata.period_type = (uint8_t)bitStream.readUv (8, "SEI green_metadata_period_type");
+      cLog::log (LOGINFO, fmt::format ("green_metadata_period_type:{}", metadata.period_type));
 
-      if (seiGreenMetadataInfo.period_type == 2) {
-        seiGreenMetadataInfo.num_seconds = (uint16_t)bitStream.readUv(16, "SEI green_metadata_num_seconds");
-        cLog::log (LOGINFO, fmt::format ("green_metadata_num_seconds = {}", seiGreenMetadataInfo.num_seconds));
+      if (metadata.period_type == 2) {
+        metadata.num_seconds = (uint16_t)bitStream.readUv (16, "SEI green_metadata_num_seconds");
+        cLog::log (LOGINFO, fmt::format ("green_metadata_num_seconds:{}", metadata.num_seconds));
         }
-      else if (seiGreenMetadataInfo.period_type == 3) {
-        seiGreenMetadataInfo.num_pictures = (uint16_t)bitStream.readUv(16, "SEI green_metadata_num_pictures");
-        cLog::log (LOGINFO, fmt::format ("green_metadata_num_pictures = {}", seiGreenMetadataInfo.num_pictures));
+      else if (metadata.period_type == 3) {
+        metadata.num_pictures = (uint16_t)bitStream.readUv (16, "SEI green_metadata_num_pictures");
+        cLog::log (LOGINFO, fmt::format ("green_metadata_num_pictures:{}", metadata.num_pictures));
         }
 
-      seiGreenMetadataInfo.percent_non_zero_macroBlocks = (uint8_t)bitStream.readUv(8, "SEI percent_non_zero_macroBlocks");
-      seiGreenMetadataInfo.percent_intra_coded_macroBlocks = (uint8_t)bitStream.readUv(8, "SEI percent_intra_coded_macroBlocks");
-      seiGreenMetadataInfo.percent_six_tap_filtering = (uint8_t)bitStream.readUv(8, "SEI percent_six_tap_filtering");
-      seiGreenMetadataInfo.percent_alpha_point_deblocking_instance =
-        (uint8_t)bitStream.readUv(8, "SEI percent_alpha_point_deblocking_instance");
+      metadata.percent_non_zero_macroBlocks = (uint8_t)bitStream.readUv (8, "SEI percent_non_zero_macroBlocks");
+      metadata.percent_intra_coded_macroBlocks = (uint8_t)bitStream.readUv (8, "SEI percent_intra_coded_macroBlocks");
+      metadata.percent_six_tap_filtering = (uint8_t)bitStream.readUv (8, "SEI percent_six_tap_filtering");
+      metadata.percent_alpha_point_deblocking_instance = (uint8_t)bitStream.readUv (8, "SEI percent_alpha_point_deblocking_instance");
 
-      cLog::log (LOGINFO, fmt::format ("percent_non_zero_macroBlocks = %f", (float)seiGreenMetadataInfo.percent_non_zero_macroBlocks/255));
-      cLog::log (LOGINFO, fmt::format ("percent_intra_coded_macroBlocks = %f", (float)seiGreenMetadataInfo.percent_intra_coded_macroBlocks/255));
-      cLog::log (LOGINFO, fmt::format ("percent_six_tap_filtering = %f", (float)seiGreenMetadataInfo.percent_six_tap_filtering/255));
-      cLog::log (LOGINFO, fmt::format ("percent_alpha_point_deblocking_instance = %f", (float)seiGreenMetadataInfo.percent_alpha_point_deblocking_instance/255));
+      cLog::log (LOGINFO, fmt::format ("percent_non_zero_macroBlocks {}", (float)metadata.percent_non_zero_macroBlocks/255));
+      cLog::log (LOGINFO, fmt::format ("percent_intra_coded_macroBlocks {}", (float)metadata.percent_intra_coded_macroBlocks/255));
+      cLog::log (LOGINFO, fmt::format ("percent_six_tap_filtering {}", (float)metadata.percent_six_tap_filtering/255));
+      cLog::log (LOGINFO, fmt::format ("percent_alpha_point_deblocking_instance {}", (float)metadata.percent_alpha_point_deblocking_instance/255));
       }
 
-    else if (seiGreenMetadataInfo.green_metadata_type == 1) {
-      seiGreenMetadataInfo.xsd_metric_type = (uint8_t)bitStream.readUv(8, "SEI: xsd_metric_type");
-      seiGreenMetadataInfo.xsd_metric_value = (uint16_t)bitStream.readUv(16, "SEI xsd_metric_value");
-      cLog::log (LOGINFO, fmt::format ("xsd_metric_type = {}", seiGreenMetadataInfo.xsd_metric_type));
-      if (seiGreenMetadataInfo.xsd_metric_type == 0)
-        cLog::log (LOGINFO, fmt::format ("xsd_metric_value = {}", (float)seiGreenMetadataInfo.xsd_metric_value/100));
+    else if (metadata.type == 1) {
+      metadata.xsd_metric_type = (uint8_t)bitStream.readUv (8, "SEI: xsd_metric_type");
+      metadata.xsd_metric_value = (uint16_t)bitStream.readUv (16, "SEI xsd_metric_value");
+      cLog::log (LOGINFO, fmt::format ("xsd_metric_type:{}", metadata.xsd_metric_type));
+      if (metadata.xsd_metric_type == 0)
+        cLog::log (LOGINFO, fmt::format ("xsd_metric_value:{}", (float)metadata.xsd_metric_value/100));
       }
     }
   //}}}
