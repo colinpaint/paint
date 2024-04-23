@@ -1493,13 +1493,13 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
 
   decoder->dpb.decoder = decoder;
 
-  decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
-
   // alloc output
   decoder->outBuffer = new cFrameStore();
   decoder->pendingOut = (sPicture*)calloc (sizeof(sPicture), 1);
   decoder->pendingOut->imgUV = NULL;
   decoder->pendingOut->imgY = NULL;
+
+  decoder->outDecodedPics = (sDecodedPic*)calloc (1, sizeof(sDecodedPic));
 
   // global only for vlc
   gDecoder = decoder;
@@ -2116,7 +2116,6 @@ void cDecoder264::initGlobalBuffers() {
       mbData = (sMacroBlock*)calloc (coding.frameSizeMbs, sizeof(sMacroBlock));
     if (!intraBlock)
       intraBlock = (char*)calloc (coding.frameSizeMbs, sizeof(char));
-
     if (!predMode)
       getMem2D (&predMode, 4*coding.frameHeightMbs, 4*coding.picWidthMbs);
     if (!siBlock)
@@ -2139,13 +2138,10 @@ void cDecoder264::initGlobalBuffers() {
 
   // alloc quant
   int bitDepth_qp_scale = imax (coding.bitDepthLumaQpScale, coding.bitDepthChromaQpScale);
-
   if (!qpPerMatrix)
     qpPerMatrix = (int*)malloc ((MAX_QP + 1 + bitDepth_qp_scale) * sizeof(int));
-
   if (!qpRemMatrix)
     qpRemMatrix = (int*)malloc ((MAX_QP + 1 + bitDepth_qp_scale) * sizeof(int));
-
   for (int i = 0; i < MAX_QP + bitDepth_qp_scale + 1; i++) {
     qpPerMatrix[i] = i / 6;
     qpRemMatrix[i] = i % 6;
