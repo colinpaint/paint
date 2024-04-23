@@ -2009,7 +2009,7 @@ sDecodedPic* cDecoder264::finish() {
 
   annexB->reset();
 
-  newFrame = 0;
+  newFrame = false;
   prevFrameNum = 0;
 
   return outDecodedPics;
@@ -2442,8 +2442,7 @@ int cDecoder264::decodeFrame() {
         slice->redundantPicCount && isPrimaryOk && (curHeader != eEOS))
       continue;
 
-    if (((curHeader != eSOP) && (curHeader != eEOS)) ||
-        ((curHeader == eSOP) && !picSliceIndex)) {
+      if (((curHeader != eSOP) && (curHeader != eEOS)) || ((curHeader == eSOP) && !picSliceIndex)) {
        slice->curSliceIndex = (int16_t)picSliceIndex;
        picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
        if (picSliceIndex > 0) {
@@ -2459,12 +2458,11 @@ int cDecoder264::decodeFrame() {
 
     else {
       if (sliceList[picSliceIndex-1]->mbAffFrame)
-        sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs / 2;
+        sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs/2;
       else
-        sliceList[picSliceIndex-1]->endMbNumPlus1 =
-          coding.frameSizeMbs / (sliceList[picSliceIndex-1]->fieldPic + 1);
+        sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs / (sliceList[picSliceIndex-1]->fieldPic+1);
 
-      newFrame = 1;
+      newFrame = true;
 
       slice->curSliceIndex = 0;
       sliceList[picSliceIndex] = nextSlice;

@@ -666,11 +666,11 @@ public:
   cPps         pps[kMaxPps];
   cPps*        activePps = nullptr;
 
+  bool         newFrame = false;
   int          decodeFrameNum = 0;
   int          idrFrameNum = 0;
   uint32_t     preFrameNum = 0;  // last decoded slice. For detecting gap in frameNum.
   uint32_t     prevFrameNum = 0; // number of previous slice
-  int          newFrame = 0;
 
   bool         nonConformingStream = false;
   int          deblockEnable = 0;
