@@ -2434,25 +2434,19 @@ int cDecoder264::decodeFrame() {
       if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
         isRedundantOk = 0;
 
-    // If primary and redundant received, primary is correct
-    //   discard redundant
-    // else
-    //   primary slice replaced with redundant slice.
-    if ((slice->frameNum == prevFrameNum) &&
-        slice->redundantPicCount && isPrimaryOk && (curHeader != eEOS))
+    if ((slice->frameNum == prevFrameNum) && slice->redundantPicCount && isPrimaryOk && (curHeader != eEOS))
       continue;
 
-      if (((curHeader != eSOP) && (curHeader != eEOS)) || ((curHeader == eSOP) && !picSliceIndex)) {
-       slice->curSliceIndex = (int16_t)picSliceIndex;
-       picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
-       if (picSliceIndex > 0) {
-         (*sliceList)->copyPoc (slice);
-         sliceList[picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
-         }
-
-       picSliceIndex++;
-       if (picSliceIndex >= numAllocatedSlices)
-         error ("decodeFrame - sliceList numAllocationSlices too small");
+    if (((curHeader != eSOP) && (curHeader != eEOS)) || ((curHeader == eSOP) && !picSliceIndex)) {
+      slice->curSliceIndex = (int16_t)picSliceIndex;
+      picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
+      if (picSliceIndex > 0) {
+        (*sliceList)->copyPoc (slice);
+        sliceList[picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
+        }
+      picSliceIndex++;
+      if (picSliceIndex >= numAllocatedSlices)
+        error ("decodeFrame - sliceList too few numAllocatedSlices");
       curHeader = eSOS;
       }
 
