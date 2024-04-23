@@ -10,7 +10,7 @@
 using namespace std;
 //}}}
 
-#define MAX_FN  256
+constexpr int kMaxFunction = 256;
 //{{{
 enum eSeqType {
   SEI_BUFFERING_PERIOD = 0,
@@ -363,68 +363,63 @@ namespace {
   //{{{
   void process_spare_pic (sBitStream& bitStream, cDecoder264* decoder) {
 
-    int x,y;
-    int bit0, bit1, no_bit0;
-    int target_frame_num = 0;
-    int num_spare_pics;
-    int delta_spare_frame_num, CandidateSpareFrameNum, SpareFrameNum = 0;
-    int ref_area_indicator;
-
-    int m, n, left, right, top, bottom,directx, directy;
-    uint8_t*** map;
-
-    target_frame_num =  bitStream.readUeV ("SEI target_frame_num");
-    num_spare_pics = 1 +  bitStream.readUeV ("SEI num_spare_pics_minus1");
+    int target_frame_num =  bitStream.readUeV ("SEI target_frame_num");
+    int num_spare_pics = bitStream.readUeV ("SEI num_spare_pics_minus1") + 1;
     if (decoder->param.seiDebug)
       cLog::log (LOGINFO, "sparePicture target_frame_num:%d num_spare_pics:%d",
-              target_frame_num, num_spare_pics);
+                          target_frame_num, num_spare_pics);
 
+    uint8_t*** map;
     getMem3D (&map, num_spare_pics, decoder->coding.height >> 4, decoder->coding.width >> 4);
+
+    int delta_spare_frame_num, candidateSpareFrameNum, spareFrameNum = 0;
     for (int i = 0; i < num_spare_pics; i++) {
       if (i == 0) {
-        CandidateSpareFrameNum = target_frame_num - 1;
-        if (CandidateSpareFrameNum < 0)
-          CandidateSpareFrameNum = MAX_FN - 1;
+        candidateSpareFrameNum = target_frame_num - 1;
+        if (candidateSpareFrameNum < 0)
+          candidateSpareFrameNum = kMaxFunction - 1;
         }
       else
-        CandidateSpareFrameNum = SpareFrameNum;
+        candidateSpareFrameNum = spareFrameNum;
 
       delta_spare_frame_num =  bitStream.readUeV ("SEI delta_spare_frame_num");
-      SpareFrameNum = CandidateSpareFrameNum - delta_spare_frame_num;
-      if (SpareFrameNum < 0 )
-        SpareFrameNum = MAX_FN + SpareFrameNum;
+      spareFrameNum = candidateSpareFrameNum - delta_spare_frame_num;
+      if (spareFrameNum < 0)
+        spareFrameNum = kMaxFunction + spareFrameNum;
 
-      ref_area_indicator =  bitStream.readUeV ("SEI ref_area_indicator");
+      int ref_area_indicator =  bitStream.readUeV ("SEI ref_area_indicator");
       switch (ref_area_indicator) {
         //{{{
         case 0: // The whole frame can serve as spare picture
-          for (y=0; y<decoder->coding.height >> 4; y++)
-            for (x=0; x<decoder->coding.width >> 4; x++)
+          for (int y = 0; y < decoder->coding.height >> 4; y++)
+            for (int x = 0; x < decoder->coding.width >> 4; x++)
               map[i][y][x] = 0;
           break;
         //}}}
         //{{{
         case 1: // The map is not compressed
-          for (y=0; y<decoder->coding.height >> 4; y++)
-            for (x=0; x<decoder->coding.width >> 4; x++)
-              map[i][y][x] = (uint8_t) bitStream.readU1("SEI ref_mb_indicator");
+          for (int y = 0; y < decoder->coding.height >> 4; y++)
+            for (int x = 0; x < decoder->coding.width >> 4; x++)
+              map[i][y][x] = (uint8_t)bitStream.readU1 ("SEI ref_mb_indicator");
           break;
         //}}}
         //{{{
-        case 2: // The map is compressed
-          bit0 = 0;
-          bit1 = 1;
-          no_bit0 = -1;
+        case 2: { // The map is compressed
+          int bit0 = 0;
+          int bit1 = 1;
+          int no_bit0 = -1;
 
-          x = ((decoder->coding.width >> 4) - 1 ) / 2;
-          y = ((decoder->coding.height >> 4) - 1 ) / 2;
-          left = right = x;
-          top = bottom = y;
-          directx = 0;
-          directy = 1;
+          int x = ((decoder->coding.width >> 4) - 1 ) / 2;
+          int y  = ((decoder->coding.height >> 4) - 1 ) / 2;
+          int left = x;
+          int right = x;
+          int top = y; 
+          int bottom = y;
+          int directx = 0;
+          int directy = 1;
 
-          for (m = 0; m < decoder->coding.height >> 4; m++)
-            for (n = 0; n < decoder->coding.width >> 4; n++) {
+          for (int m = 0; m < decoder->coding.height >> 4; m++)
+            for (int n = 0; n < decoder->coding.width >> 4; n++) {
               if (no_bit0 < 0)
                 no_bit0 =  bitStream.readUeV ("SEI zero_run_length");
               if (no_bit0>0)
@@ -434,7 +429,7 @@ namespace {
               no_bit0--;
 
               // go to the next mb:
-              if ( directx == -1 && directy == 0 ) {
+              if (directx == -1 && directy == 0) {
                 //{{{
                 if (x > left)
                   x--;
@@ -452,7 +447,7 @@ namespace {
                   }
                 }
                 //}}}
-              else if ( directx == 1 && directy == 0 ) {
+              else if (directx == 1 && directy == 0) {
                 //{{{
                 if (x < right)
                   x++;
@@ -470,9 +465,9 @@ namespace {
                   }
                 }
                 //}}}
-              else if ( directx == 0 && directy == -1 ) {
+              else if (directx == 0 && directy == -1) {
                 //{{{
-                if ( y > top)
+                if (y > top)
                   y--;
                 else if (y == 0) {
                   x = left - 1;
@@ -488,7 +483,7 @@ namespace {
                   }
                 }
                 //}}}
-              else if ( directx == 0 && directy == 1 ) {
+              else if (directx == 0 && directy == 1) {
                 //{{{
                 if (y < bottom)
                   y++;
@@ -507,6 +502,7 @@ namespace {
                 }
                 //}}}
               }
+            }
           break;
         //}}}
         //{{{
