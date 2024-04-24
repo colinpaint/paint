@@ -408,22 +408,22 @@ namespace {
 
         int ref_area_indicator = bitStream.readUeV ("SEI ref_area_indicator");
         switch (ref_area_indicator) {
-          //{{{
-          case 0: // The whole frame can serve as spare picture
+          case 0: 
+            //{{{  whole frame can serve as spare picture
             for (int y = 0; y < decoder->coding.height >> 4; y++)
               for (int x = 0; x < decoder->coding.width >> 4; x++)
                 map[i][y][x] = 0;
             break;
-          //}}}
-          //{{{
-          case 1: // The map is not compressed
+            //}}}
+          case 1: 
+            //{{{  map not compressed
             for (int y = 0; y < decoder->coding.height >> 4; y++)
               for (int x = 0; x < decoder->coding.width >> 4; x++)
                 map[i][y][x] = (uint8_t)bitStream.readU1 ("SEI ref_mb_indicator");
             break;
-          //}}}
-          //{{{
-          case 2: { // The map is compressed
+            //}}}
+          case 2: { 
+            //{{{  map compressed
             int bit0 = 0;
             int bit1 = 1;
             int no_bit0 = -1;
@@ -523,13 +523,10 @@ namespace {
                 }
               }
             break;
-          //}}}
-          //{{{
+            //}}}
           default:
-            cDecoder264::error (fmt::format ("Wrong ref_area_indicator {}", ref_area_indicator));
-            exit(0);
+            cDecoder264::error (fmt::format ("Unknown ref_area_indicator:{}", ref_area_indicator));
             break;
-          //}}}
           }
         }
 

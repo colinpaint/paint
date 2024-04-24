@@ -71,6 +71,7 @@ public:
   bool isIdr() const { return mUnitType == cNalu::NALU_TYPE_IDR; }
   eNaluType getUnitType() const { return mUnitType; }
   eNaluRefId getRefId() const { return mRefId; }
+  uint32_t getRemoveCount() const { return mRemoveCount; }
 
   std::string getNaluString() const;
 

@@ -5332,7 +5332,7 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
   }
 //}}}
 //{{{
-bool cSlice::endMacroBlockDecode (int eos_bit) {
+bool cSlice::endMacroBlockDecode (int eosBit) {
 
   // The if() statement below resembles the original code, which tested
   // decoder->mbIndex == decoder->picSizeInMbs.  Both is, of course, nonsense
@@ -5347,7 +5347,7 @@ bool cSlice::endMacroBlockDecode (int eos_bit) {
     if (mbIndex == -1) // End of cSlice group, MUST be end of slice
       return true;
 
-    if (nalStartCode (this, eos_bit) == false)
+    if (nalStartCode (this, eosBit) == false)
       return false;
 
     if ((sliceType == eSliceI) || (sliceType == eSliceSI) ||

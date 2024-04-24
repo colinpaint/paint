@@ -712,8 +712,7 @@ namespace {
                            int blockY, int blockX, int start_scan, int64_t *cbp_blk) {
 
     cSlice* slice = mb->slice;
-    sDataPartition* dataPartition;
-    const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+    const uint8_t* dataParttitionMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
     const uint8_t (*pos_scan4x4)[2] = ((slice->picStructure == eFrame) && (!mb->mbField)) ? SNGL_SCAN : FIELD_SCAN;
     const uint8_t *pos_scan_4x4 = pos_scan4x4[0];
@@ -730,7 +729,7 @@ namespace {
         if (start_scan == 0) {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER);
-          dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
+          sDataPartition* dataPartition = &slice->dataPartitionArray[dataParttitionMap[se->type]];
           if (dataPartition->mBitStream.mError)
             se->mapping = sBitStream::infoLevelRunInter;
           else
@@ -738,7 +737,7 @@ namespace {
           dataPartition->readSyntaxElement (mb, se, dataPartition);
           level = se->value1;
           if (level != 0) {
-             /* leave if level == 0 */
+            // leave if level == 0
             pos_scan_4x4 += 2 * se->value2;
             int i0 = *pos_scan_4x4++;
             int j0 = *pos_scan_4x4++;
@@ -750,16 +749,16 @@ namespace {
         if (level != 0) {
           // make distinction between INTRA and INTER coded luminance coefficients
           se->type = (mb->isIntraBlock ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER);
-          dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
+          sDataPartition* dataPartition = &slice->dataPartitionArray[dataParttitionMap[se->type]];
           if (dataPartition->mBitStream.mError)
             se->mapping = sBitStream::infoLevelRunInter;
           else
             se->reading = readRunLevelCabac;
-
           for (int k = 1; (k < 17) && (level != 0); ++k) {
             dataPartition->readSyntaxElement (mb, se, dataPartition);
             level = se->value1;
-            if (level != 0) {   /* leave if level == 0 */
+            if (level != 0) {
+              // leave if level == 0
               pos_scan_4x4 += 2 * se->value2;
               int i0 = *pos_scan_4x4++;
               int j0 = *pos_scan_4x4++;
@@ -894,7 +893,7 @@ namespace {
       mb->subblockX = boff_x; // position for coeff_count ctx
       mb->subblockY = boff_y; // position for coeff_count ctx
 
-      const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+      const uint8_t* dataParttitionMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
 
       if ((plane == PLANE_Y) || (decoder->coding.isSeperateColourPlane != 0))
         se->context = LUMA_8x8;
@@ -906,8 +905,8 @@ namespace {
 
       // read DC
       se->type = ((mb->isIntraBlock == 1) ? SE_LUM_DC_INTRA : SE_LUM_DC_INTER ); // Intra or Inter?
-      sDataPartition* dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
-      dataPartition->readSyntaxElement(mb, se, dataPartition);
+      sDataPartition* dataPartition = &slice->dataPartitionArray[dataParttitionMap[se->type]];
+      dataPartition->readSyntaxElement (mb, se, dataPartition);
       level = se->value1;
       if (level != 0) {
         *cur_cbp |= cbp_mask;
@@ -918,9 +917,9 @@ namespace {
 
         // read AC
         se->type = (mb->isIntraBlock == 1) ? SE_LUM_AC_INTRA : SE_LUM_AC_INTER;
-        dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
-        for (int k = 1; (k < 65) && (level != 0);++k) {
-          dataPartition->readSyntaxElement(mb, se, dataPartition);
+        dataPartition = &slice->dataPartitionArray[dataParttitionMap[se->type]];
+        for (int k = 1; (k < 65) && (level != 0); ++k) {
+          dataPartition->readSyntaxElement (mb, se, dataPartition);
           level = se->value1;
           if (level != 0) {
             pos_scan8x8 += 2 * (se->value2);
@@ -966,22 +965,21 @@ namespace {
       mb->subblockX = boff_x; // position for coeff_count ctx
       mb->subblockY = boff_y; // position for coeff_count ctx
 
-      sDataPartition* dataPartition;
-      const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-      if (plane == PLANE_Y || (decoder->coding.isSeperateColourPlane != 0))
+      const uint8_t* dataParttitionMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+      if ((plane == PLANE_Y) || (decoder->coding.isSeperateColourPlane != 0))
         se->context = LUMA_8x8;
-      else if (plane==PLANE_U)
+      else if (plane == PLANE_U)
         se->context = CB_8x8;
       else
         se->context = CR_8x8;
       se->reading = readRunLevelCabac;
 
       int level = 1;
-      for (int k = 0; (k < 65) && (level != 0);++k) {
+      for (int k = 0; (k < 65) && (level != 0); ++k) {
         // make distinction between INTRA and INTER codedluminance coefficients
         se->type  = ((mb->isIntraBlock == 1) ? (k == 0 ? SE_LUM_DC_INTRA : SE_LUM_AC_INTRA)
                                              : (k == 0 ? SE_LUM_DC_INTER : SE_LUM_AC_INTER));
-        dataPartition = &slice->dataPartitionArray[dpMap[se->type]];
+        sDataPartition* dataPartition = &slice->dataPartitionArray[dataParttitionMap[se->type]];
         se->reading = readRunLevelCabac;
         dataPartition->readSyntaxElement (mb, se, dataPartition);
         level = se->value1;
@@ -1014,12 +1012,12 @@ void cabacNewSlice (cSlice* slice) {
   }
 //}}}
 //{{{
-int cabacStartCode (cSlice* slice, int eos_bit) {
+int cabacStartCode (cSlice* slice, int eosBit) {
 
   uint32_t bit;
-  if (eos_bit) {
-    const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-    sDataPartition* dataPartition = &slice->dataPartitionArray[dpMap[SE_MBTYPE]];
+  if (eosBit) {
+    const uint8_t* dataParttitionMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+    sDataPartition* dataPartition = &slice->dataPartitionArray[dataParttitionMap[SE_MBTYPE]];
     bit = dataPartition->mCabacDecode.getFinal();
     }
   else
@@ -1051,9 +1049,9 @@ void checkNeighbourCabac (sMacroBlock* mb) {
   }
 //}}}
 //{{{
-int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp) {
+int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* dataPartition) {
 
-  sCabacDecode* cabacDecode = &act_dp->mCabacDecode;
+  sCabacDecode* cabacDecode = &dataPartition->mCabacDecode;
   sMotionContexts* motionContexts  = slice->motionContexts;
 
   // get next MB
@@ -1104,9 +1102,9 @@ int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartiti
   }
 //}}}
 //{{{
-int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition  *act_dp) {
+int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition* dataPartition) {
 
-  sCabacDecode* cabacDecode = &act_dp->mCabacDecode;
+  sCabacDecode* cabacDecode = &dataPartition->mCabacDecode;
   sMotionContexts* motionContexts = slice->motionContexts;
 
   // get next MB
@@ -1158,9 +1156,9 @@ int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartiti
 //}}}
 
 //{{{
-int readSyntaxElementCabac (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart) {
+int readSyntaxElementCabac (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition) {
 
-  sCabacDecode* cabacDecode = &this_dataPart->mCabacDecode;
+  sCabacDecode* cabacDecode = &dataPartition->mCabacDecode;
   int curLen = cabacDecode->getBitsRead();
 
   // perform the actual decoding by calling the appropriate method
@@ -1927,23 +1925,21 @@ void readIpcmCabac (cSlice* slice, sDataPartition* dataPartition) {
   cDecoder264* decoder = slice->decoder;
   sPicture* picture = slice->picture;
 
-  sBitStream* s = &dataPartition->mBitStream;
+  sBitStream* bitStream = &dataPartition->mBitStream;
   sCabacDecode* cabacDecode = &dataPartition->mCabacDecode;
-  uint8_t* buf = s->mBuffer;
+  uint8_t* buf = bitStream->mBuffer;
   int bitStreamLengthInBits = (dataPartition->mBitStream.mLength << 3) + 7;
-
-  int val = 0;
-  int bitsRead = 0;
 
   while (cabacDecode->bitsLeft >= 8) {
     cabacDecode->value >>= 8;
     cabacDecode->bitsLeft -= 8;
     (*cabacDecode->codeStreamLen)--;
     }
-
   int bitOffset = (*cabacDecode->codeStreamLen) << 3;
 
   // read luma values
+  int val = 0;
+  int bitsRead = 0;
   int bitDepth = decoder->bitDepthLuma;
   for (int i = 0; i < MB_BLOCK_SIZE; ++i) {
     for (int j = 0; j < MB_BLOCK_SIZE; ++j) {

@@ -207,7 +207,7 @@ public:
   void computeColocated (sPicture** listX[6]);
   void startMacroBlockDecode (sMacroBlock** mb);
 
-  bool endMacroBlockDecode (int eos_bit);
+  bool endMacroBlockDecode (int eosBit);
 
   //{{{  vars
   cDecoder264* decoder;

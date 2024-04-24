@@ -2018,7 +2018,7 @@ sDecodedPic* cDecoder264::finish() {
 //{{{
 void cDecoder264::close() {
 
-  //closeFmo (this);
+  closeFmo();
   freeLayerBuffers();
   freeGlobalBuffers();
 
@@ -2421,9 +2421,11 @@ int cDecoder264::decodeFrame() {
 
     curHeader = readNalu (slice);
     slice->curHeader = curHeader;
-    //{{{  manage primary, redundant slices
-    if (!slice->redundantPicCount)
-      isPrimaryOk = isRedundantOk = 1;
+    //{{{  set primary,redundant flags
+    if (!slice->redundantPicCount) {
+      isPrimaryOk = 1;
+      isRedundantOk = 1;
+      }
 
     if (!slice->redundantPicCount && (coding.sliceType != eSliceI)) {
       for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
@@ -2433,36 +2435,35 @@ int cDecoder264::decodeFrame() {
     else if (slice->redundantPicCount && (coding.sliceType != eSliceI)) // reference redundant slice incorrect
       if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
         isRedundantOk = 0;
-
+    //}}}
     if ((slice->frameNum == prevFrameNum) && slice->redundantPicCount && isPrimaryOk && (curHeader != eEOS))
       continue;
-
     if (((curHeader != eSOP) && (curHeader != eEOS)) || ((curHeader == eSOP) && !picSliceIndex)) {
+      //{{{  not sure ???
       slice->curSliceIndex = (int16_t)picSliceIndex;
       picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
+
       if (picSliceIndex > 0) {
         (*sliceList)->copyPoc (slice);
         sliceList[picSliceIndex-1]->endMbNumPlus1 = slice->startMbNum;
         }
       picSliceIndex++;
+
       if (picSliceIndex >= numAllocatedSlices)
         error ("decodeFrame - sliceList too few numAllocatedSlices");
       curHeader = eSOS;
       }
-
+      //}}}
     else {
       if (sliceList[picSliceIndex-1]->mbAffFrame)
         sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs/2;
       else
         sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs / (sliceList[picSliceIndex-1]->fieldPic+1);
-
       newFrame = true;
-
       slice->curSliceIndex = 0;
       sliceList[picSliceIndex] = nextSlice;
       nextSlice = slice;
       }
-    //}}}
     copySliceInfo (slice, oldSlice);
     }
 
@@ -2831,13 +2832,14 @@ int cDecoder264::readNalu (cSlice* slice) {
 
         // debug
         debug.sliceType = slice->sliceType;
-        debug.sliceString = fmt::format ("{}:{}:{:6d} -> pps:{} frame:{:2d} {} {}{}",
+        debug.sliceString = fmt::format ("{}:{}:{}:{:6d} -> pps:{} frame:{:2d} {} {}{}",
                                          nalu->isIdr() ? "IDR" : "SLC",
-                                         slice->refId, nalu->getLength(),
+                                         slice->refId, nalu->getRemoveCount(), nalu->getLength(),
                                          slice->ppsId, slice->frameNum,
                                          slice->sliceType ? (slice->sliceType == 1) ?
                                            'B' : ((slice->sliceType == 2) ? 'I':'?') : 'P',
-                                         slice->fieldPic ? " field":"", slice->mbAffFrame ? " mbAff":"");
+                                         slice->fieldPic ? " field":"",
+                                         slice->mbAffFrame ? " mbAff":"");
         if (param.sliceDebug)
           cLog::log (LOGINFO, debug.sliceString);
 

@@ -8,10 +8,10 @@ void cabacNewSlice (cSlice* slice);
 int cabacStartCode (cSlice* slice, int eos_bit);
 
 void checkNeighbourCabac (sMacroBlock* mb);
-int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
-int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition* act_dp);
+int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartition* dataPartition);
+int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartition* dataPartition);
 
-int readSyntaxElementCabac (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* this_dataPart);
+int readSyntaxElementCabac (sMacroBlock* mb, sSyntaxElement* se, sDataPartition* dataPartition);
 
 void readMbTypeCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
 void readMbTypeCabacSliceP (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* cabacDecode);
