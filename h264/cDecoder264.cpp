@@ -1198,7 +1198,7 @@ namespace {
     int cabacInitIdc = slice->cabacInitIdc;
 
     // motion coding contexts
-    if ((slice->sliceType == cSlice::eSliceI) || (slice->sliceType == cSlice::eSliceSI)) {
+    if ((slice->sliceType == cSlice::eI) || (slice->sliceType == cSlice::eSI)) {
       IBIARI_CTX_INIT2 (3, NUM_MB_TYPE_CTX,   mc->mbTypeContexts,     INIT_MB_TYPE,    cabacInitIdc, qp);
       IBIARI_CTX_INIT2 (2, NUM_B8_TYPE_CTX,   mc->b8TypeContexts,     INIT_B8_TYPE,    cabacInitIdc, qp);
       IBIARI_CTX_INIT2 (2, NUM_MV_RES_CTX,    mc->mvResContexts,      INIT_MV_RES,     cabacInitIdc, qp);
@@ -1252,7 +1252,7 @@ namespace {
     int mbx = xPosMB (curMbNum, picture->sizeX), mby = yPosMB (curMbNum, picture->sizeX);
     sObjectBuffer* curRegion = decoder->ercObjectList + (curMbNum << 2);
 
-    if (decoder->coding.sliceType == cSlice::eSliceB) {
+    if (decoder->coding.sliceType == cSlice::eB) {
       //{{{  B-frame
       for (int i = 0; i < 4; ++i) {
         int ii = 4*mbx + (i%2) * 2;
@@ -1481,7 +1481,7 @@ cDecoder264* cDecoder264::open (sParam* param, uint8_t* chunk, size_t chunkSize)
   decoder->sliceList = (cSlice**)calloc (cSlice::kMaxNumSlices, sizeof(cSlice*));
   decoder->numAllocatedSlices = cSlice::kMaxNumSlices;
   decoder->oldSlice = (sOldSlice*)malloc (sizeof(sOldSlice));
-  decoder->coding.sliceType = cSlice::eSliceI;
+  decoder->coding.sliceType = cSlice::eI;
   decoder->recoveryPoc = 0x7fffffff;
   decoder->deblockEnable = 0x3;
   decoder->pendingOutPicStructure = eFrame;
@@ -2285,7 +2285,7 @@ void cDecoder264::initRefPicture (cSlice* slice) {
     }
 
   else {
-    int totalLists = slice->mbAffFrame ? 6 : (slice->sliceType == cSlice::eSliceB ? 2 : 1);
+    int totalLists = slice->mbAffFrame ? 6 : (slice->sliceType == cSlice::eB ? 2 : 1);
     for (int j = 0; j < totalLists; j++) {
       // note that if we always set this to MAX_LIST_SIZE, we avoid crashes with invalid refIndex being set
       // since currently this is done at the slice level, it seems safe to do so.
@@ -2333,7 +2333,7 @@ void cDecoder264::initSlice (cSlice* slice) {
 //{{{
 void cDecoder264::reorderLists (cSlice* slice) {
 
-  if ((slice->sliceType != cSlice::eSliceI) && (slice->sliceType != cSlice::eSliceSI)) {
+  if ((slice->sliceType != cSlice::eI) && (slice->sliceType != cSlice::eSI)) {
     if (slice->refPicReorderFlag[LIST_0])
       slice->reorderRefPicList (LIST_0);
     if (dpb.noRefPicture == slice->listX[0][slice->numRefIndexActive[LIST_0]-1])
@@ -2343,7 +2343,7 @@ void cDecoder264::reorderLists (cSlice* slice) {
       slice->listXsize[0] = (char) slice->numRefIndexActive[LIST_0];
     }
 
-  if (slice->sliceType == cSlice::eSliceB) {
+  if (slice->sliceType == cSlice::eB) {
     if (slice->refPicReorderFlag[LIST_1])
       slice->reorderRefPicList (LIST_1);
     if (dpb.noRefPicture == slice->listX[1][slice->numRefIndexActive[LIST_1]-1])
@@ -2427,12 +2427,12 @@ int cDecoder264::decodeFrame() {
       isRedundantOk = 1;
       }
 
-    if (!slice->redundantPicCount && (coding.sliceType != cSlice::eSliceI)) {
+    if (!slice->redundantPicCount && (coding.sliceType != cSlice::eI)) {
       for (int i = 0; i < slice->numRefIndexActive[LIST_0];++i)
         if (!slice->refFlag[i]) // reference primary slice incorrect, primary slice incorrect
           isPrimaryOk = 0;
       }
-    else if (slice->redundantPicCount && (coding.sliceType != cSlice::eSliceI)) // reference redundant slice incorrect
+    else if (slice->redundantPicCount && (coding.sliceType != cSlice::eI)) // reference redundant slice incorrect
       if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
         isRedundantOk = 0;
     //}}}
@@ -2480,8 +2480,8 @@ int cDecoder264::decodeFrame() {
       cabacNewSlice (slice);
       }
       //}}}
-    if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == cSlice::eSliceB)) ||
-        (slice->activePps->hasWeightedPred && (slice->sliceType != cSlice::eSliceI)))
+    if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == cSlice::eB)) ||
+        (slice->activePps->hasWeightedPred && (slice->sliceType != cSlice::eI)))
       slice->fillWeightedPredParam();
     if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->mError)
       decodeSlice (slice);
@@ -2668,9 +2668,9 @@ void cDecoder264::initPicture (cSlice* slice) {
     //}}}
     }
 
-  if (coding.sliceType > cSlice::eSliceSI) {
+  if (coding.sliceType > cSlice::eSI) {
     setEcFlag (SE_PTYPE);
-    coding.sliceType = cSlice::eSliceP;  // concealed element
+    coding.sliceType = cSlice::eP;  // concealed element
     }
 
   // cavlc init
@@ -3120,25 +3120,25 @@ void cDecoder264::readSliceHeader (sBitStream& bitStream, cSlice* slice) {
 
   if (activePps->redundantPicCountPresent)
     slice->redundantPicCount = bitStream.readUeV ("SLC redundantPicCount");
-  if (slice->sliceType == cSlice::eSliceB)
+  if (slice->sliceType == cSlice::eB)
     slice->directSpatialMvPredFlag = bitStream.readU1 ("SLC directSpatialMvPredFlag");
 
   // read refPicLists
   slice->numRefIndexActive[LIST_0] = activePps->numRefIndexL0defaultActiveMinus1 + 1;
   slice->numRefIndexActive[LIST_1] = activePps->numRefIndexL1defaultActiveMinus1 + 1;
-  if ((slice->sliceType == cSlice::eSliceP) || (slice->sliceType == cSlice::eSliceSP) || (slice->sliceType == cSlice::eSliceB)) {
+  if ((slice->sliceType == cSlice::eP) || (slice->sliceType == cSlice::eSP) || (slice->sliceType == cSlice::eB)) {
     if (bitStream.readU1 ("SLC isNumRefIndexOverride")) {
       slice->numRefIndexActive[LIST_0] = 1 + bitStream.readUeV ("SLC numRefIndexActiveL0minus1");
-      if (slice->sliceType == cSlice::eSliceB)
+      if (slice->sliceType == cSlice::eB)
         slice->numRefIndexActive[LIST_1] = 1 + bitStream.readUeV ("SLC numRefIndexActiveL1minus1");
       }
     }
-  if (slice->sliceType != cSlice::eSliceB)
+  if (slice->sliceType != cSlice::eB)
     slice->numRefIndexActive[LIST_1] = 0;
   //{{{  read refPicList reorder
   slice->allocRefPicListReordeBuffer();
 
-  if ((slice->sliceType != cSlice::eSliceI) && (slice->sliceType != cSlice::eSliceSI)) {
+  if ((slice->sliceType != cSlice::eI) && (slice->sliceType != cSlice::eSI)) {
     int value = slice->refPicReorderFlag[LIST_0] = bitStream.readU1 ("SLC refPicReorderL0");
     if (value) {
       int i = 0;
@@ -3153,7 +3153,7 @@ void cDecoder264::readSliceHeader (sBitStream& bitStream, cSlice* slice) {
       }
     }
 
-  if (slice->sliceType == cSlice::eSliceB) {
+  if (slice->sliceType == cSlice::eB) {
     int value = slice->refPicReorderFlag[LIST_1] = bitStream.readU1 ("SLC refPicReorderL1");
     if (value) {
       int i = 0;
@@ -3169,20 +3169,20 @@ void cDecoder264::readSliceHeader (sBitStream& bitStream, cSlice* slice) {
     }
 
   // set reference index of redundant slicebitStream.
-  if (slice->redundantPicCount && (slice->sliceType != cSlice::eSliceI) )
+  if (slice->redundantPicCount && (slice->sliceType != cSlice::eI) )
     slice->redundantSliceRefIndex = slice->absDiffPicNumMinus1[LIST_0][0] + 1;
   //}}}
   //{{{  read weightedPredWeight
-  slice->hasWeightedPred = (uint16_t)(((slice->sliceType == cSlice::eSliceP) || (slice->sliceType == cSlice::eSliceSP))
+  slice->hasWeightedPred = (uint16_t)(((slice->sliceType == cSlice::eP) || (slice->sliceType == cSlice::eSP))
                               ? activePps->hasWeightedPred
-                              : ((slice->sliceType == cSlice::eSliceB) && (activePps->weightedBiPredIdc == 1)));
+                              : ((slice->sliceType == cSlice::eB) && (activePps->weightedBiPredIdc == 1)));
 
-  slice->weightedBiPredIdc = (uint16_t)((slice->sliceType == cSlice::eSliceB) &&
+  slice->weightedBiPredIdc = (uint16_t)((slice->sliceType == cSlice::eB) &&
                                               (activePps->weightedBiPredIdc > 0));
 
   if ((activePps->hasWeightedPred &&
-       ((slice->sliceType == cSlice::eSliceP) || (slice->sliceType == cSlice::eSliceSP))) ||
-      ((activePps->weightedBiPredIdc == 1) && (slice->sliceType == cSlice::eSliceB))) {
+       ((slice->sliceType == cSlice::eP) || (slice->sliceType == cSlice::eSP))) ||
+      ((activePps->weightedBiPredIdc == 1) && (slice->sliceType == cSlice::eB))) {
     slice->lumaLog2weightDenom = (uint16_t)bitStream.readUeV ("SLC lumaLog2weightDenom");
     slice->wpRoundLuma = slice->lumaLog2weightDenom ? 1 << (slice->lumaLog2weightDenom - 1) : 0;
 
@@ -3222,7 +3222,7 @@ void cDecoder264::readSliceHeader (sBitStream& bitStream, cSlice* slice) {
       }
       //}}}
 
-    if ((slice->sliceType == cSlice::eSliceB) && activePps->weightedBiPredIdc == 1)
+    if ((slice->sliceType == cSlice::eB) && activePps->weightedBiPredIdc == 1)
       for (int i = 0; i < slice->numRefIndexActive[LIST_1]; i++) {
         //{{{  read l1 weights
         if (bitStream.readU1 ("SLC hasLumaWeightL1")) {
@@ -3260,7 +3260,7 @@ void cDecoder264::readSliceHeader (sBitStream& bitStream, cSlice* slice) {
     readDecRefPicMarking (bitStream, slice);
 
   if ((activePps->entropyCoding == eCabac) &&
-      (slice->sliceType != cSlice::eSliceI) && (slice->sliceType != cSlice::eSliceSI))
+      (slice->sliceType != cSlice::eI) && (slice->sliceType != cSlice::eSI))
     slice->cabacInitIdc = bitStream.readUeV ("SLC cabacInitIdc");
   else
     slice->cabacInitIdc = 0;
@@ -3268,8 +3268,8 @@ void cDecoder264::readSliceHeader (sBitStream& bitStream, cSlice* slice) {
   slice->sliceQpDelta = bitStream.readSeV ("SLC sliceQpDelta");
   slice->qp = 26 + activePps->picInitQpMinus26 + slice->sliceQpDelta;
 
-  if ((slice->sliceType == cSlice::eSliceSP) || (slice->sliceType == cSlice::eSliceSI)) {
-    if (slice->sliceType == cSlice::eSliceSP)
+  if ((slice->sliceType == cSlice::eSP) || (slice->sliceType == cSlice::eSI)) {
+    if (slice->sliceType == cSlice::eSP)
       slice->spSwitch = bitStream.readU1 ("SLC sp_for_switchFlag");
     slice->sliceQsDelta = bitStream.readSeV ("SLC sliceQsDelta");
     slice->qs = 26 + activePps->picInitQsMinus26 + slice->sliceQsDelta;
@@ -3339,10 +3339,10 @@ void cDecoder264::decodeSlice (cSlice* slice) {
     slice->intraBlock = intraBlock;
     }
 
-  if (slice->sliceType == cSlice::eSliceB)
+  if (slice->sliceType == cSlice::eB)
     slice->computeColocated (slice->listX);
 
-  if ((slice->sliceType != cSlice::eSliceI) && (slice->sliceType != cSlice::eSliceSI))
+  if ((slice->sliceType != cSlice::eI) && (slice->sliceType != cSlice::eSI))
     initRefPicture (slice);
 
   // loop over macroBlocks
@@ -3411,7 +3411,7 @@ void cDecoder264::endDecodeFrame() {
 
     // call the right error conceal function depending on the frame type.
     ercMvPerMb /= picture->picSizeInMbs;
-    if (picture->sliceType == cSlice::eSliceI || picture->sliceType == cSlice::eSliceSI) // I-frame
+    if (picture->sliceType == cSlice::eI || picture->sliceType == cSlice::eSI) // I-frame
       ercConcealIntraFrame (this, &recfr, picture->sizeX, picture->sizeY, ercErrorVar);
     else
       ercConcealInterFrame (&recfr, ercObjectList,
@@ -3462,15 +3462,15 @@ void cDecoder264::endDecodeFrame() {
 
   if (picStructure == eTopField || picStructure == eFrame) {
     //{{{  sliceTypeString
-    if (sliceType == cSlice::eSliceI && isIdr)
+    if (sliceType == cSlice::eI && isIdr)
       debug.sliceTypeString = "IDR";
-    else if (sliceType == cSlice::eSliceI)
+    else if (sliceType == cSlice::eI)
       debug.sliceTypeString = " I ";
-    else if (sliceType == cSlice::eSliceP)
+    else if (sliceType == cSlice::eP)
       debug.sliceTypeString = " P ";
-    else if (sliceType == cSlice::eSliceSP)
+    else if (sliceType == cSlice::eSP)
       debug.sliceTypeString = "SP ";
-    else if  (sliceType == cSlice::eSliceSI)
+    else if  (sliceType == cSlice::eSI)
       debug.sliceTypeString = "SI ";
     else if (refpic)
       debug.sliceTypeString = " B ";
@@ -3480,15 +3480,15 @@ void cDecoder264::endDecodeFrame() {
     //}}}
   else if (picStructure == eBotField) {
     //{{{  sliceTypeString
-    if (sliceType == cSlice::eSliceI && isIdr)
+    if (sliceType == cSlice::eI && isIdr)
       debug.sliceTypeString += "|IDR";
-    else if (sliceType == cSlice::eSliceI)
+    else if (sliceType == cSlice::eI)
       debug.sliceTypeString += "| I ";
-    else if (sliceType == cSlice::eSliceP)
+    else if (sliceType == cSlice::eP)
       debug.sliceTypeString += "| P ";
-    else if (sliceType == cSlice::eSliceSP)
+    else if (sliceType == cSlice::eSP)
       debug.sliceTypeString += "|SP ";
-    else if  (sliceType == cSlice::eSliceSI)
+    else if  (sliceType == cSlice::eSI)
       debug.sliceTypeString += "|SI ";
     else if (refpic)
       debug.sliceTypeString += "| B ";
@@ -3521,7 +3521,7 @@ void cDecoder264::endDecodeFrame() {
     //}}}
 
     // I or P pictures ?
-    if ((sliceType == cSlice::eSliceI) || (sliceType == cSlice::eSliceSI) || (sliceType == cSlice::eSliceP) || refpic)
+    if ((sliceType == cSlice::eI) || (sliceType == cSlice::eSI) || (sliceType == cSlice::eP) || refpic)
       ++idrFrameNum;
 
     (decodeFrameNum)++;

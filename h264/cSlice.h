@@ -29,17 +29,17 @@ enum eColorPlane {
 
 class cSlice {
 public:
-  static const int kMaxNumSlices = 4;
   //{{{
   enum eSliceType {
-    eSliceP        = 0,
-    eSliceB        = 1,
-    eSliceI        = 2,
-    eSliceSP       = 3,
-    eSliceSI       = 4,
-    eSliceNumTypes = 5
+    eP        = 0,
+    eB        = 1,
+    eI        = 2,
+    eSP       = 3,
+    eSI       = 4,
+    eNumTypes = 5
     };
   //}}}
+  static const int kMaxNumSlices = 4;
   //{{{
   static inline const int kDequantCoef8[6][8][8] = {
     {

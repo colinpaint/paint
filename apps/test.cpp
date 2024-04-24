@@ -1632,13 +1632,13 @@ private:
   //{{{
   ImVec4 getSliceColor (cSlice::eSliceType sliceType) {
     switch (sliceType) {
-      case cSlice::eSliceSI :
-      case cSlice::eSliceI : return kWhite;
+      case cSlice::eSI :
+      case cSlice::eI : return kWhite;
 
-      case cSlice::eSliceSP :
-      case cSlice::eSliceP : return kMauve;
+      case cSlice::eSP :
+      case cSlice::eP : return kMauve;
 
-      case cSlice::eSliceB : return kBlue;
+      case cSlice::eB : return kBlue;
       default: return kRed;
       }
     }

@@ -750,7 +750,7 @@ namespace {
     int i = 0, j = 0, k;
 
     cSlice* slice = mb->slice;
-    int smb = slice->sliceType == cSlice::eSliceSP && (mb->isIntraBlock == false);
+    int smb = slice->sliceType == cSlice::eSP && (mb->isIntraBlock == false);
 
     setChromaVector (mb);
 
@@ -784,7 +784,7 @@ namespace {
   int mbPredPinter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
     cSlice* slice = mb->slice;
-    int smb = (slice->sliceType == cSlice::eSliceSP);
+    int smb = (slice->sliceType == cSlice::eSP);
 
     setChromaVector(mb);
     performMotionCompensation (mb, plane, picture, mb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -800,7 +800,7 @@ namespace {
   int mbPredPinter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
     cSlice* slice = mb->slice;
-    int smb = (slice->sliceType == cSlice::eSliceSP);
+    int smb = (slice->sliceType == cSlice::eSP);
 
     setChromaVector (mb);
 
@@ -818,7 +818,7 @@ namespace {
   int mbPredPinter8x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
     cSlice* slice = mb->slice;
-    int smb = (slice->sliceType == cSlice::eSliceSP);
+    int smb = (slice->sliceType == cSlice::eSP);
 
     setChromaVector (mb);
 
@@ -2162,7 +2162,7 @@ namespace {
 
           // !! KS: not sure if the following is still correct...
           ts = ls = 0;   // Check to see if the neighboring block is SI
-          if (slice->sliceType == cSlice::eSliceSI) { // need support for MBINTLC1
+          if (slice->sliceType == cSlice::eSI) { // need support for MBINTLC1
             if (left_block.ok)
               if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
                 ls = 1;
@@ -2236,7 +2236,7 @@ namespace {
 
           int ts = 0;
           int ls = 0;   // Check to see if the neighboring block is SI
-          if (slice->sliceType == cSlice::eSliceSI) {
+          if (slice->sliceType == cSlice::eSI) {
             //{{{  need support for MBINTLC1
             if (left_block.ok)
               if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
@@ -2443,7 +2443,7 @@ namespace {
     static const char b_v2b8 [14] = {0, 4, 4, 4, 5, 6, 5, 6, 5, 6, 7, 7, 7, IBLOCK};
     static const char b_v2pd [14] = {2, 0, 1, 2, 0, 0, 1, 1, 2, 2, 0, 1, 2, -1};
 
-    if (slice->sliceType == cSlice::eSliceB) {
+    if (slice->sliceType == cSlice::eB) {
       mb->b8mode[i] = b_v2b8[value];
       mb->b8pdir[i] = b_v2pd[value];
       }
@@ -4744,7 +4744,7 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   cDecoder264* decoder = mb->decoder;
   cSlice* slice = mb->slice;
 
-  int qp = (slice->sliceType == cSlice::eSliceSI) ? slice->qs : slice->qp;
+  int qp = (slice->sliceType == cSlice::eSI) ? slice->qs : slice->qp;
   int qp_per = decoder->qpPerMatrix[qp];
   int qp_rem = decoder->qpRemMatrix[qp];
   int qp_per_sp = decoder->qpPerMatrix[slice->qs];
@@ -4771,7 +4771,7 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   forward4x4 (PBlock, PBlock, 0, 0);
 
-  if (slice->spSwitch || slice->sliceType == cSlice::eSliceSI) {
+  if (slice->spSwitch || slice->sliceType == cSlice::eSI) {
     for (int j = 0; j < BLOCK_SIZE;++j)
       for (int i = 0; i < BLOCK_SIZE;++i) {
         // recovering coefficient since they are already dequantized earlier
@@ -4821,7 +4821,7 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
   int qp_rem_sp = decoder->qpRemMatrix[slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]];
   int q_bits_sp = Q_BITS + qp_per_sp;
 
-  if (slice->sliceType == cSlice::eSliceSI) {
+  if (slice->sliceType == cSlice::eSI) {
     qp_per = qp_per_sp;
     qp_rem = qp_rem_sp;
     }
@@ -4842,7 +4842,7 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
   mp1[2] = PBlock[0][0] + PBlock[4][0] - PBlock[0][4] - PBlock[4][4];
   mp1[3] = PBlock[0][0] - PBlock[4][0] - PBlock[0][4] + PBlock[4][4];
 
-  if (slice->spSwitch || slice->sliceType == cSlice::eSliceSI) {
+  if (slice->spSwitch || slice->sliceType == cSlice::eSI) {
     for (int n2 = 0; n2 < 2; ++n2 )
       for (int n1 = 0; n1 < 2; ++n1 ) {
         // quantization fo predicted block
@@ -5127,20 +5127,20 @@ void cSlice::setSliceReadFunctions() {
 
   if (decoder->activePps->entropyCoding == eCabac) {
     switch (sliceType) {
-      case eSliceP:
+      case eP:
       //{{{
-      case eSliceSP:
+      case eSP:
         readMacroBlock = readCabacMacroBlockP;
         break;
       //}}}
       //{{{
-      case eSliceB:
+      case eB:
         readMacroBlock = readCabacMacroBlockB;
         break;
       //}}}
-      case eSliceI:
+      case eI:
       //{{{
-      case eSliceSI:
+      case eSI:
         readMacroBlock = readCabacMacroBlockI;
         break;
       //}}}
@@ -5154,20 +5154,20 @@ void cSlice::setSliceReadFunctions() {
 
   else {
     switch (sliceType) {
-      case eSliceP:
+      case eP:
       //{{{
-      case eSliceSP:
+      case eSP:
         readMacroBlock = readCavlcMacroBlockP;
         break;
       //}}}
       //{{{
-      case eSliceB:
+      case eB:
         readMacroBlock = readCavlcMacroBlockB;
         break;
       //}}}
-      case eSliceI:
+      case eI:
       //{{{
-      case eSliceSI:
+      case eSI:
         readMacroBlock = readCavlcMacroBlockI;
         break;
       //}}}
@@ -5181,7 +5181,7 @@ void cSlice::setSliceReadFunctions() {
 
   switch (sliceType) {
     //{{{
-    case eSliceP:
+    case eP:
       interpretMbMode = interpretMbModeP;
       nalReadMotion = readMotionP;
       decodeComponenet = decodeComponentP;
@@ -5190,7 +5190,7 @@ void cSlice::setSliceReadFunctions() {
       break;
     //}}}
     //{{{
-    case eSliceSP:
+    case eSP:
       interpretMbMode = interpretMbModeP;
       nalReadMotion = readMotionP;
       decodeComponenet = decodeComponentSP;
@@ -5199,7 +5199,7 @@ void cSlice::setSliceReadFunctions() {
       break;
     //}}}
     //{{{
-    case eSliceB:
+    case eB:
       interpretMbMode = interpretMbModeB;
       nalReadMotion = readMotionB;
       decodeComponenet = decodeComponentB;
@@ -5208,7 +5208,7 @@ void cSlice::setSliceReadFunctions() {
       break;
     //}}}
     //{{{
-    case eSliceI:
+    case eI:
       interpretMbMode = interpretMbModeI;
       decodeComponenet = decodeComponentI;
       initLists = initListsSliceI;
@@ -5217,7 +5217,7 @@ void cSlice::setSliceReadFunctions() {
       break;
     //}}}
     //{{{
-    case eSliceSI:
+    case eSI:
       interpretMbMode = interpretMbModeSI;
       decodeComponenet = decodeComponentI;
       initLists = initListsSliceI;
@@ -5300,8 +5300,8 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
   (*mb)->setReadCbpCabac (activeSps->chromaFormatIdc);
 
   // Reset syntax element entries in MB struct
-  if (sliceType != eSliceI) {
-    if (sliceType != eSliceB)
+  if (sliceType != eI) {
+    if (sliceType != eB)
       memset ((*mb)->mvd[0][0][0], 0, MB_BLOCK_dpS * 2 * sizeof(int16_t));
     else
       memset ((*mb)->mvd[0][0][0], 0, 2 * MB_BLOCK_dpS * 2 * sizeof(int16_t));
@@ -5350,7 +5350,7 @@ bool cSlice::endMacroBlockDecode (int eosBit) {
     if (nalStartCode (this, eosBit) == false)
       return false;
 
-    if ((sliceType == eSliceI) || (sliceType == eSliceSI) ||
+    if ((sliceType == eI) || (sliceType == eSI) ||
         (decoder->activePps->entropyCoding == eCabac))
       return true;
 

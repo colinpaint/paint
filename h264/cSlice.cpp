@@ -804,8 +804,8 @@ namespace {
 
     int qp_per, qp_rem;
     cDecoder264* decoder = mb->decoder;
-    int smb = ((decoder->coding.sliceType == cSlice::eSliceSP) && (mb->isIntraBlock == false)) ||
-               (decoder->coding.sliceType == cSlice::eSliceSI && mb->mbType == SI4MB);
+    int smb = ((decoder->coding.sliceType == cSlice::eSP) && (mb->isIntraBlock == false)) ||
+               (decoder->coding.sliceType == cSlice::eSI && mb->mbType == SI4MB);
 
     int qp_per_uv[2];
     int qp_rem_uv[2];
@@ -1681,8 +1681,8 @@ namespace {
     sDataPartition* dataPartition = NULL;
     const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     cDecoder264* decoder = mb->decoder;
-    int smb = ((decoder->coding.sliceType == cSlice::eSliceSP) && (mb->isIntraBlock == false)) ||
-              ((decoder->coding.sliceType == cSlice::eSliceSI) && (mb->mbType == SI4MB));
+    int smb = ((decoder->coding.sliceType == cSlice::eSP) && (mb->isIntraBlock == false)) ||
+              ((decoder->coding.sliceType == cSlice::eSI) && (mb->mbType == SI4MB));
 
     int uv;
     int qp_per_uv[2];
@@ -1941,7 +1941,7 @@ cSlice* cSlice::allocSlice() {
 //{{{
 cSlice::~cSlice() {
 
-  if (sliceType != eSliceI && sliceType != eSliceSI)
+  if (sliceType != eI && sliceType != eSI)
     freeRefPicListReorderBuffer();
 
   freeMem2Dint (tempRes);
@@ -2148,7 +2148,7 @@ void cSlice::setQuant() {
 //{{{
 void cSlice::fillWeightedPredParam() {
 
-  if (sliceType == eSliceB) {
+  if (sliceType == eB) {
     int maxL0Ref = numRefIndexActive[LIST_0];
     int maxL1Ref = numRefIndexActive[LIST_1];
     if (activePps->weightedBiPredIdc == 2) {
@@ -2358,7 +2358,7 @@ void cSlice::updatePicNum() {
 //{{{
 void cSlice::allocRefPicListReordeBuffer() {
 
-  if ((sliceType != eSliceI) && (sliceType != eSliceSI)) {
+  if ((sliceType != eI) && (sliceType != eSI)) {
     // B,P
     int size = numRefIndexActive[LIST_0] + 1;
     modPicNumsIdc[LIST_0] = (int*)calloc (size ,sizeof(int));
@@ -2371,7 +2371,7 @@ void cSlice::allocRefPicListReordeBuffer() {
     absDiffPicNumMinus1[LIST_0] = NULL;
     }
 
-  if (sliceType == eSliceB) {
+  if (sliceType == eB) {
     // B
     int size = numRefIndexActive[LIST_1] + 1;
     modPicNumsIdc[LIST_1] = (int*)calloc (size,sizeof(int));
