@@ -111,12 +111,12 @@ namespace {
       int pred_nnz = 0;
       int cnt      = 0;
 
-      //YUV420 and YUV422
+      // YUV420 and YUV422
       // left block
       get4x4Neighbour (mb, ((i&0x01)<<2) - 1, j, decoder->mbSize[eChroma], &pixelPos);
 
       if ((mb->isIntraBlock == true) && pixelPos.ok &&
-          decoder->activePps->hasConstrainedIntraPred && (slice->dataPartitionMode==eDataPartition3)) {
+          decoder->activePps->hasConstrainedIntraPred && (slice->dataPartitionMode == eDataPartition3)) {
         pixelPos.ok &= slice->intraBlock[pixelPos.mbIndex];
         if (!pixelPos.ok)
           ++cnt;
@@ -131,7 +131,7 @@ namespace {
       get4x4Neighbour (mb, ((i&0x01)<<2), j - 1, decoder->mbSize[eChroma], &pixelPos);
 
       if ((mb->isIntraBlock == true) && pixelPos.ok &&
-          decoder->activePps->hasConstrainedIntraPred && (slice->dataPartitionMode==eDataPartition3)) {
+          decoder->activePps->hasConstrainedIntraPred && (slice->dataPartitionMode == eDataPartition3)) {
         pixelPos.ok &= slice->intraBlock[pixelPos.mbIndex];
         if (!pixelPos.ok)
           ++cnt;
@@ -539,9 +539,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
 
   sSyntaxElement se;
   se.type = dptype;
-  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-  sDataPartition* dataPartition = &slice->dataPartitionArray[dpMap[dptype]];
-  sBitStream& s = dataPartition->mBitStream;
+  const uint8_t* dataPartitionMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  sDataPartition* dataPartition = &slice->dataPartitionArray[dataPartitionMap[dptype]];
+  sBitStream& bitStream = dataPartition->mBitStream;
 
   if (!cdc) {
     //{{{  luma or chroma AC
@@ -553,7 +553,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
       nnz = predictNnz (mb, CR, i<<2, j<<2);
 
     se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-    s.readSyntaxElementNumCoeffTrailingOnes (&se, type);
+    bitStream.readSyntaxElementNumCoeffTrailingOnes (&se, type);
     numcoeff = se.value1;
     numtrailingones = se.value2;
     if  (block_type == LUMA || block_type == LUMA_INTRA16x16DC || block_type == LUMA_INTRA16x16AC || block_type == CHROMA_AC)
@@ -566,7 +566,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
     //}}}
   else {
     //{{{  chroma DC
-    s.readSyntaxElementNumCoeffTrailingOnesChromaDC (decoder, &se);
+    bitStream.readSyntaxElementNumCoeffTrailingOnesChromaDC (decoder, &se);
     numcoeff = se.value1;
     numtrailingones = se.value2;
     }
@@ -579,7 +579,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
   if (numcoeff) {
     if (numtrailingones) {
       se.len = numtrailingones;
-      s.readSyntaxElementFLC (&se);
+      bitStream.readSyntaxElementFLC (&se);
       code = se.inf;
       ntr = numtrailingones;
       for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
@@ -594,9 +594,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
       //{{{  decode level
       if (vlcnum == 0)
-        s.readSyntaxElementLevelVlc0 (&se);
+        bitStream.readSyntaxElementLevelVlc0 (&se);
       else
-        s.readSyntaxElementLevelVlcN (&se, vlcnum);
+        bitStream.readSyntaxElementLevelVlcN (&se, vlcnum);
 
       if (level_two_or_higher) {
         se.inf += (se.inf > 0) ? 1 : -1;
@@ -623,9 +623,9 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
       se.value1 = vlcnum;
 
       if (cdc)
-        s.readSyntaxElementTotalZerosChromaDC (decoder, &se);
+        bitStream.readSyntaxElementTotalZerosChromaDC (decoder, &se);
       else
-        s.readSyntaxElementTotalZeros (&se);
+        bitStream.readSyntaxElementTotalZeros (&se);
 
       totzeros = se.value1;
       }
@@ -641,7 +641,7 @@ void readCoef4x4cavlc444 (sMacroBlock* mb, int block_type, int i, int j,
         // select VLC for runbefore
         vlcnum = imin (zerosleft - 1, RUNBEFORE_NUM_M1);
         se.value1 = vlcnum;
-        s.readSyntaxElementRun (&se);
+        bitStream.readSyntaxElementRun (&se);
         runarr[i] = se.value1;
         zerosleft -= runarr[i];
         i --;
@@ -716,15 +716,15 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
 
   sSyntaxElement se;
   se.type = dptype;
-  const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
-  sDataPartition* dataPartition = &slice->dataPartitionArray[dpMap[dptype]];
-  sBitStream& s = dataPartition->mBitStream;
+  const uint8_t* dataPartitionMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
+  sDataPartition* dataPartition = &slice->dataPartitionArray[dataPartitionMap[dptype]];
+  sBitStream& bitStream = dataPartition->mBitStream;
 
   if (!cdc) {
     //{{{  luma or chroma AC
     nnz = (!cac) ? predictNnz (mb, LUMA, i<<2, j<<2) : predictNnzChroma (mb, i, ((j-4)<<2));
     se.value1 = (nnz < 2) ? 0 : ((nnz < 4) ? 1 : ((nnz < 8) ? 2 : 3));
-    s.readSyntaxElementNumCoeffTrailingOnes(&se, type);
+    bitStream.readSyntaxElementNumCoeffTrailingOnes (&se, type);
     numcoeff = se.value1;
     numtrailingones = se.value2;
     decoder->nzCoeff[mb_nr][0][j][i] = (uint8_t) numcoeff;
@@ -732,7 +732,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
     //}}}
   else {
     //{{{  chroma DC
-    s.readSyntaxElementNumCoeffTrailingOnesChromaDC (decoder, &se);
+    bitStream.readSyntaxElementNumCoeffTrailingOnesChromaDC (decoder, &se);
     numcoeff = se.value1;
     numtrailingones = se.value2;
     }
@@ -745,7 +745,7 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
   if (numcoeff) {
     if (numtrailingones) {
       se.len = numtrailingones;
-      s.readSyntaxElementFLC (&se);
+      bitStream.readSyntaxElementFLC (&se);
       code = se.inf;
       ntr = numtrailingones;
       for (k = numcoeff - 1; k > numcoeff - 1 - numtrailingones; k--) {
@@ -760,9 +760,9 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
     for (k = numcoeff - 1 - numtrailingones; k >= 0; k--) {
       //{{{  decode level
       if (vlcnum == 0)
-        s.readSyntaxElementLevelVlc0 (&se);
+        bitStream.readSyntaxElementLevelVlc0 (&se);
       else
-        s.readSyntaxElementLevelVlcN (&se, vlcnum);
+        bitStream.readSyntaxElementLevelVlcN (&se, vlcnum);
 
       if (level_two_or_higher) {
         se.inf += (se.inf > 0) ? 1 : -1;
@@ -786,12 +786,10 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
       //{{{  decode total run
       vlcnum = numcoeff - 1;
       se.value1 = vlcnum;
-
       if (cdc)
-        s.readSyntaxElementTotalZerosChromaDC (decoder, &se);
+        bitStream.readSyntaxElementTotalZerosChromaDC (decoder, &se);
       else
-        s.readSyntaxElementTotalZeros (&se);
-
+        bitStream.readSyntaxElementTotalZeros (&se);
       totzeros = se.value1;
       }
       //}}}
@@ -801,16 +799,13 @@ void readCoef4x4cavlcNormal (sMacroBlock* mb, int block_type, int i, int j,
     //{{{  decode run before each coefficient
     zerosleft = totzeros;
     i = numcoeff - 1;
-
     if (zerosleft > 0 && i > 0) {
       do {
         // select VLC for runbefore
-        vlcnum = imin(zerosleft - 1, RUNBEFORE_NUM_M1);
-
+        vlcnum = imin (zerosleft - 1, RUNBEFORE_NUM_M1);
         se.value1 = vlcnum;
-        s.readSyntaxElementRun (&se);
+        bitStream.readSyntaxElementRun (&se);
         runarr[i] = se.value1;
-
         zerosleft -= runarr[i];
         i --;
         } while (zerosleft != 0 && i != 0);
