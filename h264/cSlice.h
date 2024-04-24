@@ -39,6 +39,7 @@ public:
     eNumTypes = 5
     };
   //}}}
+
   static const int kMaxNumSlices = 4;
   //{{{
   static inline const int kDequantCoef8[6][8][8] = {
@@ -182,7 +183,10 @@ public:
   };
   //}}}
 
+  // static member
   static cSlice* allocSlice();
+
+  // pub,iuc members
   ~cSlice();
 
   void setQuant();
@@ -208,7 +212,7 @@ public:
 
   bool endMacroBlockDecode (int eosBit);
 
-  //{{{  vars
+  //{{{  public vars
   cDecoder264* decoder;
 
   cPps* activePps;
@@ -354,7 +358,7 @@ public:
   char*  intraBlock;
   char chromaVectorAdjust[6][32];
   //}}}
-  //{{{  c style virtual functionss
+  //{{{  public c style virtual functionss
   int  (*nalStartCode) (cSlice*, int);
   void (*nalReadMotion) (sMacroBlock*);
 
