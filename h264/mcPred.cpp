@@ -1383,7 +1383,8 @@ namespace {
       getBlockLuma (list, vec1_x, vec1_y, blockSizeX, blockSizeY, tempBlockL0,shift_x,maxold_x,maxold_y,tempRes,max_imgpel_value,no_ref_value, mb);
 
     int alpha_l0, weightedPredOffset, wp_denom;
-    if (mb->mbField && ((decoder->activePps->hasWeightedPred&&(type==eSliceP|| type == eSliceSP))||(decoder->activePps->weightedBiPredIdc==1 && (type==eSliceB))))
+    if (mb->mbField && ((decoder->activePps->hasWeightedPred && (type == cSlice::eSliceP || type == cSlice::eSliceSP)) || 
+                        (decoder->activePps->weightedBiPredIdc==1 && (type == cSlice::eSliceB))))
       ref_idx_wp >>=1;
     alpha_l0  = slice->weightedPredWeight[predDir][ref_idx_wp][plane];
     weightedPredOffset = slice->weightedPredOffset[predDir][ref_idx_wp][plane];

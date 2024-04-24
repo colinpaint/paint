@@ -1630,15 +1630,15 @@ private:
     }
   //}}}
   //{{{
-  ImVec4 getSliceColor (eSliceType sliceType) {
+  ImVec4 getSliceColor (cSlice::eSliceType sliceType) {
     switch (sliceType) {
-      case eSliceSI :
-      case eSliceI : return kWhite;
+      case cSlice::eSliceSI :
+      case cSlice::eSliceI : return kWhite;
 
-      case eSliceSP :
-      case eSliceP : return kMauve;
+      case cSlice::eSliceSP :
+      case cSlice::eSliceP : return kMauve;
 
-      case eSliceB : return kBlue;
+      case cSlice::eSliceB : return kBlue;
       default: return kRed;
       }
     }

@@ -498,7 +498,7 @@ struct sCoding {
   ePicStructure picStructure;
   int yuvFormat;
   int isSeperateColourPlane;
-  eSliceType sliceType;
+  cSlice::eSliceType sliceType;
 
   // size
   int width;
@@ -600,11 +600,11 @@ struct sDebug {
 
   std::vector <std::string> dpbStrings;
 
-  eSliceType  sliceType;
+  cSlice::eSliceType  sliceType;
   std::string sliceTypeString;
   std::string sliceString;
 
-  eSliceType  outSliceType;
+  cSlice::eSliceType  outSliceType;
   std::string outString;
   };
 //}}}

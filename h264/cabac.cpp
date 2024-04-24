@@ -1182,7 +1182,7 @@ void readMbTypeCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* c
   int modeSym;
   int curMbType = 0;
 
-  if (slice->sliceType == eSliceI)  {
+  if (slice->sliceType == cSlice::eSliceI)  {
     //{{{  INTRA-frame
     int a = mb->mbCabacLeft ? (((mb->mbCabacLeft->mbType != I4MB) && (mb->mbCabacLeft->mbType != I8MB)) ? 1 : 0) : 0;
     int b = mb->mbCabacUp ? (((mb->mbCabacUp->mbType != I4MB) && (mb->mbCabacUp->mbType != I8MB)) ? 1 : 0) : 0;
@@ -1226,7 +1226,7 @@ void readMbTypeCabacSliceI (sMacroBlock* mb, sSyntaxElement* se, sCabacDecode* c
       }
     }
     //}}}
-  else if(slice->sliceType == eSliceSI)  {
+  else if(slice->sliceType == cSlice::eSliceSI)  {
     //{{{  SI-frame
     // special context's for SI4MB
     int a = mb->mbCabacLeft ? ((mb->mbCabacLeft->mbType != SI4MB) ? 1 : 0) : 0;

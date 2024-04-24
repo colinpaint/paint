@@ -458,7 +458,7 @@ namespace {
     sBlockPos *picPos = decoder->picPos;
 
     sMacroBlock* MbP;
-    if ((p->sliceType==eSliceSP)||(p->sliceType==eSliceSI) ) {
+    if ((p->sliceType == cSlice::eSliceSP) || (p->sliceType == cSlice::eSliceSI) ) {
       for (idx = 0; idx < MB_BLOCK_SIZE; ++idx ) {
         getAffNeighbour(mb, edge - 1, idx, decoder->mbSize[eLuma], &pixP);
         blkQ = (int16_t) ((idx & 0xFFFC) + (edge >> 2));
@@ -629,7 +629,7 @@ namespace {
     cDecoder264* decoder = mb->decoder;
     sBlockPos *picPos = decoder->picPos;
 
-    if ((p->sliceType==eSliceSP)||(p->sliceType==eSliceSI) ) {
+    if ((p->sliceType == cSlice::eSliceSP) || (p->sliceType == cSlice::eSliceSI) ) {
       for (idx = 0; idx < MB_BLOCK_SIZE; idx += BLOCK_SIZE) {
         xQ = idx;
         getAffNeighbour(mb, xQ, yQ - 1, decoder->mbSize[eLuma], &pixP);
@@ -747,7 +747,7 @@ namespace {
     int     StrValue, i;
     sBlockPos *picPos = mb->decoder->picPos;
 
-    if ((slice->sliceType==eSliceSP)||(slice->sliceType==eSliceSI) ) {
+    if ((slice->sliceType == cSlice::eSliceSP) || (slice->sliceType == cSlice::eSliceSI) ) {
       // Set strength to either 3 or 4 regardless of pixel position
       StrValue = (edge == 0) ? 4 : 3;
       for (i = 0; i < BLOCK_SIZE; i ++ ) Strength[i] = StrValue;
@@ -760,7 +760,7 @@ namespace {
         MbP = (edge) ? mb : neighbour;
 
         if (edge || MbP->isIntraBlock == false) {
-          if (edge && (slice->sliceType == eSliceP && mb->mbType == PSKIP))
+          if (edge && (slice->sliceType == cSlice::eSliceP && mb->mbType == PSKIP))
             for (i = 0; i < BLOCK_SIZE; i ++ )
               Strength[i] = 0;
           else  if (edge && ((mb->mbType == P16x16)  || (mb->mbType == P16x8))) {
@@ -856,7 +856,7 @@ namespace {
     cSlice* slice = mb->slice;
     sBlockPos *picPos = mb->decoder->picPos;
 
-    if ((slice->sliceType==eSliceSP)||(slice->sliceType==eSliceSI) ) {
+    if ((slice->sliceType == cSlice::eSliceSP) || (slice->sliceType == cSlice::eSliceSI) ) {
       // Set strength to either 3 or 4 regardless of pixel position
       StrValue = (edge == 0 && (((p->picStructure==eFrame)))) ? 4 : 3;
       for (i = 0; i < BLOCK_SIZE; i++)
@@ -869,7 +869,7 @@ namespace {
         sMacroBlock* neighbor = get_non_aff_neighbour_luma(mb, 0, yQ);
         MbP = (edge) ? mb : neighbor;
         if (edge || MbP->isIntraBlock == false) {
-          if (edge && (slice->sliceType == eSliceP && mb->mbType == PSKIP))
+          if (edge && (slice->sliceType == cSlice::eSliceP && mb->mbType == PSKIP))
             for (i = 0; i < BLOCK_SIZE; i ++)
               Strength[i] = 0;
           else if (edge && ((mb->mbType == P16x16)  || (mb->mbType == P8x16))) {
@@ -1437,15 +1437,15 @@ namespace {
       // Vertical deblocking
       for (edge = 0; edge < 4 ; ++edge ) {
         // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
-        if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+        if (mb->codedBlockPattern == 0 && (slice->sliceType == cSlice::eSliceP || slice->sliceType == cSlice::eSliceB)) {
           if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc != YUV444)
             continue;
           else if (edge > 0) {
-            if ((mb->mbType == PSKIP && slice->sliceType == eSliceP) ||
+            if ((mb->mbType == PSKIP && slice->sliceType == cSlice::eSliceP) ||
                 (mb->mbType == P16x16) || (mb->mbType == P16x8))
               continue;
             else if ((edge & 0x01) && ((mb->mbType == P8x16) ||
-                     (slice->sliceType == eSliceB &&
+                     (slice->sliceType == cSlice::eSliceB &&
                       mb->mbType == BSKIP_DIRECT &&
                       activeSps->isDirect8x8inference)))
               continue;
@@ -1481,13 +1481,13 @@ namespace {
       // horizontal deblocking
       for (edge = 0; edge < 4 ; ++edge ) {
         // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
-        if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+        if (mb->codedBlockPattern == 0 && (slice->sliceType == cSlice::eSliceP || slice->sliceType == cSlice::eSliceB)) {
           if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc==YUV420)
             continue;
           else if (edge > 0) {
-            if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
+            if (((mb->mbType == PSKIP && slice->sliceType == cSlice::eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
               continue;
-            else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
+            else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == cSlice::eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
               continue;
             }
           }
@@ -1593,17 +1593,17 @@ namespace {
       // Vertical deblocking
       for (edge = 0; edge < 4 ; ++edge ) {
         // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
-        if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+        if (mb->codedBlockPattern == 0 && (slice->sliceType == cSlice::eSliceP || slice->sliceType == cSlice::eSliceB)) {
           if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc != YUV444)
             continue;
           else if (edge > 0) {
-            if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) ||
+            if (((mb->mbType == PSKIP && slice->sliceType == cSlice::eSliceP) ||
                  (mb->mbType == P16x16) ||
                  (mb->mbType == P16x8)))
               continue;
             else if ((edge & 0x01) &&
                      ((mb->mbType == P8x16) ||
-                     (slice->sliceType == eSliceB &&
+                     (slice->sliceType == cSlice::eSliceB &&
                       mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
               continue;
             }
@@ -1617,16 +1617,16 @@ namespace {
       // horizontal deblocking
       for (edge = 0; edge < 4 ; ++edge ) {
         // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
-        if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+        if (mb->codedBlockPattern == 0 && (slice->sliceType == cSlice::eSliceP || slice->sliceType == cSlice::eSliceB)) {
           if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc==YUV420)
             continue;
           else if (edge > 0) {
-            if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) ||
+            if (((mb->mbType == PSKIP && slice->sliceType == cSlice::eSliceP) ||
                  (mb->mbType == P16x16) || (mb->mbType == P8x16)))
               continue;
             else if ((edge & 0x01) &&
                      ((mb->mbType == P16x8) ||
-                       (slice->sliceType == eSliceB &&
+                       (slice->sliceType == cSlice::eSliceB &&
                         mb->mbType == BSKIP_DIRECT &&
                         activeSps->isDirect8x8inference)))
               continue;
@@ -1688,13 +1688,13 @@ namespace {
       // Vertical deblocking
       for (edge = 0; edge < 4 ; ++edge ) {
         // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
-        if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+        if (mb->codedBlockPattern == 0 && (slice->sliceType == cSlice::eSliceP || slice->sliceType == cSlice::eSliceB)) {
           if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc != YUV444)
             continue;
           else if (edge > 0) {
-            if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P16x8)))
+            if (((mb->mbType == PSKIP && slice->sliceType == cSlice::eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P16x8)))
               continue;
-            else if ((edge & 0x01) && ((mb->mbType == P8x16) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
+            else if ((edge & 0x01) && ((mb->mbType == P8x16) || (slice->sliceType == cSlice::eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
               continue;
             }
           }
@@ -1724,13 +1724,13 @@ namespace {
       // horizontal deblocking
       for (edge = 0; edge < 4 ; ++edge ) {
         // If codedBlockPattern == 0 then deblocking for some macroBlock types could be skipped
-        if (mb->codedBlockPattern == 0 && (slice->sliceType == eSliceP || slice->sliceType == eSliceB)) {
+        if (mb->codedBlockPattern == 0 && (slice->sliceType == cSlice::eSliceP || slice->sliceType == cSlice::eSliceB)) {
           if (filterNon8x8LumaEdgesFlag[edge] == 0 && activeSps->chromaFormatIdc==YUV420)
             continue;
           else if (edge > 0) {
-            if (((mb->mbType == PSKIP && slice->sliceType == eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
+            if (((mb->mbType == PSKIP && slice->sliceType == cSlice::eSliceP) || (mb->mbType == P16x16) || (mb->mbType == P8x16)))
               continue;
-            else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
+            else if ((edge & 0x01) && ((mb->mbType == P16x8) || (slice->sliceType == cSlice::eSliceB && mb->mbType == BSKIP_DIRECT && activeSps->isDirect8x8inference)))
               continue;
             }
           }

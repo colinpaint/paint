@@ -804,8 +804,8 @@ namespace {
 
     int qp_per, qp_rem;
     cDecoder264* decoder = mb->decoder;
-    int smb = ((decoder->coding.sliceType == eSliceSP) && (mb->isIntraBlock == false)) ||
-               (decoder->coding.sliceType == eSliceSI && mb->mbType == SI4MB);
+    int smb = ((decoder->coding.sliceType == cSlice::eSliceSP) && (mb->isIntraBlock == false)) ||
+               (decoder->coding.sliceType == cSlice::eSliceSI && mb->mbType == SI4MB);
 
     int qp_per_uv[2];
     int qp_rem_uv[2];
@@ -1681,8 +1681,8 @@ namespace {
     sDataPartition* dataPartition = NULL;
     const uint8_t* dpMap = kSyntaxElementToDataPartitionIndex[slice->dataPartitionMode];
     cDecoder264* decoder = mb->decoder;
-    int smb = ((decoder->coding.sliceType == eSliceSP) && (mb->isIntraBlock == false)) ||
-              ((decoder->coding.sliceType == eSliceSI) && (mb->mbType == SI4MB));
+    int smb = ((decoder->coding.sliceType == cSlice::eSliceSP) && (mb->isIntraBlock == false)) ||
+              ((decoder->coding.sliceType == cSlice::eSliceSI) && (mb->mbType == SI4MB));
 
     int uv;
     int qp_per_uv[2];

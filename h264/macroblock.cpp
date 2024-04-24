@@ -750,7 +750,7 @@ namespace {
     int i = 0, j = 0, k;
 
     cSlice* slice = mb->slice;
-    int smb = slice->sliceType == eSliceSP && (mb->isIntraBlock == false);
+    int smb = slice->sliceType == cSlice::eSliceSP && (mb->isIntraBlock == false);
 
     setChromaVector (mb);
 
@@ -784,7 +784,7 @@ namespace {
   int mbPredPinter16x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
     cSlice* slice = mb->slice;
-    int smb = (slice->sliceType == eSliceSP);
+    int smb = (slice->sliceType == cSlice::eSliceSP);
 
     setChromaVector(mb);
     performMotionCompensation (mb, plane, picture, mb->b8pdir[0], 0, 0, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -800,7 +800,7 @@ namespace {
   int mbPredPinter16x8 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
     cSlice* slice = mb->slice;
-    int smb = (slice->sliceType == eSliceSP);
+    int smb = (slice->sliceType == cSlice::eSliceSP);
 
     setChromaVector (mb);
 
@@ -818,7 +818,7 @@ namespace {
   int mbPredPinter8x16 (sMacroBlock* mb, eColorPlane plane, sPicture* picture) {
 
     cSlice* slice = mb->slice;
-    int smb = (slice->sliceType == eSliceSP);
+    int smb = (slice->sliceType == cSlice::eSliceSP);
 
     setChromaVector (mb);
 
@@ -2162,7 +2162,7 @@ namespace {
 
           // !! KS: not sure if the following is still correct...
           ts = ls = 0;   // Check to see if the neighboring block is SI
-          if (slice->sliceType == eSliceSI) { // need support for MBINTLC1
+          if (slice->sliceType == cSlice::eSliceSI) { // need support for MBINTLC1
             if (left_block.ok)
               if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
                 ls = 1;
@@ -2236,7 +2236,7 @@ namespace {
 
           int ts = 0;
           int ls = 0;   // Check to see if the neighboring block is SI
-          if (slice->sliceType == eSliceSI) {
+          if (slice->sliceType == cSlice::eSliceSI) {
             //{{{  need support for MBINTLC1
             if (left_block.ok)
               if (slice->siBlock [picPos[left_block.mbIndex].y][picPos[left_block.mbIndex].x])
@@ -2443,7 +2443,7 @@ namespace {
     static const char b_v2b8 [14] = {0, 4, 4, 4, 5, 6, 5, 6, 5, 6, 7, 7, 7, IBLOCK};
     static const char b_v2pd [14] = {2, 0, 1, 2, 0, 0, 1, 1, 2, 2, 0, 1, 2, -1};
 
-    if (slice->sliceType == eSliceB) {
+    if (slice->sliceType == cSlice::eSliceB) {
       mb->b8mode[i] = b_v2b8[value];
       mb->b8pdir[i] = b_v2pd[value];
       }
@@ -4744,7 +4744,7 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   cDecoder264* decoder = mb->decoder;
   cSlice* slice = mb->slice;
 
-  int qp = (slice->sliceType == eSliceSI) ? slice->qs : slice->qp;
+  int qp = (slice->sliceType == cSlice::eSliceSI) ? slice->qs : slice->qp;
   int qp_per = decoder->qpPerMatrix[qp];
   int qp_rem = decoder->qpRemMatrix[qp];
   int qp_per_sp = decoder->qpPerMatrix[slice->qs];
@@ -4757,8 +4757,8 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
   int** cof = slice->cof[plane];
   int max_imgpel_value = decoder->coding.maxPelValueComp[plane];
 
-  const int (*InvLevelScale4x4)[4] = kDequantCoef[qp_rem];
-  const int (*InvLevelScale4x4SP)[4] = kDequantCoef[qp_rem_sp];
+  const int (*InvLevelScale4x4)[4] = cSlice::kDequantCoef[qp_rem];
+  const int (*InvLevelScale4x4SP)[4] = cSlice::kDequantCoef[qp_rem_sp];
 
   int** PBlock;
   getMem2Dint (&PBlock, MB_BLOCK_SIZE, MB_BLOCK_SIZE);
@@ -4771,12 +4771,12 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
 
   forward4x4 (PBlock, PBlock, 0, 0);
 
-  if (slice->spSwitch || slice->sliceType == eSliceSI) {
+  if (slice->spSwitch || slice->sliceType == cSlice::eSliceSI) {
     for (int j = 0; j < BLOCK_SIZE;++j)
       for (int i = 0; i < BLOCK_SIZE;++i) {
         // recovering coefficient since they are already dequantized earlier
         int icof = (cof[joff + j][ioff + i] >> qp_per) / InvLevelScale4x4[j][i];
-        int ilev  = rshift_rnd_sf (iabs(PBlock[j][i]) * kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
+        int ilev  = rshift_rnd_sf (iabs(PBlock[j][i]) * cSlice::kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
         ilev  = isignab (ilev, PBlock[j][i]) + icof;
         cof[joff + j][ioff + i] = ilev * InvLevelScale4x4SP[j][i] << qp_per_sp;
         }
@@ -4786,8 +4786,8 @@ void itransSp (sMacroBlock* mb, eColorPlane plane, int ioff, int joff) {
       for (int i = 0; i < BLOCK_SIZE; ++i) {
         // recovering coefficient since they are already dequantized earlier
         int icof = (cof[joff + j][ioff + i] >> qp_per) / InvLevelScale4x4[j][i];
-        int ilev = PBlock[j][i] + ((icof * InvLevelScale4x4[j][i] * kQuantA[j][i] <<  qp_per) >> 6);
-        ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
+        int ilev = PBlock[j][i] + ((icof * InvLevelScale4x4[j][i] * cSlice::kQuantA[j][i] <<  qp_per) >> 6);
+        ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * cSlice::kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
         cof[joff + j][ioff + i] = ilev * InvLevelScale4x4SP[j][i] << qp_per_sp;
         }
 
@@ -4821,7 +4821,7 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
   int qp_rem_sp = decoder->qpRemMatrix[slice->qs < 0 ? slice->qs : QP_SCALE_CR[slice->qs]];
   int q_bits_sp = Q_BITS + qp_per_sp;
 
-  if (slice->sliceType == eSliceSI) {
+  if (slice->sliceType == cSlice::eSliceSI) {
     qp_per = qp_per_sp;
     qp_rem = qp_rem_sp;
     }
@@ -4842,15 +4842,15 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
   mp1[2] = PBlock[0][0] + PBlock[4][0] - PBlock[0][4] - PBlock[4][4];
   mp1[3] = PBlock[0][0] - PBlock[4][0] - PBlock[0][4] + PBlock[4][4];
 
-  if (slice->spSwitch || slice->sliceType == eSliceSI) {
+  if (slice->spSwitch || slice->sliceType == cSlice::eSliceSI) {
     for (int n2 = 0; n2 < 2; ++n2 )
       for (int n1 = 0; n1 < 2; ++n1 ) {
         // quantization fo predicted block
-        int ilev = rshift_rnd_sf (iabs (mp1[n1+n2*2]) * kQuantCoef[qp_rem_sp][0][0], q_bits_sp + 1);
+        int ilev = rshift_rnd_sf (iabs (mp1[n1+n2*2]) * cSlice::kQuantCoef[qp_rem_sp][0][0], q_bits_sp + 1);
         // addition
         ilev = isignab (ilev, mp1[n1+n2*2]) + cof[n2<<2][n1<<2];
         // dequanti  zation
-        mp1[n1+n2*2] = ilev * kDequantCoef[qp_rem_sp][0][0] << qp_per_sp;
+        mp1[n1+n2*2] = ilev * cSlice::kDequantCoef[qp_rem_sp][0][0] << qp_per_sp;
         }
 
     for (int n2 = 0; n2 < decoder->mbCrSizeY; n2 += BLOCK_SIZE)
@@ -4858,21 +4858,21 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
         for (int j = 0; j < BLOCK_SIZE; ++j)
           for (int i = 0; i < BLOCK_SIZE; ++i) {
             // recovering coefficient since they are already dequantized earlier
-            cof[n2 + j][n1 + i] = (cof[n2 + j][n1 + i] >> qp_per) / kDequantCoef[qp_rem][j][i];
+            cof[n2 + j][n1 + i] = (cof[n2 + j][n1 + i] >> qp_per) / cSlice::kDequantCoef[qp_rem][j][i];
             // quantization of the predicted block
-            int ilev = rshift_rnd_sf (iabs(PBlock[n2 + j][n1 + i]) * kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
+            int ilev = rshift_rnd_sf (iabs(PBlock[n2 + j][n1 + i]) * cSlice::kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
             // addition of the residual
             ilev = isignab (ilev,PBlock[n2 + j][n1 + i]) + cof[n2 + j][n1 + i];
             // Inverse quantization
-            cof[n2 + j][n1 + i] = ilev * kDequantCoef[qp_rem_sp][j][i] << qp_per_sp;
+            cof[n2 + j][n1 + i] = ilev * cSlice::kDequantCoef[qp_rem_sp][j][i] << qp_per_sp;
             }
     }
   else {
     for (int n2 = 0; n2 < 2; ++n2 )
       for (int n1 = 0; n1 < 2; ++n1 ) {
-        int ilev = mp1[n1+n2*2] + (((cof[n2<<2][n1<<2] * kDequantCoef[qp_rem][0][0] * kQuantA[0][0]) << qp_per) >> 5);
-        ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * kQuantCoef[qp_rem_sp][0][0], q_bits_sp + 1);
-        mp1[n1+n2*2] = ilev * kDequantCoef[qp_rem_sp][0][0] << qp_per_sp;
+        int ilev = mp1[n1+n2*2] + (((cof[n2<<2][n1<<2] * cSlice::kDequantCoef[qp_rem][0][0] * cSlice::kQuantA[0][0]) << qp_per) >> 5);
+        ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * cSlice::kQuantCoef[qp_rem_sp][0][0], q_bits_sp + 1);
+        mp1[n1+n2*2] = ilev * cSlice::kDequantCoef[qp_rem_sp][0][0] << qp_per_sp;
         }
 
     for (int n2 = 0; n2 < decoder->mbCrSizeY; n2 += BLOCK_SIZE)
@@ -4880,12 +4880,12 @@ void itransSpChroma (sMacroBlock* mb, int uv) {
         for (int j = 0; j < BLOCK_SIZE; ++j)
           for (int i = 0; i < BLOCK_SIZE; ++i) {
             // recovering coefficient since they are already dequantized earlier
-            int icof = (cof[n2 + j][n1 + i] >> qp_per) / kDequantCoef[qp_rem][j][i];
+            int icof = (cof[n2 + j][n1 + i] >> qp_per) / cSlice::kDequantCoef[qp_rem][j][i];
             // dequantization and addition of the predicted block
-            int ilev = PBlock[n2 + j][n1 + i] + ((icof * kDequantCoef[qp_rem][j][i] * kQuantA[j][i] << qp_per) >> 6);
+            int ilev = PBlock[n2 + j][n1 + i] + ((icof * cSlice::kDequantCoef[qp_rem][j][i] * cSlice::kQuantA[j][i] << qp_per) >> 6);
             // quantization and dequantization
-            ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
-            cof[n2 + j][n1 + i] = ilev * kDequantCoef[qp_rem_sp][j][i] << qp_per_sp;
+            ilev = isign (ilev) * rshift_rnd_sf (iabs(ilev) * cSlice::kQuantCoef[qp_rem_sp][j][i], q_bits_sp);
+            cof[n2 + j][n1 + i] = ilev * cSlice::kDequantCoef[qp_rem_sp][j][i] << qp_per_sp;
             }
     }
 
