@@ -213,171 +213,171 @@ public:
   bool endMacroBlockDecode (int eosBit);
 
   //{{{  public vars
-  cDecoder264* decoder;
+  cDecoder264* decoder = nullptr;
 
-  cPps* activePps;
-  cSps* activeSps;
-  cDpb* dpb;
+  cPps* activePps = nullptr;
+  cSps* activeSps = nullptr;
+  cDpb* dpb = nullptr;
 
-  eSliceType sliceType;
+  eSliceType sliceType = eI;
 
-  int isIDR;
-  int idrPicId;
-  int refId;
-  int transform8x8Mode;
-  bool chroma444notSeparate; // indicates chroma 4:4:4 coding with isSeperateColourPlane equal to zero
+  int isIDR = 0;
+  int idrPicId = 0;
+  int refId = 0;
+  int transform8x8Mode = 0;
+  bool chroma444notSeparate = false; // indicates chroma 4:4:4 coding with isSeperateColourPlane equal to zero
 
-  int topPoc;   // poc for this top field
-  int botPoc;   // poc of bottom field of frame
-  int framePoc; // poc of this frame
+  int topPoc = 0;   // poc for this top field
+  int botPoc = 0;   // poc of bottom field of frame
+  int framePoc = 0; // poc of this frame
 
   // pocMode 0
-  uint32_t picOrderCountLsb;
-  int deltaPicOrderCountBot;
-  signed int PicOrderCntMsb;
+  uint32_t picOrderCountLsb = 0;
+  int deltaPicOrderCountBot = 0;
+  signed int PicOrderCntMsb = 0;
 
   // pocMode 1
-  int deltaPicOrderCount[2];
-  uint32_t AbsFrameNum;
-  int thisPoc;
+  int deltaPicOrderCount[2] = {0};
+  uint32_t AbsFrameNum = 0;
+  int thisPoc = 0;
 
   // information need to move to slice
-  uint32_t  mbIndex;
-  uint32_t  numDecodedMbs;
+  uint32_t mbIndex = 0;
+  uint32_t numDecodedMbs = 0;
 
-  int16_t  curSliceIndex;
-  int codCount;    // Current count of number of skipped macroBlocks in a row
-  int allrefzero;
+  int16_t curSliceIndex = 0;
+  int codCount = 0;    // Current count of number of skipped macroBlocks in a row
+  int allrefzero = 0;
 
-  int mbAffFrame;
-  int directSpatialMvPredFlag; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
-  int numRefIndexActive[2];    // number of ok list references
+  int mbAffFrame = 0;
+  int directSpatialMvPredFlag = 0; // Indicator for direct mode type (1 for Spatial, 0 for Temporal)
+  int numRefIndexActive[2] = {0};    // number of ok list references
 
-  int mError;   // 0 if the dataPartitons[0] contains valid information
-  int qp;
-  int sliceQpDelta;
-  int qs;
-  int sliceQsDelta;
+  int mError = 0;   // 0 if the dataPartitons[0] contains valid information
+  int qp = 0;
+  int sliceQpDelta = 0;
+  int qs = 0;
+  int sliceQsDelta = 0;
 
-  int cabacInitIdc;     // cabac model number
-  uint32_t frameNum;
+  int cabacInitIdc = 0;     // cabac model number
+  uint32_t frameNum = 0;
 
-  ePicStructure picStructure;
-  uint32_t fieldPic;
-  uint8_t botField;
-  int startMbNum;   // MUST be set by NAL even in case of mError == 1
-  int endMbNumPlus1;
+  ePicStructure picStructure = eFrame;
+  uint32_t fieldPic = 0;
+  uint8_t botField = 0;
+  int startMbNum = 0;   // MUST be set by NAL even in case of mError == 1
+  int endMbNumPlus1 = 0;
 
-  int curHeader;
-  int nextHeader;
-  int lastDquant;
+  int curHeader = 0;
+  int nextHeader = 0;
+  int lastDquant = 0;
 
   // slice header information;
-  int colourPlaneId;             // colourPlaneId of the current coded slice
-  int redundantPicCount;
-  int spSwitch;                  // 1 for switching sp, 0 for normal sp
-  int sliceGroupChangeCycle;
-  int redundantSliceRefIndex;    // reference index of redundant slice
-  int noOutputPriorPicFlag;
-  int longTermRefFlag;
-  int adaptRefPicBufFlag;
-  sDecodedRefPicMark* decRefPicMarkBuffer; // stores memory management control operations
+  int colourPlaneId = 0;             // colourPlaneId of the current coded slice
+  int redundantPicCount = 0;
+  int spSwitch = 0;                  // 1 for switching sp, 0 for normal sp
+  int sliceGroupChangeCycle = 0;
+  int redundantSliceRefIndex = 0;    // reference index of redundant slice
+  int noOutputPriorPicFlag = 0;
+  int longTermRefFlag = 0;
+  int adaptRefPicBufFlag = 0;
+  sDecodedRefPicMark* decRefPicMarkBuffer = nullptr; // stores memory management control operations
 
-  char listXsize[6];
-  sPicture** listX[6];
+  char listXsize[6] = {0};
+  sPicture** listX[6] = {nullptr};
 
-  uint32_t          maxDataPartitions;
-  int               dataPartitionMode;
-  sDataPartition*   dataPartitionArray;
-  sMotionContexts*  motionContexts;  // pointer to struct of context models for use in eCabac
-  sTextureContexts* textureContexts; // pointer to struct of context models for use in eCabac
+  uint32_t          maxDataPartitions = 0;
+  int               dataPartitionMode = 0;
+  sDataPartition*   dataPartitionArray = nullptr;
+  sMotionContexts*  motionContexts = nullptr;  // pointer to struct of context models for use in eCabac
+  sTextureContexts* textureContexts = nullptr; // pointer to struct of context models for use in eCabac
 
-  int mvscale[6][MAX_REFERENCE_PICTURES];
-  int refPicReorderFlag[2];
-  int* modPicNumsIdc[2];
-  int* absDiffPicNumMinus1[2];
-  int* longTermPicIndex[2];
+  int mvscale[6][MAX_REFERENCE_PICTURES] = {0};
+  int refPicReorderFlag[2] = {0};
+  int* modPicNumsIdc[2] = {nullptr};
+  int* absDiffPicNumMinus1[2] = {nullptr};
+  int* longTermPicIndex[2] = {nullptr};
 
-  int16_t deblockFilterDisableIdc; // Disable deblocking filter on slice
-  int16_t deblockFilterC0Offset;   // Alpha and C0 offset for filtering slice
-  int16_t deblockFilterBetaOffset; // Beta offset for filtering slice
+  int16_t deblockFilterDisableIdc = 0; // Disable deblocking filter on slice
+  int16_t deblockFilterC0Offset = 0;   // Alpha and C0 offset for filtering slice
+  int16_t deblockFilterBetaOffset = 0; // Beta offset for filtering slice
 
-  int ppsId;             // ID of picture parameter set the slice is referring to
-  int noDataPartitionB;  // non-zero, if data dataPartition B is lost
-  int noDataPartitionC;  // non-zero, if data dataPartition C is lost
+  int ppsId = 0;             // ID of picture parameter set the slice is referring to
+  int noDataPartitionB = 0;  // non-zero, if data dataPartition B is lost
+  int noDataPartitionC = 0;  // non-zero, if data dataPartition C is lost
 
-  bool isResetCoef;
-  bool isResetCoefCr;
-  sPixel*** mbPred;
-  sPixel*** mbRec;
-  int*** mbRess;
-  int*** cof;
-  int*** fcf;
-  int cofu[16];
+  bool isResetCoef = false;
+  bool isResetCoefCr =false;
+  sPixel*** mbPred = nullptr;
+  sPixel*** mbRec = nullptr;
+  int*** mbRess = nullptr;
+  int*** cof = nullptr;
+  int*** fcfv = nullptr;
+  int cofu[16] = {0};
 
   int** tempRes;
-  sPixel** tempBlockL0;
-  sPixel** tempBlockL1;
-  sPixel** tempBlockL2;
-  sPixel** tempBlockL3;
+  sPixel** tempBlockL0 = nullptr;
+  sPixel** tempBlockL1 = nullptr;
+  sPixel** tempBlockL2 = nullptr;
+  sPixel** tempBlockL3 = nullptr;
 
   // Scaling matrix info
-  int InvLevelScale4x4_Intra[3][6][4][4];
-  int InvLevelScale4x4_Inter[3][6][4][4];
-  int InvLevelScale8x8_Intra[3][6][8][8];
-  int InvLevelScale8x8_Inter[3][6][8][8];
+  int InvLevelScale4x4_Intra[3][6][4][4] = {0};
+  int InvLevelScale4x4_Inter[3][6][4][4] = {0};
+  int InvLevelScale8x8_Intra[3][6][8][8] = {0};
+  int InvLevelScale8x8_Inter[3][6][8][8] = {0};
 
   int* qmatrix[12];
 
   // Cabac
-  int coeff[64]; // one more for EOB
-  int coefCount;
-  int pos;
+  int coeff[64] = {0}; // one more for EOB
+  int coefCount = 0;
+  int pos = 0;
 
   // weighted pred
-  uint16_t hasWeightedPred;
-  uint16_t weightedBiPredIdc;
-  uint16_t lumaLog2weightDenom;
-  uint16_t chromaLog2weightDenom;
-  int***  weightedPredWeight;   // weight in [list][index][component] order
-  int***  weightedPredOffset;   // offset in [list][index][component] order
-  int**** weightedBiPredWeight;  // weight in [list][fw_index][bw_index][component] order
-  int16_t wpRoundLuma;
-  int16_t wpRoundChroma;
+  uint16_t hasWeightedPred = 0;
+  uint16_t weightedBiPredIdc = 0;
+  uint16_t lumaLog2weightDenom = 0;
+  uint16_t chromaLog2weightDenom = 0;
+  int***  weightedPredWeight = nullptr;   // weight in [list][index][component] order
+  int***  weightedPredOffset = nullptr;   // offset in [list][index][component] order
+  int**** weightedBiPredWeight = nullptr;  // weight in [list][fw_index][bw_index][component] order
+  int16_t wpRoundLuma = 0;
+  int16_t wpRoundChroma = 0;
 
   // for signalling to the neighbour logic that this is a deblocker call
   int maxMbVmvR;   // maximum vertical motion vector range in luma quarter pixel units for the current levelIdc
   int refFlag[17]; // 0: i-th previous frame is incorrect
 
-  int ercMvPerMb;
-  sMacroBlock* mbData;
-  sPicture* picture;
+  int ercMvPerMb = 0;
+  sMacroBlock* mbData = nullptr;
+  sPicture* picture = nullptr;
 
-  int** siBlock;
-  uint8_t** predMode;
-  char*  intraBlock;
-  char chromaVectorAdjust[6][32];
+  int** siBlock = nullptr;
+  uint8_t** predMode = nullptr;
+  char*  intraBlock = nullptr;
+  char chromaVectorAdjust[6][32] = {0};
   //}}}
   //{{{  public c style virtual functionss
-  int  (*nalStartCode) (cSlice*, int);
-  void (*nalReadMotion) (sMacroBlock*);
+  int  (*nalStartCode) (cSlice*, int) = nullptr;
+  void (*nalReadMotion) (sMacroBlock*) = nullptr;
 
-  void (*initLists) (cSlice*);
-  void (*readCBPcoeffs) (sMacroBlock*);
-  int  (*decodeComponenet) (sMacroBlock*, eColorPlane, sPixel**, sPicture*);
-  void (*readMacroBlock) (sMacroBlock*);
-  void (*interpretMbMode) (sMacroBlock*);
+  void (*initLists) (cSlice*) = nullptr;
+  void (*readCBPcoeffs) (sMacroBlock*) = nullptr;
+  int  (*decodeComponenet) (sMacroBlock*, eColorPlane, sPixel**, sPicture*) = nullptr;
+  void (*readMacroBlock) (sMacroBlock*) = nullptr;
+  void (*interpretMbMode) (sMacroBlock*) = nullptr;
 
-  void (*intraPredChroma) (sMacroBlock*);
-  int  (*intraPred4x4) (sMacroBlock*, eColorPlane, int, int, int, int);
-  int  (*intraPred8x8) (sMacroBlock*, eColorPlane, int, int);
-  int  (*intraPred16x16) (sMacroBlock*, eColorPlane plane, int);
+  void (*intraPredChroma) (sMacroBlock*) = nullptr;
+  int  (*intraPred4x4) (sMacroBlock*, eColorPlane, int, int, int, int) = nullptr;
+  int  (*intraPred8x8) (sMacroBlock*, eColorPlane, int, int) = nullptr;
+  int  (*intraPred16x16) (sMacroBlock*, eColorPlane plane, int) = nullptr;
 
-  void (*updateDirectMv) (sMacroBlock*);
-  void (*readCoef4x4cavlc) (sMacroBlock*, int, int, int, int[16], int[16], int*);
+  void (*updateDirectMv) (sMacroBlock*) = nullptr;
+  void (*readCoef4x4cavlc) (sMacroBlock*, int, int, int, int[16], int[16], int*) = nullptr;
 
-  void (*infoCbpIntra) (int, int, int*, int*);
-  void (*infoCbpInter) (int, int, int*, int*);
+  void (*infoCbpIntra) (int, int, int*, int*) = nullptr;
+  void (*infoCbpInter) (int, int, int*, int*) = nullptr;
   //}}}
 
 private:

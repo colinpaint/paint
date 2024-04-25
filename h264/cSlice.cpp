@@ -1211,7 +1211,7 @@ namespace {
         mb->readCompCoef8x8cavlc (mb, PLANE_Y, InvLevelScale8x8, qp_per, codedBlockPattern, decoder->nzCoeff[mb_nr][PLANE_Y]);
       }
     else
-      memset(decoder->nzCoeff[mb_nr][0][0], 0, BLOCK_PIXELS * sizeof(uint8_t));
+      memset (decoder->nzCoeff[mb_nr][0][0], 0, BLOCK_PIXELS * sizeof(uint8_t));
     }
   //}}}
   //{{{
@@ -1356,7 +1356,7 @@ namespace {
         mb->readCompCoef8x8cavlc (mb, PLANE_Y, InvLevelScale8x8, qp_per, codedBlockPattern, decoder->nzCoeff[mb_nr][PLANE_Y]);
       }
     else
-      memset(decoder->nzCoeff[mb_nr][0][0], 0, BLOCK_PIXELS * sizeof(uint8_t));
+      memset (decoder->nzCoeff[mb_nr][0][0], 0, BLOCK_PIXELS * sizeof(uint8_t));
 
     //{{{  chroma DC coeff
     if (codedBlockPattern>15) {
@@ -1620,7 +1620,7 @@ namespace {
         mb->readCompCoef8x8cavlc (mb, PLANE_Y, InvLevelScale8x8, qp_per, codedBlockPattern, decoder->nzCoeff[mb_nr][PLANE_Y]);
     }
     else
-      memset(decoder->nzCoeff[mb_nr][0][0], 0, BLOCK_PIXELS * sizeof(uint8_t));
+      memset (decoder->nzCoeff[mb_nr][0][0], 0, BLOCK_PIXELS * sizeof(uint8_t));
 
     for (uv = PLANE_U; uv <= PLANE_V; ++uv ) {
       //{{{  16x16DC Luma_Add
@@ -1800,7 +1800,7 @@ namespace {
         mb->readCompCoef8x8cavlc (mb, PLANE_Y, InvLevelScale8x8, qp_per, codedBlockPattern, decoder->nzCoeff[mb_nr][PLANE_Y]);
       }
     else
-      memset(decoder->nzCoeff[mb_nr][0][0], 0, BLOCK_PIXELS * sizeof(uint8_t));
+      memset (decoder->nzCoeff[mb_nr][0][0], 0, BLOCK_PIXELS * sizeof(uint8_t));
 
     //{{{  chroma DC coeff
     if (codedBlockPattern>15) {
@@ -1841,7 +1841,7 @@ namespace {
     //}}}
     //{{{  chroma AC coeff, all zero fram start_scan
     if (codedBlockPattern<=31)
-      memset(decoder->nzCoeff [mb_nr ][1][0], 0, 2 * BLOCK_PIXELS * sizeof(uint8_t));
+      memset (decoder->nzCoeff [mb_nr ][1][0], 0, 2 * BLOCK_PIXELS * sizeof(uint8_t));
     else {
       if (mb->isLossless == false) {
         for (b8=0; b8 < decoder->coding.numBlock8x8uv; ++b8) {
@@ -1895,11 +1895,11 @@ namespace {
   //}}}
   }
 
+// static
 //{{{
 cSlice* cSlice::allocSlice() {
 
   cSlice* slice = new cSlice();
-  memset (slice, 0, sizeof(cSlice));
 
   // create all context models
   slice->motionContexts = (sMotionContexts*)calloc (1, sizeof(sMotionContexts));
@@ -1938,6 +1938,8 @@ cSlice* cSlice::allocSlice() {
   return slice;
   }
 //}}}
+
+// public
 //{{{
 cSlice::~cSlice() {
 
