@@ -1251,12 +1251,8 @@ int cDecoder264::decodeFrame() {
     cSlice* slice = sliceList[sliceIndex];
     curHeader = slice->curHeader;
     initSlice (slice);
-    if (slice->activePps->entropyCoding == eCabac) {
-      //{{{  init cabac
+    if (slice->activePps->entropyCoding == eCabac) 
       slice->initCabacContexts();
-      slice->lastDquant = 0; 
-      }
-      //}}}
     if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == cSlice::eB)) ||
         (slice->activePps->hasWeightedPred && (slice->sliceType != cSlice::eI)))
       slice->fillWeightedPredParam();
