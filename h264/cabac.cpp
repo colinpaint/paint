@@ -1007,11 +1007,6 @@ namespace {
   }
 
 //{{{
-void cabacNewSlice (cSlice* slice) {
-  slice->lastDquant = 0;
-  }
-//}}}
-//{{{
 int cabacStartCode (cSlice* slice, int eosBit) {
 
   uint32_t bit;

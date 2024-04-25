@@ -4,7 +4,6 @@
 #define IS_I16MB(MB) (((MB)->mbType == I16MB) || ((MB)->mbType == IPCM))
 #define IS_DIRECT(MB) (((MB)->mbType == 0) && (slice->sliceType == cSlice::eB))
 
-void cabacNewSlice (cSlice* slice);
 int cabacStartCode (cSlice* slice, int eos_bit);
 
 void checkNeighbourCabac (sMacroBlock* mb);

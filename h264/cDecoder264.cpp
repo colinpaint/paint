@@ -17,8 +17,8 @@
 using namespace std;
 //}}}
 namespace {
-  const int kSubWidthC[]= { 1, 2, 2, 1 };
-  const int kSubHeightC[]= { 1, 2, 1, 1 };
+  const int kSubWidthC[] = {1, 2, 2, 1};
+  const int kSubHeightC[] = {1, 2, 1, 1};
   //{{{
   void ercWriteMbModeMv (sMacroBlock* mb) {
 
@@ -1254,7 +1254,7 @@ int cDecoder264::decodeFrame() {
     if (slice->activePps->entropyCoding == eCabac) {
       //{{{  init cabac
       slice->initCabacContexts();
-      cabacNewSlice (slice);
+      slice->lastDquant = 0; 
       }
       //}}}
     if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == cSlice::eB)) ||
@@ -2536,9 +2536,6 @@ void cDecoder264::setCodingParam (cSps* sps) {
 //}}}
 //{{{
 void cDecoder264::setFormat (cSps* sps, sFrameFormat* source, sFrameFormat* output) {
-
-  static const int kSubWidthC[4] = { 1, 2, 2, 1};
-  static const int kSubHeightC[4] = { 1, 2, 1, 1};
 
   // source
   //{{{  crop
