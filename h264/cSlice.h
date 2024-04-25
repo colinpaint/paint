@@ -189,13 +189,16 @@ public:
   // pub,iuc members
   ~cSlice();
 
-  void setQuant();
+  void initCabacContexts();
+
   void setReadCbpCavlc();
   void setReadCbpCabac();
+
   void setIntraPredFunctions();
   void setUpdateDirectFunction();
   void setSliceReadFunctions();
 
+  void setQuant();
   void fillWeightedPredParam();
   void resetWeightedPredParam();
 
