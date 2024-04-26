@@ -1966,7 +1966,7 @@ namespace {
 
     // the following line checks both: slice number and if the mb has been decoded
     if (!mb->DeblockCall)
-      if (slice->mbData[mbIndex].sliceNum != mb->sliceNum)
+      if (slice->mbData[mbIndex].sliceIndex != mb->sliceIndex)
         return false;
 
     return true;
@@ -2317,15 +2317,15 @@ namespace {
 
     cSlice* slice = mb->slice;
     sPicMotion** mvInfo = &slice->picture->mvInfo[mb->blockY];
-    int slice_no = slice->curSliceIndex;
+    int sliceIndex = slice->curSliceIndex;
 
     // reset vectors and pred. modes
     for(int j = 0; j < BLOCK_SIZE; ++j) {
       int i = mb->blockX;
-      resetMvInfo (*mvInfo + (i++), slice_no);
-      resetMvInfo (*mvInfo + (i++), slice_no);
-      resetMvInfo (*mvInfo + (i++), slice_no);
-      resetMvInfo (*(mvInfo++) + i, slice_no);
+      resetMvInfo (*mvInfo + (i++), sliceIndex);
+      resetMvInfo (*mvInfo + (i++), sliceIndex);
+      resetMvInfo (*mvInfo + (i++), sliceIndex);
+      resetMvInfo (*(mvInfo++) + i, sliceIndex);
       }
 
     mb->setReadCompCabac();
@@ -2335,7 +2335,7 @@ namespace {
   //{{{
   void initMacroBlockDirect (sMacroBlock* mb) {
 
-    int slice_no = mb->slice->curSliceIndex;
+    int sliceIndex = mb->slice->curSliceIndex;
     sPicMotion** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
 
     mb->setReadCompCabac();
@@ -2343,10 +2343,10 @@ namespace {
 
     int i = mb->blockX;
     for (int j = 0; j < BLOCK_SIZE; ++j) {
-      (*mvInfo+i)->slice_no = slice_no;
-      (*mvInfo+i+1)->slice_no = slice_no;
-      (*mvInfo+i+2)->slice_no = slice_no;
-      (*(mvInfo++)+i+3)->slice_no = slice_no;
+      (*mvInfo+i)->slice_no = sliceIndex;
+      (*mvInfo+i+1)->slice_no = sliceIndex;
+      (*mvInfo+i+2)->slice_no = sliceIndex;
+      (*(mvInfo++)+i+3)->slice_no = sliceIndex;
       }
     }
   //}}}
@@ -2594,15 +2594,15 @@ namespace {
   void initMacroBlockBasic (sMacroBlock* mb) {
 
     sPicMotion** mvInfo = &mb->slice->picture->mvInfo[mb->blockY];
-    int slice_no = mb->slice->curSliceIndex;
+    int sliceIndex = mb->slice->curSliceIndex;
 
     // reset vectors and pred. modes
     for (int j = 0; j < BLOCK_SIZE; ++j) {
       int i = mb->blockX;
-      resetMvInfoList (*mvInfo + (i++), LIST_1, slice_no);
-      resetMvInfoList (*mvInfo + (i++), LIST_1, slice_no);
-      resetMvInfoList (*mvInfo + (i++), LIST_1, slice_no);
-      resetMvInfoList (*(mvInfo++) + i, LIST_1, slice_no);
+      resetMvInfoList (*mvInfo + (i++), LIST_1, sliceIndex);
+      resetMvInfoList (*mvInfo + (i++), LIST_1, sliceIndex);
+      resetMvInfoList (*mvInfo + (i++), LIST_1, sliceIndex);
+      resetMvInfoList (*(mvInfo++) + i, LIST_1, sliceIndex);
       }
     }
   //}}}
@@ -5291,7 +5291,7 @@ void cSlice::startMacroBlockDecode (sMacroBlock** mb) {
 
   // Save the slice number of this macroBlock. When the macroBlock below
   // is coded it will use this to decide if prediction for above is possible
-  (*mb)->sliceNum = (int16_t)curSliceIndex;
+  (*mb)->sliceIndex = (int16_t)curSliceIndex;
 
   checkNeighbours (*mb);
 

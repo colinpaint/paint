@@ -384,8 +384,8 @@ struct sMacroBlock {
   bool    isVblock;
   int     DeblockCall;
 
-  int16_t sliceNum;
-  char    mError;        // error indicator flag that enables conceal
+  int16_t sliceIndex;
+  char    mError;           // error indicator flag that enables conceal
   char    dplFlag;          // error indicator flag that signals a missing data dataPartition
   int16_t deltaQuant;       // for rate control
 
@@ -629,7 +629,7 @@ public:
   static void error (const std::string& text);
   ~cDecoder264();
 
-  void reset_ecFlags();
+  void resetEcFlags();
   int setEcFlag (int se);
   int getConcealElement (sSyntaxElement* se);
   int fmoGetNextMbIndex (int curMbIndex);

@@ -1055,7 +1055,7 @@ int checkNextMbFieldCabacSliceP (cSlice* slice, sSyntaxElement* se, sDataPartiti
   sMacroBlock* mb = &slice->mbData[slice->mbIndex];
   mb->decoder = slice->decoder;
   mb->slice = slice;
-  mb->sliceNum = slice->curSliceIndex;
+  mb->sliceIndex = slice->curSliceIndex;
   mb->mbField = slice->mbData[slice->mbIndex-1].mbField;
   mb->mbIndexX  = slice->mbIndex;
   mb->listOffset = ((slice->mbAffFrame) && (mb->mbField))? (mb->mbIndexX&0x01) ? 4 : 2 : 0;
@@ -1108,7 +1108,7 @@ int checkNextMbFieldCabacSliceB (cSlice* slice, sSyntaxElement* se, sDataPartiti
   sMacroBlock* mb = &slice->mbData[slice->mbIndex];
   mb->decoder = slice->decoder;
   mb->slice = slice;
-  mb->sliceNum = slice->curSliceIndex;
+  mb->sliceIndex = slice->curSliceIndex;
   mb->mbField = slice->mbData[slice->mbIndex-1].mbField;
   mb->mbIndexX  = slice->mbIndex;
   mb->listOffset = ((slice->mbAffFrame)&&(mb->mbField))? (mb->mbIndexX & 0x01) ? 4 : 2 : 0;

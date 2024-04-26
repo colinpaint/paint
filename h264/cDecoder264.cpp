@@ -317,7 +317,7 @@ cDecoder264::~cDecoder264() {
 //}}}
 
 //{{{
-void cDecoder264::reset_ecFlags () {
+void cDecoder264::resetEcFlags() {
 
   for (int i = 0; i < SE_MAX_ELEMENTS; i++)
     ecFlag[i] = NO_EC;
@@ -333,13 +333,11 @@ int cDecoder264::setEcFlag (int se) {
       ecFlag[SE_PTYPE] = EC_REQ;
     case SE_MBTYPE :
       ecFlag[SE_MBTYPE] = EC_REQ;
-    //{{{
     case SE_REFFRAME :
       ecFlag[SE_REFFRAME] = EC_REQ;
       ecFlag[SE_MVD] = EC_REQ; // set all motion vectors to zero length
-      se = SE_CBP_INTER;      // conceal also Inter texture elements
+      se = SE_CBP_INTER;       // conceal also Inter texture elements
       break;
-    //}}}
 
     //{{{
     case SE_INTRAPREDMODE :
@@ -368,11 +366,9 @@ int cDecoder264::setEcFlag (int se) {
       ecFlag[SE_CHR_DC_INTRA] = EC_REQ;
     case SE_LUM_AC_INTRA :
       ecFlag[SE_LUM_AC_INTRA] = EC_REQ;
-    //{{{
     case SE_CHR_AC_INTRA :
       ecFlag[SE_CHR_AC_INTRA] = EC_REQ;
       break;
-    //}}}
 
     case SE_CBP_INTER :
       ecFlag[SE_CBP_INTER] = EC_REQ;
@@ -382,11 +378,9 @@ int cDecoder264::setEcFlag (int se) {
       ecFlag[SE_CHR_DC_INTER] = EC_REQ;
     case SE_LUM_AC_INTER :
       ecFlag[SE_LUM_AC_INTER] = EC_REQ;
-    //{{{
     case SE_CHR_AC_INTER :
       ecFlag[SE_CHR_AC_INTER] = EC_REQ;
       break;
-    //}}}
 
     //{{{
     case SE_DELTA_QUANT_INTER :
@@ -1251,7 +1245,7 @@ int cDecoder264::decodeFrame() {
     cSlice* slice = sliceList[sliceIndex];
     curHeader = slice->curHeader;
     initSlice (slice);
-    if (slice->activePps->entropyCoding == eCabac) 
+    if (slice->activePps->entropyCoding == eCabac)
       slice->initCabacContexts();
     if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == cSlice::eB)) ||
         (slice->activePps->hasWeightedPred && (slice->sliceType != cSlice::eI)))
@@ -1460,7 +1454,7 @@ void cDecoder264::initPicture (cSlice* slice) {
         //{{{  resetMb
         mb->mError = 1;
         mb->dplFlag = 0;
-        mb->sliceNum = -1;
+        mb->sliceIndex = -1;
         mb++;
         }
         //}}}
@@ -1476,7 +1470,7 @@ void cDecoder264::initPicture (cSlice* slice) {
       //{{{  resetMb
       mb->mError = 1;
       mb->dplFlag = 0;
-      mb->sliceNum = -1;
+      mb->sliceIndex = -1;
       mb++;
       }
       //}}}
