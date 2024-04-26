@@ -1159,27 +1159,32 @@ void cDecoder264::copySliceInfo (cSlice* slice, sOldSlice* oldSlice) {
 int cDecoder264::decodeFrame() {
 
   int ret = 0;
+
   numDecodedMbs = 0;
   picSliceIndex = 0;
   numDecodedSlices = 0;
 
   int curHeader = 0;
   if (newFrame) {
-    // get firstSlice from sliceList;
+    //{{{  get firstSlice from sliceList;
     cSlice* slice = sliceList[picSliceIndex];
     sliceList[picSliceIndex] = nextSlice;
     nextSlice = slice;
     slice = sliceList[picSliceIndex];
+
     useParameterSet (slice);
     initPicture (slice);
     picSliceIndex++;
+
     curHeader = eSOS;
     }
+    //}}}
 
   while ((curHeader != eSOP) && (curHeader != eEOS)) {
-    // no pending slices, readNalu
+    //{{{  no pending slices, readNalu
     if (!sliceList[picSliceIndex])
       sliceList[picSliceIndex] = cSlice::allocSlice();
+
     cSlice* slice = sliceList[picSliceIndex];
     slice->decoder = this;
     slice->dpb = &dpb;
@@ -1191,6 +1196,7 @@ int cDecoder264::decodeFrame() {
     slice->isResetCoefCr = false;
 
     curHeader = readNalu (slice);
+
     slice->curHeader = curHeader;
     //{{{  set primary,redundant flags
     if (!slice->redundantPicCount) {
@@ -1203,14 +1209,18 @@ int cDecoder264::decodeFrame() {
         if (!slice->refFlag[i]) // reference primary slice incorrect, primary slice incorrect
           isPrimaryOk = 0;
       }
-    else if (slice->redundantPicCount && (coding.sliceType != cSlice::eI)) // reference redundant slice incorrect
+    else if (slice->redundantPicCount && (coding.sliceType != cSlice::eI)) {
+      // reference redundant slice incorrect
       if (!slice->refFlag[slice->redundantSliceRefIndex]) // redundant slice is incorrect
         isRedundantOk = 0;
+      }
     //}}}
+
     if ((slice->frameNum == prevFrameNum) && slice->redundantPicCount && isPrimaryOk && (curHeader != eEOS))
       continue;
+
     if (((curHeader != eSOP) && (curHeader != eEOS)) || ((curHeader == eSOP) && !picSliceIndex)) {
-      //{{{  not sure ???
+      // not sure ???
       slice->curSliceIndex = (int16_t)picSliceIndex;
       picture->maxSliceId = (int16_t)imax (slice->curSliceIndex, picture->maxSliceId);
 
@@ -1224,41 +1234,53 @@ int cDecoder264::decodeFrame() {
         error ("decodeFrame - sliceList too few numAllocatedSlices");
       curHeader = eSOS;
       }
-      //}}}
     else {
+      // normal case
       if (sliceList[picSliceIndex-1]->mbAffFrame)
         sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs/2;
       else
         sliceList[picSliceIndex-1]->endMbNumPlus1 = coding.frameSizeMbs / (sliceList[picSliceIndex-1]->fieldPic+1);
+
       newFrame = true;
       slice->curSliceIndex = 0;
       sliceList[picSliceIndex] = nextSlice;
       nextSlice = slice;
       }
+
     copySliceInfo (slice, oldSlice);
     }
+    //}}}
 
-  // decode slices
+  //{{{  decode slices
   ret = curHeader;
+
   initPictureDecode();
+
   for (int sliceIndex = 0; sliceIndex < picSliceIndex; sliceIndex++) {
     cSlice* slice = sliceList[sliceIndex];
     curHeader = slice->curHeader;
+
     initSlice (slice);
     if (slice->activePps->entropyCoding == eCabac)
       slice->initCabacContexts();
+
     if (((slice->activePps->weightedBiPredIdc > 0) && (slice->sliceType == cSlice::eB)) ||
         (slice->activePps->hasWeightedPred && (slice->sliceType != cSlice::eI)))
       slice->fillWeightedPredParam();
+
     if (((curHeader == eSOP) || (curHeader == eSOS)) && !slice->mError)
       decodeSlice (slice);
+
     numDecodedSlices++;
     ercMvPerMb += slice->ercMvPerMb;
     numDecodedMbs += slice->numDecodedMbs;
     }
+  //}}}
 
   endDecodeFrame();
+
   prevFrameNum = sliceList[0]->frameNum;
+
   return ret;
   }
 //}}}
